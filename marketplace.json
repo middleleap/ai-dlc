@@ -1,0 +1,37 @@
+{
+  "name": "middleleap-ai-dlc",
+  "version": "1.0.0",
+  "description": "MiddleLeap AI DLC — Downloadable Content for AI agents",
+  "artifacts": [
+    {
+      "name": "open-finance-uae",
+      "type": "skill",
+      "category": "finance",
+      "description": "UAE Open Finance regulatory requirements, Al Tareq platform integration, CBUAE compliance, and Standards v1.0–v2.1-final",
+      "source": "skills/finance/open-finance-uae",
+      "version": "1.0.0",
+      "tags": ["uae", "open-finance", "cbuae", "regulation", "banking"],
+      "format": "agent-skills"
+    },
+    {
+      "name": "altareq-brand-guidelines",
+      "type": "skill",
+      "category": "finance",
+      "description": "Al Tareq Open Finance brand implementation — consent screens, payment buttons, CX certification",
+      "source": "skills/finance/altareq-brand-guidelines",
+      "version": "1.0.0",
+      "tags": ["uae", "open-finance", "branding", "ui", "consent"],
+      "format": "agent-skills"
+    },
+    {
+      "name": "open-finance-uiux",
+      "type": "skill",
+      "category": "finance",
+      "description": "Rapidly prototype Open Finance value propositions with solution presentations and interactive mockups",
+      "source": "skills/finance/open-finance-uiux",
+      "version": "1.0.0",
+      "tags": ["uae", "open-finance", "prototyping", "uiux", "presentations"],
+      "format": "agent-skills"
+    }
+  ]
+}

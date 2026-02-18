@@ -4,27 +4,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**MiddleLeap Agent Skills** — a collection of AI agent skills following the [Agent Skills](https://agentskills.io) standard. Focused on UAE Open Finance, banking, and fintech domains. This is a knowledge base / skills library, not a software application — there is no build system, package manager, or test framework.
+**MiddleLeap AI DLC** — a marketplace of downloadable content for AI agents: skills, plugins, agents, tools, and MCP servers. This is a knowledge base / artifact library, not a software application — there is no build system, package manager, or test framework.
 
 ## Repository Structure
 
 ```
 skills/
-├── open-finance-uae/          # UAE Open Finance regulatory guidance (SKILL.md + 10 reference docs)
-├── altareq-brand-guidelines/  # Al Tareq brand implementation (SKILL.md + 2 reference docs)
-Open Finance Assets/           # UI/UX assets (logos, screen mockups)
+└── finance/
+    ├── open-finance-uae/          # UAE Open Finance regulatory guidance (SKILL.md + 10 reference docs)
+    ├── altareq-brand-guidelines/  # Al Tareq brand implementation (SKILL.md + 2 reference docs)
+    └── open-finance-uiux/         # Open Finance value proposition prototyper (SKILL.md + 10 reference docs)
+plugins/                           # Coming soon
+agents/                            # Coming soon
+tools/                             # Coming soon
+mcp-servers/                       # Coming soon
+marketplace.json                   # Machine-readable artifact registry
 ```
 
-Two additional skills are listed in README.md but not yet implemented.
+## Artifact Types
 
-## Skill Anatomy
+| Type | Directory | Entry File | Description |
+|------|-----------|------------|-------------|
+| Skill | `skills/<category>/` | `SKILL.md` | Domain expertise and instructions |
+| Plugin | `plugins/<category>/` | `PLUGIN.md` | Reusable agent extensions |
+| Agent | `agents/<category>/` | `AGENT.md` | Pre-built agent configurations |
+| Tool | `tools/<category>/` | `TOOL.md` | Standalone utilities |
+| MCP Server | `mcp-servers/<category>/` | `SERVER.md` | MCP server configurations |
 
-Each skill is a folder under `skills/` containing:
-- `SKILL.md` — Main entry with YAML frontmatter (`name`, `description`, trigger patterns) and instruction body
+## Artifact Anatomy
+
+Each artifact is a folder containing:
+- Entry file (e.g., `SKILL.md`) — Main entry with YAML frontmatter (`name`, `description`) and instruction body
 - `references/` — Supporting documents (regulations, API specs, brand guides, etc.)
-- `assets/` — Images, logos, and visual resources (optional)
+- `assets/` — Images, logos, and visual resources (optional, keep small)
 
-## Key Domain Context
+## Key Domain Context (Finance Skills)
 
 - **Al Tareq** = UAE Open Finance consumer-facing brand; **Nebras** = the platform operator
 - **Current Standards version**: v2.1-final (Jan 7, 2026)
@@ -32,15 +46,16 @@ Each skill is a folder under `skills/` containing:
 - **TPP** = Third Party Provider; **LFI** = Licensed Financial Institution
 - **API Hub**: Ozone-powered centralized infrastructure for Open Finance APIs
 
-## When Editing Skills
+## When Editing Artifacts
 
-- SKILL.md files use YAML frontmatter — preserve `name`, `description`, and trigger fields
+- Entry files use YAML frontmatter — preserve `name`, `description`, and trigger fields
 - Reference files are markdown with domain-specific content — maintain accuracy of regulatory figures, dates, and AED amounts
-- The `open-finance-uae` skill contains 10 reference files totaling ~2,800 lines covering regulations, API specs, pricing, liability, testing, and implementation roadmaps
-- The `altareq-brand-guidelines` skill contains detailed screen specifications for consent journeys — preserve mandatory UI elements (logo, progress bar, buttons)
+- Register new artifacts in `marketplace.json`
+- Follow lowercase-kebab-case naming for all folders
+- No large binaries (>.fig, .psd, large PNGs) — host those in [middleleap/open-finance-assets](https://github.com/middleleap/open-finance-assets)
 
 ## Git
 
-- Origin remote: `michartmann/connect`
-- Main branch: `main`; current working branch: `master`
+- Origin remote: `middleleap/ai-dlc`
+- Main branch: `main`
 - License: Apache 2.0

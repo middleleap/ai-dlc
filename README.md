@@ -1,48 +1,63 @@
-# MiddleLeap Agent Skills
+# MiddleLeap AI DLC
 
-A collection of agent skills for Claude and other AI coding assistants, focused on UAE Open Finance, banking, and fintech domains.
+**Downloadable Content for AI agents** — skills, plugins, agents, tools, and MCP servers that make AI assistants smarter at specialized tasks.
 
-Skills follow the [Agent Skills](https://agentskills.io) standard — folders of instructions, scripts, and resources that AI assistants load dynamically to improve performance on specialized tasks.
+DLC = knowledge packs, workflows, and integrations you install into AI coding assistants the same way game DLC extends a base game. Browse by type, pick what you need, drop it in.
 
-## Skills
+## Browse
+
+### Skills
+
+Domain expertise and instructions that AI assistants load dynamically.
+
+#### Finance
 
 | Skill | Description |
 |-------|-------------|
-| [open-finance-uae](skills/open-finance-uae/) | UAE Open Finance regulatory requirements, Al Tareq platform, CBUAE compliance, Standards v1.0–v2.1-final |
-| [altareq-brand-guidelines](skills/altareq-brand-guidelines/) | Al Tareq Open Finance brand — consent screens, payment buttons, CX certification |
+| [open-finance-uae](skills/finance/open-finance-uae/) | UAE Open Finance regulatory requirements, Al Tareq platform, CBUAE compliance, Standards v1.0–v2.1-final |
+| [altareq-brand-guidelines](skills/finance/altareq-brand-guidelines/) | Al Tareq Open Finance brand — consent screens, payment buttons, CX certification |
+| [open-finance-uiux](skills/finance/open-finance-uiux/) | Rapidly prototype Open Finance value propositions with presentations and interactive mockups |
+
+### Plugins
+
+Reusable extensions for AI agents. [Browse plugins](plugins/) — *coming soon*
+
+### Agents
+
+Pre-built agent configurations and workflows. [Browse agents](agents/) — *coming soon*
+
+### Tools
+
+Standalone utilities AI agents can invoke. [Browse tools](tools/) — *coming soon*
+
+### MCP Servers
+
+Model Context Protocol server configs. [Browse MCP servers](mcp-servers/) — *coming soon*
 
 ## Installation
 
 ### Claude Code
 ```bash
-npx skills add middleleap/skills
+npx skills add middleleap/ai-dlc
 ```
 
 ### Manual
-Copy the desired skill folder into your agent's skills directory:
+Copy the desired artifact folder into your agent's directory:
 ```bash
-# Claude Code
-cp -r skills/open-finance-uae ~/.claude/skills/
+# Copy a skill into Claude Code
+cp -r skills/finance/open-finance-uae ~/.claude/skills/
 
-# Claude.ai
-# Upload the skill folder via the Skills settings panel
+# Claude.ai — upload the skill folder via the Skills settings panel
 ```
 
-## Usage
+## Related Repositories
 
-Skills activate automatically when relevant queries are detected. For example:
-
-- *"What are the TPP licensing requirements in UAE?"* → `open-finance-uae`
-- *"Design a consent screen for Al Tareq"* → `altareq-brand-guidelines`
+- [middleleap/open-finance-assets](https://github.com/middleleap/open-finance-assets) — UI/UX design assets (logos, wireframes, screen mockups) for Al Tareq Open Finance
 
 ## Contributing
 
-1. Fork this repository
-2. Create a new skill folder under `skills/`
-3. Include a `SKILL.md` with YAML frontmatter (`name`, `description`)
-4. Add reference files under `references/` and assets under `assets/`
-5. Submit a pull request
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add skills, plugins, agents, tools, and MCP servers.
 
 ## License
 
-Apache 2.0
+[Apache 2.0](LICENSE)
