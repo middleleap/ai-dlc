@@ -1,8 +1,41 @@
 {
   "name": "middleleap-ai-dlc",
-  "version": "1.0.0",
-  "description": "MiddleLeap AI DLC — Downloadable Content for AI agents",
+  "version": "1.1.0",
+  "description": "MiddleLeap AI DLC — Downloadable Content for AI-enabled development",
   "artifacts": [
+    {
+      "name": "claude-md-guide",
+      "type": "skill",
+      "category": "ai-sdlc",
+      "description": "Best practices for writing effective CLAUDE.md files — structure, patterns, anti-patterns, and real-world examples for AI coding assistant configuration",
+      "source": "skills/ai-sdlc/claude-md-guide",
+      "version": "1.0.0",
+      "tags": ["claude-code", "claude-md", "ai-sdlc", "developer-experience", "context-files"],
+      "compatibility": ["claude-code", "cursor", "copilot", "windsurf"],
+      "format": "agent-skills"
+    },
+    {
+      "name": "context-template",
+      "type": "tool",
+      "category": "ai-sdlc",
+      "description": "Starter CLAUDE.md template generator — fill-in-the-blanks template for any stack with customization options for frontend, backend, and monorepo projects",
+      "source": "tools/ai-sdlc/context-template",
+      "version": "1.0.0",
+      "tags": ["template", "claude-md", "ai-sdlc", "project-setup", "context-files"],
+      "compatibility": ["claude-code", "cursor", "copilot", "windsurf"],
+      "format": "agent-tools"
+    },
+    {
+      "name": "code-reviewer",
+      "type": "agent",
+      "category": "ai-sdlc",
+      "description": "Structured 4-pass code review framework — correctness, security, conventions, and design with severity classification and CI/CD integration patterns",
+      "source": "agents/ai-sdlc/code-reviewer",
+      "version": "1.0.0",
+      "tags": ["code-review", "security", "quality", "ai-sdlc", "ci-cd"],
+      "compatibility": ["claude-code", "cursor", "copilot"],
+      "format": "agent-config"
+    },
     {
       "name": "open-finance-uae",
       "type": "skill",
@@ -11,6 +44,7 @@
       "source": "skills/finance/open-finance-uae",
       "version": "1.0.0",
       "tags": ["uae", "open-finance", "cbuae", "regulation", "banking"],
+      "compatibility": ["claude-code", "cursor", "copilot"],
       "format": "agent-skills"
     },
     {
@@ -21,6 +55,7 @@
       "source": "skills/finance/altareq-brand-guidelines",
       "version": "1.0.0",
       "tags": ["uae", "open-finance", "branding", "ui", "consent"],
+      "compatibility": ["claude-code", "cursor"],
       "format": "agent-skills"
     },
     {
@@ -31,6 +66,7 @@
       "source": "skills/finance/open-finance-uiux",
       "version": "1.0.0",
       "tags": ["uae", "open-finance", "prototyping", "uiux", "presentations"],
+      "compatibility": ["claude-code"],
       "format": "agent-skills"
     }
   ]
