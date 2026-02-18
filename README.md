@@ -1,14 +1,26 @@
 # MiddleLeap AI DLC
 
-**Downloadable Content for AI agents** — skills, plugins, agents, tools, and MCP servers that make AI assistants smarter at specialized tasks.
+**Downloadable Content for AI-enabled development** — skills, plugins, agents, tools, and MCP servers that make AI coding assistants smarter at real work.
 
 DLC = knowledge packs, workflows, and integrations you install into AI coding assistants the same way game DLC extends a base game. Browse by type, pick what you need, drop it in.
+
+## Why AI DLC?
+
+AI coding assistants are powerful out of the box, but they become dramatically more useful with project-specific context, domain knowledge, and structured workflows. This repository is a shared library of that context — battle-tested artifacts you can install to skip the trial-and-error phase of AI-assisted development.
 
 ## Browse
 
 ### Skills
 
 Domain expertise and instructions that AI assistants load dynamically.
+
+#### AI-SDLC
+
+Practices and patterns for AI-enabled software development.
+
+| Skill | Description |
+|-------|-------------|
+| [claude-md-guide](skills/ai-sdlc/claude-md-guide/) | Best practices for writing CLAUDE.md files — structure, patterns, anti-patterns, and real-world examples |
 
 #### Finance
 
@@ -18,36 +30,59 @@ Domain expertise and instructions that AI assistants load dynamically.
 | [altareq-brand-guidelines](skills/finance/altareq-brand-guidelines/) | Al Tareq Open Finance brand — consent screens, payment buttons, CX certification |
 | [open-finance-uiux](skills/finance/open-finance-uiux/) | Rapidly prototype Open Finance value propositions with presentations and interactive mockups |
 
-### Plugins
-
-Reusable extensions for AI agents. [Browse plugins](plugins/) — *coming soon*
-
 ### Agents
 
-Pre-built agent configurations and workflows. [Browse agents](agents/) — *coming soon*
+Pre-built agent configurations and workflows.
+
+#### AI-SDLC
+
+| Agent | Description |
+|-------|-------------|
+| [code-reviewer](agents/ai-sdlc/code-reviewer/) | Structured 4-pass review framework — correctness, security, conventions, design |
+
+[Browse all agents](agents/)
 
 ### Tools
 
-Standalone utilities AI agents can invoke. [Browse tools](tools/) — *coming soon*
+Standalone utilities AI agents can invoke.
+
+#### AI-SDLC
+
+| Tool | Description |
+|------|-------------|
+| [context-template](tools/ai-sdlc/context-template/) | Starter CLAUDE.md template — fill in the blanks for your stack |
+
+[Browse all tools](tools/)
+
+### Plugins
+
+Reusable extensions for AI agents. [Browse plugins](plugins/) — *coming soon*
 
 ### MCP Servers
 
 Model Context Protocol server configs. [Browse MCP servers](mcp-servers/) — *coming soon*
 
-## Installation
+## Getting Started
 
-### Claude Code
+### 1. Install a skill into Claude Code
 ```bash
-npx skills add middleleap/ai-dlc
+# Clone the repo
+git clone https://github.com/middleleap/ai-dlc.git
+
+# Copy a skill into your project
+cp -r ai-dlc/skills/ai-sdlc/claude-md-guide/ your-project/.claude/skills/
 ```
 
-### Manual
-Copy the desired artifact folder into your agent's directory:
+### 2. Use the context template to set up your project
 ```bash
-# Copy a skill into Claude Code
-cp -r skills/finance/open-finance-uae ~/.claude/skills/
+# Copy the template tool and fill in the blanks for your stack
+cat ai-dlc/tools/ai-sdlc/context-template/TOOL.md
+```
 
-# Claude.ai — upload the skill folder via the Skills settings panel
+### 3. Set up AI code review
+```bash
+# Copy the review agent configuration
+cp -r ai-dlc/agents/ai-sdlc/code-reviewer/ your-project/.claude/agents/
 ```
 
 ## Related Repositories
