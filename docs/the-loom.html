@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Loom — how a regulated entity builds with AI · MiddleLeap</title>
+<meta name="description" content="The Loom is MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, and always-on controls — proven end-to-end on a UAE Open Finance back office.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='9' width='14' height='14' rx='2.2' fill='%23E65C2D' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink-0:#080808;--ink-1:#101010;--ink-2:#181817;--ink-3:#232321;--ink-4:#33322F;--ink-border:#1E1E1C;
+  --bone-0:#ECE9E1;--bone-1:#DEDBD4;--bone-2:#A8A59E;--bone-3:#87847D;
+  --ember-300:#F58F55;--ember-400:#F0722E;--ember-500:#E65C2D;--ember-600:#CE451B;
+  --ember-grad:linear-gradient(135deg,#F0722E,#CE451B);--ember-dim:rgba(230,92,45,.14);
+  --positive:#5FA671;--caution:#D9A03C;--critical-text:#E06060;--info:#5D8FA6;
+  --positive-dim:rgba(95,166,113,.14);--caution-dim:rgba(217,160,60,.14);--info-dim:rgba(93,143,166,.14);
+  --serif:"Instrument Serif",Georgia,serif;--sans:"DM Sans",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;
+  --ease-out:cubic-bezier(.2,0,0,1);--ease-leap:cubic-bezier(.34,1.3,.4,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink-0);color:var(--bone-1);font:16px/1.6 var(--sans)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--bone-0);line-height:1.15}
+h2{font-size:30px;margin-bottom:12px}
+h3{font-size:22px}
+em{font-style:italic;color:var(--ember-500)}
+p{max-width:70ch}
+a{color:var(--ember-300);text-decoration:none}
+a:hover{color:var(--ember-400)}
+section{padding:72px 0;border-top:1px solid var(--ink-border)}
+.eyebrow{font:500 12.5px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--ember-400);margin-bottom:14px}
+.eyebrow::before{content:"// "}
+.lede{color:var(--bone-2);font-size:16px;max-width:64ch}
+.caption{font-size:12.5px;color:var(--bone-3);margin-top:14px}
+.dia{display:inline-block;width:8px;height:8px;background:var(--ember-500);transform:rotate(45deg);flex:none}
+.dia.sm{width:6px;height:6px}
+/* header */
+header{padding:22px 0;border-bottom:1px solid var(--ink-border)}
+header .wrap{display:flex;align-items:center;justify-content:space-between}
+.lockup{display:flex;align-items:center;gap:12px}
+.mark{display:flex;align-items:center;gap:7px}
+.mark .sq{width:16px;height:16px;background:var(--bone-1);border-radius:16%}
+.mark .dm{width:16px;height:16px;background:var(--ember-grad);border-radius:16%;transform:rotate(45deg)}
+@media(prefers-reduced-motion:no-preference){
+  .mark .dm{animation:pivotIn .9s var(--ease-leap) both}
+  @keyframes pivotIn{from{transform:translateX(-18px) rotate(0deg)}to{transform:translateX(0) rotate(45deg)}}
+}
+.wordmark{font:600 17px var(--sans);letter-spacing:-.02em;color:var(--bone-1)}
+.wordmark b{font-weight:600;color:var(--ember-500)}
+.headtag{font:400 12.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--bone-3)}
+/* hero */
+.hero{padding:96px 0 72px;border-top:none}
+.hero h1{font-size:clamp(44px,6vw,76px);line-height:1.08;max-width:20ch;margin-bottom:22px}
+.hero .lede{font-size:18px;margin-bottom:34px}
+.btnrow{display:flex;gap:12px;flex-wrap:wrap}
+.btn{font:500 13px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:14px 22px;border-radius:0;cursor:pointer;display:inline-flex;align-items:center;gap:10px;border:1px solid transparent;transition:all .2s var(--ease-out)}
+.btn .m{width:9px;height:9px;background:currentColor;transition:transform .4s var(--ease-leap)}
+.btn:hover .m{transform:rotate(45deg)}
+.btn-primary{background:var(--ember-500);color:#110D0A}
+.btn-primary:hover{background:var(--ember-400);box-shadow:0 4px 24px rgba(230,92,45,.28);transform:translateY(-1px)}
+.btn-secondary{background:transparent;color:var(--bone-1);border-color:var(--ink-4)}
+.btn-secondary:hover{border-color:var(--bone-3)}
+.btn:focus-visible{outline:2px solid var(--ember-400);outline-offset:2px}
+.factrow{display:flex;gap:40px;flex-wrap:wrap;margin-top:56px}
+.fact .n{font-family:var(--serif);font-size:34px;color:var(--bone-0)}
+.fact .l{font:400 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--bone-3);margin-top:2px}
+/* cards & grids */
+.grid{display:grid;gap:16px;margin-top:32px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--ink-2);border:1px solid var(--ink-border);border-radius:0;padding:24px;transition:border-color .2s var(--ease-out),transform .2s var(--ease-out)}
+.card:hover{border-color:var(--ink-4);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.45)}
+.card h3{margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.card p{font-size:14px;color:var(--bone-2)}
+.klabel{font:500 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--bone-3)}
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{font:400 11.5px var(--mono);background:var(--ember-dim);color:var(--ember-300);border-radius:2px;padding:5px 9px;display:inline-flex;align-items:center;gap:7px;cursor:default}
+.chip .dia{width:7px;height:7px;background:currentColor}
+.chip[data-tip]{position:relative}
+.chip[data-tip]:hover::after,.chip[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 8px);z-index:5;width:260px;background:var(--ink-3);border:1px solid var(--ink-4);color:var(--bone-1);font:400 12px/1.5 var(--sans);text-transform:none;letter-spacing:0;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.45)}
+.chip.gold{background:var(--caution-dim);color:var(--caution)}
+.chip.green{background:var(--positive-dim);color:var(--positive)}
+/* loom figure */
+.loomfig{background:var(--ink-1);border:1px solid var(--ink-border);padding:28px;margin-top:32px}
+.loomfig svg{width:100%;height:auto;display:block}
+.loompart{cursor:pointer}
+.loompart .hit{fill:transparent}
+.loompart:focus{outline:none}
+.loompart:focus-visible .hit{stroke:var(--ember-400);stroke-width:2}
+.loomfig .base{transition:opacity .2s var(--ease-out)}
+.loomfig.dimmed .loompart .base{opacity:.28}
+.loomfig.dimmed .loompart.active .base{opacity:1}
+.loomfig.dimmed .loompart.active .hit{stroke:var(--ember-500);stroke-width:1}
+.loomlegend{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.loomlegend button{font:500 11.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;background:transparent;border:1px solid var(--ink-4);color:var(--bone-2);border-radius:0;padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s var(--ease-out)}
+.loomlegend button .dia{background:var(--bone-3)}
+.loomlegend button:hover{border-color:var(--bone-3);color:var(--bone-1)}
+.loomlegend button.active{border-color:var(--ember-500);color:var(--ember-300)}
+.loomlegend button.active .dia{background:var(--ember-500)}
+.loomlegend button:focus-visible{outline:2px solid var(--ember-400);outline-offset:2px}
+.loomdesc{margin-top:16px;background:var(--ink-2);border:1px solid var(--ink-border);border-left:2px solid var(--ember-500);padding:16px 18px;min-height:84px}
+.loomdesc .t{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ember-400);margin-bottom:6px}
+.loomdesc p{font-size:14px;color:var(--bone-2);max-width:none}
+/* flow (delivery loop) */
+.flow{counter-reset:step;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:32px}
+.step{background:var(--ink-2);border:1px solid var(--ink-border);padding:18px;position:relative}
+.step::before{counter-increment:step;content:counter(step,decimal-leading-zero);font:500 11px var(--mono);color:var(--ember-400);letter-spacing:.14em}
+.step h4{font:600 14px var(--sans);color:var(--bone-0);margin:8px 0 6px}
+.step p{font-size:12.5px;color:var(--bone-3)}
+.step.human{border-color:rgba(230,92,45,.4);background:linear-gradient(var(--ember-dim),var(--ember-dim)),var(--ink-2)}
+.step.human h4{color:var(--ember-300)}
+/* tables */
+.tbl{overflow-x:auto;margin-top:28px;border:1px solid var(--ink-border)}
+table{width:100%;border-collapse:collapse;background:var(--ink-2)}
+th{font:500 11.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--bone-3);text-align:left;padding:12px 16px;border-bottom:1px solid var(--ink-4)}
+td{font-size:14px;padding:12px 16px;border-bottom:1px solid var(--ink-border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--ink-1)}
+td.mono{font:400 12.5px var(--mono);color:var(--ember-300);white-space:nowrap}
+/* callout */
+.callout{margin-top:32px;background:var(--ember-dim);border:1px solid rgba(230,92,45,.3);padding:24px;display:flex;gap:14px;align-items:flex-start}
+.callout .dia{margin-top:7px}
+.callout p{font-size:16px;color:var(--bone-1);max-width:none}
+/* before/after */
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px}
+.ba .col{border:1px solid var(--ink-border);background:var(--ink-2);padding:24px}
+.ba .col.now{border-color:rgba(95,166,113,.35)}
+.ba h4{font:500 12px var(--mono);letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+.ba .was h4{color:var(--bone-3)}.ba .now h4{color:var(--positive)}
+.ba ul{list-style:none}
+.ba li{font-size:14px;color:var(--bone-2);padding:6px 0 6px 20px;position:relative}
+.ba li::before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;transform:rotate(45deg);background:var(--bone-3)}
+.ba .now li::before{background:var(--positive)}
+.ba .verdict{margin-top:14px;font:400 12.5px var(--mono);color:var(--bone-3)}
+.ba .now .verdict{color:var(--positive)}
+/* code */
+.codeblock{background:var(--ink-1);border:1px solid var(--ink-border);padding:18px 20px;font:400 13px/1.8 var(--mono);color:var(--bone-1);overflow-x:auto;margin-top:24px}
+.codeblock .c{color:var(--bone-3)}
+/* footer */
+footer{border-top:1px solid var(--ink-border);padding:40px 0;margin-top:72px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+footer p{font-size:12.5px;color:var(--bone-3)}
+@media(max-width:900px){.flow{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){
+  .g2,.g3,.ba{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr}
+  section{padding:56px 0}
+  .hero{padding:64px 0 56px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="lockup">
+      <span class="mark" aria-hidden="true"><span class="sq"></span><span class="dm"></span></span>
+      <span class="wordmark">Middle<b>Leap</b></span>
+    </div>
+    <span class="headtag">The Loom · method documentation</span>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <div class="eyebrow">The Loom</div>
+  <h1>A way for a regulated entity to build with <em>AI.</em></h1>
+  <p class="lede">Set it up once, then weave any solution on it. Two harnesses — discovery finds
+  the right problem, delivery ships it under control — run across a frame of always-on controls,
+  weaving to the institution's own context. The output is live, audit-ready software, built the
+  same way every time.</p>
+  <div class="btnrow">
+    <a class="btn btn-primary" href="#adopt"><span class="m" aria-hidden="true"></span>Adopt the Loom</a>
+    <a class="btn btn-secondary" href="https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-loom">Read the canon</a>
+  </div>
+  <div class="factrow" aria-label="Proof points from the first build">
+    <div class="fact"><div class="n">134 / ~139</div><div class="l">stories to done, first build</div></div>
+    <div class="fact"><div class="n">9 + 5</div><div class="l">discovery gates · CI quality gates</div></div>
+    <div class="fact"><div class="n">100%</div><div class="l">merges by human four-eyes</div></div>
+    <div class="fact"><div class="n">0</div><div class="l">real customer records, ever</div></div>
+  </div>
+</div>
+
+<section id="loom">
+  <div class="wrap">
+    <div class="eyebrow">The idea</div>
+    <h2>The metaphor is <em>exact.</em></h2>
+    <p class="lede">Every part of a loom maps one-to-one onto the method. Select a part to see
+    what it does.</p>
+
+    <div class="loomfig" id="loomfig">
+      <svg viewBox="0 0 960 470" role="img" aria-label="Diagram of a loom: vertical warp threads under tension, two harness bars, a shuttle carrying agents, the pattern (the institution's context brain), and the woven cloth of shipped solutions">
+        <!-- warp threads -->
+        <g class="loompart" id="p-warp" data-part="warp" tabindex="0" role="button" aria-label="Warp — the always-on controls">
+          <rect class="hit" x="70" y="20" width="820" height="80"/>
+          <g class="base">
+            <text x="80" y="38" font-family="JetBrains Mono,monospace" font-size="11" letter-spacing="2" fill="#87847D">WARP — ALWAYS-ON CONTROLS</text>
+            <g stroke="#33322F" stroke-width="2">
+              <line x1="100" y1="50" x2="100" y2="420"/><line x1="180" y1="50" x2="180" y2="420"/>
+              <line x1="260" y1="50" x2="260" y2="420"/><line x1="340" y1="50" x2="340" y2="420"/>
+              <line x1="420" y1="50" x2="420" y2="420"/><line x1="500" y1="50" x2="500" y2="420"/>
+              <line x1="580" y1="50" x2="580" y2="420"/><line x1="660" y1="50" x2="660" y2="420"/>
+              <line x1="740" y1="50" x2="740" y2="420"/><line x1="820" y1="50" x2="820" y2="420"/>
+            </g>
+            <g font-family="JetBrains Mono,monospace" font-size="10" fill="#87847D">
+              <text x="100" y="68" text-anchor="middle">4-EYES</text>
+              <text x="260" y="68" text-anchor="middle">AUDIT</text>
+              <text x="420" y="68" text-anchor="middle">LINEAGE</text>
+              <text x="580" y="68" text-anchor="middle">GATES</text>
+              <text x="740" y="68" text-anchor="middle">RESIDENCY</text>
+            </g>
+          </g>
+        </g>
+        <!-- harnesses -->
+        <g class="loompart" id="p-harness" data-part="harness" tabindex="0" role="button" aria-label="Harnesses — discovery and delivery">
+          <rect class="hit" x="70" y="120" width="820" height="120"/>
+          <g class="base">
+            <rect x="90" y="130" width="380" height="44" fill="#181817" stroke="#33322F"/>
+            <text x="280" y="152" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" letter-spacing="1.5" fill="#DEDBD4">① DISCOVERY HARNESS</text>
+            <text x="280" y="166" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10.5" fill="#87847D">frame the right problem · gates D1–D9</text>
+            <rect x="490" y="130" width="380" height="44" fill="#181817" stroke="#33322F"/>
+            <text x="680" y="152" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" letter-spacing="1.5" fill="#DEDBD4">② DELIVERY HARNESS</text>
+            <text x="680" y="166" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10.5" fill="#87847D">ship under control · gates Q1–Q5</text>
+            <text x="480" y="156" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" fill="#F0722E">→</text>
+          </g>
+        </g>
+        <!-- pattern / brain -->
+        <g class="loompart" id="p-pattern" data-part="pattern" tabindex="0" role="button" aria-label="Pattern — the institution's context brain">
+          <rect class="hit" x="70" y="200" width="820" height="80"/>
+          <g class="base">
+            <rect x="290" y="210" width="380" height="52" fill="#181817" stroke="#33322F"/>
+            <text x="480" y="232" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" letter-spacing="1.5" fill="#DEDBD4">THE BRAIN — THE PATTERN</text>
+            <text x="480" y="248" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10.5" fill="#87847D">regulated context · solution domain · institutional DNA</text>
+          </g>
+        </g>
+        <!-- shuttle -->
+        <g class="loompart" id="p-shuttle" data-part="shuttle" tabindex="0" role="button" aria-label="Shuttle — the AI agents weaving continuously">
+          <rect class="hit" x="70" y="288" width="820" height="60"/>
+          <g class="base">
+            <line x1="100" y1="318" x2="860" y2="318" stroke="#33322F" stroke-dasharray="4 6"/>
+            <rect x="452" y="304" width="28" height="28" fill="#E65C2D" transform="rotate(45 466 318)"/>
+            <text x="500" y="323" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" fill="#87847D">THE SHUTTLE — AGENTS, WEAVING CONTINUOUSLY</text>
+          </g>
+        </g>
+        <!-- cloth -->
+        <g class="loompart" id="p-cloth" data-part="cloth" tabindex="0" role="button" aria-label="Cloth — shipped, audit-ready solutions">
+          <rect class="hit" x="70" y="356" width="820" height="100"/>
+          <g class="base">
+            <rect x="90" y="370" width="780" height="60" fill="#101010" stroke="#33322F"/>
+            <g font-family="JetBrains Mono,monospace" font-size="10.5">
+              <rect x="110" y="386" width="150" height="28" fill="rgba(95,166,113,.14)"/>
+              <text x="185" y="404" text-anchor="middle" fill="#5FA671">OPEN FINANCE ✓</text>
+              <rect x="280" y="386" width="120" height="28" fill="#181817" stroke="#1E1E1C"/>
+              <text x="340" y="404" text-anchor="middle" fill="#87847D">PAYMENTS</text>
+              <rect x="420" y="386" width="120" height="28" fill="#181817" stroke="#1E1E1C"/>
+              <text x="480" y="404" text-anchor="middle" fill="#87847D">LENDING</text>
+              <rect x="560" y="386" width="130" height="28" fill="#181817" stroke="#1E1E1C"/>
+              <text x="625" y="404" text-anchor="middle" fill="#87847D">ONBOARDING</text>
+              <rect x="710" y="386" width="120" height="28" fill="#181817" stroke="#1E1E1C"/>
+              <text x="770" y="404" text-anchor="middle" fill="#87847D">SERVICING</text>
+            </g>
+            <text x="90" y="450" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" fill="#87847D">THE CLOTH — LIVE, AUDIT-READY SOLUTIONS</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="loomlegend" role="tablist" aria-label="Loom parts">
+      <button data-part="warp"><span class="dia sm"></span>Warp — controls</button>
+      <button data-part="harness"><span class="dia sm"></span>Harnesses</button>
+      <button data-part="shuttle"><span class="dia sm"></span>Shuttle — agents</button>
+      <button data-part="pattern"><span class="dia sm"></span>Pattern — brain</button>
+      <button data-part="cloth"><span class="dia sm"></span>Cloth — output</button>
+    </div>
+    <div class="loomdesc" id="loomdesc" aria-live="polite">
+      <div class="t">Select a part of the loom</div>
+      <p>Hover, tap, or use the buttons above to see what each part maps to in the build model.</p>
+    </div>
+    <p class="caption">The first cloth off the loom was a UAE Open Finance back office. The loom
+    itself is the deliverable: payments, lending, onboarding, servicing reuse the same frame.</p>
+  </div>
+</section>
+
+<section id="diamond">
+  <div class="wrap">
+    <div class="eyebrow">The harnesses</div>
+    <h2>A double diamond — find the right problem, <em>then deliver it.</em></h2>
+    <p class="lede">Each diamond opens up to explore, then narrows to decide. The first is about
+    the problem; the second about the solution. They meet at a single artifact — the agreed
+    problem statement, the PRD — and the process is non-linear by design: evidence found during
+    delivery can legitimately send you back a diamond.</p>
+
+    <div class="loomfig">
+      <svg viewBox="0 0 960 300" role="img" aria-label="The double diamond: Discover diverges and Define converges in the discovery harness; Develop diverges and Deliver converges in the delivery harness; the PRD is the hand-off between them">
+        <g font-family="JetBrains Mono,monospace" letter-spacing="1.5">
+          <text x="240" y="34" text-anchor="middle" font-size="11" fill="#87847D">DIAMOND 1 · DISCOVERY</text>
+          <text x="720" y="34" text-anchor="middle" font-size="11" fill="#87847D">DIAMOND 2 · DELIVERY</text>
+        </g>
+        <!-- diamond 1 -->
+        <path d="M60 150 L240 60 L420 150 L240 240 Z" fill="#181817" stroke="#33322F"/>
+        <line x1="240" y1="60" x2="240" y2="240" stroke="#1E1E1C"/>
+        <!-- diamond 2 -->
+        <path d="M540 150 L720 60 L900 150 L720 240 Z" fill="#181817" stroke="#33322F"/>
+        <line x1="720" y1="60" x2="720" y2="240" stroke="#1E1E1C"/>
+        <!-- PRD waist -->
+        <rect x="446" y="128" width="68" height="44" fill="#E65C2D"/>
+        <text x="480" y="147" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" fill="#110D0A" font-weight="500">PRD</text>
+        <text x="480" y="162" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="#110D0A">hand-off</text>
+        <g font-family="DM Sans,sans-serif" font-size="13" fill="#DEDBD4" text-anchor="middle">
+          <text x="150" y="140">Discover</text><text x="330" y="140">Define</text>
+          <text x="630" y="140">Develop</text><text x="810" y="140">Deliver</text>
+        </g>
+        <g font-family="DM Sans,sans-serif" font-size="10.5" fill="#87847D" text-anchor="middle">
+          <text x="150" y="158">diverge — explore</text><text x="330" y="158">converge — frame +</text>
+          <text x="330" y="171">make tangible</text>
+          <text x="630" y="158">diverge — explore</text><text x="630" y="171">solution directions</text>
+          <text x="810" y="158">converge — ship</text><text x="810" y="171">under control</text>
+        </g>
+        <g font-family="JetBrains Mono,monospace" font-size="10" fill="#87847D">
+          <text x="60" y="278">CHALLENGE / TRIGGER →</text>
+          <text x="900" y="278" text-anchor="end">→ SHIPPED + DEMOABLE</text>
+        </g>
+        <text x="480" y="278" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10.5" fill="#5D8FA6">⟲ non-linear — learning can send you back a diamond</text>
+      </svg>
+    </div>
+    <p class="caption">A discovery is allowed to fail: stopping the wrong problem early is a win,
+    not a waste. The waist between the diamonds is enforced — no feature enters delivery without
+    a gate-green hand-off.</p>
+  </div>
+</section>
+
+<section id="discovery">
+  <div class="wrap">
+    <div class="eyebrow">Diamond 1</div>
+    <h2>Discovery — evidence in, <em>problem out.</em></h2>
+    <p class="lede">Before a line of code, the harness turns a challenge into evidence and an
+    agreed problem: signals logged with stable ids, themes that trace to signals, one falsifiable
+    problem statement, a data-governance verdict against the risk register, and a low-fidelity
+    prototype a stakeholder actually reacted to. Every step is an artifact; every artifact is
+    gated.</p>
+
+    <div class="chips" aria-label="The nine discovery gates">
+      <span class="chip" tabindex="0" data-tip="Fails when the problem statement lacks a falsifiable problem, target user, or success measure."><span class="dia"></span>D1 FRAMING</span>
+      <span class="chip" tabindex="0" data-tip="Fails when claims aren't traceable to a logged signal — assertion without source."><span class="dia"></span>D2 EVIDENCE</span>
+      <span class="chip" tabindex="0" data-tip="Fails when stakeholders aren't named or scope boundaries (in/out) are absent."><span class="dia"></span>D3 SCOPE</span>
+      <span class="chip" tabindex="0" data-tip="Fails when discovery artifacts specify a build — endpoints, schemas, tech choices. Discovery names the problem; delivery owns the solution."><span class="dia"></span>D4 NO-SOLUTIONING</span>
+      <span class="chip" tabindex="0" data-tip="Fails when themes don't trace to signals or prioritisation lacks a stated method."><span class="dia"></span>D5 SYNTHESIS</span>
+      <span class="chip" tabindex="0" data-tip="Fails when the run doesn't cite resolvable risk categories and a regulatory driver from the mounted data-risk register, with a residual-risk verdict."><span class="dia"></span>D6 DATA-GOVERNANCE</span>
+      <span class="chip" tabindex="0" data-tip="Fails when any visual artifact skips the brand profile or inlines raw hex/px/font instead of design tokens."><span class="dia"></span>D7 BRAND</span>
+      <span class="chip" tabindex="0" data-tip="Fails when the prototype stage produced nothing tangible — or over-specified into delivery fidelity."><span class="dia"></span>D8 TANGIBILITY</span>
+      <span class="chip" tabindex="0" data-tip="Fails when a prototype exists but no stakeholder reaction was recorded per hypothesis. A prototype no one reacted to tested nothing."><span class="dia"></span>D9 VALIDATION</span>
+    </div>
+
+    <div class="grid g3">
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>The prototype boundary</h3>
+        <p>Brand-real, behaviour-hollow. A low-fi wireframe tests the framing — it is disposable,
+        about the problem, and never binds delivery. Rendered by a zero-dependency engine against
+        the brand profile, so it can't go off-brand even by accident.</p></div>
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>The two seams</h3>
+        <p>The data-risk register (D6) and the brand profile (D7) are mounted, not embedded.
+        Swap the seams and the same machinery runs discovery for a different organisation —
+        nothing hard-codes an entity, a regulator, or a platform.</p></div>
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>The hand-off contract</h3>
+        <p>Problem, success measures, out-of-scope, the inherited data-governance verdict, and
+        the prototype as direction — with zero delivery design. Delivery inherits the risk
+        position instead of rediscovering it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="delivery">
+  <div class="wrap">
+    <div class="eyebrow">Diamond 2</div>
+    <h2>Delivery — an autonomous loop that <em>proposes, never disposes.</em></h2>
+    <p class="lede">One loop invocation takes one backlog item end to end. The agent authors and
+    verifies; a human merges — every time. Compliance is a property of the line, not a scramble
+    before an audit.</p>
+
+    <div class="flow" aria-label="The eight steps of one delivery iteration">
+      <div class="step"><h4>Pick</h4><p>First eligible item. The waist gate rejects any feature without a gate-green discovery hand-off.</p></div>
+      <div class="step"><h4>Isolate</h4><p>One story, one branch, one session. Concurrent loops use isolated worktrees.</p></div>
+      <div class="step"><h4>Spec-first</h4><p>Contract path → generated types → contract tests, shown red before any implementation.</p></div>
+      <div class="step"><h4>Implement</h4><p>To green, against interfaces. Synthetic data only; audit and lineage in the same change.</p></div>
+      <div class="step"><h4>Review</h4><p>Reviewer agents on the diff: hard-stops PASS, contract CONFORMANT — or it doesn't proceed.</p></div>
+      <div class="step human"><h4>Human merge</h4><p>PR opens, CI gates run, and the loop stops. Four-eyes is human, enforced by branch protection.</p></div>
+      <div class="step"><h4>Deploy</h4><p>Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.</p></div>
+      <div class="step"><h4>Evidence</h4><p>On release: gates re-run at the released commit; the evidence bundle is sealed into the repo.</p></div>
+    </div>
+
+    <div class="chips" aria-label="The CI quality gates">
+      <span class="chip" tabindex="0" data-tip="Build + unit tests; generated artifacts committed and in sync."><span class="dia"></span>Q1 BUILD</span>
+      <span class="chip gold" tabindex="0" data-tip="The anti-reward-hacking gate: diffs against the merge base and counts net assertions, so a red bar can't go green by weakening a test."><span class="dia"></span>Q1b TEST INTEGRITY</span>
+      <span class="chip" tabindex="0" data-tip="Lint, types, security static analysis."><span class="dia"></span>Q2 STATIC + SAST</span>
+      <span class="chip" tabindex="0" data-tip="Integration against real local stores; contract tests end to end."><span class="dia"></span>Q3 INTEGRATION</span>
+      <span class="chip" tabindex="0" data-tip="Dependency audit and secrets scan."><span class="dia"></span>Q4 SECURITY</span>
+      <span class="chip" tabindex="0" data-tip="Every data store emits the lineage the regulator expects — in the same change, never retrofit."><span class="dia"></span>Q4.5 LINEAGE</span>
+      <span class="chip green" tabindex="0" data-tip="A human, at release time — evidenced, not implied."><span class="dia"></span>Q5 PROD APPROVAL</span>
+    </div>
+
+    <div class="callout"><span class="dia" aria-hidden="true"></span>
+      <p>Three tripwire hooks guard every edit: a <strong>PII guard</strong> blocks real-shaped
+      identifiers before they're written, a <strong>spec tripwire</strong> locks the API contract
+      mid-feature, and a <strong>test tripwire</strong> blocks weakened tests. The loop's
+      discipline is enforced at the moment of the edit — it never depends on the agent's
+      restraint.</p>
+    </div>
+  </div>
+</section>
+
+<section id="brain">
+  <div class="wrap">
+    <div class="eyebrow">The pattern</div>
+    <h2>The context brain — why the method <em>compounds.</em></h2>
+    <p class="lede">A harness alone is generic, and so is an AI agent. What makes the Loom
+    produce this institution's software is context, treated as a first-class governed asset —
+    access-controlled, versioned, auditable, with owners and a change history. Not loose notes
+    in people's heads.</p>
+
+    <div class="grid g3">
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>Regulated context</h3>
+        <p>What you must obey: mandates and deadlines, security posture, the risk taxonomy and
+        controls. Lives as the data-risk register seam — discovery's D6 gate reads it on every
+        run.</p></div>
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>Solution domain</h3>
+        <p>What you're building: the API contract, the data model, personas and scopes, the
+        synthetic dataset. Swap this dimension and the same Loom builds a different
+        solution.</p></div>
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>Institutional DNA</h3>
+        <p>How the entity works: approval routes, architectural patterns, approved technologies,
+        design tokens, terminology, tone of voice. The part no competitor shares.</p></div>
+    </div>
+
+    <div class="callout"><span class="dia" aria-hidden="true"></span>
+      <p><strong>The moat test.</strong> If a competitor copied the entire codebase tomorrow,
+      what would they still lack? Everything that makes it yours — the accumulated, governed
+      context. It cannot be copied, only built, cycle after cycle. And bad context compounds as
+      readily as good: curation is a control, not housekeeping.</p>
+    </div>
+  </div>
+</section>
+
+<section id="assurance">
+  <div class="wrap">
+    <div class="eyebrow">Always-on</div>
+    <h2>Continuous assurance — agents, <em>not meetings.</em></h2>
+    <p class="lede">Keeping a regulated entity compliant traditionally means an endless calendar
+    of review, risk, and sign-off meetings — assurance only as fresh as the last one. The harness
+    pulls specialised agents through the same lifecycle continuously: on every change, on a
+    schedule, and on events.</p>
+
+    <div class="tbl"><table>
+      <thead><tr><th>Step</th><th>Run by</th><th>Replaces</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">① WATCH</td><td>change-watch agent — regulatory &amp; risk horizon scan</td><td>periodic review</td></tr>
+        <tr><td class="mono">② ASSESS</td><td>risk-reviewer agent — risk &amp; impact review</td><td>risk committee</td></tr>
+        <tr><td class="mono">③ CHECK</td><td>conformance + hard-stop reviewers — spec &amp; hard-stop check</td><td>design review</td></tr>
+        <tr><td class="mono">④ TEST</td><td>gate runners — controls, the Q-gates</td><td>control-test cycle</td></tr>
+        <tr><td class="mono">⑤ EVIDENCE</td><td>audit + lineage agents — trail + lineage capture</td><td>audit-prep scramble</td></tr>
+        <tr><td class="mono">⑥ CONFIRM</td><td>attest + report agents, <strong>plus human four-eyes</strong></td><td>sign-off meetings</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="ba">
+      <div class="col was"><h4>Before — point-in-time</h4>
+        <ul>
+          <li>Humans in the loop; countless meetings and handoffs</li>
+          <li>Periodic reviews; evidence gathered after the fact</li>
+          <li>Compliance proven at audit time — a scramble</li>
+          <li>Assurance is a snapshot, and quickly goes stale</li>
+        </ul>
+        <div class="verdict">slow, costly, current only to the last review</div>
+      </div>
+      <div class="col now"><h4>On the Loom — continuous</h4>
+        <ul>
+          <li>Agents pulled in by the harness on every trigger</li>
+          <li>Review, testing and evidence run automatically, always-on</li>
+          <li>Compliance is a property of the line, not an event</li>
+          <li>Every commitment confirmed live — always audit-ready</li>
+        </ul>
+        <div class="verdict">fast, cheap, current to the last commit</div>
+      </div>
+    </div>
+    <p class="caption">The loop never ends — it re-runs on the next trigger, and every cycle
+    writes back to the brain. Humans are not removed; they are reserved for judgement and the
+    approvals that must stay human.</p>
+  </div>
+</section>
+
+<section id="governance">
+  <div class="wrap">
+    <div class="eyebrow">Who assures the AI</div>
+    <h2>Governance — AI proposes; humans and a protected control plane <em>dispose.</em></h2>
+    <p class="lede">An ungoverned agent can author, self-review, self-merge, deploy, and edit its
+    own guardrails. The HG catalog is the set of decisions that closes each of those gaps —
+    written as real ADRs by the adopting institution, each naming its enforcement of record.</p>
+
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>Gap in an ungoverned harness</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">HG-0001</td><td>Self-merge, no human four-eyes</td><td>Human-approved merges via enforced branch protection</td></tr>
+        <tr><td class="mono">HG-0002</td><td>Agent can edit its own guardrails</td><td>Immutable control plane — hooks, gates, CI outside the agent's write scope</td></tr>
+        <tr><td class="mono">HG-0003</td><td>Self-attested change records</td><td>Externally-anchored, tamper-evident evidence</td></tr>
+        <tr><td class="mono">HG-0004</td><td>Broad agent credentials</td><td>Least-privilege identity + vaulted secrets</td></tr>
+        <tr><td class="mono">HG-0005</td><td>Auto-deploy, no promotion</td><td>Staged promotion with a human production gate + rollback</td></tr>
+        <tr><td class="mono">HG-0006</td><td>The agent is an ungoverned model</td><td>Model-risk governance for the harness itself</td></tr>
+        <tr><td class="mono">HG-0007</td><td>Delivery built the wrong thing</td><td>Discovery precedes delivery — the waist gate</td></tr>
+        <tr><td class="mono">HG-0008</td><td>Domain hard-coded into the harness</td><td>Solution-agnostic seams: register + brand profile</td></tr>
+        <tr><td class="mono">HG-0009</td><td>The right diamond was a straight line</td><td>Develop diverges before delivery converges</td></tr>
+        <tr><td class="mono">HG-0010</td><td>No cease-use capability</td><td>Kill-switch + a named accountable officer</td></tr>
+        <tr><td class="mono">HG-0011</td><td>Residency-uncontrolled AI traffic</td><td>Onshore model gateway + pre-egress DLP</td></tr>
+        <tr><td class="mono">HG-0012</td><td>"Green" by retrieval, not derivation</td><td>Controlled build runtime + derivation audit</td></tr>
+      </tbody>
+    </table></div>
+    <p class="caption">A skill that honours a rule is hygiene; the control is the platform
+    mechanism the agent cannot bypass. An HG id with no ADR behind it is a label, not a
+    control.</p>
+  </div>
+</section>
+
+<section id="proof">
+  <div class="wrap">
+    <div class="eyebrow">The proof — and the limits</div>
+    <h2>Proven on Open Finance. <em>Stated plainly.</em></h2>
+    <p class="lede">The first build on the Loom was a bank-neutral UAE Open Finance back office:
+    an autonomous loop carried 134 of ~139 backlog stories to done under the full gate set, every
+    merge by human four-eyes, on synthetic data — and the discovery harness took real problems
+    end to end through all nine gates. A method worth adopting also names its own risks:</p>
+
+    <div class="grid g2">
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>Demo-proven, not production-proven</h3>
+        <p>The proof runs on synthetic data and is permanently non-production. It shows the
+        method produces a real, gated, audit-evidenced system; it has not yet cleared a live
+        regulator examination or production scale.</p></div>
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>"Any domain" is early evidence</h3>
+        <p>One bounded greenfield domain proved the loop. Legacy integration, real data, and
+        organisational change are the true costs elsewhere — and are not yet in the cost
+        curve.</p></div>
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>The brain must be curated</h3>
+        <p>Bad context compounds as readily as good. The brain is governed, versioned, and
+        quality-checked — curation is a control, not housekeeping.</p></div>
+      <div class="card"><h3><span class="dia" aria-hidden="true"></span>AI model risk is real</h3>
+        <p>The agents need ongoing validation, monitoring, and independent challenge — that is
+        what the catalog's model-risk decisions exist for.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="adopt">
+  <div class="wrap">
+    <div class="eyebrow">Adopt it</div>
+    <h2>The Loom ships as a <em>plugin.</em></h2>
+    <p class="lede">The method canon, the gate validator, the branded renderer, the artifact
+    templates, the build-loop skills, the reviewer agents, and the guardrail hooks — packaged for
+    Claude Code, adopted into a repository in one guided pass.</p>
+    <div class="codeblock">
+<span class="c">// in Claude Code</span><br>
+/plugin marketplace add middleleap/ai-dlc<br>
+/plugin install middleleap-loom@middleleap-ai-dlc<br>
+<br>
+<span class="c">// then, in the repository that adopts the method</span><br>
+/middleleap-loom:loom-adopt
+    </div>
+    <p class="caption">Installing adds two skills and two reviewer agents — nothing always-on.
+    The hooks and the build loop activate only when a repository adopts them explicitly. The
+    machinery is verified in CI by a full adoption dry-run: the bundled test suites must pass in
+    the adopted layout on every push.</p>
+    <div class="btnrow" style="margin-top:24px">
+      <a class="btn btn-primary" href="https://github.com/middleleap/ai-dlc"><span class="m" aria-hidden="true"></span>Browse the marketplace</a>
+      <a class="btn btn-secondary" href="https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-loom">Plugin documentation</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="lockup">
+      <span class="mark" aria-hidden="true"><span class="sq" style="width:12px;height:12px"></span><span class="dm" style="width:12px;height:12px;animation:none"></span></span>
+      <span class="wordmark" style="font-size:14px">Middle<b>Leap</b></span>
+    </div>
+    <p>The Loom · Apache 2.0 · <a href="https://github.com/middleleap/ai-dlc">middleleap/ai-dlc</a></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var DESC={
+    warp:{t:"Warp — the always-on controls",p:"The threads under tension: four-eyes approval, INSERT-only audit, data lineage, the quality gates, data residency. They are strung before any weaving starts and every pass of the shuttle crosses them — controls are the frame, not an afterthought."},
+    harness:{t:"Harnesses — discovery + delivery",p:"The discovery harness finds the right problem (Discover → Define, gates D1–D9, ending in a hand-off). The delivery harness builds it right (Develop → Deliver, the autonomous loop, gates Q1–Q5, human merge). Together they form the double diamond."},
+    shuttle:{t:"Shuttle — the AI agents",p:"The agents the harness pulls in to weave continuously: the build loop, the reviewer agents, the gate runners, the assurance lifecycle. The shuttle moves fast because the warp holds the tension — autonomy is safe because the controls are always on."},
+    pattern:{t:"Pattern — the institution's brain",p:"The governed context the harnesses read at every step and write back to after every cycle: regulated context (the register), solution domain (the contract and data model), and institutional DNA (how this entity works). This is the moat — it cannot be copied, only built."},
+    cloth:{t:"Cloth — audit-ready software",p:"What comes off the loom: live, demonstrable, evidence-sealed solutions. Open Finance was the first; payments, lending, onboarding, and servicing reuse the same frame. One loom, any domain."}
+  };
+  var fig=document.getElementById('loomfig'),desc=document.getElementById('loomdesc');
+  var parts=fig.querySelectorAll('.loompart'),btns=document.querySelectorAll('.loomlegend button');
+  function activate(key){
+    fig.classList.add('dimmed');
+    parts.forEach(function(p){p.classList.toggle('active',p.dataset.part===key)});
+    btns.forEach(function(b){b.classList.toggle('active',b.dataset.part===key)});
+    var d=DESC[key];
+    desc.innerHTML='<div class="t">'+d.t+'</div><p>'+d.p+'</p>';
+  }
+  function clear(){
+    fig.classList.remove('dimmed');
+    parts.forEach(function(p){p.classList.remove('active')});
+    btns.forEach(function(b){b.classList.remove('active')});
+  }
+  parts.forEach(function(p){
+    var k=p.dataset.part;
+    p.addEventListener('mouseenter',function(){activate(k)});
+    p.addEventListener('mouseleave',clear);
+    p.addEventListener('focus',function(){activate(k)});
+    p.addEventListener('click',function(){activate(k)});
+    p.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();activate(k);}});
+  });
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){activate(b.dataset.part)});
+    b.addEventListener('mouseenter',function(){activate(b.dataset.part)});
+  });
+})();
+</script>
+</body>
+</html>

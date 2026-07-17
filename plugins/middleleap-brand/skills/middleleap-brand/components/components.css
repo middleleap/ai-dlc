@@ -1,0 +1,110 @@
+/* MiddleLeap component styles · v2.0 · import after tokens.css */
+@import '../tokens.css';
+
+/* ---------- Mark ---------- */
+.ml-mark{display:inline-flex;align-items:center}
+.ml-mark__sq{background:var(--bone-1)}
+.ml-mark__dm{background:var(--ember-grad);transform:rotate(45deg)}
+.ml-mark--animate .ml-mark__dm{animation:ml-leap-in .9s var(--ease-leap) .3s both}
+@keyframes ml-leap-in{
+  0%{transform:rotate(0) translateX(-.75em);opacity:0}
+  35%{opacity:1}
+  100%{transform:rotate(45deg) translateX(0);opacity:1}
+}
+.ml-wordmark{font-family:var(--font-body);font-weight:600;letter-spacing:-.02em;color:var(--bone-1)}
+.ml-wordmark b{font-weight:600;color:var(--ember-500)}
+
+/* ---------- Button ---------- */
+.ml-btn{font-family:var(--font-mono);font-weight:500;font-size:13px;letter-spacing:.08em;
+  text-transform:uppercase;border:none;border-radius:var(--r-ui);padding:14px 22px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:10px;transition:all var(--dur-base) var(--ease-out)}
+.ml-btn__pv{width:9px;height:9px;border-radius:2px;background:currentColor;
+  transition:transform var(--dur-leap) var(--ease-leap)}
+.ml-btn:hover .ml-btn__pv{transform:rotate(45deg)}
+.ml-btn--primary{background:var(--ember-500);color:#110D0A}
+.ml-btn--primary:hover{background:var(--ember-400);box-shadow:var(--shadow-ember);transform:translateY(-1px)}
+.ml-btn--secondary{background:transparent;color:var(--bone-1);border:1px solid var(--ink-4)}
+.ml-btn--secondary:hover{border-color:var(--bone-3);background:var(--ink-2)}
+.ml-btn--ghost{background:transparent;color:var(--ember-400)}
+.ml-btn--ghost:hover{background:var(--ember-dim)}
+.ml-btn--danger{background:var(--danger-btn-bg);color:#fff}
+.ml-btn:disabled{opacity:.38;cursor:not-allowed;transform:none;box-shadow:none}
+.ml-btn--sm{padding:10px 16px;font-size:11.5px}
+.ml-btn--lg{padding:17px 28px;font-size:13.5px}
+.ml-btn:focus-visible{outline:2px solid var(--ember-400);outline-offset:2px}
+
+/* ---------- Field ---------- */
+.ml-field{display:flex;flex-direction:column;gap:8px}
+.ml-field__label{font-family:var(--font-body);font-size:var(--fs-small);color:var(--bone-1);font-weight:600}
+.ml-field__input{background:var(--ink-0);border:1px solid var(--ink-4);border-radius:var(--r-ui);
+  padding:11px 14px;color:var(--bone-0);font-family:var(--font-body);font-size:15px;
+  transition:border-color var(--dur-base) var(--ease-out)}
+.ml-field__input:hover{border-color:var(--bone-4)}
+.ml-field__input:focus{outline:none;border-color:var(--ember-500);box-shadow:0 0 0 3px var(--ember-dim)}
+.ml-field__hint{font-size:var(--fs-caption);color:var(--bone-3)}
+.ml-field--error .ml-field__input{border-color:var(--critical)}
+.ml-field--error .ml-field__hint{color:var(--critical-text)}
+
+/* ---------- Checkbox (the pivot) ---------- */
+.ml-check{display:inline-flex;align-items:center;gap:12px;cursor:pointer;
+  font-family:var(--font-body);font-size:15px;color:var(--bone-1)}
+.ml-check input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.ml-check__box{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--ink-4);
+  background:var(--ink-0);transition:all var(--dur-leap) var(--ease-leap)}
+.ml-check input:checked + .ml-check__box{background:var(--ember-grad);border-color:transparent;
+  transform:rotate(45deg) scale(.88)}
+.ml-check:hover .ml-check__box{border-color:var(--bone-3)}
+.ml-check input:focus-visible + .ml-check__box{outline:2px solid var(--ember-400);outline-offset:2px}
+
+/* ---------- Toggle ---------- */
+.ml-toggle{position:relative;display:inline-block;width:48px;height:26px;cursor:pointer}
+.ml-toggle input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.ml-toggle__track{position:absolute;inset:0;background:var(--ink-3);border:1px solid var(--ink-4);
+  border-radius:var(--r-pill);transition:background var(--dur-base) var(--ease-out)}
+.ml-toggle__thumb{position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:5px;
+  background:var(--bone-2);transition:all var(--dur-leap) var(--ease-leap)}
+.ml-toggle input:checked ~ .ml-toggle__track{background:var(--ember-600);border-color:var(--ember-500)}
+.ml-toggle input:checked ~ .ml-toggle__thumb{left:26px;background:var(--bone-0);transform:rotate(45deg)}
+.ml-toggle input:focus-visible ~ .ml-toggle__track{outline:2px solid var(--ember-400);outline-offset:2px}
+
+/* ---------- Badge ---------- */
+.ml-badge{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);
+  font-size:11.5px;letter-spacing:.06em;padding:5px 11px;border-radius:var(--r-chip);text-transform:uppercase}
+.ml-badge__dot{width:7px;height:7px;border-radius:2px;transform:rotate(45deg)}
+.ml-badge--ember{background:var(--ember-dim);color:var(--ember-300)}.ml-badge--ember .ml-badge__dot{background:var(--ember-400)}
+.ml-badge--positive{background:var(--positive-dim);color:var(--positive)}.ml-badge--positive .ml-badge__dot{background:var(--positive)}
+.ml-badge--caution{background:var(--caution-dim);color:var(--caution)}.ml-badge--caution .ml-badge__dot{background:var(--caution)}
+.ml-badge--critical{background:var(--critical-dim);color:var(--critical-text)}.ml-badge--critical .ml-badge__dot{background:var(--critical)}
+.ml-badge--neutral{background:var(--ink-3);color:var(--bone-2)}.ml-badge--neutral .ml-badge__dot{background:var(--bone-3)}
+
+/* ---------- Card ---------- */
+.ml-card{background:var(--ink-2);border:1px solid var(--ink-border);border-radius:var(--r-ui);
+  padding:var(--s-5);transition:all var(--dur-base) var(--ease-out)}
+.ml-card:hover{border-color:var(--ink-4);transform:translateY(-2px);box-shadow:var(--shadow-2)}
+.ml-card__title{font-family:var(--font-display);font-weight:400;font-size:20px;
+  color:var(--bone-0);margin:14px 0 6px}
+.ml-card__body{font-family:var(--font-body);font-size:var(--fs-small);color:var(--bone-2)}
+
+/* ---------- Alert ---------- */
+.ml-alert{display:flex;gap:14px;padding:var(--s-4) var(--s-5);border-radius:var(--r-ui);
+  font-family:var(--font-body);font-size:var(--fs-small);border:1px solid;align-items:flex-start;color:var(--bone-1)}
+.ml-alert__dot{flex:none;width:10px;height:10px;border-radius:3px;transform:rotate(45deg);margin-top:5px}
+.ml-alert__title{display:block;font-weight:600;margin-bottom:2px;color:var(--bone-0)}
+.ml-alert--positive{background:var(--positive-dim);border-color:rgba(95,166,113,.3)}.ml-alert--positive .ml-alert__dot{background:var(--positive)}
+.ml-alert--caution{background:var(--caution-dim);border-color:rgba(217,160,60,.3)}.ml-alert--caution .ml-alert__dot{background:var(--caution)}
+.ml-alert--critical{background:var(--critical-dim);border-color:rgba(214,69,69,.3)}.ml-alert--critical .ml-alert__dot{background:var(--critical)}
+.ml-alert--info{background:var(--info-dim);border-color:rgba(93,143,166,.3)}.ml-alert--info .ml-alert__dot{background:var(--info)}
+
+/* ---------- Loader ---------- */
+.ml-loader{width:34px;height:34px;border-radius:7px;background:var(--ember-grad);
+  animation:ml-pivot-loop 1.6s var(--ease-leap) infinite}
+@keyframes ml-pivot-loop{0%,15%{transform:rotate(0)}50%,70%{transform:rotate(45deg)}100%{transform:rotate(90deg)}}
+
+/* ---------- Eyebrow ---------- */
+.ml-eyebrow{font-family:var(--font-mono);font-size:var(--fs-caption);letter-spacing:.22em;
+  color:var(--ember-400);text-transform:uppercase}
+
+@media (prefers-reduced-motion:reduce){
+  .ml-mark--animate .ml-mark__dm,.ml-loader{animation-duration:.01ms}
+  .ml-btn,.ml-check__box,.ml-toggle__thumb,.ml-card{transition-duration:.01ms}
+}

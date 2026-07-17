@@ -1,0 +1,12 @@
+{
+  "name": "middleleap-brand",
+  "description": "MiddleLeap brand and design system — tokens, the Pivot logo rules, component recipes, voice and copy rules, and a WCAG AA gate. Use when building or reviewing any MiddleLeap interface, document, or marketing asset.",
+  "version": "2.0.0",
+  "author": {
+    "name": "MiddleLeap"
+  },
+  "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-brand",
+  "repository": "https://github.com/middleleap/ai-dlc",
+  "license": "Apache-2.0",
+  "keywords": ["brand", "design-system", "design-tokens", "middleleap", "accessibility"]
+}

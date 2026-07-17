@@ -1,0 +1,55 @@
+/* MiddleLeap design tokens · v2.0 · verified against middleleap.com, July 2026
+   Import this file; do not redeclare values. See DESIGN.md for usage rules. */
+:root{
+  /* Ink — surfaces */
+  --ink-0:#080808; --ink-1:#101010; --ink-2:#181817;
+  --ink-3:#232321; --ink-4:#33322F; --ink-border:#1E1E1C;
+
+  /* Bone — text on dark */
+  --bone-0:#ECE9E1; --bone-1:#DEDBD4; --bone-2:#A8A59E;
+  --bone-3:#87847D; /* AA >=4.8:1 on all surfaces */
+  --bone-4:#4A4945; /* disabled only */
+
+  /* Ember — accent */
+  --ember-300:#F58F55; --ember-400:#F0722E; --ember-500:#E65C2D;
+  --ember-600:#CE451B; --ember-700:#A83614;
+  --ember-grad:linear-gradient(135deg,#F0722E 0%,#CE451B 100%); /* the mark only */
+  --ember-dim:rgba(230,92,45,.14);
+
+  /* Semantic */
+  --positive:#5FA671; --positive-dim:rgba(95,166,113,.14);
+  --caution:#D9A03C;  --caution-dim:rgba(217,160,60,.14);
+  --critical:#D64545; --critical-text:#E06060; --critical-dim:rgba(214,69,69,.14);
+  --info:#5D8FA6;     --info-dim:rgba(93,143,166,.14);
+  --danger-btn-bg:#C43B3B; /* white text passes AA */
+
+  /* Type */
+  --font-display:'Instrument Serif',Georgia,serif; /* weight 400 only; em = italic ember */
+  --font-body:'DM Sans',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --fs-hero:clamp(44px,6vw,76px);
+  --fs-h1:42px; --fs-h2:30px; --fs-h3:22px;
+  --fs-body:16px; --fs-small:14px; --fs-caption:12.5px;
+  --lh-tight:1.08; --lh-head:1.2; --lh-body:1.6;
+
+  /* Space — 4px grid */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px;
+  --s-5:24px; --s-6:32px; --s-7:48px; --s-8:64px; --s-9:96px;
+
+  /* Radius — UI is sharp; radius belongs to the mark */
+  --r-ui:0; --r-chip:2px; --r-pill:999px;
+  --r-mark:16%; /* pivot glyphs only: logo, checkbox, toggle thumb, loader */
+
+  /* Elevation */
+  --shadow-1:0 1px 2px rgba(0,0,0,.5);
+  --shadow-2:0 4px 16px rgba(0,0,0,.45);
+  --shadow-ember:0 4px 24px rgba(230,92,45,.28); /* primary CTA hover only */
+
+  /* Motion — the pivot */
+  --dur-fast:120ms; --dur-base:200ms; --dur-leap:400ms;
+  --ease-out:cubic-bezier(.2,0,0,1);
+  --ease-leap:cubic-bezier(.34,1.3,.4,1);
+}
+@media (prefers-reduced-motion:reduce){
+  :root{--dur-fast:.01ms;--dur-base:.01ms;--dur-leap:.01ms}
+}

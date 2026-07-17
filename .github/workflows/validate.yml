@@ -1,0 +1,38 @@
+name: Validate marketplace
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate manifests, skills, and agents
+        run: node scripts/validate-marketplace.mjs
+
+      - name: Brand contrast gate (WCAG AA)
+        run: node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs
+
+      - name: Loom bundle — adoption dry-run (tests must pass in the adopted layout)
+        run: |
+          A="$RUNNER_TEMP/loom-adopt-dryrun"
+          P=plugins/middleleap-loom/skills
+          mkdir -p "$A/discovery/brand" "$A/docs/governance" "$A/scripts"
+          cp "$P/loom/references/discovery-harness.md" "$A/discovery/DISCOVERY.md"
+          cp -r "$P/loom-adopt/harness/discovery/gates"     "$A/discovery/gates"
+          cp -r "$P/loom-adopt/harness/discovery/render"    "$A/discovery/render"
+          cp -r "$P/loom-adopt/harness/discovery/templates" "$A/discovery/templates"
+          cp "$P/loom-adopt/harness/discovery/brand/design.md" "$A/discovery/brand/design.md"
+          cp -r "$P/loom-adopt/harness/discovery/brand/examples" "$A/discovery/brand/examples"
+          cp "$P/loom-adopt/harness/scripts/discovery-link-check.mjs" "$A/scripts/"
+          cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
+          printf 'milestones: []\n' > "$A/docs/backlog.yaml"
+          cd "$A"
+          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs
+          node scripts/discovery-link-check.mjs

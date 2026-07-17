@@ -1,0 +1,90 @@
+{
+  "name": "middleleap-ai-dlc",
+  "owner": {
+    "name": "MiddleLeap"
+  },
+  "description": "MiddleLeap AI DLC — downloadable content for AI-enabled development: skills, agents, and workflows for regulated software delivery.",
+  "version": "2.0.0",
+  "plugins": [
+    {
+      "name": "middleleap-ai-sdlc",
+      "source": "./plugins/middleleap-ai-sdlc",
+      "description": "Practices and patterns for AI-enabled software development — CLAUDE.md authoring, a starter context template, and a structured code-review agent.",
+      "version": "1.0.0",
+      "author": {
+        "name": "MiddleLeap"
+      },
+      "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-ai-sdlc",
+      "repository": "https://github.com/middleleap/ai-dlc",
+      "license": "Apache-2.0",
+      "keywords": [
+        "claude-md",
+        "ai-sdlc",
+        "code-review",
+        "context-files",
+        "developer-experience"
+      ]
+    },
+    {
+      "name": "middleleap-open-finance",
+      "source": "./plugins/middleleap-open-finance",
+      "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, Islamic banking (Shariah-compliant finance), a virtual Head-of-Risk reviewer, and value-proposition prototyping.",
+      "version": "2.1.0",
+      "author": {
+        "name": "MiddleLeap"
+      },
+      "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-open-finance",
+      "repository": "https://github.com/middleleap/ai-dlc",
+      "license": "Apache-2.0",
+      "keywords": [
+        "uae",
+        "open-finance",
+        "cbuae",
+        "regulation",
+        "banking",
+        "risk",
+        "prototyping"
+      ]
+    },
+    {
+      "name": "middleleap-brand",
+      "source": "./plugins/middleleap-brand",
+      "description": "MiddleLeap brand and design system — tokens, the Pivot logo rules, component recipes, voice and copy rules, and a WCAG AA gate. Use when building or reviewing any MiddleLeap interface, document, or marketing asset.",
+      "version": "2.0.0",
+      "author": {
+        "name": "MiddleLeap"
+      },
+      "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-brand",
+      "repository": "https://github.com/middleleap/ai-dlc",
+      "license": "Apache-2.0",
+      "keywords": [
+        "brand",
+        "design-system",
+        "design-tokens",
+        "middleleap",
+        "accessibility"
+      ]
+    },
+    {
+      "name": "middleleap-loom",
+      "source": "./plugins/middleleap-loom",
+      "description": "The Loom — MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.",
+      "version": "1.1.0",
+      "author": {
+        "name": "MiddleLeap"
+      },
+      "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-loom",
+      "repository": "https://github.com/middleleap/ai-dlc",
+      "license": "Apache-2.0",
+      "keywords": [
+        "ai-sdlc",
+        "governance",
+        "double-diamond",
+        "discovery",
+        "delivery",
+        "regulated",
+        "autonomous-agents"
+      ]
+    }
+  ]
+}

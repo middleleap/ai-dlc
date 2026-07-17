@@ -1,69 +1,89 @@
 # Contributing to MiddleLeap AI DLC
 
-Thanks for contributing! This guide covers how to add any artifact type to the marketplace.
+Thanks for contributing! This repo is a **Claude Code plugin marketplace**. Everything ships inside a plugin — that's what makes it installable.
 
-## Artifact Types
+## Layout
 
-| Type | Directory | Entry File | Description |
-|------|-----------|------------|-------------|
-| Skill | `skills/<category>/` | `SKILL.md` | Domain expertise and instructions |
-| Plugin | `plugins/<category>/` | `PLUGIN.md` | Reusable agent extensions |
-| Agent | `agents/<category>/` | `AGENT.md` | Pre-built agent configurations |
-| Tool | `tools/<category>/` | `TOOL.md` | Standalone utilities |
-| MCP Server | `mcp-servers/<category>/` | `SERVER.md` | MCP server configurations |
+```
+.claude-plugin/marketplace.json     # the marketplace manifest — lists every plugin
+plugins/
+└── <plugin-name>/
+    ├── .claude-plugin/plugin.json  # the plugin manifest
+    ├── README.md
+    ├── skills/<skill-name>/SKILL.md
+    ├── agents/<agent-name>.md
+    ├── commands/<command-name>.md
+    └── hooks/hooks.json
+```
 
-## How to Add an Artifact
+The directory names inside a plugin (`skills/`, `agents/`, `commands/`, `hooks/`) are discovered automatically — don't rename them.
 
-1. **Create the folder** under the appropriate type and category directory:
-   ```
-   skills/finance/my-new-skill/
-   ```
+Note the asymmetry, because it's a common mistake: a **skill** is a *directory* containing `SKILL.md`, while an **agent** is a *flat markdown file*. `agents/code-reviewer/AGENT.md` will not be discovered; `agents/code-reviewer.md` will.
 
-2. **Add the entry file** (e.g., `SKILL.md`) with YAML frontmatter:
+## Adding a skill to an existing plugin
+
+1. Create `plugins/<plugin>/skills/<skill-name>/SKILL.md` with YAML frontmatter:
+
    ```yaml
    ---
    name: my-new-skill
-   description: What this skill does and when to use it
+   description: What this does, and when Claude should use it. Include the trigger words a user would actually type.
    ---
    ```
 
-3. **Add supporting files** under `references/` and/or `assets/` subdirectories.
+   `description` is what Claude reads to decide whether to load the skill — it's the highest-leverage field in the file. Keep it under 1024 characters. `name` is optional (it defaults to the folder name), but we set it explicitly.
 
-4. **Register in `marketplace.json`** — add an entry to the `artifacts` array:
-   ```json
-   {
-     "name": "my-new-skill",
-     "type": "skill",
-     "category": "finance",
-     "description": "Short description",
-     "source": "skills/finance/my-new-skill",
-     "version": "1.0.0",
-     "tags": ["relevant", "tags"],
-     "format": "agent-skills"
-   }
-   ```
+2. Put supporting documents in `references/` and images in `assets/` alongside `SKILL.md`.
 
-5. **Submit a pull request.**
+3. Bump the plugin's `version` in **both** `plugins/<plugin>/.claude-plugin/plugin.json` and its entry in `.claude-plugin/marketplace.json`.
 
-## Naming Conventions
+## Adding a new plugin
 
-- Use **lowercase-kebab-case** for all folder and file names
-- Category folders group related artifacts (e.g., `finance`, `devops`, `healthcare`)
-- Keep names descriptive but concise
+1. Create `plugins/<plugin-name>/.claude-plugin/plugin.json` — copy an existing one and edit.
+2. Add a matching entry to the `plugins` array in `.claude-plugin/marketplace.json`, with an explicit `"source": "./plugins/my-plugin"`.
 
-## Size Guidelines
+   Write the path out in full. The `metadata.pluginRoot` shortcut (a bare `"source": "my-plugin"`) is documented, but current Claude Code releases reject it at install time with *"This plugin uses a source type your Claude Code version does not support"* — and the marketplace still *adds* cleanly, so the breakage only surfaces when a user tries to install. Don't reintroduce it.
+3. Add a `README.md` covering what's in it and how to install it.
+4. List it in the root `README.md`.
 
-- **Skills**: < 1 MB total (text-based references and small SVG assets are fine)
-- **No large binaries**: Do not commit `.fig`, `.psd`, `.png` > 100 KB, or other design files. Host them in a separate repo (see [open-finance-assets](https://github.com/middleleap/open-finance-assets) for an example)
-- **No `node_modules`** or generated artifacts
+## Versioning — this one matters
 
-## Quality Checklist
+`version` is what decides whether existing users receive your change. **Ship an update without bumping it and nobody gets it.** Bump the plugin version on every content change:
 
-- [ ] Entry file has valid YAML frontmatter with `name` and `description`
-- [ ] Folder follows lowercase-kebab-case naming
-- [ ] Registered in `marketplace.json`
-- [ ] No large binary files included
-- [ ] Description is accurate and triggers are well-defined
+- patch — typo, clarification, small correction
+- minor — new skill, new agent, meaningful new content
+- major — restructure, removal, or anything that breaks existing usage
+
+## Naming
+
+- **lowercase-kebab-case** for every folder and file
+- Plugin names are public and namespace their skills (`/my-plugin:my-skill`) — pick something you won't regret
+- Keep names descriptive but short
+
+## Size
+
+Every install clones the plugin, so weight matters — but completeness matters more.
+
+- **Ship everything the skill references.** If `SKILL.md` or `DESIGN.md` names a file, that file must be in the plugin. A skill pointing at something it doesn't ship is broken in the most confusing way possible: it looks fine until an agent tries to read it. This rule outranks the size ones below — `middleleap-brand` carries a 132 KB `og-image.png` because its skill references it.
+- **No design source files** — `.fig`, `.psd`, `.sketch`. Host those separately (see [open-finance-assets](https://github.com/middleleap/open-finance-assets)) and link to them.
+- **Keep a plugin under about 1 MB.** `middleleap-brand` is the current heaviest at ~260 KB. If you're approaching the limit, the question is whether the assets belong in a skill at all.
+- No `node_modules/` or generated output.
+
+## Before you open a PR
+
+Run the validator — CI runs the same check:
+
+```bash
+node scripts/validate-marketplace.mjs
+```
+
+It verifies both manifests parse, every plugin source resolves, versions agree between the two manifests, and every skill and agent is where Claude Code will look for it.
+
+Then confirm the marketplace actually loads:
+
+```
+/plugin marketplace add ./
+```
 
 ## License
 
