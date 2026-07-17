@@ -21,9 +21,16 @@ plugins/
 │   ├── skills/open-finance-uae/
 │   ├── skills/altareq-brand-guidelines/
 │   └── skills/open-finance-uiux/
-└── middleleap-brand/               # MiddleLeap brand & design system (v2.0)
+├── middleleap-brand/               # MiddleLeap brand & design system (v2.0)
+│   ├── .claude-plugin/plugin.json
+│   └── skills/middleleap-brand/    # SKILL.md, DESIGN.md, tokens, components, assets
+└── middleleap-loom/                # The Loom — the AI-SDLC method (flagship)
     ├── .claude-plugin/plugin.json
-    └── skills/middleleap-brand/    # SKILL.md, DESIGN.md, tokens, components, assets
+    ├── agents/                     # discovery-boundary + data-governance reviewers
+    └── skills/
+        ├── loom/                   # method canon + references (discovery/delivery/governance)
+        └── loom-adopt/             # adoption skill + harness/ bundle (gates, renderer,
+                                    #   templates, hooks, skills — copied into adopting repos)
 scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 ```
 
@@ -58,7 +65,7 @@ Reference files carry regulatory figures, dates, and AED amounts. Treat them as 
 
 - **Brand spelling is inconsistent** — both `AlTareq` and `Al Tareq` appear across the Open Finance skills. Canonical spelling is undecided; don't "fix" one way without confirming.
 - **The skills here lag the canonical copies**, which live in the Claude.ai skills UI and must be exported manually. A separate `uae-open-finance` skill (technical/integration focus: Ozone Connect, FAPI/OIDC, sandbox vs production) exists outside this repo and has never been merged in.
-- **The Loom** — the reusable discovery/delivery harness — currently lives in the `ofbo` repo (`docs/the-loom.html`, `docs/discovery-harness.md`, `.claude/`). The plan is to extract the generic harness here as a plugin and leave the OFBO-specific instantiation there.
+- **The Loom** is extracted here as `plugins/middleleap-loom` (the generic harness). The OFBO-specific instantiation — the CBUAE data-risk register, OFBO brand profile, OFBO hard-stop checklists, Q1–Q5 CI workflows, and the three `the-loom*.html` decks — stays in the `ofbo` repo as the worked example. The `loom-adopt` bundle's copy of the machinery must track upstream fixes made in `ofbo/discovery/` (no automated sync; CI's adoption dry-run catches breakage, not drift).
 
 ## Git
 

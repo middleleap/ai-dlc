@@ -35,6 +35,17 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 | Skill | `altareq-brand-guidelines` | Brand implementation — consent screens, payment buttons, CX certification |
 | Skill | `open-finance-uiux` | Value-proposition prototyper — solution decks and interactive journey mockups |
 
+### [middleleap-loom](plugins/middleleap-loom/)
+
+**The Loom** — MiddleLeap's method for how a regulated entity builds software with AI: a gated discovery harness (D1–D9), an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | `loom` | The method canon — the double diamond, the gate models, the context brain, the governance catalog (HG-0001…HG-0012) |
+| Skill | `loom-adopt` | Stands the harness up in a repo — gate validator, branded renderer, artifact templates, waist gate, five build-loop skills, reviewer templates, guardrail hooks |
+| Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line and prototype fidelity on discovery runs |
+| Agent | `data-governance-reviewer` | Judges control coverage and residual-risk soundness beyond the mechanical D6 gate |
+
 ### [middleleap-brand](plugins/middleleap-brand/)
 
 The MiddleLeap brand and design system — v2.0, verified against middleleap.com.
