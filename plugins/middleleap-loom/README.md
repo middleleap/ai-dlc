@@ -11,6 +11,11 @@ context. Proven end-to-end on a UAE Open Finance back office: an autonomous buil
 /plugin install middleleap-loom@middleleap-ai-dlc
 ```
 
+Human-facing documentation: **[docs/the-loom.html](../../docs/the-loom.html)** — the interactive
+page showing how the Loom works (the loom figure, the double diamond, the brain, continuous
+assurance, the governance catalog). The plugin's markdown canon and that page are the same
+method in two forms: agents read the skill; people read the page.
+
 ## What's in it
 
 | Type | Name | What it does |

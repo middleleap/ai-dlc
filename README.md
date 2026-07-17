@@ -39,6 +39,8 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 
 **The Loom** — MiddleLeap's method for how a regulated entity builds software with AI: a gated discovery harness (D1–D9), an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.
 
+**[Read how the Loom works →](docs/the-loom.html)** — the interactive, human-facing documentation page (open it in a browser).
+
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | `loom` | The method canon — the double diamond, the gate models, the context brain, the governance catalog (HG-0001…HG-0012) |

@@ -51,6 +51,10 @@ Full canon for each half:
   pattern, the guardrail hooks, and the merge policy: **the agent proposes; a human disposes.**
 - `references/governance.md` — the harness-governance catalog (HG-0001…HG-0012): the decisions
   that make an autonomous loop acceptable to a regulated institution.
+- `references/continuous-assurance.md` — what happens after the build: the harness pulls
+  assurance agents through the six-step regulatory lifecycle (watch, assess, check, test,
+  evidence, confirm) on every trigger, so compliance is current to the last commit rather than
+  to the last meeting.
 
 ## The context brain — why the method compounds
 
@@ -68,7 +72,26 @@ dimensions:
    profile** seam (gate D7 reads it) plus `CLAUDE.md` and the ADRs.
 
 The moat test: if a competitor copied the entire codebase tomorrow, what would they still lack?
-The accumulated, governed context. It cannot be copied — only built, cycle after cycle.
+The accumulated, governed context. It cannot be copied — only built, cycle after cycle. And the
+brain is *governed*, not merely accumulated: access-controlled, versioned, auditable, with
+owners and a change history. Bad context compounds as readily as good — curation is a control.
+
+## Limits — what the method can claim, stated plainly
+
+A method worth adopting names its own risks:
+
+- **Proven on a demo, not yet in production.** The Open Finance proof runs on synthetic data
+  and is permanently non-production. It shows the method produces a real, gated,
+  audit-evidenced system; it has not yet cleared a live regulator examination or production
+  scale.
+- **"Any domain" is early evidence, not a measured result.** One bounded greenfield domain
+  proved the loop; a second problem ran through the discovery machinery. Legacy integration,
+  real data, and organisational change are the true costs elsewhere, and are not yet in the
+  cost curve.
+- **The cost/moat curve is illustrative** — directional, not measured ROI.
+- **The brain must be curated** — governed, versioned, quality-checked, not merely accumulated.
+- **AI model risk is real.** The agents need ongoing validation, monitoring, and independent
+  challenge — that is what the HG catalog's model-risk decisions exist for.
 
 ## The one-sentence guardrail
 
