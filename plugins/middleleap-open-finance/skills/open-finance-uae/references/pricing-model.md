@@ -2,6 +2,8 @@
 
 **Version**: 1.0 | **Publication Date**: Oct 4, 2024 | **Classification**: Public
 
+> **Verification note (8 June 2026):** The OF Confluence "Commercial and Pricing Model" page was edited on **2 June 2026**, but the document version label remains **1.0 (4 Oct 2024)** and the fee schedule below is unchanged. The Jun 2 edit appears non-substantive (no version bump). **If a Version 2.0 of the Commercial and Pricing Model is ever published, treat every figure below as stale and re-extract.**
+
 ## Table of Contents
 1. [Key Principles](#key-principles)
 2. [CBUAE Licensing Fees](#cbuae-licensing-fees)
@@ -11,6 +13,7 @@
 6. [Open Banking - Quotes](#open-banking---quotes)
 7. [Open Insurance](#open-insurance)
 8. [Open Foreign Exchange](#open-foreign-exchange)
+9. [Billing and Settlement](#billing-and-settlement)
 
 ---
 
@@ -179,6 +182,8 @@ Charged to TPPs based on API call consumption, invoiced and collected by Nebras.
 
 **TPP to LFI**: FREE
 
+**API Hub Fees for Insurance Quotes**: **12.5 fils** (maximum tier fee applies to insurance quote provision)
+
 **LFI to TPP (Commissions)**: Default commissions apply absent bilateral agreements:
 
 | Insurance Type | Commission |
@@ -197,6 +202,8 @@ Charged to TPPs based on API call consumption, invoiced and collected by Nebras.
 
 **Health Insurance Note (**)**: 5% cap applies to employees earning < 4,000 AED/month (Dubai, Abu Dhabi, other Emirates)
 
+**Insurance Quote Fee Note**: The API Hub fee for insurance quotes is **12.5 fils** per API call, charged to the TPP initiating the quote request.
+
 **Commission Rules:**
 - Not paid until 30 days after policy sale (cool-off/free-look periods pass)
 - Clawback applies for life assurance cancellation within first 2 years
@@ -214,6 +221,15 @@ Charged to TPPs based on API call consumption, invoiced and collected by Nebras.
 | Direction | Fee |
 |-----------|-----|
 | TPP to LFI | **FREE** for Remittance, FX, Onboarding |
+
+### FX Data & Quotes API Pricing
+
+| Service | Fee |
+|---------|-----|
+| FX Data & Quotes API (TPP to LFI) | **FREE** |
+| FX Quotes (per provider tier) | See Quotes API Fees section |
+
+*FX quotes follow the same tiered fee structure as other quotes (5-12.5 fils depending on number of providers)*
 
 ### End User to TPP Caps
 
@@ -240,3 +256,53 @@ Charged to TPPs based on API call consumption, invoiced and collected by Nebras.
 - Self-invoicing arrangements permitted between TPPs and LFIs
 - Participants may be required to provide Direct Debit/VOD consents to Nebras
 - All participants MUST comply with Nebras collection requirements
+
+---
+
+## Per-Endpoint Chargeability (API Hub Fees)
+
+> Source: `https://nebras-open-finance.com/pricing/` and `https://nebras-open-finance.com/pricing/endpoints/` (77-endpoint table), verified 10 June 2026.
+
+**Principle:** only endpoints that **pull data from an LFI** or **instruct a payment** attract the Nebras per-call fee. Consent raise/check, authentication, discovery, and reference-data lookups are free. Chargeable = 2.5 fils unless tiered; "disc." = 0.5 fils when paired with a payment within 2 hours.
+
+| Category | Endpoints | Fee status |
+|---|---|---|
+| Consent & authorization | `POST /par`, `POST /token`, `GET`/`PATCH /account-access-consents[/{ConsentId}]`, `GET`/`PATCH /payment-consents[/{ConsentId}]`, `GET`/`PATCH /insurance-consents[/{ConsentId}]` | **FREE** |
+| Bank data sharing | `GET /accounts`, `GET /accounts/{AccountId}`, `…/balances` (**disc.**), `…/beneficiaries`, `…/direct-debits`, `…/parties`, `…/product`, `…/scheduled-payments`, `…/standing-orders`, `…/statements`, `…/transactions`, `GET /parties` | **Chargeable** |
+| Insurance data sharing | `GET /{sector}-insurance-policies[/{InsurancePolicyId}]` — all 7 sectors (motor/health/home/renters/travel/life/employment) | **Chargeable** |
+| Payment initiation | `POST /payments` | **Chargeable** |
+| Payment status | `GET /payments` (PaymentId from idempotency key), `GET /payments/{PaymentId}` | **FREE** |
+| Refund account | `GET /payment-consents/{ConsentId}/refund` | **Chargeable** |
+| Insurance quote creation | `POST /{sector}-insurance-quotes` | **Chargeable — tiered 5–12.5 fils** by number of LFIs returning quotes |
+| Quote retrieval | `GET /{sector}-insurance-quotes/{QuoteId}` | **FREE** |
+| Quote accept / policy create | `PATCH /{sector}-insurance-quotes/{QuoteId}` (accept/submit KYC), `POST /{sector}-insurance-policies` | **Chargeable — flat 2.5 fils** (tiered rate applies to the POST quote only) |
+| Confirmation of Payee | `POST /confirmation` | **Chargeable** (**disc.**) |
+| CoP discovery | `POST /discovery` | **FREE** |
+| ATMs / products / leads | `GET /atms`, `GET /products`, `POST /leads` | **FREE** |
+| Onboarding & directory | `POST /tpp-registration`, `GET /participants` | **FREE** |
+
+**Paired-discount limit:** one payment discounts **only one Balance call AND one CoP call** to 0.5 fils (within 2 hours of the payment).
+
+**Practical implications:** payment status polling is free; consent management is free; quote retrieval after creation is free; the balance check is the only discounted data call besides CoP confirmation.
+
+**Other rules from the pricing page (10 Jun 2026):**
+- Segment definitions: Corporate = turnover **> AED 100m/year**; Large Value / Rent / Invoice Collection = embedded payment link in a smart invoice or equivalent (e.g. rent, retail/SME invoices **above AED 5,000**).
+- SME bulk: **no limit on the number of transactions in a batch** (the caps are 25 fils/tx and 250 fils/batch).
+- Fee caps apply **whether the payment settles through Aani Core or an alternative rail**; LFIs MUST NOT impose additional end-user charges for OF-initiated payments.
+- End-user pricing, LFI→TPP commissions and CBUAE license fees are governed elsewhere in the AlTareq Standards (covered above in this file).
+- The page ships an interactive fee calculator (presets, year-stepped bps, 50-AED cap logic, free-threshold modelling) — a guide, not a quote.
+
+## Per-LFI Data-Sharing Overage Rates (Machine-Readable)
+
+> Source: `https://nebras-open-finance.com/pricing/lfi-rates/`, verified 10 June 2026.
+
+- Above the free per-customer/per-day threshold (15 attended / 5 unattended pages), **each LFI sets its own per-call overage rate**, published machine-readably in the Open Finance directory.
+- Read it from `GET https://data.directory.openfinance.ae/participants` (production) or `GET https://data.sandbox.directory.openfinance.ae/participants` (sandbox) — **no auth required**. Path: `participants[].AuthorisationServers[].ApiResources[]` where `ApiFamilyType === "account-information"` → `ApiMetadata.OverLimitFees` (string, AED per call, e.g. `"0.50"`). **A missing/empty value means the LFI charges nothing above the threshold.**
+- One call returns the rate for every LFI; rates change rarely — daily caching is plenty.
+- The same `/participants` payload exposes **per-LFI capability flags** (`ApiMetadata`: `AccountSubType[]`, plus per-payment-type support flags such as `SingleInstantPayment.Supported`, `FixedOnDemand`, `VariableOnDemand.{Single|Multiple|Open}BeneficiariesSupported`, `DelegatedAuthentication.*`) — a single directory endpoint answers both "what's live at which LFI" and "what does overage cost".
+
+## CAAP Pricing
+
+> Source: CAAP pricing page in the v2.1 LFI guide (`https://nebras-open-finance.com/tech/lfi-api-hub/v2.1/caap/`), verified 10 June 2026.
+
+The CAAP pricing page is a **placeholder** — commercial terms are still being finalised between Nebras and LFIs. Use the Nebras Service Desk for indicative quotes.

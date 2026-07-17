@@ -1,9 +1,6 @@
----
-name: altareq-brand-guidelines
-description: AlTareq brand implementation guidelines for UAE Open Finance. Use when designing or implementing Open Finance user interfaces, consent screens, payment buttons, progress indicators, or any customer-facing Open Finance journeys. Covers mandatory brand elements (logo, buttons, progress bar), CX requirements for LFIs and TPPs, allowable customizations, and screen certification requirements. Triggers on queries about AlTareq branding, Open Finance UI design, consent screen design, payment button styling, CX certification, or "Pay by bank using AlTareq" implementation.
----
+# AlTareq Brand & CX Implementation Guidelines
 
-# AlTareq Brand Guidelines
+> Merged from the standalone `altareq-brand-guidelines` skill on 12 July 2026 (Brand Guidelines doc v1.0, 31 Oct 2024). Detailed screen specs: `altareq-cx-requirements.md`; journey-specific screens: `altareq-journey-screens.md`.
 
 Implementation guide for AlTareq brand elements in UAE Open Finance user journeys.
 
@@ -156,5 +153,5 @@ Each journey type in Standards includes:
 - [ ] Prepare separate templates per brand/interface
 - [ ] Ensure pre-prod matches production
 
-See `references/cx-requirements.md` for detailed screen specifications.
-See `references/journey-screens.md` for journey-specific screen requirements.
+See `altareq-cx-requirements.md` for detailed screen specifications.
+See `altareq-journey-screens.md` for journey-specific screen requirements.

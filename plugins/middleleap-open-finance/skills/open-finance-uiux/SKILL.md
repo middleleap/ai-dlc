@@ -220,5 +220,5 @@ The 3-step progress bar (Consent → Authorize → Complete) must use:
 
 ## Related Skills
 
-- `altareq-brand-guidelines` — Brand rules and CX certification process
-- `open-finance-uae` — Regulatory requirements, API specs, Standards versions
+- `open-finance-uae` — Regulatory requirements, API specs, Standards versions; AlTareq brand
+  rules and CX certification now live in its `references/altareq-*.md` files

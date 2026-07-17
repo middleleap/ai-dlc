@@ -1,5 +1,7 @@
 # UAE Open Finance Standards Versions
 
+> **Last verified: 13 July 2026** (version/errata pass; full-site coverage audit 10 June 2026) against the community hub Release Notes & Errata register and the api-specs repo. Current production standard is **v2.1-final** with **errata3** (register-published; supersedes errata2 of 7 May 2026 for the two touched specs). Note: live API traffic is still dominated by v1.2 and v2.0 (v2.1 adoption nascent as of May 2026 data) — "Superseded" below means "not for new builds," not "out of live use."
+
 ## Table of Contents
 1. [Version History Overview](#version-history-overview)
 2. [Standards v1.0-final](#standards-v10-final)
@@ -7,8 +9,9 @@
 4. [Standards v1.2-final](#standards-v12-final)
 5. [Standards v2.0-final](#standards-v20-final)
 6. [Standards v2.1-final](#standards-v21-final)
-7. [Key Differences Between Versions](#key-differences-between-versions)
-8. [Implementation Guidance](#implementation-guidance)
+7. [Errata & Release Notes Register](#errata--release-notes-register)
+8. [Key Differences Between Versions](#key-differences-between-versions)
+9. [Implementation Guidance](#implementation-guidance)
 
 ---
 
@@ -18,13 +21,13 @@
 |---------|------------------|--------|-----------|
 | v1.0-final | Aug 2, 2024 | Deprecated | Initial framework |
 | v1.1-final | Nov 1, 2024 | Deprecated | Errata fixes from v1.0 |
-| v1.2-final | Dec 20, 2024 | Deprecated | Enhanced features |
-| v2.0-final | Apr 4, 2025 | Previous Production | Major uplift |
-| v2.1-rc1 | Oct 3, 2025 | Superseded | Release candidate |
-| v2.1-rc2 | Nov 21, 2025 | Superseded | Second release candidate |
-| **v2.1-final** | **Jan 7, 2026** | **Current — Final for Implementation** | **Final v2.1 with all errata** |
+| v1.2-final | Dec 20, 2024 | Superseded (heavy live use) | Enhanced features |
+| v2.0-final | Apr 4, 2025 | Superseded (heavy live use) | Major uplift |
+| v2.1-final | Jan 7, 2026 | Current Production | Enhanced APIs and operational requirements |
+| v2.1-errata2 | May 7, 2026 | Superseded per-file by errata3 | Doc corrections to v2.1-final + API Hub v8 (17 sections) |
+| **v2.1-errata3** | **Register-published by 13 Jul 2026** | **Current Errata** | 2 corrections — Bank Service Initiation international creditor (SWIFT SR2026); touches auth-endpoints + bank-initiation specs only |
 
-**Important**: v2.1-final is the current implementation target. Based on v2.1-rc1 with all errata incorporated. Previous versions should not be used for new implementations.
+**Important**: Always implement against the **latest available version plus its current errata** (v2.1-final + errata3; errata resolve per file — highest errata folder containing the file wins). Deprecated versions should not be used for new implementations. Confirm which version a counterparty LFI actually serves in production — many remain on v1.2/v2.0.
 
 ---
 
@@ -102,7 +105,7 @@ Operational Guidelines/
 ## Standards v1.2-final
 
 **Publication**: December 20, 2024  
-**Status**: DEPRECATED
+**Status**: Superseded — still in heavy live use (API Hub v6)
 
 ### Key Enhancements
 1. **Strong Customer Authentication Guidelines** - Detailed SCA implementation guidance
@@ -131,8 +134,8 @@ Operational Guidelines/
 
 ## Standards v2.0-final
 
-**Publication**: April 4, 2025  
-**Status**: Previous Production - Still valid for existing systems pending migration
+**Publication**: April 4, 2025
+**Status**: Superseded — still in heavy live use; v2.1-final is current (API Hub v7)
 
 ### Major Changes from v1.x
 1. **Comprehensive API restructuring**
@@ -163,156 +166,220 @@ See `api-specifications.md` for complete API reference.
 
 ## Standards v2.1-final
 
-**Publication**: January 7, 2026  
-**Status**: Current — Final version for implementation  
-**Classification**: PUBLIC  
-**Confluence Space**: `standardsv2dot1final`  
-**Based on**: v2.1-rc1 with all errata incorporated
+**Publication**: January 7, 2026 (current errata: **errata3**, register-published by 13 Jul 2026; errata2 7 May 2026)
+**Status**: Current Production - Recommended for all new implementations
 
-### Major Changes from v2.0 and Release Candidates
+### Structure Overview (76 pages across Confluence space)
 
-#### Authorization APIs
-- **PII Creditor split**: Separate properties for Domestic and International Payments
-  - Domestic: Only IBAN for `CreditorAccount.SchemeName`; `Creditor.Type` optional
-  - International: `ConfirmationOfPayeeResponse` removed
-- **ConsentSchedule**: Mandatory constraint from v2.1-rc2 **removed** (now optional)
+#### Common Components
+- API Security
+- FAPI 2.0 Framework
+- Registration Framework
+- Certificate Standard (incl. **certificate rotation** operational guidance, added Jun 2026)
+- UX Principles
+- Consent Setup
+- Combined Consents
+- Authentication and Authorization
+- Centralized Authentication and Authorization Platform (CAAP)
+- Strong Customer Authentication (SCA)
+- Webhooks
+- Partial Encryption (incl. **FinanceRates JWE encryption**)
 
-#### Payments
-- PII changes reflected in Bank Service Initiation API
-- **Bulk/Batch File Upload**: Changed to Client Credentials grant type (upload before consent authorization)
-- ConsentSchedule mandatory constraint removed
-- **Fast Track journey removed** (payment auth now required at consent authorization)
-- **Single future-dated payments** must be created as Fixed Defined Payments
-- Consent end date: `ExpirationDateTime` MUST NOT exceed 1 year from current date
+#### Banking: Service Initiation
+- Bank Service Initiation with SIP (Single Instant Payments)
+- Future Dated Payments (FDP)
+- Multi-Payments
+- Open Beneficiary + Delegated Authentication
+- Bulk/Batch Payments
+- International Payments
+- FX & Remittance
+- Payment Refunds
+- Confirmation of Payee (CoP)
+- Dynamic Account Opening
+- Pay Request
+- Payment Status Guidelines
 
-#### Multi-Payments
-- Visual illustration of Multi-Payment types and Creditor options
-- Wireframes grouped by Multi-Payment type; "Select payment method" removed
-- Variable-defined Beneficiary (IAVDB): Beneficiary List under "Who you're paying"
-- Variable Beneficiary (EAVB): "Add Merchant to Trusted Payees" removed from LFI UI
-- New Section 6.3: Combined Payments to Different Creditors
-- Single Future-Dated Payments now a Fixed Defined Multi-Payment type
-- New rule 5.8.2: User can add creditor to trusted payees from Open Finance payments
-
-#### International Payments
-- Payment limit: 15,000 AED for first-time payments through a single TPP to new beneficiary, per customer, per LFI
-- Limit ID 12.1: Max payment applies within first 24 hours
-
-#### Payment Refunds
-- New rule: LFI must return error (not account details) when debtor account is closed/suspended/credit-restricted
-
-#### Confirmation of Payee
-- **Partial match indicator** added (in addition to Yes/No)
-- Discovery operation properties renamed for clarity
-
-#### Common Rules and Guidelines
-- **A10.1**: Multi-Creditor consent limits: min 2, max 10 creditors
-- **Debtor/Creditor Reference**: Revised Structured Reference guidelines
-- **CRG-26.1.2**: Trusted Payee rule extended to International Payments
-- **Rule 27** (new): Three-letter country codes required
-- **Rule 22** (new): Exception Handling guidance for incomplete journeys
-- **Rule 26** (new): Adding Trusted Payee (Beneficiaries)
-- **CRG-1.3.1/1.3.2** (new): LFI requirements for dormant/inactive accounts
-- **CRG-1.7**: Rule wording updated
-- **Risk Block (Rule 9)**: Authentication Channel & Device Info changed from Mandatory to Conditional
-
-#### Limits and Constants
-- Limit A2: 30-day consent authorisation limit removed
-- New Limit A12.1: Max International Payment for first-time to new beneficiary
-- Constant B1: Revised Scheduled Payments Time Window
-- New entries A22, A23, A24, A25 added
-- New Section D: Payment Purpose Codes (Aani + International Remittances)
-
-#### Customer Data
-- `ReadParty` permission: Updated guidance for SME and Corporate accounts
-- `FinanceRates`: JWE encryption support for lending rates
-- New permission: `ReadProductLendingRates`
-- New Section 4.2: Data Sharing Access to Product Lending Rates
-- New Section 4.3: Beneficiaries Data Sharing (OFP vs LFI-created)
-- Removed unsupported permissions: `ReadTransactionsCredits`, `ReadTransactionsDetail`, `ReadFXProducts`
-
-#### Unconsented Products Data
-- Islamic Banking and Finance support (term "Loan" → "Finance")
-- Unconsented product objects aligned with Consented product objects
-
-#### Consent Management
-- **TPP CMI**: LFI notification requirements removed for pause/reactivate (LFI not notified when consent paused via TPP)
-- **LFI CMI**: "Suspended" consent state added to ID4; sidebar menu removed from wireframes
-- New Insurance Data Sharing consent management wireframes
-- New Insurance consent revocation journey (LFI CMI Section 3.1.3)
-
-#### Webhooks
-- ConsentSchedule mandatory constraint removed
-- New event notification guidance pages and OpenAPI specification
+#### Banking: Data Sharing
+- Customer Data (expanded for SME/Corporate)
+- Mandated Accounts
 
 #### Insurance
-- **Motor Insurance**: Vehicle engine details returned; Edata/Auto-data recommended for vehicle specs
-- **Insurance Quotes**: Max cover term 1 year (except Life Insurance)
-- **Life Insurance**: New optional riders (add-ons) section
-- **TPP-led Policy Issuance** (new): TPPs can handle KYC, premium collection, policy document issuance
-- **All Insurance Types**: `CountrySubDivision` required for Emirate location in quote requests
-- **Insurance Data Sharing**: Premium data JWE encryption; new CX examples for data clusters
-- Quote Application Status states updated for TPP-led issuance
-- New CX wireframes for Employment Insurance
-
-#### Dynamic Account Opening
-- State model aligned with API description (Rule 5)
-- Updated CX screens for User Data Sharing and Account Opening
-
-#### FX & Remittance
-- Quote lifecycle status model updated
-- Multiple new CX screen variations (FX-only, Remittance-only, user account selection, dynamic account opening variations)
-- Rule 4.3 updated for quote generation
+- Insurance Data Sharing (expanded May 2026 on community standards)
+- Insurance Quote Initiation (7 types)
 
 #### Operational Requirements
-- API Performance table updated with v1.2 and v2.0 APIs
-- `x-fapi-customer-ip-address` header mandatory on GET /products and POST /leads
-- `FullName` added to personal Claims object in Bank Data OpenAPI
-- `ExtendedPurpose` definition clarified for international payments
+- Availability and Performance
+- Data Quality
+- Change Management
+- Problem Resolution
+- Fraud Prevention
 
-### v2.1-final Confluence Structure
-```
-Standards v2.1-final (space: standardsv2dot1final)/
-├── Common Components
-├── Banking
-├── Insurance
-├── Operational Requirements
-├── Release Notes
-└── Future Functionality
-```
+### Key Changes in v2.1-final
+
+#### Authorization APIs
+- **Creditor Property in PII Restructuring**:
+  - Domestic: IBAN only
+  - International: Removed ConfirmationOfPayeeResponse requirement
+- **ConsentSchedule Mandatory Constraints**: Eliminated across all flows
+
+#### Payments
+- **File Upload Flow**: Shifted from Authorization Code to Client Credentials grant
+- **ConsentSchedule Mandatory**: Removed from payment consent requirements
+
+#### Multi-Payments
+- New diagrams for supported payment types
+- Reorganized wireframes for clarity
+- Enhanced business rules documentation
+
+#### International Payments
+- Wireframe correction for GBP currency handling
+- Enhanced international flow guidance
+
+#### Payment Refunds
+- New business guidance for closed/suspended accounts
+- Credit-restricted account handling
+- Refund eligibility criteria updates
+
+#### Common Rules & Guidelines
+- **Rule A10.1**: Multi-creditor payments 2-10 creditors
+- **Debtor/Creditor Reference**: Revised for Structured Reference format
+- **Rule 26**: Updated for international payments support
+
+#### Insurance
+- Motor vehicle: Engine details now required
+- Coverage limits: Maximum 1 year (except life insurance)
+- Life insurance: Rider selection enhancements
+
+#### Customer Data
+- **ReadParty API**: Expanded for SME and Corporate entities
+- **FinanceRates**: JWE encryption implementation
+
+#### Webhooks
+- **ConsentSchedule**: Mandatory constraint removed from webhook events
+
+#### Limits & Constants
+- Updated maximum payment amounts for first 24-hour period
+- Enhanced transaction limits documentation
+
+#### Wireframes
+- Multiple structural updates for clarity
+- Enhanced user experience flows
+- Improved consent and payment initiation diagrams
+
+---
+
+## Errata & Release Notes Register
+
+The post-publication register has two halves, both on the community hub
+([Release Notes & Erratas](https://nebras-open-finance.com/tech/release-notes-and-erratas/)):
+
+- **Release Notes** — changes deployed to operational systems (API Hub: OIDC authorization server, Consent Manager, gateway; Trust Framework: directory, certificate authority, roles & scopes via Raidiam). Each entry states what was deployed, the effective date, and the TPP/LFI impact.
+- **Erratas** — corrections to published documentation (TPP Standards, LFI Integration Guide, OpenAPI specs), each recording what was corrected, why, and the effective date.
+
+**Rule of thumb**: once a version is published, its existing content MUST NOT change without an associated Errata record. Behaviour-affecting platform deployments go in Release Notes.
+
+### v2.1-errata3 — international creditor restructure (SWIFT SR2026)
+
+Register-published (community hub erratas page) by **13 July 2026**; spec folders `dist/standards/v2.1-errata3/` contain **only** `uae-authorization-endpoints-openapi.yaml` and `uae-bank-initiation-openapi.yaml` — all other specs remain effective at their errata2/errata1/base levels (per-file resolution rule). **Two corrections, both Bank Service Initiation / international payments:**
+
+1. **International Creditor restructured into Individual and Organization variants (SWIFT SR2026).** The international `Creditor` on the Bank Service Initiation RAR becomes a `oneOf` of Individual and Organization variants, discriminated by `IdentityType`, carrying structured beneficiary attributes for cross-border payments. New schemas: `AEInternationalCreditorParty`, `AEInternationalIndividualCreditor`, `AEInternationalOrganisationCreditor`, `AEInternationalCreditorName(Component)`, `AEInternationalCreditorEvidence`. **Domestic Creditor schemas unchanged.** Touches PAR, payment-consents (incl. PATCH), payments, Consent Manager, and Consent Events surfaces on both TPP and LFI sides.
+2. **International Creditor Agent address aligned onto shared `AEInternationalAddress`** — `TownName` becomes required and its `maxLength` tightens from 140 to 70; the Creditor Agent address itself remains optional.
+
+**Impact:** any TPP/LFI building or serving v2.1 **international payments** must adopt the new creditor structures; domestic-only flows are unaffected. Detected 13 Jul 2026 with the register landing page still summarising "errata2" while the versioned erratas page listed the errata3 group — trust the versioned page (`erratas/v2.1/`).
+
+### v2.1-errata2 — two registers, read both
+
+v2.1-errata2 is recorded in **two registers that do not mirror each other**. Cite the right one:
+
+**(a) Standards-level (doc) errata** — the OF Confluence errata document (published 7 May 2026; page maintained, last edit Jun 2026). Read in conjunction with **Standards v2.1-final** and **API Hub Documentation v8**. Headline corrections:
+
+1. **LFI Consent Management Interfaces (§2.2 Rules & Guidelines)** — during a multi-user authorization journey the API Hub did not let the LFI retrieve an "Awaiting Authorization" consent's details so the remaining approvers could view and authorize it; errata addresses this capability gap.
+2. **Domestic Payments — Aani Core Purpose-of-Payment Codes** — the domestic Purpose Code business rule and the allowed code list were updated to the **Aani Core (Category Purpose) codes per the Aani Core Interface Specifications, September 2025** (superseding the July 2024 list). Always confirm against the current Aani specification.
+
+_(Errata1 preceded this; both are folded into the errata2 register. Confirm the full current errata list on the hub before an implementation cutover.)_
+
+**(b) OpenAPI-level (spec) errata register** — the community hub register
+([erratas page](https://nebras-open-finance.com/tech/release-notes-and-erratas/erratas/v2.1/), source
+[`src/data/erratas-registry.ts`](https://github.com/Nebras-Open-Finance/community-standards/blob/main/src/data/erratas-registry.ts))
+holds **17 sections, all under `v2.1-errata2`** (no errata1 entries): 10 effective **28 Apr 2026**, 7 marked
+"to be confirmed on merge to main" — a flag the registry kept even after the underlying PR merged on 22 May 2026.
+Note the date mismatch with (a): the doc-level errata says "published 7 May 2026" while spec-level sections carry
+28 Apr effective dates.
+
+| # | Spec / area | Correction | Effective |
+|---|---|---|---|
+| 1 | Account Information | `Permissions` on consent responses flattened to a flat string array (was array-of-arrays) | 28 Apr 2026 |
+| 2 | Account Information | `TrustFrameworkCode` enum on party responses corrected to `FI` (was unemittable `Undefined`) | 28 Apr 2026 |
+| 3 | Authorization Endpoints | `POST /token` response restructured as `oneOf` per grant type; `client_credentials` documented; `client_id` now optional (mTLS identifies the client) | 28 Apr 2026 |
+| 4 | CoP | 204 response description corrected to "IBAN is not recognised" (was opt-out wording) | 28 Apr 2026 |
+| 5 | CoP | `aud` claim on every `*BodySigned` JWT tightened from array to single string | 28 Apr 2026 |
+| 6 | Multiple specs | Over-escaped (doubled-backslash) regex patterns corrected — monetary `Amount` across five specs; `rarType` + CoP patterns on Ozone Connect User Operations | 28 Apr 2026 |
+| 7 | Webhook Template | `Permissions` flattening mirrored into webhook event payloads | 28 Apr 2026 |
+| 8 | Consent Manager | Unused `AERiskExternalAccountIdentificationCode` schema removed | 28 Apr 2026 |
+| 9 | Ozone Connect Health Check | `echo-cert` `clientCertificate` described as the caller's mTLS client cert (not server cert); issuer example refreshed | 28 Apr 2026 |
+| 10 | Ozone Connect Bank Data Sharing | `GET /accounts/{AccountId}/statements` gains optional `meta` block (`firstAvailableDateTime`/`lastAvailableDateTime`) | 28 Apr 2026 |
+| 11 | Payments Risk object | `additionalProperties: false` throughout `AERisk` nested indicator objects; `SupplementaryData` stays open; `AddressLine` bounded 1–70 chars | TBC on merge |
+| 12 | Payments Risk object | Creditor-indicator `AccountType` enum corrected to `[Retail, SME, Corporate]` (was a product-category list); Ozone Connect `AEAccountTypeCode` gains `SME` | TBC on merge |
+| 13 | Account Information | `AESupplementaryData` opened as an extension point (was closed empty object) on Transaction/Beneficiary/Standing Order | TBC on merge |
+| 14 | Consent Manager | `ReadStatements` + `ReadProductFinanceRates` added to `AEAccountAccessConsentPermissionCodes` | TBC on merge |
+| 15 | Consent Manager | The three per-consent-type `PATCH /consents/{consentId}` schemas closed (`additionalProperties: false`) to enforce cross-type field separation | TBC on merge |
+| 16 | Consent Manager | Payment-log reject-reason casing reverted to lower-case `rejectReasonCode`/`code`/`message` (v2.0.x contract restored) | TBC on merge |
+| 17 | Ozone Connect Bank Data Sharing | `GET /accounts/{accountId}/products` description corrected to account-scoped products (200 + empty array when none), not institution-wide catalogue | TBC on merge |
+
+> **Breaking changes for TPPs in errata2:** the Risk tree is tightened with `additionalProperties: false` on
+> `POST /payments`, `POST /payment-consents`, and `POST /file-payments` — TPPs sending undeclared Risk
+> properties now get validation errors (remedy: remove them or move them under `SupplementaryData`, which is
+> intentionally left open) — and the Risk `AccountType` enum changes to **`[Retail, SME, Corporate]`**.
+> Accepted breaking changes are recorded per errata, with oasdiff rule and rationale, in the `api-specs` repo
+> under [`supporting/breaking-changes/`](https://github.com/Nebras-Open-Finance/api-specs/tree/main/supporting/breaking-changes)
+> (see `repositories.md`).
+
+### Release registers: two platform streams
+
+Release Notes (behaviour-affecting deployments) are kept per platform component — **two separate streams**, on different versioning schemes. Track both, plus the errata register, when assessing change impact.
+
+**API Hub (`2026.x` scheme)** — source
+[`src/data/api-hub-releases-registry.ts`](https://github.com/Nebras-Open-Finance/community-standards/blob/main/src/data/api-hub-releases-registry.ts);
+full table in `implementation-roadmap.md`. Releases to date: **2026.07.0** (11 Mar 2026, v2.1 banking families enabled end-to-end), **2026.13.1** (20 Apr 2026), **2026.19.0** (production 9 Jun 2026; pre-production 2 Jun 2026). Release **2026.19.0** carries two participant-impacting behaviour changes: **mandatory `x-fapi-customer-ip-address` header on Product API endpoints** and **60-second authorisation-code expiry for FAPI 2.0 profiles**.
+
+**Trust Framework (Raidiam directory — own versioning, separate from `2026.x`)** — register at
+[/tech/release-notes-and-erratas/release-notes/trust-framework/2026](https://nebras-open-finance.com/tech/release-notes-and-erratas/release-notes/trust-framework/2026), source
+[`src/data/trust-framework-releases-registry.ts`](https://github.com/Nebras-Open-Finance/community-standards/blob/main/src/data/trust-framework-releases-registry.ts):
+
+| TF release | Date | Status | Themes |
+|---|---|---|---|
+| 2.0.0 | 19 Feb 2026 | Released | API Families via Reference Data, certificate description field, new Auth Server detail experience, federation endpoint visibility |
+| 2.1.0 | 2 Apr 2026 | Released | New Application details experience, IDP creation wizard, federation visibility |
+| 2.2.0 | 2 Jun 2026 | Planned (flagged planned at 10 Jun 2026 audit) | Directory version display, server roles, OTP validation in onboarding, cross-org audit-log scope |
+| 2.3.0 | 2026 | Planned | Application change history / audit comparison, active-server filter |
 
 ---
 
 ## Key Differences Between Versions
 
 ### Authentication Evolution
-| Aspect | v1.0 | v1.2 | v2.0+ | v2.1-final |
-|--------|------|------|-------|------------|
-| SCA Guidelines | Basic | Enhanced with FIDO2 | Full specification | Payment auth at consent |
-| Delegated Auth | Not available | Introduced | Refined | Fast Track removed |
-| CAAP | Basic spec | Enhanced | Production-ready | Production-ready |
-| Device binding | Not specified | Defined | Required | Required |
+| Aspect | v1.0 | v1.2 | v2.0+ |
+|--------|------|------|-------|
+| SCA Guidelines | Basic | Enhanced with FIDO2 | Full specification |
+| Delegated Auth | Not available | Introduced | Refined |
+| CAAP | Basic spec | Enhanced | Production-ready |
+| Device binding | Not specified | Defined | Required |
 
 ### API Differences
-| API | v1.x | v2.0+ | v2.1-final |
-|-----|------|-------|------------|
-| CoP | Limited | Full specification | + Partial match |
-| Payment Refund | N/A | GET /payment-consents/{consentId}/refund | + Closed account handling |
-| Products | N/A | GET /products | + mandatory x-fapi-customer-ip-address |
-| Leads | N/A | POST /leads | + mandatory x-fapi-customer-ip-address |
-| ATM | N/A | GET /atm | GET /atm |
-| Bulk/Batch Upload | N/A | Auth Code grant | Client Credentials grant |
-| Insurance Issuance | N/A | LFI-led only | + TPP-led issuance |
+| API | v1.x | v2.0+ |
+|-----|------|-------|
+| CoP (Confirmation of Payee) | Limited | Full specification |
+| Payment Refund | Not available | GET /payment-consents/{consentId}/refund |
+| Products | Not available | GET /products |
+| Leads | Not available | POST /leads |
+| ATM | Not available | GET /atm |
 
 ### Consent Management
-| Feature | v1.0 | v1.2 | v2.0+ | v2.1-final |
-|---------|------|------|-------|------------|
-| Consent Groups | Basic | Enhanced | Full support | Full support |
-| Balance Check | N/A | Introduced | Standard | Standard |
-| Event notifications | Basic | Enhanced | Comprehensive | + Webhook OpenAPI |
-| ConsentSchedule | N/A | N/A | N/A | Optional |
-| Max expiration | N/A | N/A | N/A | 1 year |
-| Suspended state | N/A | N/A | N/A | Supported in LFI CMI |
+| Feature | v1.0 | v1.2 | v2.0+ |
+|---------|------|------|-------|
+| Consent Groups | Basic | Enhanced | Full support |
+| Balance Check permission | Not available | Introduced | Standard |
+| Event notifications | Basic | Enhanced | Comprehensive |
 
 ---
 
@@ -320,51 +387,48 @@ Standards v2.1-final (space: standardsv2dot1final)/
 
 ### Which Version to Implement?
 
-**New LFI Implementations**: Use Standards **v2.1-final**
+**New LFI Implementations**: Use Standards v2.1-final + errata3
 
-**New TPP Implementations**: Use Standards **v2.1-final**
+**New TPP Implementations**: Use Standards v2.1-final + errata3
 
-**Existing v2.0 Implementations**: Plan migration to v2.1-final; review Release Notes for all changes
+**Existing v2.0-final Implementations**: Plan migration to v2.1-final
 
-**Existing v1.x Implementations**: Plan migration to v2.1-final (significant changes)
+**Existing v1.x Implementations**: Plan migration to v2.1-final
+
+> **Live reality:** per the ecosystem metrics dashboard (data to 31 May 2026), most production traffic is still v1.2/v2.0 and v2.1 volume is small. Plan integrations to v2.1+errata3, but expect counterparties to still be running older versions and confirm per LFI.
 
 ### Version-Specific API Hub Documentation
-| Standards Version | API Hub Docs | Publication |
-|-------------------|--------------|-------------|
-| v1.0 | v1, v2 | Jun-Jul 2024 |
-| v1.1 | v3 | Aug 2024 |
-| v1.2 | v4, v5 | Sep-Nov 2024 |
-| v2.0 | v6, v7 | Jan-Apr 2025 |
-| v2.1 | **v8** | **Jul 4, 2025** |
+| Standards Version | API Hub Docs | Publication | Alignment |
+|-------------------|--------------|-------------|-----------|
+| v1.0 | v1, v2 | Jun-Jul 2024 | Initial release |
+| v1.1 | v3 | Aug 2024 | Registration Framework |
+| v1.2 | v4, v5, **v6** | Sep 2024 - Jan 2025 | SCA and Delegated Auth |
+| v2.0 | **v7** | 2025 | Major uplift |
+| v2.1 | **v8** | **Jan 2026** | **Aligns with Standards v2.1-final (errata2)** |
 
-### API Hub v8 New Features
+### API Hub v8 Features
+**Core Documentation**
 - Bank Open Data OpenAPI
 - Bank Product Data OpenAPI
 - User Operations OpenAPI
 - CAAP sequence diagrams (User Registration, Consent Authorization)
 - AlTareq CAAP Integration Guide
-- Bank Data Sharing: API Hub v8 to Standards v2.1 Response Data Mapping
-- Separate Banking and Insurance Testing Tools
+- Bank Data Sharing: API Hub v8 to Standards v2.1-final Response Data Mapping
+
+**Testing & Validation Tools**
+- Banking Testing Tool
+- Insurance Testing Tool
+- Ozone Connect Test Cases
+- Sample Configuration Files
 
 ### Certification Requirements
 - LFIs: CX certification screens per version
 - TPPs: FAPI 2.0 RP certification
 - Both: Renewal with each major standards version
 
-### Migration Considerations (v2.0 → v2.1-final)
-1. **PII Creditor properties**: Update Domestic/International payment handling for split Creditor properties
-2. **ConsentSchedule**: If you implemented mandatory ConsentSchedule from rc2, it's now optional
-3. **Bulk/Batch uploads**: Migrate from Auth Code to Client Credentials grant for file uploads
-4. **Fast Track removal**: Ensure payment authentication at consent authorization
-5. **Future-dated payments**: Convert to Fixed Defined Payment type
-6. **CoP partial match**: Implement handling for new Partial match indicator
-7. **Risk Block conditionality**: Update Authentication Channel/Device Info from mandatory to conditional
-8. **Insurance quotes**: Add `CountrySubDivision` to all quote requests
-9. **Removed permissions**: Remove `ReadTransactionsCredits`, `ReadTransactionsDetail`, `ReadFXProducts`
-10. **New permissions**: Implement `ReadProductLendingRates`
-11. **Country codes**: Ensure three-letter country codes throughout
-12. **International payment limit**: Implement 15,000 AED first-time beneficiary limit
-13. **Webhook OpenAPI**: Integrate new event notification specification
-14. Test in sandbox against v2.1-final schemas
-15. Obtain updated certifications
-16. Coordinate with Nebras for production cutover
+### Migration Considerations
+1. Review release notes **and the current errata (errata2)** for breaking changes
+2. Update API integrations per new schemas
+3. Test in sandbox against new version
+4. Obtain updated certifications
+5. Coordinate with Nebras for production cutover

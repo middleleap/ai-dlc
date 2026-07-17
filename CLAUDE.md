@@ -18,8 +18,8 @@ plugins/
 │   └── agents/code-reviewer.md
 ├── middleleap-open-finance/        # UAE Open Finance domain expertise
 │   ├── .claude-plugin/plugin.json
-│   ├── skills/open-finance-uae/
-│   ├── skills/altareq-brand-guidelines/
+│   ├── skills/open-finance-uae/    # the canon incl. AlTareq brand refs + check_current.py
+│   ├── skills/islamic-banking-uae/ # Shariah-compliant finance; composes with the canon
 │   └── skills/open-finance-uiux/
 ├── middleleap-brand/               # MiddleLeap brand & design system (v2.0)
 │   ├── .claude-plugin/plugin.json
@@ -53,18 +53,18 @@ To confirm it actually loads, from inside Claude Code: `/plugin marketplace add 
 
 ## Key Domain Context (Open Finance)
 
-- **Al Tareq** = UAE Open Finance consumer-facing brand; **Nebras** = the platform operator
+- **AlTareq** = UAE Open Finance consumer-facing brand (brand/app spelling; "Al Tareq" appears in some CBUAE prose); **Nebras** = the platform operator
 - **CBUAE** = Central Bank of the UAE (the regulator)
 - **TPP** = Third Party Provider; **LFI** = Licensed Financial Institution
 - **API Hub** = Ozone-powered centralised infrastructure for Open Finance APIs
-- Standards canon: **v2.1-final** (7 Jan 2026) — verify currency before relying on it rather than trusting this line
+- Standards canon at last verification (13 Jul 2026): **v2.1-final + errata3**, API Hub **v8** — don't trust this line; run `python3 plugins/middleleap-open-finance/skills/open-finance-uae/scripts/check_current.py`
 
-Reference files carry regulatory figures, dates, and AED amounts. Treat them as load-bearing: check against the Standards, never paraphrase from memory.
+Reference files carry regulatory figures, dates, and AED amounts. Treat them as load-bearing: check against the Standards, never paraphrase from memory, and record corrections in the skill's `references/verification-log.md`.
 
-## Known Issues
+## Provenance rules (learned the hard way)
 
-- **Brand spelling is inconsistent** — both `AlTareq` and `Al Tareq` appear across the Open Finance skills. Canonical spelling is undecided; don't "fix" one way without confirming.
-- **The skills here lag the canonical copies**, which live in the Claude.ai skills UI and must be exported manually. A separate `uae-open-finance` skill (technical/integration focus: Ozone Connect, FAPI/OIDC, sandbox vs production) exists outside this repo and has never been merged in.
+- **The Open Finance and Islamic banking skills are canonical in the Claude.ai skills UI**, edited there and imported here via manual `.skill` export. Before editing them in this repo, ask whether a fresher export exists; if they do change here, the change must flow back to Claude.ai or the next import will overwrite it. Last import: 17 Jul 2026 (content verified 13 Jul 2026).
+- **The former `altareq-brand-guidelines` skill is retired** — merged into `open-finance-uae` as `references/altareq-*.md`. Don't recreate it.
 - **The Loom** is extracted here as `plugins/middleleap-loom` (the generic harness). The OFBO-specific instantiation — the CBUAE data-risk register, OFBO brand profile, OFBO hard-stop checklists, Q1–Q5 CI workflows, and the three `the-loom*.html` decks — stays in the `ofbo` repo as the worked example. The `loom-adopt` bundle's copy of the machinery must track upstream fixes made in `ofbo/discovery/` (no automated sync; CI's adoption dry-run catches breakage, not drift).
 
 ## Git

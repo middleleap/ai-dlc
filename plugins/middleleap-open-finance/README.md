@@ -11,20 +11,29 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 
 | Skill | Description |
 |-------|-------------|
-| `open-finance-uae` | Regulatory and commercial canon — CBUAE regulation, Standards v1.0–v2.1-final, API specifications, certification paths, liability model, pricing |
-| `altareq-brand-guidelines` | Brand implementation — consent screens, payment buttons, progress indicators, CX certification requirements |
+| `open-finance-uae` | The canon — CBUAE regulation, Standards versions and errata tracking, API specifications, certification paths, liability model, pricing, AlTareq brand and CX requirements, plus scripts that check whether the skill's version claims are still current |
+| `islamic-banking-uae` | Shariah-compliant finance — principles, contract structures (Murabaha, Ijara, Musharaka, Tawarruq, Sukuk, Takaful), CBUAE Shariah governance (HSA, ISSC, SCF), and the native Islamic fields in Open Finance Standards v2.1. Composes with `open-finance-uae` |
 | `open-finance-uiux` | Value-proposition prototyper — generates solution decks and interactive journey mockups |
+
+The former standalone `altareq-brand-guidelines` skill is merged into `open-finance-uae`
+(`references/altareq-*.md`) — one install now carries the whole domain.
 
 Once installed, skills are namespaced to the plugin: `/middleleap-open-finance:open-finance-uae`.
 
 ## Orientation
 
-- **Al Tareq** is the consumer-facing Open Finance brand; **Nebras** is the platform operator.
+- **AlTareq** is the consumer-facing Open Finance brand ("Al Tareq" appears in some CBUAE
+  prose; the brand and app spelling is AlTareq); **Nebras** is the platform operator.
 - **CBUAE** is the Central Bank of the UAE — the regulator.
 - **TPP** = Third Party Provider; **LFI** = Licensed Financial Institution.
 - The **API Hub** is the Ozone-powered centralised infrastructure for Open Finance APIs.
-- Standards version canon: **v2.1-final** (7 Jan 2026). Verify currency before relying on it — the Standards move, and a hardcoded version rots quietly.
+- Standards canon at last verification (13 Jul 2026): **v2.1-final + errata3**, API Hub **v8**.
+  Don't trust that line — run `python3 skills/open-finance-uae/scripts/check_current.py`,
+  which exists precisely because hardcoded version claims rot quietly.
 
 ## Accuracy
 
-These skills carry specific regulatory figures, dates, and AED amounts. When editing, treat those as load-bearing: check them against the Standards rather than paraphrasing. The upstream sources are listed at the end of `skills/open-finance-uae/SKILL.md`.
+These skills carry specific regulatory figures, dates, and AED amounts. When editing, treat
+those as load-bearing: check them against the Standards rather than paraphrasing, and record
+corrections in `skills/open-finance-uae/references/verification-log.md` — it is the audit
+trail for the skill's factual claims.

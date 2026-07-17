@@ -1,153 +1,115 @@
-# Limitation of Liability Model
+# Limitation of Liability Framework
 
-**Version**: 2.1 | **Publication Date**: Nov 25, 2025 | **Classification**: Public
+> Regenerated from public sources 9 Jun 2026 (original file lost) — provenance & full verification history: `verification-log.md`. Cross-check time-sensitive figures against the community hub / OF Confluence before relying on them.
+
+Sources: CBUAE Open Finance Regulation C 3/2025 Article 21 (verified on rulebook.centralbank.ae) for the statutory liability baseline; the **Limitation of Liability Model** on the OF Confluence space ([page 124944402](https://openfinanceuae.atlassian.net/wiki/spaces/OF/pages/124944402/Limitation+of+Liability+Model), document **Version 2.1**, page last updated 6 Jan 2026 — anonymously readable, re-verified 10 Jun 2026) for the compensation schedule.
 
 ## Table of Contents
-1. [Core Principles](#core-principles)
-2. [General / Consent / Authentication Issues](#general-consent-authentication-issues)
-3. [Security Incidents](#security-incidents)
-4. [Data Issues](#data-issues)
-5. [Payments / Exchange Issues](#payments-exchange-issues)
-6. [Indirect and Consequential Losses](#indirect-and-consequential-losses)
+1. [Two Layers of Liability](#two-layers-of-liability)
+2. [Statutory Baseline — Regulation Article 21](#statutory-baseline--regulation-article-21)
+3. [Compensation Table (Limitation of Liability Model)](#compensation-table-limitation-of-liability-model)
+4. [Liability Cascade](#liability-cascade)
+5. [Nebras Liability Cap](#nebras-liability-cap)
+6. [Dispute Process](#dispute-process)
+7. [Insurance and Indemnity Expectations](#insurance-and-indemnity-expectations)
+8. [Interaction with Certification Status](#interaction-with-certification-status)
+9. [Practical Guidance](#practical-guidance)
 
 ---
 
-## Core Principles
+## Two Layers of Liability
 
-### Duty of Care
-Each participant is responsible and accountable for their assigned or voluntary tasks, whether manual, automated, system-based, technical, or operational.
+| Layer | Instrument | Nature |
+|-------|-----------|--------|
+| Statutory | OF Regulation C 3/2025, Article 21 (+ Articles 20, 34, 35) | Open-ended liability of providers to Users for unauthorised/defective transactions and data breaches; CBUAE sanctions on top |
+| Scheme | **Limitation of Liability Model** (OF Confluence, part of the Al Tareq Standards) | Standardised per-incident compensation amounts, allocation rules between Nebras / LFI / TPP, and caps — the operational "who pays what" layer |
 
-**Open Finance TPPs and LFIs have a duty of care to their Customers to ensure:**
-- Secured systems/processes
-- Reliable services
-- Clear and accurate information
-- Accurate transaction execution
+The Limitation of Liability Model compensates users for performance issues and security breaches **in addition to** protections under UAE law; it does not displace statutory or consumer-protection remedies.
 
-### Breach of Duty
-In case of breaches, parties may be liable for direct losses suffered by Users. For example, if a service provider fails to implement adequate security measures and a User's account is hacked, they may be liable for direct losses.
+## Statutory Baseline — Regulation Article 21
 
-### Data Protection and Privacy
-Service providers are responsible for protecting privacy and security of User data. Failure may result in liability for direct losses from compromised or improperly transmitted data.
+Verified text of Article 21 (C 3/2025):
 
-### Payment of Compensation
-All participants MUST pay Open Finance Compensation and direct losses from the liable party to the affected party **as soon as a dispute verdict has been reached**.
+1. An **Open Finance Provider is liable to the User** for loss/damage from unauthorised access to or loss of that User's data held by the provider.
+2. A **Service Initiation Provider (TPP) is liable to the User** for non-execution or late/defective execution of a transaction — including failures of authorisation, authentication, accurate recording, or secure communication.
+3. **Burden of proof sits with the Service Initiation Provider**: in a dispute it must prove, with evidence, that the transaction was correctly processed.
+4. The **Service Owner (LFI) is liable to the User** for non-execution or late/defective execution **unless** the loss resulted from the Service Initiation Provider's act or omission under 21(2).
+5. Security breaches causing illegal/unauthorised/accidental access, alteration, destruction, disclosure or loss of personal data expose the provider to **CBUAE administrative and financial sanctions** on top of civil liability.
 
-**Important Notes:**
-- Indirect and consequential losses are NOT compensated under Open Finance standards
-- Legal protections under UAE legislation remain in place
-- Does not supersede Aani scheme rules and disputes mechanisms
-- Nebras max liability: **5 million AED per claim**
+Related: Article 2(8) — liability can never be transferred to a Technical Service Provider; Article 20 — 60 days' notice of T&C changes and free-exit rights.
 
----
+## Compensation Table (Limitation of Liability Model)
 
-## General / Consent / Authentication Issues
+Standardised compensation amounts per incident, in AED — **all values below verified 10 Jun 2026 against the Limitation of Liability Model (OF Confluence, doc Version 2.1)**:
 
-| Issue | Liable Party | OF Compensation (AED) |
-|-------|--------------|----------------------|
-| Activity without valid consent | LFI | Case specific |
-| TPP failure to maintain consent state causing user detriment | TPP | **500** |
-| Failure to revoke consent (via TPP channel) | TPP | **350** |
-| Consumer Protection obligations not followed | LFI/TPP | **1,000** |
-| Failure to revoke consent (via LFI channel) | LFI | **350** |
-| Fraudulent/erroneous LFI authentication | LFI | **500** |
-| Inaccurate consent articulation to User | TPP | **350** |
-| TPP failure to execute request within SLA | TPP | **350** (12h+), **250** (6h+), **200** (<6h) |
-| LFI failure to execute request within SLA | LFI | **350** (12h+), **250** (6h+), **200** (<6h) |
-| TPP failure to execute request accurately | TPP | **250** |
-| LFI failure to execute request accurately | LFI | **250** |
-| LFI data mapping failure causing TPP loss of long-lived consent | LFI | **5,000** |
-| Misrepresented service offering by TPP | TPP | **1,000** |
-| TPP failure to manage deprecation/endpoint updates | TPP | **2,500** |
-| LFI failure to manage breaking changes/deprecation | LFI | **5,000** |
-| TPP failure to send required notifications | TPP | **150** |
-| API Hub/Trust Framework failure | Nebras | Max **5M** direct losses |
-| Incorrect categorization causing invalid pricing (TPP) | TPP | **1,000** |
-| Incorrect categorization causing invalid pricing (LFI) | LFI | **1,000** |
+| Failure / Issue | Compensation (AED) | Typically liable party |
+|-----------------|--------------------|------------------------|
+| Consent state failure (TPP fails to maintain an up-to-date consent state) | **500** | Party serving the wrong consent state |
+| Consent revocation failure (requested via TPP channel or via LFI channel) | **350** (each scenario) | Party that failed to propagate/honour revocation |
+| SCA / authentication errors (fraudulent or erroneous LFI authentication) | **500** | Party operating the failed auth step |
+| Data breach (security breach of LFI or TPP — cyber or physical; data transmitted outside the ecosystem; uncontrolled app access) | **750** | Party from whose environment the data was breached |
+| Failure to execute within SLA | **tiered: 350 (within 12 hrs) / 250 (next 6 hrs) / 200 (next 6 hrs)** | LFI (execution) or TPP (late initiation) per Article 21(2)/(4) split |
+| Consumer protection violation | **1,000** | Violating participant |
+| Failure to manage deprecation / endpoint updates | **2,500** | Party mismanaging the deprecation |
+| Breaking change mismanagement by LFI (change-management rules breached, e.g. no 30-day notice / no dual running) | **5,000** | Party introducing the unmanaged breaking change |
+| Failure to prevent fraudulent/improper/unauthorised use (LFI or TPP) | **10,000** | Negligent party |
+| International payment to a new beneficiary over the AED 15,000 / 48-hour limit | **1,000** + direct losses | TPP (limit is per customer, per TPP, per bank, for 48h after beneficiary creation) |
+| **Nebras liability cap** (centralized API Hub / Trust Framework failure) | **Maximum of 5,000,000 of direct losses *per claim*** | Nebras — see below |
 
----
+Notes:
+- Amounts are per-incident redress estimates used to settle inter-participant disputes quickly; they do not cap a User's statutory claim for actual loss under Article 21.
+- The model addresses defined dispute scenarios across sections (Consent, Security, Data, Payments/Exchange, Quotation), identifies the liable and responsible parties, and states the extent of redress as "Direct Losses & Open Finance Compensation" plus the AED amount.
+- **Correction vs earlier baseline:** the Nebras cap is stated **per claim**, not as an aggregate; and the SLA-failure compensation is tiered 350/250/200 by delay (the earlier "200–350" shorthand was directionally right).
 
-## Security Incidents
+## Liability Cascade
 
-| Issue | Liable Party | OF Compensation (AED) |
-|-------|--------------|----------------------|
-| LFI security breach (cyber/physical) | LFI | **750** |
-| TPP security breach (cyber/physical) | TPP | **750** |
-| Data transmitted outside ecosystem by LFI | LFI | **750** |
-| Data transmitted outside ecosystem by TPP | TPP | **750** |
-| TPP fails to ensure controlled access (MFA) | TPP | **750** |
+Allocation follows the **locus of failure**, with the customer-facing party paying first and recovering up the chain:
 
----
+| Step | Principle |
+|------|-----------|
+| 1. Customer is made whole first | The participant with the customer relationship (usually the LFI for account/payment failures; the TPP for app-level failures) compensates the User without waiting for inter-participant allocation |
+| 2. Failure attribution | Logs, consent records and the API Hub audit trail establish where the failure occurred (TPP request, API Hub routing/consent state, LFI execution, CAAP authentication) |
+| 3. Recovery | The paying party recovers from the party at fault per the model's scenario tables; burden of proof on the Service Initiation Provider for execution disputes (Article 21(3)) |
+| 4. Nebras layer | Failures inside the API Hub / Trust Framework / CAAP are Nebras's responsibility, subject to the AED 5,000,000 per-claim cap |
+| 5. No pass-through to TSPs | Liability cannot be contractually shifted to technical service providers (Article 2(8)) — participants own their vendors' failures |
 
-## Data Issues
+**Delegated SCA:** where a TPP performs delegated authentication (v1.2+ Standards), liability for authentication failures shifts to the TPP for those flows — the liability framework is explicitly aligned to the delegated-authentication model (see `standards-versions.md`).
 
-| Issue | Liable Party | OF Compensation (AED) |
-|-------|--------------|----------------------|
-| Misuse/loss of data by TPP | TPP | **750** |
-| Inaccurate data processing/analysis by TPP | TPP | **500** |
-| LFI data shared outside consent | LFI | **750** |
-| Data transmitted incorrectly/mis-mapped by LFI | LFI | **500** |
-| Inaccurate data in LFI mastered data | LFI | **500** |
-| User-submitted error for incorrect onboarding | User | N/A |
-| TPP-submitted error for incorrect onboarding | TPP | **350** |
-| Inaccurate User-contributed data from LFI | LFI (to User) | Direct losses only |
-| Misrepresentation of OF data by TPP | TPP | **500** |
-| TPP fails to attempt CoP for new beneficiary | TPP | **250** |
-| TPP fails to attempt CoP/KYC for merchant onboarding | TPP | **500** |
+## Nebras Liability Cap
 
----
+- Verified 10 Jun 2026 (Limitation of Liability Model, doc v2.1): for "Centralized API hub and / or Trust Framework failure" Nebras's extent of redress is a **"Maximum of 5 million of direct losses per claim"** — i.e. AED 5,000,000 **per claim**, not an aggregate annual cap.
+- Mirrors the Regulation's professional-indemnity floor (AED 5,000,000 single claim) for Open Finance Providers — the ecosystem is engineered so each layer carries roughly equivalent worst-case cover.
+- Beyond the cap, losses rest where they fall, subject to statutory claims and CBUAE supervisory intervention.
 
-## Payments / Exchange Issues
+## Dispute Process
 
-| Issue | Liable Party | OF Compensation (AED) |
-|-------|--------------|----------------------|
-| Incorrect beneficiary details (User supplied/approved) | User | N/A |
-| Incorrect beneficiary details (TPP supplied) | TPP | **350** |
-| Incorrect beneficiary details (LFI supplied/proxy resolution) | LFI | **350** |
-| TPP payment request mismatch to User intention | TPP | **350** |
-| Fraudulent VRP/Delegated SCA payment by TPP | TPP | **500** |
-| LFI fraud monitoring failure for VRP/Delegated SCA | LFI | **250** |
-| Payment initiated outside consent scope | TPP | **350** |
-| Fraudulent payment requests (including RTP) via TPP | TPP | **500** |
-| LFI failure to execute payment within SLA | LFI | Case specific |
+| Stage | What happens |
+|-------|--------------|
+| 1. User complaint | User raises the issue with the relevant **LFI or TPP** (the party they interact with). Standard consumer-protection complaint SLAs apply |
+| 2. Bilateral resolution | LFI and TPP attempt resolution using shared evidence (consent records, API Hub logs, payment status history) |
+| 3. Nebras review | Inter-participant disputes that cannot be settled bilaterally are **reviewed and determined by Nebras** using the Limitation of Liability Model scenario tables (Service Desk / dispute-resolution tooling in the Common Infrastructural Services) |
+| 4. CBUAE escalation | Unresolved or systemic disputes escalate to the **CBUAE**; the regulator may also impose sanctions independently (Article 34) |
 
----
+Evidence expectations: participants must retain consent and transaction records for **at least 5 years** (Article 13) and surrender them promptly — record-keeping failures effectively concede disputes given the Article 21(3) burden of proof.
 
-## Indirect and Consequential Losses
+## Insurance and Indemnity Expectations
 
-### Indirect Losses
-Losses that are a secondary result of an issue but not the immediate consequence.
+| Participant | Requirement |
+|-------------|-------------|
+| Licensed TPP (Open Finance Provider) | Professional indemnity insurance: **AED 5,000,000 per single claim**; aggregate the higher of AED 5,000,000 or 50% of annual OF income; must cover unauthorised transactions, data loss/breaches, cyber risk, and delayed/incorrect initiations (Article 9, verified) |
+| Deemed-licence participant (bank/insurer) | Covered by existing prudential/insurance arrangements; CBUAE may require equivalent cover (verify against source) |
+| API Hub (Nebras) | Guarantees or PII "if and to the extent required by the Central Bank" (Article 24(6), verified) |
 
-**Not compensated** under Open Finance standards but legal protections under UAE legislation remain.
+## Interaction with Certification Status
 
-### Consequential Losses
-Losses that flow from a breach but are not direct (e.g., lost business opportunities, reputational damage).
+- Compensation amounts assume participants are **certified** (functional, CX, security, live-proving — see `testing-certification.md`). Operating outside certified configurations weakens a participant's position in attribution disputes.
+- **Breaking change mismanagement (AED 5,000 per incident)** is the liability teeth behind the change-management rules: 30-day notice for breaking changes and mandatory dual running during transitions. The community-hub **Version Management Policy** (verified, updated Apr 2026) confines breaking changes to major versions (≥18-month cadence) for capabilities declared Live — breaching these stability guarantees is what the model prices at 5,000.
+- CX certification ties to consent-state liabilities: an LFI whose consent screens were certified, and which serves consent states per the Standards, can rebut consent state failure claims; deviation from certified screens removes that defence.
+- Certificate/key hygiene (rotation per the Jun 2026 certificate-rotation guidance) is treated as part of the secure-communication duty under Article 21(2) — expired-certificate outages are SLA failures (AED 200–350) attributable to the negligent party.
 
-**Not compensated** under Open Finance standards but legal protections under UAE legislation remain.
+## Practical Guidance
 
-### Tortious Losses
-Losses arising from civil wrongs outside of contract.
-
-**Not compensated** under Open Finance standards but legal protections under UAE legislation remain.
-
----
-
-## Key Requirements
-
-### TPP Obligations
-1. Ensure robust customer authentication (including delegated SCA)
-2. Prevent fraud via secure app access with MFA/biometrics
-3. Monitor transactions and identify fraud risks
-4. Report suspicious activities via CBUAE AML GO portal
-5. Accurately populate Risk Information Block for LFI payment decisioning
-6. Issue Key Facts Statements for each Open Finance service
-
-### LFI Obligations
-1. Manage AML and fraud for Open Finance transactions same as other transactions
-2. Develop real-time fraud/AML capabilities for all transactions
-3. Utilize and analyze risk indicators provided by TPPs
-4. No additional Open Finance-specific procedures required
-
-### Deprecation and Change Management
-- LFIs must provide adequate notice of API deprecation/retirement
-- TPPs must update services to supported API versions after deprecation notices
-- Breaking changes must be managed with appropriate notification
+1. **Log everything against the consent.** Attribution drives allocation; the party with the weakest evidence pays.
+2. **Treat the table as the floor, not the ceiling.** Statutory liability to the User for actual loss is uncapped for participants; only Nebras has the AED 5,000,000 per-claim cap.
+3. **Model the AED 5,000 breaking-change exposure per affected counterparty** when planning version migrations — dual running is cheaper.
+4. **Verify amounts before committing them to a business case** — the compensation schedule lives on the OF Confluence Limitation of Liability Model page (anonymously readable) and may have been revised after the skill's last verification (10 June 2026, doc Version 2.1).
