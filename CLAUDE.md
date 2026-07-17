@@ -4,55 +4,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**MiddleLeap AI DLC** — a marketplace of downloadable content for AI agents: skills, plugins, agents, tools, and MCP servers. This is a knowledge base / artifact library, not a software application — there is no build system, package manager, or test framework.
+**MiddleLeap AI DLC** — a Claude Code plugin marketplace: skills, agents, and workflows for AI-enabled development, published for public installation. This is a knowledge-base / artifact library, not an application: no build system, no package manager, no test framework. The only executable is the manifest validator.
 
 ## Repository Structure
 
 ```
-skills/
-└── finance/
-    ├── open-finance-uae/          # UAE Open Finance regulatory guidance (SKILL.md + 10 reference docs)
-    ├── altareq-brand-guidelines/  # Al Tareq brand implementation (SKILL.md + 2 reference docs)
-    └── open-finance-uiux/         # Open Finance value proposition prototyper (SKILL.md + 10 reference docs)
-plugins/                           # Coming soon
-agents/                            # Coming soon
-tools/                             # Coming soon
-mcp-servers/                       # Coming soon
-marketplace.json                   # Machine-readable artifact registry
+.claude-plugin/marketplace.json     # marketplace manifest — the file Claude Code reads
+plugins/
+├── middleleap-ai-sdlc/             # AI-SDLC practices
+│   ├── .claude-plugin/plugin.json
+│   ├── skills/claude-md-guide/
+│   ├── skills/context-template/
+│   └── agents/code-reviewer.md
+└── middleleap-open-finance/        # UAE Open Finance domain expertise
+    ├── .claude-plugin/plugin.json
+    ├── skills/open-finance-uae/
+    ├── skills/altareq-brand-guidelines/
+    └── skills/open-finance-uiux/
+scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 ```
 
-## Artifact Types
+## The rules that actually bite
 
-| Type | Directory | Entry File | Description |
-|------|-----------|------------|-------------|
-| Skill | `skills/<category>/` | `SKILL.md` | Domain expertise and instructions |
-| Plugin | `plugins/<category>/` | `PLUGIN.md` | Reusable agent extensions |
-| Agent | `agents/<category>/` | `AGENT.md` | Pre-built agent configurations |
-| Tool | `tools/<category>/` | `TOOL.md` | Standalone utilities |
-| MCP Server | `mcp-servers/<category>/` | `SERVER.md` | MCP server configurations |
+- **A skill is a directory containing `SKILL.md`. An agent is a flat `.md` file.** `agents/foo/AGENT.md` is silently never loaded; `agents/foo.md` works. This repo shipped that bug for months.
+- **Everything installable lives under `plugins/<plugin>/`.** Top-level `skills/`, `agents/`, or `tools/` directories are not installable — the validator rejects them.
+- **`version` gates updates.** Change content without bumping the plugin version in *both* `plugin.json` and the `marketplace.json` entry, and existing users never receive it.
+- **The `description` in a skill's frontmatter is what Claude uses to decide whether to load it.** It's the highest-leverage line in the file. Max 1024 characters.
+- **There is no "tool" or "MCP server" artifact type.** A plugin bundles skills, agents, commands, hooks, and `.mcp.json`. The old five-type taxonomy is gone; don't reintroduce it.
 
-## Artifact Anatomy
+## Verification
 
-Each artifact is a folder containing:
-- Entry file (e.g., `SKILL.md`) — Main entry with YAML frontmatter (`name`, `description`) and instruction body
-- `references/` — Supporting documents (regulations, API specs, brand guides, etc.)
-- `assets/` — Images, logos, and visual resources (optional, keep small)
+```bash
+node scripts/validate-marketplace.mjs   # manifests, sources, versions, skill/agent layout
+```
 
-## Key Domain Context (Finance Skills)
+To confirm it actually loads, from inside Claude Code: `/plugin marketplace add ./`
+
+## Key Domain Context (Open Finance)
 
 - **Al Tareq** = UAE Open Finance consumer-facing brand; **Nebras** = the platform operator
-- **Current Standards version**: v2.1-final (Jan 7, 2026)
-- **CBUAE** = Central Bank of UAE (the regulator)
+- **CBUAE** = Central Bank of the UAE (the regulator)
 - **TPP** = Third Party Provider; **LFI** = Licensed Financial Institution
-- **API Hub**: Ozone-powered centralized infrastructure for Open Finance APIs
+- **API Hub** = Ozone-powered centralised infrastructure for Open Finance APIs
+- Standards canon: **v2.1-final** (7 Jan 2026) — verify currency before relying on it rather than trusting this line
 
-## When Editing Artifacts
+Reference files carry regulatory figures, dates, and AED amounts. Treat them as load-bearing: check against the Standards, never paraphrase from memory.
 
-- Entry files use YAML frontmatter — preserve `name`, `description`, and trigger fields
-- Reference files are markdown with domain-specific content — maintain accuracy of regulatory figures, dates, and AED amounts
-- Register new artifacts in `marketplace.json`
-- Follow lowercase-kebab-case naming for all folders
-- No large binaries (>.fig, .psd, large PNGs) — host those in [middleleap/open-finance-assets](https://github.com/middleleap/open-finance-assets)
+## Known Issues
+
+- **Brand spelling is inconsistent** — both `AlTareq` and `Al Tareq` appear across the Open Finance skills. Canonical spelling is undecided; don't "fix" one way without confirming.
+- **The skills here lag the canonical copies**, which live in the Claude.ai skills UI and must be exported manually. A separate `uae-open-finance` skill (technical/integration focus: Ozone Connect, FAPI/OIDC, sandbox vs production) exists outside this repo and has never been merged in.
+- **The Loom** — the reusable discovery/delivery harness — currently lives in the `ofbo` repo (`docs/the-loom.html`, `docs/discovery-harness.md`, `.claude/`). The plan is to extract the generic harness here as a plugin and leave the OFBO-specific instantiation there.
 
 ## Git
 

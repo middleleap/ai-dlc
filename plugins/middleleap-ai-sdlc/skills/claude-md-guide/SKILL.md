@@ -219,6 +219,6 @@ Your CLAUDE.md is working well when:
 
 | Topic | File |
 |-------|------|
-| Starter template | See `tools/ai-sdlc/context-template/` |
+| Starter template | The `context-template` skill in this plugin |
 | Detailed patterns | `references/patterns.md` |
 | Platform-specific tips | `references/platform-tips.md` |

@@ -1,0 +1,12 @@
+{
+  "name": "middleleap-ai-sdlc",
+  "description": "Practices and patterns for AI-enabled software development — CLAUDE.md authoring, a starter context template, and a structured code-review agent.",
+  "version": "1.0.0",
+  "author": {
+    "name": "MiddleLeap"
+  },
+  "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-ai-sdlc",
+  "repository": "https://github.com/middleleap/ai-dlc",
+  "license": "Apache-2.0",
+  "keywords": ["claude-md", "ai-sdlc", "code-review", "context-files", "developer-experience"]
+}

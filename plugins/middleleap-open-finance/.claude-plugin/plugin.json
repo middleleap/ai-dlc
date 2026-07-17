@@ -1,0 +1,12 @@
+{
+  "name": "middleleap-open-finance",
+  "description": "UAE Open Finance domain expertise — CBUAE regulation, Al Tareq platform integration, brand and CX requirements, and value-proposition prototyping.",
+  "version": "1.0.0",
+  "author": {
+    "name": "MiddleLeap"
+  },
+  "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-open-finance",
+  "repository": "https://github.com/middleleap/ai-dlc",
+  "license": "Apache-2.0",
+  "keywords": ["uae", "open-finance", "cbuae", "regulation", "banking", "prototyping"]
+}
