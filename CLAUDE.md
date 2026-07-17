@@ -16,11 +16,14 @@ plugins/
 │   ├── skills/claude-md-guide/
 │   ├── skills/context-template/
 │   └── agents/code-reviewer.md
-└── middleleap-open-finance/        # UAE Open Finance domain expertise
+├── middleleap-open-finance/        # UAE Open Finance domain expertise
+│   ├── .claude-plugin/plugin.json
+│   ├── skills/open-finance-uae/
+│   ├── skills/altareq-brand-guidelines/
+│   └── skills/open-finance-uiux/
+└── middleleap-brand/               # MiddleLeap brand & design system (v2.0)
     ├── .claude-plugin/plugin.json
-    ├── skills/open-finance-uae/
-    ├── skills/altareq-brand-guidelines/
-    └── skills/open-finance-uiux/
+    └── skills/middleleap-brand/    # SKILL.md, DESIGN.md, tokens, components, assets
 scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 ```
 
@@ -36,6 +39,7 @@ scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 
 ```bash
 node scripts/validate-marketplace.mjs   # manifests, sources, versions, skill/agent layout
+node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs   # WCAG AA gate
 ```
 
 To confirm it actually loads, from inside Claude Code: `/plugin marketplace add ./`

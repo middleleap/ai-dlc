@@ -15,3 +15,6 @@ jobs:
           node-version: '22'
       - name: Validate manifests, skills, and agents
         run: node scripts/validate-marketplace.mjs
+
+      - name: Brand contrast gate (WCAG AA)
+        run: node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs
