@@ -1,7 +1,7 @@
 {
   "name": "middleleap-open-finance",
-  "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, Islamic banking (Shariah-compliant finance), and value-proposition prototyping.",
-  "version": "2.0.0",
+  "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, Islamic banking (Shariah-compliant finance), a virtual Head-of-Risk reviewer, and value-proposition prototyping.",
+  "version": "2.1.0",
   "author": {
     "name": "MiddleLeap"
   },
@@ -16,6 +16,7 @@
     "banking",
     "islamic-banking",
     "shariah",
+    "risk",
     "prototyping"
   ]
 }

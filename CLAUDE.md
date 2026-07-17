@@ -63,7 +63,7 @@ Reference files carry regulatory figures, dates, and AED amounts. Treat them as 
 
 ## Provenance rules (learned the hard way)
 
-- **The Open Finance and Islamic banking skills are canonical in the Claude.ai skills UI**, edited there and imported here via manual `.skill` export. Before editing them in this repo, ask whether a fresher export exists; if they do change here, the change must flow back to Claude.ai or the next import will overwrite it. Last import: 17 Jul 2026 (content verified 13 Jul 2026).
+- **The Open Finance, Islamic banking, and UAE bank risk reviewer skills are canonical in the Claude.ai skills UI**, edited there and imported here via manual `.skill`/`.zip` export. Before editing them in this repo, ask whether a fresher export exists; if they do change here, the change must flow back to Claude.ai or the next import will overwrite it. Last import: 17 Jul 2026.
 - **The former `altareq-brand-guidelines` skill is retired** — merged into `open-finance-uae` as `references/altareq-*.md`. Don't recreate it.
 - **The Loom** is extracted here as `plugins/middleleap-loom` (the generic harness). The OFBO-specific instantiation — the CBUAE data-risk register, OFBO brand profile, OFBO hard-stop checklists, Q1–Q5 CI workflows, and the three `the-loom*.html` decks — stays in the `ofbo` repo as the worked example. The `loom-adopt` bundle's copy of the machinery must track upstream fixes made in `ofbo/discovery/` (no automated sync; CI's adoption dry-run catches breakage, not drift).
 

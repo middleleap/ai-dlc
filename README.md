@@ -33,6 +33,7 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 |------|------|-------------|
 | Skill | `open-finance-uae` | The canon — CBUAE regulation, Standards + errata tracking, API specs, certification, liability, pricing, AlTareq brand & CX, self-check scripts |
 | Skill | `islamic-banking-uae` | Shariah-compliant finance — principles, contracts, CBUAE Shariah governance, and the Islamic fields in Standards v2.1; composes with `open-finance-uae` |
+| Skill | `uae-bank-risk-reviewer` | Virtual Head of Risk — discovery landscape, backlog risk tagging, formal review, and control-enforcement verification against a 77-control UAE taxonomy |
 | Skill | `open-finance-uiux` | Value-proposition prototyper — solution decks and interactive journey mockups |
 
 ### [middleleap-loom](plugins/middleleap-loom/)
