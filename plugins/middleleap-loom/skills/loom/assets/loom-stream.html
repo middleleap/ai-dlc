@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Loom — closed-loop build stream & bank-grade maturity · MiddleLeap</title>
+<title>How the Loom harness works · MiddleLeap</title>
 <meta name="description" content="The Loom's closed-loop build stream, its security & governance checkpoints, the Run to Discovery feedback loop, and a bank-grade maturity traffic-light. MiddleLeap brand, Paper mode.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='3' y='11' width='16' height='16' fill='%232A2925'/%3E%3Crect x='23' y='12' width='13' height='13' transform='rotate(45 29.5 18.5)' fill='%23CE451B'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,912 +16,384 @@
     --bg:#FAF9F5; --surface:#FFFFFF; --surface-2:#F4F2EC;
     --head:#14130F; --ink:#2A2925; --muted:#6E6A60;
     --line:#E7E4DC; --line-strong:#D6D2C8;
-    --thread:#CE451B; --discovery:#33322F; --delivery:#CE451B;
-    --sec:#8F6614; --gov:#3A6E86; --biz:#CE451B; --vendor:#3A6E86;
-    --enf:#2F7048; --named:#8F6614; --absent:#B23434;
-    --warp:rgba(42,41,37,.05);
-    --shadow:0 1px 2px rgba(20,19,15,.05),0 6px 22px rgba(20,19,15,.06);
-    --r:0px; --r-sm:2px;
+    --ember:#CE451B; --ember-cta:#E65C2D; --ember-dim:rgba(206,69,27,.10);
+    --pos:#2F7048; --pos-dim:rgba(47,112,72,.12);
+    --caution:#8F6614; --crit:#B23434; --crit-dim:rgba(178,52,52,.12); --info:#3A6E86;
+    --shadow:0 1px 2px rgba(20,19,15,.05),0 8px 24px rgba(20,19,15,.07);
     --serif:'Instrument Serif',Georgia,serif;
-    --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
     --sans:'DM Sans',system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
   }
-
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
-    line-height:1.6;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
-  h1,h2,h3,h4{text-wrap:balance;margin:0;color:var(--head)}
-  h1,h2{font-family:var(--serif);font-weight:400}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  h1,h2,h3,h4{margin:0;color:var(--head);text-wrap:balance}
+  h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:0}
+  a{color:var(--ember)}
   .mono{font-family:var(--mono)}
-  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  em{font-style:italic;color:var(--ember)}
 
-  /* ---------- header ---------- */
-  header{padding:64px 0 30px}
-  .kicker{display:flex;align-items:center;gap:10px;color:var(--thread);margin-bottom:20px}
-  .kicker .spool{width:22px;height:22px;flex:none}
-  h1{font-size:clamp(2.4rem,5.4vw,3.9rem);font-weight:400;letter-spacing:0;line-height:1.05}
-  h1 .q{color:var(--thread);font-style:italic;font-weight:400}
-  .lede{max-width:62ch;margin-top:18px;font-size:1.06rem;color:var(--muted)}
+  /* header */
+  header{padding:56px 0 20px}
+  .brandbar{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .wordmark{font-family:var(--sans);font-weight:600;font-size:1.04rem}
+  .wm-mid{color:var(--head)} .wm-leap{color:var(--ember)}
+  h1{font-size:clamp(2.3rem,5.2vw,3.7rem);line-height:1.05}
+  .lede{max-width:64ch;margin-top:16px;font-size:1.08rem;color:var(--muted)}
   .lede b{color:var(--head);font-weight:600}
 
-  /* ---------- legend ---------- */
-  .legend{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:26px;padding:16px 18px;
-    background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
-  .legend .grp{display:flex;flex-direction:column;gap:8px}
-  .legend .grp-h{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-  .legend .row{display:flex;flex-wrap:wrap;gap:7px 14px}
-  .key{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--ink)}
-  .mk{width:13px;height:13px;flex:none}
-  .mk.sec{background:var(--sec);transform:rotate(45deg);width:11px;height:11px}
-  .mk.gov{background:var(--gov)}                 /* square */
-  .mk.biz{background:var(--biz);transform:rotate(45deg);width:11px;height:11px} /* diamond */
+  section{padding:26px 0}
+  .sec-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .sec-h h2{font-size:1.7rem}
+  .sec-sub{color:var(--muted);max-width:72ch;margin:4px 0 18px;font-size:.98rem}
 
-  /* ---------- hero schematic ---------- */
-  .schematic{margin:30px 0 8px;padding:26px 22px 18px;background:var(--surface);
-    border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+  /* hero diagram */
+  .schematic{background:var(--surface);border:1px solid var(--line);padding:22px 20px 12px;box-shadow:var(--shadow)}
   .schematic svg{width:100%;height:auto;display:block;overflow:visible}
   .dd-diamond{fill:none;stroke-width:2}
-  .dd-fillL{fill:var(--discovery);opacity:.08}
-  .dd-fillR{fill:var(--delivery);opacity:.08}
-  .dd-strokeL{stroke:var(--discovery);fill:none}
-  .dd-strokeR{stroke:var(--delivery);fill:none}
+  .dd-fillL{fill:var(--info);opacity:.07} .dd-fillR{fill:var(--ember);opacity:.07}
+  .dd-strokeL{stroke:#33322F;fill:none} .dd-strokeR{stroke:var(--ember);fill:none}
   .dd-flow{stroke:var(--line-strong);stroke-width:2;fill:none}
   .dd-lab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;fill:var(--muted);text-transform:uppercase}
-  .dd-mode{font-family:var(--sans);font-size:12.5px;font-weight:640;fill:var(--ink)}
-  .dd-h{font-family:var(--sans);font-size:13px;font-weight:760;letter-spacing:.02em}
-  .dd-hL{fill:var(--discovery)} .dd-hR{fill:var(--delivery)}
-  rect.dd-waist,.dd-waist rect{fill:var(--surface-2);stroke:var(--thread);stroke-width:1.5}
-  text.dd-waist,.dd-waist text{font-family:var(--mono);fill:var(--thread);letter-spacing:.04em}
-  .draw{stroke-dasharray:640;stroke-dashoffset:640;animation:draw 1.5s ease forwards}
-  @keyframes draw{to{stroke-dashoffset:0}}
+  .dd-mode{font-family:var(--sans);font-size:12.5px;font-weight:600;fill:var(--ink)}
+  .dd-h{font-family:var(--sans);font-size:13px;font-weight:700}
+  .dd-hL{fill:#33322F} .dd-hR{fill:var(--ember)}
+  rect.dd-waist{fill:var(--surface-2);stroke:var(--ember);stroke-width:1.5}
+  text.dd-waist{font-family:var(--mono);fill:var(--ember);letter-spacing:.04em}
 
-  /* ---------- section scaffolding ---------- */
-  section{padding:30px 0}
-  .sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap}
-  .sec-h h2{font-size:1.72rem;font-weight:400;letter-spacing:0}
-  .sec-sub{color:var(--muted);max-width:70ch;margin:2px 0 22px;font-size:.97rem}
+  /* ============ simulator ============ */
+  .sim{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);padding:0;overflow:hidden}
+  .sim-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+  .sim-controls label{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  select,.btn{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:0;cursor:pointer}
+  select{padding-right:8px}
+  .btn{text-transform:uppercase;letter-spacing:.06em;font-size:.72rem;transition:background .15s,color .15s,border-color .15s}
+  .btn:hover{border-color:var(--ink)}
+  .btn.primary{background:var(--ember-cta);color:#110D0A;border-color:var(--ember-cta);font-weight:600}
+  .btn.primary:hover{background:var(--ember)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn:focus-visible,select:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+  .spacer{flex:1}
+  .sim-status{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
 
-  /* warp / continuous-assurance bands */
-  .band{border-radius:var(--r);border:1px solid var(--line);padding:16px 20px;background:var(--surface)}
-  .band--warp{border-style:dashed;border-color:var(--line-strong)}
-  .band-h{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.72rem;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
-  .warp-items{display:flex;flex-wrap:wrap;gap:9px}
-  .warp-items .chip{border-color:var(--line-strong)}
+  .sim-body{display:grid;grid-template-columns:1fr;gap:0}
+  .sim-track{padding:20px 18px 6px}
+  .phase{margin-bottom:14px}
+  .phase-lab{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:8px}
+  .phase-lab::after{content:"";flex:1;height:1px;background:var(--line)}
+  .nodes{display:flex;flex-wrap:wrap;gap:8px}
+  .node{position:relative;flex:0 0 auto;min-width:96px;border:1px solid var(--line);background:var(--surface);padding:9px 11px;cursor:pointer;transition:border-color .2s,background .2s,transform .2s}
+  .node:hover{border-color:var(--line-strong)}
+  .node .nlab{font-size:.82rem;font-weight:600;color:var(--head);line-height:1.15}
+  .node .ngate{font-family:var(--mono);font-size:.58rem;letter-spacing:.03em;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+  .node .nmark{position:absolute;top:6px;right:7px;font-family:var(--mono);font-size:.7rem;line-height:1}
+  .node[data-state="active"]{border-color:var(--ember);background:var(--ember-dim);box-shadow:0 0 0 2px var(--ember-dim)}
+  .node[data-state="pass"]{border-left:3px solid var(--pos)}
+  .node[data-state="pass"] .nmark{color:var(--pos)}
+  .node[data-state="block"]{border-color:var(--crit);background:var(--crit-dim)}
+  .node[data-state="block"] .nmark{color:var(--crit)}
+  .node[data-state="wait"]{border-color:var(--ember);background:var(--ember-dim)}
+  @media (prefers-reduced-motion:no-preference){.node[data-state="active"]{animation:pulse 1.1s ease-in-out infinite}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 2px var(--ember-dim)}50%{box-shadow:0 0 0 5px var(--ember-dim)}}
 
-  /* the stream: stages */
-  .diamond-block{position:relative;margin-top:18px;padding-left:4px}
-  .flow-rail{position:absolute;left:15px;top:8px;bottom:8px;width:2px;border-radius:2px}
-  .flow-rail.L{background:var(--discovery)}
-  .flow-rail.R{background:var(--delivery)}
-  .stage{position:relative;display:grid;grid-template-columns:34px 1fr;gap:14px;margin:0 0 12px}
-  .node{grid-column:1;width:32px;height:32px;border-radius:0;display:grid;place-items:center;
-    font-family:var(--mono);font-size:.82rem;font-weight:600;color:var(--surface);z-index:1;
-    margin-top:2px}
-  .node.L{background:var(--discovery)} .node.R{background:var(--delivery);color:#110D0A}
-  .card{grid-column:2;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
-    padding:13px 16px;box-shadow:var(--shadow)}
-  .card .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .card h3{font-size:1.02rem;font-weight:700}
-  .card .mode{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .card p{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
-  .art{font-family:var(--mono);font-size:.8rem;color:var(--ink);background:var(--surface-2);
-    border:1px solid var(--line);border-radius:2px;padding:1px 7px}
-  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+  .sim-detail{border-top:1px solid var(--line);display:grid;grid-template-columns:1.2fr 1fr;gap:0}
+  @media (max-width:720px){.sim-detail{grid-template-columns:1fr}}
+  .detail-main{padding:18px}
+  .detail-main .dphase{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .detail-main h3{font-size:1.25rem;margin:3px 0 8px}
+  .detail-main .dgate{display:inline-block;font-family:var(--mono);font-size:.66rem;border:1px solid var(--line-strong);padding:2px 7px;border-radius:2px;color:var(--muted);margin-bottom:10px}
+  .detail-main p{margin:0;font-size:.94rem;color:var(--ink)}
+  .verdict{margin-top:12px;font-family:var(--mono);font-size:.8rem;padding:9px 12px;border-radius:2px;display:none}
+  .verdict.pass{display:block;color:var(--pos);background:var(--pos-dim);border:1px solid color-mix(in srgb,var(--pos) 40%,transparent)}
+  .verdict.block{display:block;color:var(--crit);background:var(--crit-dim);border:1px solid color-mix(in srgb,var(--crit) 40%,transparent)}
+  .verdict.wait{display:block;color:var(--ember);background:var(--ember-dim);border:1px solid color-mix(in srgb,var(--ember) 40%,transparent)}
+  .approve{margin-top:12px}
+  .detail-log{border-left:1px solid var(--line);padding:18px;background:var(--surface-2)}
+  .detail-log .llab{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .log{list-style:none;margin:0;padding:0;font-family:var(--mono);font-size:.72rem;max-height:210px;overflow-y:auto}
+  .log li{padding:3px 0;border-bottom:1px solid var(--line);color:var(--ink);display:flex;gap:8px}
+  .log li .g{flex:0 0 auto}
+  .log li.pass .g{color:var(--pos)} .log li.block .g{color:var(--crit)} .log li.wait .g{color:var(--ember)} .log li.info .g{color:var(--muted)}
+  .loopback{padding:12px 18px;border-top:1px dashed var(--line-strong);font-family:var(--mono);font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:10px;transition:color .3s,background .3s}
+  .loopback.fired{color:var(--ember);background:var(--ember-dim)}
+  .loopback .arrow{font-size:1rem}
 
-  /* chips */
-  .chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.72rem;
-    padding:3px 9px;border-radius:2px;border:1px solid var(--line);background:var(--surface-2);
-    color:var(--ink);white-space:nowrap}
-  .chip .lb{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  .chip--gate{border-color:color-mix(in srgb,var(--ink) 22%,transparent)}
-  .chip--agent{border-color:var(--thread);color:var(--thread)}
-  .chip--seam{border-style:dashed;border-color:var(--muted);color:var(--muted)}
-  .chip--hook{border-color:var(--line-strong);background:transparent}
-  .chip--sec{border-color:var(--sec);color:var(--sec);background:color-mix(in srgb,var(--sec) 8%,var(--surface-2))}
-  .chip--vendor{border-style:dashed;border-color:var(--vendor);color:var(--vendor);
-    background:color-mix(in srgb,var(--vendor) 8%,var(--surface-2))}
-  /* overlay dots on cards */
-  .dots{display:inline-flex;gap:5px;align-items:center;margin-left:2px}
-  .dot{width:11px;height:11px;flex:none}
-  .dot.sec{background:var(--sec);transform:rotate(45deg);width:9px;height:9px}
-  .dot.gov{background:var(--gov)}
-  .dot.biz{background:var(--biz);transform:rotate(45deg);width:9px;height:9px}
+  /* gate reference / maturity */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
+  .card{background:var(--surface);border:1px solid var(--line);padding:14px 16px}
+  .card h4{font-size:.95rem;display:flex;align-items:center;gap:8px}
+  .card .gid{font-family:var(--mono);font-size:.6rem;color:var(--muted);border:1px solid var(--line-strong);padding:1px 5px;border-radius:2px}
+  .card p{margin:7px 0 0;font-size:.84rem;color:var(--muted)}
 
-  /* waist */
-  .waist{margin:6px 0 6px;display:grid;grid-template-columns:34px 1fr;gap:14px}
-  .waist .node{background:var(--thread);color:#110D0A}
-  .waist .card{border-color:var(--thread);border-width:1.5px}
-  .waist .card h3{color:var(--thread)}
+  .scorebar{display:flex;height:15px;border:1px solid var(--line);overflow:hidden;margin:6px 0 10px}
+  .scorebar span{display:block}
+  .scorebar .enf{background:var(--pos)} .scorebar .nam{background:var(--caution)} .scorebar .abs{background:var(--crit)}
+  .scoretags{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--mono);font-size:.76rem}
+  .scoretags .sw{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px}
+  .scoretags .enf{background:var(--pos)} .scoretags .nam{background:var(--caution)} .scoretags .abs{background:var(--crit)}
 
-  /* deliver loop steps: tighter grid */
-  .loop-note{font-size:.86rem;color:var(--muted);margin:2px 0 14px;font-family:var(--mono);letter-spacing:.02em}
-
-  /* continuous assurance */
-  .ca{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin-top:14px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
-  .ca .step{background:var(--surface);padding:13px 12px}
-  .ca .step .n{font-family:var(--mono);font-size:.68rem;color:var(--thread);letter-spacing:.1em}
-  .ca .step h4{margin:5px 0 3px;font-size:.92rem;font-weight:700}
-  .ca .step p{margin:0;font-size:.76rem;color:var(--muted)}
-  .ca-trig{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-
-  /* vendor mapping */
-  .vend-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
-  .vcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
-    padding:18px 20px;box-shadow:var(--shadow)}
-  .vcard.snyk{border-top:3px solid var(--vendor)}
-  .vcard.cg{border-top:3px solid var(--thread)}
-  .vcard h3{font-size:1.12rem;font-weight:780;display:flex;align-items:center;gap:9px}
-  .vcard .tagline{font-size:.85rem;color:var(--muted);margin:4px 0 14px}
-  .maps{display:flex;flex-direction:column;gap:9px}
-  .map{display:grid;grid-template-columns:auto 22px 1fr;align-items:center;gap:8px;
-    padding:8px 10px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm)}
-  .map .to{font-family:var(--mono);font-size:.7rem;color:var(--muted);text-align:center}
-  .map .dest{font-size:.83rem}
-  .map .dest b{font-family:var(--mono);font-weight:600}
-  .map .prod{font-family:var(--mono);font-size:.72rem;padding:2px 7px;border-radius:2px;
-    border:1px solid var(--line-strong);white-space:nowrap}
-
-  .note{margin-top:26px;padding:16px 20px;border-left:3px solid var(--sec);
-    background:color-mix(in srgb,var(--sec) 7%,var(--surface));border-radius:0 var(--r) var(--r) 0}
-  .note h4{margin:0 0 6px;font-size:.86rem;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--sec)}
-  .note p{margin:0;font-size:.9rem;color:var(--ink)}
-  .note p+p{margin-top:8px}
-
-  footer{padding:34px 0 60px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);margin-top:14px}
-  footer a{color:var(--thread)}
-  footer .mono{font-size:.78rem}
-
-  /* ---------- maturity traffic-light layer ---------- */
-  .mat-legend{display:flex;flex-wrap:wrap;gap:10px 22px;margin:2px 0 20px}
-  .mkey{display:inline-flex;align-items:center;gap:8px;font-size:.86rem}
-  .mkey .g{font-size:1rem;line-height:1;width:16px;text-align:center}
-  .mkey .g.enf{color:var(--enf)} .mkey .g.named{color:var(--named)} .mkey .g.absent{color:var(--absent)}
-  .mkey b{font-weight:650} .mkey span{color:var(--muted)}
-
-  .scorecard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
-    padding:16px 20px;box-shadow:var(--shadow);margin-bottom:22px}
-  .scorecard .sc-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-  .scorecard .sc-h .lab{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .scorecard .sc-h .tot{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
-  .sc-bar{display:flex;height:16px;border-radius:2px;overflow:hidden;border:1px solid var(--line)}
-  .sc-bar span{display:block;height:100%}
-  .sc-bar .enf{background:var(--enf)} .sc-bar .named{background:var(--named)} .sc-bar .absent{background:var(--absent)}
-  .sc-tags{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:11px}
-  .sc-tags .t{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:.76rem;color:var(--ink)}
-  .sc-tags .sw{width:11px;height:11px;border-radius:2px}
-  .sc-tags .sw.enf{background:var(--enf)} .sc-tags .sw.named{background:var(--named)} .sc-tags .sw.absent{background:var(--absent)}
-
-  .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .mcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
-    padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
-  .mcard > h3{font-size:1rem;font-weight:740;display:flex;align-items:center;gap:9px}
-  .mcard > h3 .tag{font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;color:var(--muted);
-    border:1px solid var(--line);border-radius:2px;padding:1px 6px}
-  .mini-bar{display:flex;height:5px;border-radius:2px;overflow:hidden;margin:11px 0 13px;border:1px solid var(--line)}
-  .mini-bar span{height:100%}
-  .mini-bar .enf{background:var(--enf)} .mini-bar .named{background:var(--named)} .mini-bar .absent{background:var(--absent)}
-  .mrows{display:flex;flex-direction:column;gap:0}
-  .mrow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
-    padding:7px 0;border-top:1px solid var(--line)}
-  .mrow:first-child{border-top:0}
-  .mrow .cap{font-size:.85rem;line-height:1.35}
-  .mrow .cap b{font-family:var(--mono);font-weight:600}
-  .mrow .cap small{display:block;color:var(--muted);font-size:.76rem;margin-top:1px}
-  .state{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.68rem;
-    padding:3px 9px;border-radius:2px;white-space:nowrap}
-  .state .g{font-size:.85rem;line-height:1}
-  .state.enf{color:var(--enf);border:1px solid color-mix(in srgb,var(--enf) 55%,transparent);
-    background:color-mix(in srgb,var(--enf) 10%,transparent)}
-  .state.named{color:var(--named);border:1px solid color-mix(in srgb,var(--named) 55%,transparent);
-    background:color-mix(in srgb,var(--named) 10%,transparent)}
-  .state.absent{color:var(--absent);border:1px solid color-mix(in srgb,var(--absent) 55%,transparent);
-    background:color-mix(in srgb,var(--absent) 10%,transparent)}
-
-  .roadmap{margin-top:22px;background:var(--surface-2);border:1px solid var(--line);
-    border-radius:var(--r);padding:20px 22px}
-  .roadmap h3{font-size:1.05rem;font-weight:760;margin-bottom:3px}
-  .roadmap .rsub{color:var(--muted);font-size:.9rem;margin-bottom:16px}
-  .rsteps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;counter-reset:r}
-  .rstep{position:relative;padding:14px 14px 14px 14px;background:var(--surface);
-    border:1px solid var(--line);border-radius:var(--r-sm);border-top:3px solid var(--enf)}
-  .rstep:nth-child(1){border-top-color:var(--enf)}
-  .rstep:nth-child(2){border-top-color:var(--named)}
-  .rstep:nth-child(3){border-top-color:var(--gov)}
-  .rstep:nth-child(4){border-top-color:var(--biz)}
-  .rstep .num{font-family:var(--mono);font-size:.72rem;color:var(--muted);letter-spacing:.1em}
-  .rstep h4{margin:6px 0 5px;font-size:.94rem;font-weight:720;line-height:1.25}
-  .rstep p{margin:0;font-size:.8rem;color:var(--muted)}
-
-  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  .note{margin-top:20px;padding:14px 18px;border-left:3px solid var(--ember);background:var(--ember-dim)}
+  .note p{margin:0;font-size:.9rem;color:var(--ink)} .note p+p{margin-top:7px}
+  footer{padding:30px 0 56px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);margin-top:20px}
+  footer .mono{font-size:.74rem}
+  .reveal{opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
   .reveal.in{opacity:1;transform:none}
-
-  @media (max-width:760px){
-    .vend-grid{grid-template-columns:1fr}
-    .ca{grid-template-columns:repeat(2,1fr)}
-    .map{grid-template-columns:auto 18px 1fr}
-    .mat-grid{grid-template-columns:1fr}
-    .rsteps{grid-template-columns:1fr 1fr}
-  }
-  @media (prefers-reduced-motion:reduce){
-    .reveal{opacity:1;transform:none;transition:none}
-    .draw{animation:none;stroke-dashoffset:0}
-  }
-
-  /* ---------- "shipped this release" strip + roadmap status badges ---------- */
-  .shipbar{margin-bottom:22px;background:color-mix(in srgb,var(--enf) 9%,var(--surface));
-    border:1px solid color-mix(in srgb,var(--enf) 34%,var(--line));border-radius:var(--r);padding:15px 18px}
-  .shipbar .sh-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:11px}
-  .shipbar .sh-h .lead{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--enf)}
-  .shipbar .sh-h .ver{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
-  .shiprow{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-  .shiprow .rl{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-self:center;margin-right:2px}
-  .shipchip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.72rem;
-    padding:3px 9px;border-radius:2px;border:1px solid color-mix(in srgb,var(--enf) 45%,transparent);
-    color:var(--enf);background:color-mix(in srgb,var(--enf) 8%,transparent);white-space:nowrap}
-  .shipchip.agent{border-color:color-mix(in srgb,var(--thread) 55%,transparent);color:var(--thread);background:color-mix(in srgb,var(--thread) 8%,transparent)}
-  .shipchip.doc{border-color:var(--line-strong);color:var(--muted);background:transparent}
-  .rbadge{position:absolute;top:10px;right:12px;font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;padding:2px 7px;border-radius:2px}
-  .rbadge.done{color:var(--enf);border:1px solid color-mix(in srgb,var(--enf) 50%,transparent);background:color-mix(in srgb,var(--enf) 12%,transparent)}
-  .rbadge.partial{color:var(--named);border:1px solid color-mix(in srgb,var(--named) 50%,transparent);background:color-mix(in srgb,var(--named) 12%,transparent)}
-
-  /* ---------- MiddleLeap brand additions ---------- */
-  a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--thread);outline-offset:2px}
-  a{color:var(--thread)}
-  .brandbar{display:flex;align-items:center;gap:10px;margin-bottom:24px}
-  .brandbar .mark{flex:none}
-  .wordmark{font-family:var(--sans);font-weight:600;font-size:1.04rem;letter-spacing:-.01em}
-  .wm-mid{color:var(--head)} .wm-leap{color:var(--thread)}
-  .brandbar .eyebrow{margin-left:2px}
-  /* brand tables (sharp, ruled) */
-  .wrap table{width:100%;border-collapse:collapse;font-size:.9rem}
-  .wrap th,.wrap td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
-  .wrap thead th{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line-strong)}
-  .wrap tbody tr:last-child td{border-bottom:0}
-  .wrap td strong{color:var(--head);font-weight:600}
-  #loop-closes h3{font-family:var(--sans);font-size:1.05rem;font-weight:600;color:var(--head);margin:30px 0 6px}
-  #loop-closes p:not([class]){font-size:.93rem;color:var(--ink);margin:12px 0 2px;max-width:76ch}
-  #loop-closes > div{border:1px solid var(--line);margin:8px 0 4px}
-  #loop-closes table{margin:0}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <header>
     <div class="brandbar">
-      <svg class="mark" width="40" height="18" viewBox="0 0 40 18" aria-hidden="true">
+      <svg width="40" height="18" viewBox="0 0 40 18" aria-hidden="true">
         <rect x="1" y="2.5" width="13" height="13" fill="#2A2925"/>
         <rect x="24.5" y="3" width="10.6" height="10.6" transform="rotate(45 29.8 8.3)" fill="#CE451B"/>
       </svg>
       <span class="wordmark"><span class="wm-mid">Middle</span><span class="wm-leap">Leap</span></span>
       <span class="eyebrow">· The Loom · AI-SDLC</span>
     </div>
-    <h1>The build stream, its checkpoints,<br><span class="q">and how bank-grade it runs.</span></h1>
-    <p class="lede">One idea becomes gated, audit-ready software — and running reopens discovery. Below is the
-      actual stream: every <b>gate</b>, <b>reviewer agent</b>, <b>skill</b>, <b>hook</b>, and <b>seam</b> the Loom
-      defines, coloured for where <b>security</b>, <b>data governance</b>, and <b>business intent</b> are checked;
-      where <b>Chainguard</b> and <b>Snyk</b> attach; the <b>closed loop</b> back to Discovery; and a bank-grade
-      traffic-light now reflecting <b>five enforced gates</b>, three assurance agents, and six org-side runbooks
-      (v1.9.0).</p>
-
-    <div class="legend" aria-label="Legend">
-      <div class="grp">
-        <span class="grp-h">Overlay — what's being checked</span>
-        <div class="row">
-          <span class="key"><span class="mk sec"></span> Security</span>
-          <span class="key"><span class="mk gov"></span> Data governance</span>
-          <span class="key"><span class="mk biz"></span> Business intent / requirements</span>
-        </div>
-      </div>
-      <div class="grp">
-        <span class="grp-h">Node type</span>
-        <div class="row">
-          <span class="key"><span class="chip chip--gate mono">D· / Q·</span> gate (CI)</span>
-          <span class="key"><span class="chip chip--agent mono">agent</span> reviewer</span>
-          <span class="key"><span class="chip chip--seam mono">seam</span> mounted context</span>
-          <span class="key"><span class="chip chip--vendor mono">vendor</span> plug-in</span>
-        </div>
-      </div>
-    </div>
+    <h1>How the harness <em>actually works</em>.</h1>
+    <p class="lede">The Loom turns an idea into gated, audit-ready software and then lets <b>running reopen discovery</b>.
+      Below is the mental model — then <b>send a change through it yourself</b>: pick a scenario, watch each gate, hook,
+      and reviewer evaluate, approve the human four-eyes step, and see a Run signal loop back to Discovery.</p>
   </header>
 
-  <!-- ================= HERO SCHEMATIC ================= -->
-  <div class="schematic reveal" aria-label="The closed loop — discovery, delivery, run, and the feedback edge to discovery">
-    <svg viewBox="0 0 1040 332" role="img" aria-label="The Loom as a closed loop: a discovery diamond (discover diverges, define converges) and a delivery diamond (develop diverges, deliver converges) meet at the hand-off waist that emits the PRD; the delivery diamond feeds a Run and Operations node — the cloth in use — whose operational signals sweep back along the bottom into the discover diamond as evidence gated at D2, closing the double diamond into a loop. The return edge is triaged three ways: spec-fix back to Delivery, register back to Assurance, or re-discover.">
-  <defs>
-    <marker id="ff-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 Z" style="fill:var(--thread)"/>
-    </marker>
-  </defs>
-
-  <!-- headers -->
-  <text class="dd-h dd-hL" x="210" y="16" text-anchor="middle">DISCOVERY HARNESS · the problem</text>
-  <text class="dd-h dd-hR" x="690" y="16" text-anchor="middle">DELIVERY HARNESS · the solution</text>
-
-  <!-- left diamond (discover / define) -->
-  <path class="dd-diamond dd-fillL" d="M30 105 L210 25 L390 105 L210 185 Z"/>
-  <path class="dd-strokeL draw" d="M30 105 L210 25 L390 105 L210 185 Z"/>
-  <line x1="210" y1="25" x2="210" y2="185" style="stroke:var(--line-strong);opacity:.3;stroke-width:1"/>
-
-  <!-- right diamond (develop / deliver) -->
-  <path class="dd-diamond dd-fillR" d="M510 105 L690 25 L870 105 L690 185 Z"/>
-  <path class="dd-strokeR draw" d="M510 105 L690 25 L870 105 L690 185 Z"/>
-  <line x1="690" y1="25" x2="690" y2="185" style="stroke:var(--line-strong);opacity:.3;stroke-width:1"/>
-
-  <!-- diamond labels -->
-  <text class="dd-lab" x="150" y="99" text-anchor="middle">discover</text>
-  <text class="dd-mode" x="150" y="121" text-anchor="middle">diverge</text>
-  <text class="dd-lab" x="300" y="99" text-anchor="middle">define</text>
-  <text class="dd-mode" x="300" y="121" text-anchor="middle">converge</text>
-  <text class="dd-lab" x="600" y="99" text-anchor="middle">develop</text>
-  <text class="dd-mode" x="600" y="121" text-anchor="middle">diverge</text>
-  <text class="dd-lab" x="780" y="99" text-anchor="middle">deliver</text>
-  <text class="dd-mode" x="780" y="121" text-anchor="middle">converge</text>
-
-  <!-- waist -->
-  <rect class="dd-waist" x="393" y="88" width="114" height="34"/>
-  <text class="dd-waist" x="450" y="103" text-anchor="middle" style="font-size:11px;font-weight:600">HAND-OFF</text>
-  <text class="dd-waist" x="450" y="116" text-anchor="middle" style="font-size:8px">waist gate ↦ PRD</text>
-
-  <!-- short arrow: delivery right point → RUN -->
-  <path class="dd-flow" d="M872 105 L890 105" style="stroke:var(--thread);stroke-dasharray:none;fill:none;stroke-width:2" marker-end="url(#ff-arrow)"/>
-
-  <!-- RUN · OPERATIONS node (styled like the waist, thread-accented) -->
-  <rect class="dd-waist" x="894" y="79" width="122" height="52" rx="10" style="stroke-width:2"/>
-  <text class="dd-waist" x="955" y="101" text-anchor="middle" style="font-size:10.5px;font-weight:600">RUN · OPERATIONS</text>
-  <text class="dd-lab" x="955" y="117" text-anchor="middle" style="font-size:8.5px">the cloth in use</text>
-
-  <!-- feedback edge: RUN → along the bottom → Discover left point (30,105) -->
-  <path class="dd-flow" d="M955 131 C970 250 800 304 480 304 C200 304 46 232 30 108" style="stroke:var(--thread);stroke-dasharray:none;fill:none;stroke-width:2" marker-end="url(#ff-arrow)"/>
-
-  <!-- warp caption (above the loop, legible) -->
-  <text class="dd-lab" x="470" y="206" text-anchor="middle">warp — always-on controls run under all three arcs</text>
-
-  <!-- routing triage on the return edge -->
-  <text class="dd-lab" x="322" y="250" text-anchor="middle">spec-fix ↻ Delivery</text>
-  <text class="dd-lab" x="540" y="250" text-anchor="middle">register ↻ Assurance</text>
-  <text class="dd-lab" x="726" y="250" text-anchor="middle">re-discover ↻</text>
-
-  <!-- feedback edge label -->
-  <text class="dd-lab" x="492" y="283" text-anchor="middle">sense → signals · fed to Discovery as evidence (D2)</text>
-</svg>
-  </div>
-
-  <!-- ================= WARP ================= -->
+  <!-- the mental model -->
   <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">Under everything</span><h2>The warp — always-on controls</h2></div>
-    <p class="sec-sub">Threads under tension. Every stage in both diamonds is woven across these; they are not a
-      phase, they are the loom. Enforced in CI, hooks, and branch protection — not left to the agent's restraint.</p>
-    <div class="band band--warp">
-      <div class="band-h">warp · continuous</div>
-      <div class="warp-items">
-        <span class="chip">four-eyes merge <span class="dots"><span class="dot sec"></span></span></span>
-        <span class="chip">INSERT-only audit <span class="dots"><span class="dot gov"></span></span></span>
-        <span class="chip">data lineage <span class="dots"><span class="dot gov"></span></span></span>
-        <span class="chip">quality gates <span class="dots"><span class="dot sec"></span></span></span>
-        <span class="chip">data residency <span class="dots"><span class="dot gov"></span></span></span>
-      </div>
-      <div class="band-h" style="margin-top:14px">enforcement gates · new, run every PR</div>
-      <div class="warp-items">
-        <span class="chip chip--gate chip--sec">control-plane-check · HG-0002 <span class="dots"><span class="dot sec"></span></span></span>
-        <span class="chip chip--gate chip--sec">model-provenance-check · HG-0006 <span class="dots"><span class="dot sec"></span></span></span>
-        <span class="chip chip--gate chip--sec">evidence-seal-check · HG-0003 <span class="dots"><span class="dot sec"></span></span></span>
-        <span class="chip chip--gate">data-lifecycle-check · retention/erasure <span class="dots"><span class="dot gov"></span></span></span>
-        <span class="chip chip--gate">operations-signal-check · Run→Discovery <span class="dots"><span class="dot gov"></span></span></span>
-      </div>
-    </div>
+    <div class="sec-h"><span class="eyebrow">The mental model</span><h2>A closed loop, not a line</h2></div>
+    <p class="sec-sub">Two diamonds — find the right problem, build it right — meet at a hand-off, ship, run, and feed
+      Run's signals back into Discovery. The <em>warp</em> (four-eyes, INSERT-only audit, lineage, residency) runs under all three arcs.</p>
+    <div class="schematic" id="hero"></div>
   </section>
 
-  <!-- ================= LEFT DIAMOND ================= -->
-  <section>
-    <div class="sec-h reveal"><span class="eyebrow">Left diamond</span><h2>Discovery — build the <em>right</em> thing</h2></div>
-    <p class="sec-sub reveal">Skill: <span class="art">discovery</span>. Gates <b class="mono">D1–D9</b> are mechanical (a
-      pure-Node validator); two reviewer agents add the judgement the validator can't. This is where
-      <b>business intent</b> is framed and <b>data governance</b> feasibility is decided — before a line is built.</p>
-
-    <div class="diamond-block reveal">
-      <div class="flow-rail L"></div>
-
-      <div class="stage">
-        <div class="node L">1</div>
-        <div class="card">
-          <div class="top"><h3>Discover — explore the problem space</h3><span class="mode">diverge</span></div>
-          <p>Signals, pains, stakeholders, prior evidence. → <span class="art">research-log.md</span> · <span class="art">evidence/</span></p>
-          <div class="tags"><span class="chip chip--gate">D2 · evidence</span><span class="chip chip--gate">D3 · scope & stakeholders</span></div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node L">2</div>
-        <div class="card">
-          <div class="top"><h3>Synthesise into themes</h3><span class="mode">converge</span></div>
-          <p>Signals → themes, sized and prioritised. → <span class="art">synthesis.md</span></p>
-          <div class="tags"><span class="chip chip--gate">D5 · synthesis integrity</span></div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node L">3</div>
-        <div class="card">
-          <div class="top"><h3>Frame the ONE problem <span class="dots"><span class="dot biz" title="business intent"></span></span></h3><span class="mode">define</span></div>
-          <p>Falsifiable problem, target user, success measures, constraints. <b>This is where business
-            requirements enter the stream.</b> → <span class="art">problem-statement.md</span></p>
-          <div class="tags">
-            <span class="chip chip--gate">D1 · problem framing</span>
-            <span class="chip chip--gate chip--sec">D4 · no-solutioning boundary</span>
-            <span class="chip chip--agent">discovery-boundary-reviewer</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node L">4</div>
-        <div class="card">
-          <div class="top"><h3>Data-governance feasibility <span class="dots"><span class="dot gov" title="data governance"></span></span></h3><span class="mode">define</span></div>
-          <p>Classify the data the direction touches, map to the register, assert acceptable residual risk —
-            asked <em>here</em>, never retrofitted in delivery. → <span class="art">data-governance.md</span></p>
-          <div class="tags">
-            <span class="chip chip--gate">D6 · data-governance</span>
-            <span class="chip chip--agent">data-governance-reviewer</span>
-            <span class="chip chip--seam">seam · data-risk register</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node L">5</div>
-        <div class="card">
-          <div class="top"><h3>Prototype — make it tangible</h3><span class="mode">define</span></div>
-          <p>Low-fidelity, brand-real, behaviour-hollow wireframe to test the framing. →
-            <span class="art">prototype.md</span> + wireframe</p>
-          <div class="tags">
-            <span class="chip chip--gate">D7 · brand conformance</span>
-            <span class="chip chip--gate">D8 · tangibility</span>
-            <span class="chip chip--agent">discovery-boundary-reviewer</span>
-            <span class="chip chip--seam">seam · brand profile</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node L">5b</div>
-        <div class="card">
-          <div class="top"><h3>Stakeholder reaction — close the loop</h3><span class="mode">validate</span></div>
-          <p>Show the prototype to named roles; log each reaction as fresh evidence. →
-            <span class="art">stakeholder-reaction.md</span></p>
-          <div class="tags"><span class="chip chip--gate">D9 · validation loop</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= WAIST ================= -->
+  <!-- the simulator -->
   <section class="reveal">
-    <div class="waist">
-      <div class="node">↦</div>
-      <div class="card">
-        <div class="top"><h3>Hand-off — the boundary object (the PRD)</h3><span class="mode mono">D1–D9 green</span></div>
-        <p>Problem + target user + success measures + explicit out-of-scope + the data-governance verdict,
-          carried across. No delivery design crosses this line. → <span class="art">handoff.md</span></p>
-        <div class="tags">
-          <span class="chip chip--gate">waist gate · discovery-link-check.mjs</span>
-          <span class="chip">a green hand-off is the entry condition for any feature item</span>
+    <div class="sec-h"><span class="eyebrow">Run it</span><h2>Send a change through the Loom</h2></div>
+    <p class="sec-sub">Every step below is a real gate, hook, or reviewer in the bundle. Pick a scenario that trips one,
+      press <b>Play</b>, and watch it <b>block the merge</b> — or approve four-eyes yourself and watch the loop close.</p>
+
+    <div class="sim">
+      <div class="sim-controls">
+        <label for="scenario">Scenario</label>
+        <select id="scenario" aria-label="Scenario"></select>
+        <button class="btn primary" id="play">▶ Play</button>
+        <button class="btn" id="step">⇢ Step</button>
+        <button class="btn" id="reset">↻ Reset</button>
+        <span class="spacer"></span>
+        <span class="sim-status" id="status">ready</span>
+      </div>
+      <div class="sim-body">
+        <div class="sim-track" id="track"></div>
+        <div class="sim-detail">
+          <div class="detail-main">
+            <div class="dphase" id="d-phase">Press Play or Step</div>
+            <h3 id="d-title">The change starts here</h3>
+            <span class="dgate" id="d-gate" hidden></span>
+            <p id="d-desc">Each stage is a control the harness actually ships. A gate that fails blocks merge — the agent proposes, a human disposes.</p>
+            <div class="verdict" id="d-verdict"></div>
+            <div class="approve" id="d-approve" hidden><button class="btn primary" id="approveBtn">✓ Approve merge (four-eyes)</button></div>
+          </div>
+          <div class="detail-log">
+            <div class="llab">Build log</div>
+            <ul class="log" id="log"></ul>
+          </div>
         </div>
+        <div class="loopback" id="loopback"><span class="arrow">↻</span> <span id="loopback-text">Run → Discovery: a signal loops back here when the cycle completes.</span></div>
       </div>
     </div>
   </section>
 
-  <!-- ================= RIGHT DIAMOND ================= -->
-  <section>
-    <div class="sec-h reveal"><span class="eyebrow">Right diamond</span><h2>Delivery — build the thing <em>right</em></h2></div>
-    <p class="sec-sub reveal">Develop diverges (explore N solution directions), then the autonomous
-      <span class="art">next-story</span> loop converges — one backlog item, end to end. Gates
-      <b class="mono">Q1–Q5</b> run in CI; three hooks fire on every edit; the agent proposes, a human disposes.</p>
-
-    <div class="diamond-block reveal">
-      <div class="flow-rail R"></div>
-
-      <div class="stage">
-        <div class="node R">D</div>
-        <div class="card">
-          <div class="top"><h3>Develop — explore N solution directions <span class="dots"><span class="dot biz" title="business intent"></span></span></h3><span class="mode">diverge</span></div>
-          <p>Skill <span class="art">develop</span>: judge several directions, converge on one → a Solution
-            Direction Record + a <span class="art">discovery:</span>-linked backlog item.</p>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node R">1</div>
-        <div class="card">
-          <div class="top"><h3>Pick &amp; isolate</h3><span class="mode">next-story</span></div>
-          <p>First eligible item; the waist gate rejects any feature without a gate-green hand-off. One story
-            per branch / worktree.</p>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node R">3</div>
-        <div class="card">
-          <div class="top"><h3>Spec-first — show tests RED</h3><span class="mode">contract</span></div>
-          <p>Skill <span class="art">spec-change</span>: the API contract changes via its own spec-only PR,
-            never mid-feature. Contract + acceptance tests written and shown failing before code.</p>
-          <div class="tags"><span class="chip chip--hook">hook · spec-tripwire</span></div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node R">4</div>
-        <div class="card">
-          <div class="top"><h3>Implement to green <span class="dots"><span class="dot gov" title="data governance"></span></span></h3><span class="mode">implement-story</span></div>
-          <p>Against interfaces, synthetic data only; audit + lineage emitted in the <em>same</em> change,
-            never retrofitted.</p>
-          <div class="tags">
-            <span class="chip chip--hook chip--sec">hook · pii-guard</span>
-            <span class="chip chip--hook">hook · test-tripwire</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node R">5</div>
-        <div class="card">
-          <div class="top"><h3>Review the diff <span class="dots"><span class="dot sec" title="security"></span></span></h3><span class="mode">agents</span></div>
-          <p>Local reviewer agents must pass before a PR opens. The hard-stop reviewer is the security &amp;
-            regulatory backstop (auth scope, record immutability, PII, egress, four-eyes).</p>
-          <div class="tags">
-            <span class="chip chip--agent chip--sec">hard-stop-reviewer → PASS</span>
-            <span class="chip chip--agent">contract-conformance-reviewer → CONFORMANT</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node R">6</div>
-        <div class="card">
-          <div class="top"><h3>CI quality gates → PR → human merge <span class="dots"><span class="dot sec" title="security"></span><span class="dot gov" title="data governance"></span></span></h3><span class="mode">Q-gates</span></div>
-          <p>A failed gate blocks merge. The loop opens the PR and <b>stops</b> — a human holds four-eyes.
-            Discovery gates + the waist gate run in the same CI.</p>
-          <div class="tags">
-            <span class="chip chip--gate">Q1 · build + unit</span>
-            <span class="chip chip--gate">Q1b · test integrity</span>
-            <span class="chip chip--gate chip--sec">Q2 · static + SAST</span>
-            <span class="chip chip--gate">Q2b · doc integrity</span>
-            <span class="chip chip--gate">Q3 · integration + contract</span>
-            <span class="chip chip--gate chip--sec">Q4 · security + dependencies</span>
-            <span class="chip chip--gate">Q4.5 · lineage <span class="dots"><span class="dot gov"></span></span></span>
-            <span class="chip chip--gate">Q5 · production approval · human</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="node R">8</div>
-        <div class="card">
-          <div class="top"><h3>Deploy &amp; seal the evidence bundle <span class="dots"><span class="dot sec" title="security"></span></span></h3><span class="mode">on release</span></div>
-          <p>Auto-deploy + live smoke suite. On release, re-run the gates at the released commit and seal
-            test results, reviewer verdicts, <b>lineage proof</b>, and <b>agent build-provenance</b> into the repo.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= CONTINUOUS ASSURANCE ================= -->
+  <!-- gate reference -->
   <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">After the build, forever</span><h2>Continuous assurance — agents, not meetings</h2></div>
-    <p class="sec-sub">The harness pulls specialised agents through the regulatory lifecycle on every trigger, so
-      compliance is current to the last commit rather than the last review. This is the loop the vendors' live
-      signals feed.</p>
-    <div class="ca">
-      <div class="step"><div class="n">① watch ■</div><h4>Regulatory &amp; risk horizon</h4><p><b>change-watch</b> agent — ships now</p></div>
-      <div class="step"><div class="n">② assess ■</div><h4>Risk &amp; impact</h4><p><b>risk-reviewer</b> agent — ships now</p></div>
-      <div class="step"><div class="n">③ check</div><h4>Spec &amp; hard-stop</h4><p>conformance + hard-stop</p></div>
-      <div class="step"><div class="n">④ test</div><h4>Controls</h4><p>the Q-gate runners</p></div>
-      <div class="step"><div class="n">⑤ evidence</div><h4>Trail &amp; lineage</h4><p>audit + lineage capture</p></div>
-      <div class="step"><div class="n">⑥ confirm</div><h4>File &amp; report</h4><p>+ human four-eyes</p></div>
-    </div>
-    <div class="ca-trig">
-      <span class="chip">trigger · on every change</span>
-      <span class="chip">trigger · on a schedule</span>
-      <span class="chip">trigger · on events</span>
-    </div>
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Six gates, run every PR</h2></div>
+    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — wired so the agent identity can't bypass it.</p>
+    <div class="grid" id="gategrid"></div>
   </section>
 
-<section class="reveal" id="loop-closes">
-  <div class="sec-h">
-    <span class="eyebrow">Run · the third arc</span>
-    <h2>The loop closes — Run feeds Discovery</h2>
-  </div>
-  <p class="sec-sub">The double diamond is not a line with two ends; it is a loop. Past the delivery seam the cloth <strong>runs</strong>, and what running learns is fed back into Discovery as evidence. What the bundle ships is the <em>feedback machinery</em> — the wire — not the system it carries. It does not run your service, page your on-call, or detect your incidents.</p>
-
-  <p><strong>Seam in (⑦/⑧).</strong> Run begins at delivery steps <strong>⑦ Deploy</strong> and <strong>⑧ Evidence</strong>: merge auto-deploys to a live target, a smoke suite runs against the live URL, and the release seals its evidence bundle. Past that seam the warp persists — four-eyes, INSERT-only audit, lineage, the sealed trail keep accreting as the system operates.</p>
-
-  <p><strong>What operates in Run.</strong> The run-time expression of the warp is <strong>Continuous Assurance</strong> — the watch→assess→check→test→evidence→confirm lifecycle, re-run on a schedule and on events. Two of its agents ship today: <strong>① Watch (change-watch)</strong> catches drift / CVE / regulatory horizon items, and <strong>② Assess (risk-reviewer)</strong> produces the ROUTE verdict. The bundle listens; it does not run the pager.</p>
-
-  <h3>The feedback edge — a Run signal is just a signal</h3>
-  <p class="sec-sub">Discovery is evidence-gated (D2), so a production signal re-enters through the same doors any evidence uses — never onto the floor.</p>
-  <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Signal Run produces</th><th>Re-enters via</th></tr></thead>
-      <tbody>
-        <tr><td>incident / near-miss</td><td>research-log evidence (D2) → usually a Delivery fix</td></tr>
-        <tr><td>slo-breach</td><td>evidence (D2); an error-budget freeze touches the delivery line</td></tr>
-        <tr><td>drift / cve</td><td>① Watch (change-watch) → the D6 register or a patch</td></tr>
-        <tr><td>regulatory change</td><td>① Watch horizon scan → the register, or reopen Discovery</td></tr>
-        <tr><td>risk-materialised</td><td>the D6 register — cite its <span class="mono">DR-*</span></td></tr>
-        <tr><td>customer-signal</td><td>research-log evidence → synthesis, possibly a new problem</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3>The routing triage</h3>
-  <p class="sec-sub">Most signals do not reopen Discovery. The triage is the ROUTE verdict ② Assess already produces, and the <strong>operations-signal gate</strong> (<span class="mono">operations-signal-check.mjs</span>) is the Run→Discovery analogue of the waist gate: it makes <strong>triage + traceability the exit condition for a signal</strong>. A signal with no route is the one failure it exists to catch.</p>
-  <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Route</th><th>The claim</th><th>Lands in</th></tr></thead>
-      <tbody>
-        <tr><td><strong>spec-fix ↻</strong></td><td>the build is wrong, the problem is fine</td><td>Delivery — a PR / <span class="mono">spec-change</span></td></tr>
-        <tr><td><strong>register ↻</strong></td><td>the risk position moved</td><td>Continuous Assurance — a <span class="mono">DR-*</span> update</td></tr>
-        <tr><td><strong>re-discover ↻</strong></td><td>the <em>problem</em> may be wrong</td><td>Discovery, reopened — a re-discovery run</td></tr>
-        <tr><td><strong>accepted</strong></td><td>a conscious no-op</td><td>closed, with a stated reason</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3>Honest state — what ships vs. what is yours</h3>
-  <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Ships — the feedback machinery</th><th>Adopter-side — the Run operation itself</th></tr></thead>
-      <tbody>
-        <tr><td>Evidence-gated Discovery (D2)</td><td>SRE, observability, SLOs, on-call</td></tr>
-        <tr><td>The D6 register seam</td><td>Incident management &amp; detection</td></tr>
-        <tr><td>Continuous Assurance's triggers (schedule / event)</td><td>Operational resilience — BCP/DR, RTO/RPO, chaos, kill-switch (cluster E, <em>Absent by design</em>)</td></tr>
-        <tr><td>① Watch (change-watch) + ② Assess (risk-reviewer)</td><td>The system that produces the events they react to</td></tr>
-        <tr><td>The operations-signal seam + its gate</td><td>The security-testing-and-resilience runbook</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="sec-sub">The operations-signal gate reads a JSON log — it enforces that a logged signal is triaged and traceable. It does <strong>not</strong> detect incidents, watch SLOs, or read production; detection is the adopter's operation. The bundle ships the discipline that a signal, once produced, cannot fall on the floor — and nothing more.</p>
-</section>
-
-  <!-- ================= VENDOR PLUG-IN ================= -->
-  <section>
-    <div class="sec-h reveal"><span class="eyebrow">The point of the exercise</span><h2>Where Chainguard &amp; Snyk plug in</h2></div>
-    <p class="sec-sub reveal">The Loom names <em>roles</em>, not vendors (HG-0008 keeps the harness solution-agnostic).
-      These tools are concrete fills for slots that already exist — Snyk <b>shifts scanning left</b> onto the PR
-      gates; Chainguard <b>shifts the baseline down</b> so there are fewer findings to begin with.</p>
-
-    <div class="vend-grid reveal">
-      <div class="vcard snyk">
-        <h3><span class="chip chip--vendor">plug-in</span> Snyk</h3>
-        <p class="tagline">Developer-security platform — SCA, SAST, container &amp; IaC scanning, SBOM.
-          Blocks-on-introduce at the gate.</p>
-        <div class="maps">
-          <div class="map"><span class="prod">Snyk Code</span><span class="to">↦</span><span class="dest">SAST at <b>Q2</b> · static + SAST</span></div>
-          <div class="map"><span class="prod">Snyk IaC</span><span class="to">↦</span><span class="dest">Terraform / K8s / CFN misconfig at <b>Q2</b></span></div>
-          <div class="map"><span class="prod">Snyk Open Source</span><span class="to">↦</span><span class="dest">SCA — the "dependency audit" in <b>Q4</b></span></div>
-          <div class="map"><span class="prod">Snyk Container</span><span class="to">↦</span><span class="dest">image CVE scan at <b>Q4</b></span></div>
-          <div class="map"><span class="prod">Snyk SBOM</span><span class="to">↦</span><span class="dest">SPDX/CycloneDX sealed in step <b>⑧</b> evidence</span></div>
-          <div class="map"><span class="prod">re-scan · new-CVE</span><span class="to">↦</span><span class="dest">Continuous assurance <b>watch → assess</b></span></div>
-        </div>
-      </div>
-
-      <div class="vcard cg">
-        <h3><span class="chip chip--vendor" style="border-color:var(--thread);color:var(--thread)">plug-in</span> Chainguard</h3>
-        <p class="tagline">Zero-CVE hardened minimal images, signed SBOMs, SLSA provenance — the trusted base
-          of the control plane.</p>
-        <div class="maps">
-          <div class="map"><span class="prod">Hardened images</span><span class="to">↦</span><span class="dest">shrinks the OS surface <b>Q4</b> must scan</span></div>
-          <div class="map"><span class="prod">Zero-CVE base</span><span class="to">↦</span><span class="dest">fewer findings to triage, by construction</span></div>
-          <div class="map"><span class="prod">Signed SBOM</span><span class="to">↦</span><span class="dest">step <b>⑧</b> evidence + <b>HG-0002</b></span></div>
-          <div class="map"><span class="prod">SLSA provenance</span><span class="to">↦</span><span class="dest">supply-chain integrity · <b>HG-0002</b></span></div>
-          <div class="map"><span class="prod">Approved images</span><span class="to">↦</span><span class="dest">institutional DNA · golden base path</span></div>
-          <div class="map"><span class="prod">Daily rebuild</span><span class="to">↦</span><span class="dest">Continuous assurance · drift caught upstream</span></div>
-        </div>
-      </div>
+  <!-- maturity -->
+  <section class="reveal">
+    <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
+    <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
+      real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
+    <div class="scorebar" role="img" aria-label="about 16 enforced, 16 named-only, 15 absent">
+      <span class="enf" style="width:34%"></span><span class="nam" style="width:34%"></span><span class="abs" style="width:32%"></span>
     </div>
-
-    <div class="note reveal">
-      <h4>The rule that keeps this honest</h4>
-      <p>A scanner that <em>reports</em> is hygiene; the <b>control</b> is the CI gate that <b>blocks merge</b> on a
-        policy violation, wired so the agent identity cannot bypass it (branch protection / protected CI —
-        HG-0001, HG-0002). Buying the tools is not the control.</p>
-      <p>And the caveats the Loom would insist on: "zero-CVE" means <em>known</em> CVEs at build time, not proof
-        of no vulnerabilities; SCA covers declared dependencies, not your custom code — that is SAST's job; tool
-        choice stays the institution's. These are recommended instances, not a mandate.</p>
+    <div class="scoretags">
+      <span><span class="sw enf"></span>~16 enforced</span>
+      <span><span class="sw nam"></span>~16 named-only</span>
+      <span><span class="sw abs"></span>~15 absent</span>
     </div>
-  </section>
-
-  <!-- ================= BANK-GRADE MATURITY ================= -->
-  <section id="maturity">
-    <div class="sec-h reveal"><span class="eyebrow">Bank-grade assessment</span><h2>The traffic-light — is each checkpoint <em>enforced</em>?</h2></div>
-    <p class="sec-sub reveal">The same stream, graded. "Bank-grade" is a higher bar in three ways: controls must be
-      <b>enforced, not narrated</b>; assurance must be <b>independent, not self-generated</b>; scope must cover
-      <b>running the bank, not just building the app</b>. The glyph shows how filled-in each control actually is.</p>
-
-    <div class="shipbar reveal">
-      <div class="sh-h"><span class="lead">Shipped this pass — the enforced column grew</span><span class="ver">middleleap-loom 1.1.0 → 1.9.0</span></div>
-      <div class="shiprow"><span class="rl">gates</span>
-        <span class="shipchip">control-plane-check · HG-0002</span>
-        <span class="shipchip">model-provenance-check · HG-0006</span>
-        <span class="shipchip">evidence-seal-check · HG-0003</span>
-        <span class="shipchip">data-lifecycle-check · retention/erasure</span>
-        <span class="shipchip">operations-signal-check · Run→Discovery</span>
-      </div>
-      <div class="shiprow"><span class="rl">agents</span>
-        <span class="shipchip agent">change-watch · ① Watch</span>
-        <span class="shipchip agent">risk-reviewer · ② Assess</span>
-        <span class="shipchip agent">model-risk-reviewer</span>
-      </div>
-      <div class="shiprow"><span class="rl">runbooks</span>
-        <span class="shipchip doc">identity &amp; secrets</span>
-        <span class="shipchip doc">independent assurance</span>
-        <span class="shipchip doc">model-risk operating model</span>
-        <span class="shipchip doc">data protection</span>
-        <span class="shipchip doc">security &amp; resilience</span>
-        <span class="shipchip doc">governance &amp; accountability</span>
-      </div>
-    </div>
-
-    <div class="mat-legend reveal" aria-label="Maturity states">
-      <span class="mkey"><span class="g enf">■</span> <b>Enforced</b> <span>— wired by the machinery, non-bypassable</span></span>
-      <span class="mkey"><span class="g named">◧</span> <b>Named only</b> <span>— decided / documented, no enforcement of record</span></span>
-      <span class="mkey"><span class="g absent">□</span> <b>Absent</b> <span>— capability not present in the harness</span></span>
-    </div>
-
-    <div class="scorecard reveal">
-      <div class="sc-h"><span class="lab">Maturity across ~47 assessed capabilities</span><span class="tot">was ~13/~12/~22 at the start of this pass</span></div>
-      <div class="sc-bar" role="img" aria-label="16 enforced, 16 named-only, 15 absent">
-        <span class="enf" style="width:34%"></span><span class="named" style="width:34%"></span><span class="absent" style="width:32%"></span>
-      </div>
-      <div class="sc-tags">
-        <span class="t"><span class="sw enf"></span> ~16 enforced <span style="color:var(--enf)">▲ 3</span></span>
-        <span class="t"><span class="sw named"></span> ~16 named-only <span style="color:var(--named)">▲ 4</span></span>
-        <span class="t"><span class="sw absent"></span> ~15 absent <span style="color:var(--enf)">▼ 7</span></span>
-      </div>
-    </div>
-
-    <div class="mat-grid">
-
-      <!-- A -->
-      <div class="mcard reveal">
-        <h3>A · Control-plane enforcement <span class="tag">HG catalog</span></h3>
-        <div class="mini-bar"><span class="enf" style="width:63%"></span><span class="named" style="width:37%"></span></div>
-        <div class="mrows">
-          <div class="mrow"><span class="cap"><b>HG-0001</b> four-eyes merge · branch protection</span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap"><b>HG-0002</b> immutable control plane <small>+ control-plane-check.mjs gate + CODEOWNERS template</small></span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap"><b>HG-0003</b> tamper-evident sealed evidence <small>evidence-seal.mjs — hash-chained release bundle</small></span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap"><b>HG-0007/0009</b> waist gate · develop diverges</span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap"><b>HG-0008</b> solution-agnostic seams</span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap"><b>HG-0004</b> least-privilege identity · vault <small>activation-runbook + identity runbook; real IAM/vault is adopter's</small></span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap"><b>HG-0005</b> promotion + rehearsed rollback</span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap"><b>HG-0011</b> onshore gateway · pre-egress DLP · sandbox</span><span class="state named"><span class="g">◧</span>named</span></div>
-        </div>
-      </div>
-
-      <!-- B -->
-      <div class="mcard reveal">
-        <h3>B · Model risk &amp; AI governance <span class="tag">SR 11-7 · AI Act</span></h3>
-        <div class="mini-bar"><span class="enf" style="width:29%"></span><span class="named" style="width:43%"></span><span class="absent" style="width:28%"></span></div>
-        <div class="mrows">
-          <div class="mrow"><span class="cap"><b>Q1b</b> anti-reward-hacking gate</span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap">Model + prompt pinning <small>model-provenance.mjs — pin + eval-against-pin + validated_by</small></span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap">Agent eval harness <small>gate requires eval-before-release; the eval rig is the adopter's</small></span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">Independent model validation <small>validated_by + model-risk-reviewer; the org function is adopter's</small></span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">Drift monitoring <small>change-watch on schedule/event; runtime monitoring adopter's</small></span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">Replayable decision log</span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Fairness/bias testing · explainability · AI-IR</span><span class="state absent"><span class="g">□</span>absent</span></div>
-        </div>
-      </div>
-
-      <!-- C -->
-      <div class="mcard reveal">
-        <h3>C · Assurance &amp; audit <span class="tag">3 lines of defence</span></h3>
-        <div class="mini-bar"><span class="enf" style="width:17%"></span><span class="named" style="width:33%"></span><span class="absent" style="width:50%"></span></div>
-        <div class="mrows">
-          <div class="mrow"><span class="cap">1st-line reviewer agents <small>hard-stop · conformance · data-gov · boundary</small></span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap">Continuous-assurance agents <small>① change-watch + ② risk-reviewer ship now; ③–⑥ documented</small></span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">WORM · anchored evidence <small>evidence-seal is tamper-evident + anchor-checkable; external WORM adopter's</small></span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">Independent 2nd-line challenge function <small>documented in a runbook; org-separate function is adopter's</small></span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">3rd-line audit · read-only evidence portal</span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">SOC 2 / ISO 27001 attestation of the harness</span><span class="state absent"><span class="g">□</span>absent</span></div>
-        </div>
-      </div>
-
-      <!-- D -->
-      <div class="mcard reveal">
-        <h3>D · Data governance depth <span class="tag">BCBS 239 · PDPL</span></h3>
-        <div class="mini-bar"><span class="enf" style="width:33%"></span><span class="named" style="width:34%"></span><span class="absent" style="width:33%"></span></div>
-        <div class="mrows">
-          <div class="mrow"><span class="cap"><b>D6</b> register seam + data-governance-reviewer</span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap"><b>Q4.5</b> lineage emission · pii-guard hook</span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap">Retention + right-to-erasure <small>data-lifecycle.mjs — bounded retention + erasure disposition required; execution adopter's</small></span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">Data residency (HG-0011)</span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">Full risk taxonomy <small>bundled register is a 1-record demo (DR-1 only)</small></span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Real-data control surface <small>KMS · field encryption · tokenization — synthetic-only; in the data-protection runbook</small></span><span class="state absent"><span class="g">□</span>absent</span></div>
-        </div>
-      </div>
-
-      <!-- E -->
-      <div class="mcard reveal">
-        <h3>E · Security &amp; resilience breadth <span class="tag">DORA · FAPI</span></h3>
-        <div class="mini-bar"><span class="enf" style="width:30%"></span><span class="named" style="width:20%"></span><span class="absent" style="width:50%"></span></div>
-        <div class="mrows">
-          <div class="mrow"><span class="cap"><b>Q2</b> SAST · <b>Q4</b> SCA + secrets (current) <small>gates exist — Snyk/Chainguard fill them</small></span><span class="state enf"><span class="g">■</span>enforced</span></div>
-          <div class="mrow"><span class="cap">DAST · penetration testing</span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Threat modelling (STRIDE) gate · secrets-history</span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Operational resilience <small>BCP/DR · RTO/RPO · chaos · SEV · SLOs — in the security &amp; resilience runbook</small></span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Pre-egress DLP (HG-0011)</span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">FAPI 2.0 / mTLS conformance</span><span class="state named"><span class="g">◧</span>named</span></div>
-        </div>
-      </div>
-
-      <!-- F -->
-      <div class="mcard reveal">
-        <h3>F · Operating model &amp; production proof <span class="tag">SMR · exam</span></h3>
-        <div class="mini-bar"><span class="named" style="width:20%"></span><span class="absent" style="width:80%"></span></div>
-        <div class="mrows">
-          <div class="mrow"><span class="cap">Named accountable officer (HG-0010)</span><span class="state named"><span class="g">◧</span>named</span></div>
-          <div class="mrow"><span class="cap">Senior-manager regime · board oversight · RACI <small>in the governance &amp; accountability runbook</small></span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Supervised production pilot</span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Legacy / core-banking integration patterns</span><span class="state absent"><span class="g">□</span>absent</span></div>
-          <div class="mrow"><span class="cap">Live regulator examination</span><span class="state absent"><span class="g">□</span>absent</span></div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="roadmap reveal">
-      <h3>The roadmap — what landed this pass, what's left</h3>
-      <p class="rsub">Each step's <em>shippable</em> half is now enforced machinery; its <em>org-side</em> half went to a runbook.</p>
-      <div class="rsteps">
-        <div class="rstep">
-          <span class="rbadge partial">gate shipped</span>
-          <div class="num">STEP 01</div>
-          <h4>Enforce the control plane</h4>
-          <p>control-plane-check + CODEOWNERS + activation runbook (HG-0001/0002). Real IAM/vault (HG-0004) stays the adopter's — see the identity runbook.</p>
-        </div>
-        <div class="rstep">
-          <span class="rbadge partial">gate shipped</span>
-          <div class="num">STEP 02</div>
-          <h4>Model-risk management</h4>
-          <p>model-provenance gate (pin + eval-against-pin + validated_by) + model-risk-reviewer. The independent function &amp; runtime drift are in the model-risk runbook.</p>
-        </div>
-        <div class="rstep">
-          <span class="rbadge partial">gate shipped</span>
-          <div class="num">STEP 03</div>
-          <h4>Tamper-evident evidence</h4>
-          <p>evidence-seal gate — hash-chained, anchor-checkable release bundle (HG-0003). The independent 2nd line + external WORM store are in the assurance runbook.</p>
-        </div>
-        <div class="rstep">
-          <span class="rbadge partial">gate shipped</span>
-          <div class="num">STEP 04</div>
-          <h4>Data lifecycle</h4>
-          <p>data-lifecycle gate — bounded retention + right-to-erasure required. The real-PII surface + full register stay the adopter's — see the data-protection runbook.</p>
-        </div>
-      </div>
+    <div class="note">
+      <p><b>The rule that keeps it honest:</b> a control the harness <em>narrates</em> is hygiene; the control is the
+        platform mechanism the agent can't bypass — a gate that blocks merge, branch protection, a vault. Everything the
+        bundle can't enforce is documented in a runbook, never faked with a green check.</p>
     </div>
   </section>
 
   <footer>
-    <p class="mono">Sources in the repo: skills/loom/references/{discovery-harness, delivery-harness, governance, continuous-assurance, bank-grade-gap, model-risk, supply-chain-security}.md · loom-adopt/harness/scripts/{control-plane,model-provenance,evidence-seal,data-lifecycle}-check.mjs · loom-adopt/harness/governance/runbooks/*.md · agents/{discovery-boundary,data-governance,model-risk}-reviewer · change-watch · risk-reviewer</p>
-    <p style="margin-top:8px">Vendor capabilities: <a href="https://www.chainguard.dev/containers">Chainguard Containers</a> ·
-      <a href="https://snyk.io/product/open-source-security-management/">Snyk Open Source</a>.
-      Gate/agent/seam names are quoted verbatim from the Loom canon.</p>
+    <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom — a way for a regulated entity to build with AI.</p>
   </footer>
-
 </div>
 
 <script>
-  (function(){
-    var els=document.querySelectorAll('.reveal');
-    if(!('IntersectionObserver'in window)){els.forEach(function(e){e.classList.add('in')});return;}
-    var io=new IntersectionObserver(function(en){
-      en.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}});
-    },{rootMargin:'0px 0px -8% 0px',threshold:.08});
-    els.forEach(function(e){io.observe(e);});
-  })();
+/* ---------- the closed-loop hero (drawn once) ---------- */
+document.getElementById('hero').innerHTML = `
+<svg viewBox="0 0 1040 300" role="img" aria-label="Closed loop: a discovery diamond and a delivery diamond meet at a hand-off; delivery feeds a Run node whose signals sweep back into discovery, closing the loop.">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#CE451B"/></marker></defs>
+  <text class="dd-h dd-hL" x="210" y="16" text-anchor="middle">DISCOVERY · the problem</text>
+  <text class="dd-h dd-hR" x="690" y="16" text-anchor="middle">DELIVERY · the solution</text>
+  <path class="dd-diamond dd-fillL" d="M30 105 L210 25 L390 105 L210 185 Z"/><path class="dd-strokeL" d="M30 105 L210 25 L390 105 L210 185 Z"/>
+  <path class="dd-diamond dd-fillR" d="M510 105 L690 25 L870 105 L690 185 Z"/><path class="dd-strokeR" d="M510 105 L690 25 L870 105 L690 185 Z"/>
+  <text class="dd-lab" x="150" y="99" text-anchor="middle">discover</text><text class="dd-mode" x="150" y="121" text-anchor="middle">diverge</text>
+  <text class="dd-lab" x="300" y="99" text-anchor="middle">define</text><text class="dd-mode" x="300" y="121" text-anchor="middle">converge</text>
+  <text class="dd-lab" x="600" y="99" text-anchor="middle">develop</text><text class="dd-mode" x="600" y="121" text-anchor="middle">diverge</text>
+  <text class="dd-lab" x="780" y="99" text-anchor="middle">deliver</text><text class="dd-mode" x="780" y="121" text-anchor="middle">converge</text>
+  <rect class="dd-waist" x="393" y="88" width="114" height="34"/><text class="dd-waist" x="450" y="103" text-anchor="middle" style="font-size:11px;font-weight:600">HAND-OFF</text><text class="dd-waist" x="450" y="116" text-anchor="middle" style="font-size:8px">waist gate ↦ PRD</text>
+  <path class="dd-flow" d="M872 105 L890 105" style="stroke:#CE451B;stroke-width:2;fill:none" marker-end="url(#a)"/>
+  <rect class="dd-waist" x="894" y="79" width="122" height="52" rx="10" style="stroke-width:2"/><text class="dd-waist" x="955" y="101" text-anchor="middle" style="font-size:10.5px;font-weight:600">RUN · OPERATIONS</text><text class="dd-lab" x="955" y="117" text-anchor="middle" style="font-size:8.5px">the cloth in use</text>
+  <path class="dd-flow" d="M955 131 C970 250 800 288 480 288 C200 288 46 232 30 108" style="stroke:#CE451B;stroke-width:2;fill:none" marker-end="url(#a)"/>
+  <text class="dd-lab" x="470" y="206" text-anchor="middle">warp — always-on controls run under all three arcs</text>
+  <text class="dd-lab" x="322" y="242" text-anchor="middle">spec-fix ↻ Delivery</text><text class="dd-lab" x="540" y="242" text-anchor="middle">register ↻ Assurance</text><text class="dd-lab" x="726" y="242" text-anchor="middle">re-discover ↻</text>
+  <text class="dd-lab" x="492" y="270" text-anchor="middle">sense → signals · fed to Discovery as evidence (D2)</text>
+</svg>`;
+
+/* ---------- the simulator ---------- */
+const STAGES = [
+  {id:'discover', ph:'Discovery', lab:'Discover', gate:'D1–D5', desc:'Explore the problem space and frame the one problem worth solving — every claim traced to a logged signal (D2).'},
+  {id:'define',   ph:'Discovery', lab:'Define', gate:'D6–D9', desc:'Data-governance feasibility against the register (D6), then a brand-real, stakeholder-tested prototype (D7–D9).'},
+  {id:'waist',    ph:'Hand-off',  lab:'Hand-off', gate:'HG-0007 · discovery-link-check', desc:'The waist gate: a feature may not enter delivery without a gate-green discovery hand-off. No unsourced requests.'},
+  {id:'develop',  ph:'Delivery',  lab:'Develop', gate:'develop skill', desc:'Diverge on N solution directions, converge on one, and append a discovery-linked backlog item.'},
+  {id:'spec',     ph:'Delivery',  lab:'Spec-first', gate:'spec-tripwire', desc:'Write the API contract + acceptance tests and show them RED before implementing. The contract changes only via its own PR.'},
+  {id:'implement',ph:'Delivery',  lab:'Implement', gate:'pii-guard', desc:'Implement to green against interfaces — synthetic data only; audit + lineage emitted in the same change.'},
+  {id:'review',   ph:'Delivery',  lab:'Review', gate:'reviewer agents', desc:'Local reviewer agents must pass on the diff: hard-stop (PASS) and contract-conformance (CONFORMANT).'},
+  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'6 gates', desc:'Every gate runs: control-plane (HG-0002), model-provenance (HG-0006), evidence-seal (HG-0003), data-lifecycle, the waist gate, and the Q-gates.'},
+  {id:'merge',    ph:'Delivery',  lab:'Merge', gate:'HG-0001 · human', desc:'The agent opens the PR and STOPS. A human holds four-eyes — the agent identity is not in the approver group and never merges its own work.'},
+  {id:'deploy',   ph:'Run',       lab:'Deploy', gate:'smoke', desc:'Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.'},
+  {id:'evidence', ph:'Run',       lab:'Evidence', gate:'HG-0003 · evidence-seal', desc:'Seal the release evidence bundle — a hash chain the gate re-reads and verifies, so altering any artifact breaks a seal.'},
+  {id:'run',      ph:'Run',       lab:'Run', gate:'continuous assurance', desc:'The cloth in use. Continuous assurance re-runs on schedule and on events; operations produces signals.'},
+  {id:'feedback', ph:'Loop',      lab:'Feedback', gate:'operations-signal', desc:'A signal is triaged (routed) and traceable, then re-enters Discovery as evidence (D2). The loop closes.'},
+];
+const SCENARIOS = {
+  clean:     {name:'A clean feature — ships', block:null},
+  nohandoff: {name:'No discovery hand-off', block:'waist', why:'The feature carries no discovery: link and is not exempt. The waist gate (HG-0007) rejects it — run the discovery harness first, or set discovery_exempt with a reason.'},
+  pii:       {name:'Real PII in a fixture', block:'implement', why:'pii-guard blocks a PII-shaped literal at write time. Synthetic data only, everywhere — the hook stops it before it lands.'},
+  unpinned:  {name:'An unpinned model', block:'gates', why:'model-provenance (HG-0006): a model role uses a floating tag, or ships with no passing eval against its pin. The gate fails the build.'},
+  tampered:  {name:'A tampered evidence bundle', block:'evidence', why:'evidence-seal (HG-0003): an artifact’s content sha256 no longer matches the manifest. The seal breaks — the bundle is not intact.'},
+};
+const PHASES = ['Discovery','Hand-off','Delivery','Run','Loop'];
+
+const $ = (id) => document.getElementById(id);
+const track = $('track'), logEl = $('log'), sel = $('scenario');
+let idx = -1, running = false, timer = null, approved = false, done = false;
+
+for (const [k,v] of Object.entries(SCENARIOS)) { const o=document.createElement('option'); o.value=k; o.textContent=v.name; sel.appendChild(o); }
+
+// build the track
+const nodeEls = {};
+for (const ph of PHASES) {
+  const g = document.createElement('div'); g.className='phase';
+  const lab = document.createElement('div'); lab.className='phase-lab'; lab.textContent=ph; g.appendChild(lab);
+  const nodes = document.createElement('div'); nodes.className='nodes';
+  STAGES.filter(s=>s.ph===ph).forEach(s=>{
+    const n=document.createElement('button'); n.className='node'; n.dataset.state='idle'; n.type='button';
+    n.innerHTML=`<div class="nmark"></div><div class="nlab">${s.lab}</div><div class="ngate">${s.gate}</div>`;
+    n.addEventListener('click',()=>showDetail(STAGES.indexOf(s), STAGES.indexOf(s)<=idx?null:'preview'));
+    nodes.appendChild(n); nodeEls[s.id]=n;
+  });
+  g.appendChild(nodes); track.appendChild(g);
+}
+
+function mark(id, state){ const n=nodeEls[id]; n.dataset.state=state; n.querySelector('.nmark').textContent = state==='pass'?'✓':state==='block'?'✕':state==='wait'?'⏸':''; }
+function addLog(stage, cls, msg){ const li=document.createElement('li'); li.className=cls; li.innerHTML=`<span class="g">${cls==='pass'?'✓':cls==='block'?'✕':cls==='wait'?'⏸':'·'}</span><span><b>${stage}</b> — ${msg}</span>`; logEl.appendChild(li); logEl.scrollTop=logEl.scrollHeight; }
+function setStatus(t){ $('status').textContent=t; }
+
+function showDetail(i, mode){
+  const s=STAGES[i]; $('d-phase').textContent=s.ph; $('d-title').textContent=s.lab;
+  const gate=$('d-gate'); gate.textContent=s.gate; gate.hidden=false;
+  $('d-desc').textContent=s.desc;
+  const v=$('d-verdict'); v.className='verdict'; v.textContent='';
+  $('d-approve').hidden=true;
+  if(mode==='preview'){ v.className='verdict'; }
+}
+
+function evaluate(i){
+  const s=STAGES[i], sc=SCENARIOS[sel.value];
+  showDetail(i);
+  // block?
+  if(sc.block===s.id){
+    mark(s.id,'block'); addLog(s.lab,'block',sc.why);
+    const v=$('d-verdict'); v.className='verdict block'; v.textContent='✕ BLOCKED — '+sc.why;
+    setStatus('blocked at '+s.lab); running=false; done=true;
+    return 'block';
+  }
+  // human four-eyes at merge
+  if(s.id==='merge' && !approved){
+    mark(s.id,'wait'); addLog(s.lab,'wait','Agent opened the PR and stopped. Waiting for a human to approve (four-eyes).');
+    const v=$('d-verdict'); v.className='verdict wait'; v.textContent='⏸ The agent proposes — a human disposes. Approve to continue.';
+    $('d-approve').hidden=false; setStatus('waiting for four-eyes'); running=false;
+    return 'wait';
+  }
+  // pass
+  mark(s.id,'pass');
+  addLog(s.lab,'pass', passMsg(s));
+  const v=$('d-verdict'); v.className='verdict pass'; v.textContent='✓ '+passMsg(s);
+  if(s.id==='feedback'){ fireLoop(); done=true; setStatus('cycle complete — the loop closed'); running=false; return 'done'; }
+  setStatus('at '+s.lab);
+  return 'ok';
+}
+function passMsg(s){
+  return ({
+    discover:'Problem framed from evidence (D1–D5 green).', define:'Data-governance verdict recorded; prototype reacted to (D6–D9 green).',
+    waist:'Feature traces to a gate-green hand-off (HG-0007).', develop:'One solution direction chosen; backlog item linked.',
+    spec:'Contract + acceptance tests written and shown RED.', implement:'Green against interfaces; synthetic data; lineage emitted.',
+    review:'hard-stop: PASS · contract-conformance: CONFORMANT.', gates:'control-plane · model-provenance · evidence-seal · data-lifecycle · waist · Q-gates — all green.',
+    merge:'Human approved — four-eyes merge (HG-0001).', deploy:'Deployed; smoke suite green against the live URL.',
+    evidence:'Evidence bundle sealed and verified — the hash chain is intact.', run:'Live. Continuous assurance watching on schedule + events.',
+    feedback:'Signal triaged and traceable → re-enters Discovery as evidence.'
+  })[s.id]||'ok';
+}
+function fireLoop(){ const lb=$('loopback'); lb.classList.add('fired'); $('loopback-text').textContent='Run → Discovery: a signal fed back as evidence. Reset and run it again to weave the next cycle.'; }
+
+function advance(){
+  if(done) return 'done';
+  if(idx>=STAGES.length-1) return 'done';
+  idx++; return evaluate(idx);
+}
+function play(){ if(running||done) return; running=true; setStatus('running…'); tick(); }
+function tick(){ if(!running) return; const r=advance(); if(r==='ok'){ const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches; timer=setTimeout(tick, reduce?60:850);} else { running=false; } }
+function step(){ if(running||done) return; advance(); }
+function reset(){
+  running=false; done=false; approved=false; idx=-1; clearTimeout(timer);
+  Object.values(nodeEls).forEach(n=>{n.dataset.state='idle'; n.querySelector('.nmark').textContent='';});
+  logEl.innerHTML=''; $('loopback').classList.remove('fired');
+  $('loopback-text').textContent='Run → Discovery: a signal loops back here when the cycle completes.';
+  $('d-phase').textContent='Press Play or Step'; $('d-title').textContent='The change starts here';
+  $('d-gate').hidden=true; $('d-desc').textContent='Each stage is a control the harness actually ships. A gate that fails blocks merge — the agent proposes, a human disposes.';
+  $('d-verdict').className='verdict'; $('d-approve').hidden=true;
+  setStatus('ready · '+SCENARIOS[sel.value].name);
+}
+$('play').addEventListener('click',play);
+$('step').addEventListener('click',step);
+$('reset').addEventListener('click',reset);
+$('approveBtn').addEventListener('click',()=>{ approved=true; $('d-approve').hidden=true; addLog('Merge','info','Human four-eyes approval recorded.'); evaluate(idx); play(); });
+sel.addEventListener('change',reset);
+reset();
+
+/* ---------- gate reference cards ---------- */
+const GATES=[
+ {id:'HG-0002',n:'control-plane-check',d:'Fails if any control-plane file (hooks, gates, workflows, CODEOWNERS) loses its owner — so the agent can’t edit its own guardrails.'},
+ {id:'HG-0006',n:'model-provenance-check',d:'Fails unless every model role is pinned, tiered, evaluated against its shipping pin, and independently validated (medium + high).'},
+ {id:'HG-0003',n:'evidence-seal-check',d:'Re-reads each release artifact and verifies its hash against an append-only chain — altering any artifact breaks a seal.'},
+ {id:'data-gov',n:'data-lifecycle-check',d:'Fails a release unless every data category declares a bounded retention and a right-to-erasure disposition.'},
+ {id:'HG-0007',n:'discovery-link-check',d:'The waist gate: a pending feature must trace to a gate-green discovery hand-off, or carry an explicit exemption.'},
+ {id:'loop',n:'operations-signal-check',d:'The Run→Discovery gate: an operational signal must be triaged (routed) and traceable, so nothing falls on the floor.'},
+];
+$('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
+
+/* ---------- scroll reveal ---------- */
+(function(){const els=document.querySelectorAll('.reveal');if(!('IntersectionObserver'in window)){els.forEach(e=>e.classList.add('in'));return;}const io=new IntersectionObserver(en=>en.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.06});els.forEach(e=>io.observe(e));})();
 </script>
 </body>
 </html>
