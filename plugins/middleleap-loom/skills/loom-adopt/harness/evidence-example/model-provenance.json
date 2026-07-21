@@ -1,0 +1,5 @@
+{
+  "manifest": "docs/governance/model-manifest.json",
+  "gate": "model-provenance-check",
+  "result": "OK"
+}

@@ -16,6 +16,7 @@
 // Run from the repo root: `node scripts/evidence-seal-check.mjs` (exit 1 on any finding).
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import process from 'node:process';
 
 const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
@@ -25,6 +26,7 @@ const GENESIS = 'GENESIS';
 export const REQUIRED_TYPES = ['tests', 'reviews', 'lineage', 'model-provenance', 'control-plane'];
 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
+const sha256File = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 
 /** The seal for one entry, chained onto `prev`. Deterministic and content-addressed. */
 export function sealOf(prev, e) {
@@ -42,8 +44,13 @@ export function buildChain(rawEntries) {
   });
 }
 
-/** Findings (one per break). Empty ⇒ the bundle is a complete, intact, append-only chain. */
-export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES } = {}) {
+/**
+ * Findings (one per break). Empty ⇒ the bundle is a complete, intact, append-only chain.
+ * When `baseDir` is given, each entry's artifact at `ref` (resolved relative to baseDir) is read
+ * and its sha256 verified against the manifest — so altering the artifact on disk (not just the
+ * manifest) is caught, which is what makes the seal tamper-evident. The CLI always passes it.
+ */
+export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = null } = {}) {
   const findings = [];
   const entries = manifest && manifest.entries;
   if (!Array.isArray(entries) || entries.length === 0) {
@@ -57,6 +64,14 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES } = {}) {
     }
     if (e.seal !== expectSeal) {
       findings.push(`entry ${i} (${e.type}): seal mismatch — the entry was altered after sealing, or the chain was reordered`);
+    }
+    if (baseDir && typeof e.ref === 'string') {
+      const p = join(baseDir, e.ref);
+      if (!existsSync(p)) {
+        findings.push(`entry ${i} (${e.type}): sealed artifact ${e.ref} not found — a sealed bundle must contain its evidence`);
+      } else if (sha256File(p) !== e.sha256) {
+        findings.push(`entry ${i} (${e.type}): artifact ${e.ref} was altered after sealing — its content sha256 no longer matches the manifest`);
+      }
     }
     prev = expectSeal; // continue from the recomputed seal so errors localise, not cascade
   });
@@ -74,7 +89,7 @@ function run(cwd = process.cwd()) {
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
   catch (e) { return [`evidence manifest is not valid JSON: ${e.message}`]; }
-  return evaluate(manifest);
+  return evaluate(manifest, { baseDir: dirname(path) });
 }
 
 // CLI (skipped when imported by the test suite).

@@ -36,11 +36,12 @@ All sources are relative to this skill's directory. All destinations are repo-ro
 | `harness/scripts/evidence-seal-check.mjs` | `scripts/evidence-seal-check.mjs` | The evidence-seal gate (HG-0003) + its tests |
 | `harness/scripts/data-lifecycle-check.mjs` | `scripts/data-lifecycle-check.mjs` | The data-lifecycle gate (retention & right-to-erasure) + its tests |
 | `harness/scripts/operations-signal-check.mjs` | `scripts/operations-signal-check.mjs` | The Run→Discovery feedback gate + its tests |
+| `harness/ci/ci.yml` | `.github/workflows/ci.yml` | Reference CI running every gate (the `control-plane-check` CONTROL_TARGET) — own it in CODEOWNERS |
 | `harness/governance/CODEOWNERS.template` | `CODEOWNERS` (fill the team) | Immutable control-plane ownership (HG-0002) |
 | `harness/governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | Platform-admin runbook to activate HG-0001/0002/0004 |
 | `harness/governance/runbooks/` | `docs/governance/runbooks/` | Org-side adoption runbooks — the gaps a bundle cannot enforce (identity, assurance, model-risk, data-protection, security/resilience, governance) |
 | `harness/governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory seam (HG-0006) — replace demo values |
-| `harness/governance/evidence-manifest.template.json` | `docs/governance/evidence/manifest.json` | Sealed evidence index seam (HG-0003) — reseal with real hashes |
+| `harness/evidence-example/` | `docs/governance/evidence/` | Sealed evidence bundle (HG-0003) — a real, tamper-evident manifest + artifacts; reseal for each release |
 | `harness/governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data-lifecycle seam (retention & erasure) — replace demo categories |
 | `harness/governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | Operations-signal seam (Run→Discovery) — replace demo entries |
 | `harness/skills/*/SKILL.md` | `.claude/skills/<name>/SKILL.md` | discovery · develop · next-story · implement-story · spec-change |
@@ -108,12 +109,13 @@ one artifact with the renderer to confirm D7 conformance. Only then aim the deli
 
 ## 5. Wire CI and governance
 
-- CI: run the bundled test suites, `discovery-link-check.mjs`, `control-plane-check.mjs`,
-  `model-provenance-check.mjs`, `evidence-seal-check.mjs`, `data-lifecycle-check.mjs`,
-  `operations-signal-check.mjs`, and `validate.mjs` over every `discovery/runs/*` on each PR — a
-  broken run, an untraced feature item, an unowned control file, an unpinned/unevaluated model, an
-  unsealed/tampered evidence bundle, a data category with no bounded retention or erasure
-  disposition, or an untriaged operational signal blocks merge like a failing test. Add the
+- CI: the reference `.github/workflows/ci.yml` (copied in step 1) already runs the bundled test
+  suites, all six gates (`control-plane-check`, `discovery-link-check`, `model-provenance-check`,
+  `evidence-seal-check`, `data-lifecycle-check`, `operations-signal-check`), and `validate.mjs`
+  over every `discovery/runs/*` on each PR — a broken run, an untraced feature item, an unowned
+  control file, an unpinned/unevaluated model, an unsealed/tampered evidence bundle, a data
+  category with no bounded retention or erasure disposition, or an untriaged operational signal
+  blocks merge like a failing test. Own the workflow file in CODEOWNERS (HG-0002) and add the
   project's own Q-gates per `../loom/references/delivery-harness.md`.
 - Governance: walk `../loom/references/governance.md`, then run
   `governance/activation-runbook.md` (a platform admin, outside the agent's write scope) to

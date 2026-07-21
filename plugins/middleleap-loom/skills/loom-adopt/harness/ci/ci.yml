@@ -1,0 +1,45 @@
+# Reference CI workflow for a Loom adoption. Copy to .github/workflows/ci.yml (a control-plane
+# file — own it in CODEOWNERS, HG-0002). It runs every bundled gate on each PR, so the Loom's
+# controls are actually ENFORCED, not merely documented. `control-plane-check.mjs` names this
+# exact path as a CONTROL_TARGET; this file is what it guards.
+#
+# ADOPT: add your project's own Q-gates (build+unit, SAST, integration) per
+# ../loom/references/delivery-harness.md, and fill the SAST/SCA seams (Snyk/Chainguard, see
+# supply-chain-security.md). Node >= 18.
+name: loom-gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Bundled test suites (discovery gates + renderer + the gate tests)
+        run: node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs
+
+      - name: Warp & control-plane gates
+        run: |
+          node scripts/control-plane-check.mjs        # HG-0002 — control-plane owned in CODEOWNERS
+          node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
+
+      - name: Model, evidence, data & feedback gates
+        run: |
+          node scripts/model-provenance-check.mjs      # HG-0006 — models pinned/tiered/evaluated
+          node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence is sealed & intact
+          node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
+          node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
+
+      - name: Discovery runs are gate-green (D1–D9)
+        run: |
+          shopt -s nullglob
+          for run in discovery/runs/*/; do
+            node discovery/gates/validate.mjs "$run"
+          done

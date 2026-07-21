@@ -1,0 +1,5 @@
+{
+  "gate": "control-plane-check",
+  "codeowners_covered": true,
+  "result": "OK"
+}
