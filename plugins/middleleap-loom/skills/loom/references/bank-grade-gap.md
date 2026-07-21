@@ -39,14 +39,15 @@ Across ~47 assessed capabilities, the bundled harness today grades roughly:
 
 | Enforced | Named-only | Absent |
 |---|---|---|
-| ~14 | ~12 | ~21 |
+| ~15 | ~15 | ~17 |
 
 **This is a defensible estimate of what ships today, not an audit.** It reflects the plugin
-bundle as-is — e.g. the six continuous-assurance agents are graded *Named-only* because
-`continuous-assurance.md` describes them but they are not present in the plugin's `agents/`
-directory; the bundled data-risk register is graded against its shipped state (a one-record
-demo), not the full taxonomy an adopter mounts. Read the clusters below for the reasoning
-behind each grade. The headline it encodes: **build-time frame strong, run-the-bank sparse.**
+bundle as-is — e.g. of the six continuous-assurance agents only step ① Watch (`change-watch`)
+ships so far, so the rest are graded *Named-only*; the bundled data-risk register is graded
+against its shipped state (a one-record demo), not the full taxonomy an adopter mounts. Read
+the clusters below for the reasoning behind each grade. The headline it encodes: **build-time
+frame strong, run-the-bank sparse** — though the enforced column is growing as roadmap steps
+land (control-plane gate, model-provenance gate).
 
 ## Six clusters, graded
 
@@ -80,16 +81,22 @@ but not yet *enforced* — the real IAM/vault is still the adopter's to wire.
 | Capability | State | What closes it |
 |---|---|---|
 | Q1b anti-reward-hacking gate | **Enforced** | — |
-| Independent model validation function | Absent | An MRM function separate from the builders |
-| Agent eval harness · challenger models | Absent | A held-out eval suite + challenger comparison |
-| Production drift monitoring | Absent | Ongoing performance/accuracy monitoring in prod |
-| Model + prompt version pinning in evidence bundle | Absent | Pin and attest model + prompt versions per release |
+| Model + prompt version pinning in evidence bundle | **Enforced** | — (the model-provenance gate) |
+| Agent eval harness · challenger models | Named-only | The gate requires a fresh passing eval before release; the eval *rig* + challengers are the adopter's to build |
+| Independent model validation function | Named-only | `validated_by` + the `model-risk-reviewer` challenge agent ship; the org-separate MRM *function* is the adopter's |
+| Production drift monitoring | Named-only | `change-watch` catches model/eval drift on a schedule/event; continuous *runtime* monitoring is a run-the-bank control |
 | Replayable decision log | Absent | A reconstructable log of what the agent did and why |
 | Fairness/bias testing · explainability · AI incident runbook | Absent | Where applicable to the use case |
 
-The agent *is a model*. This cluster is the gap most specific to an AI-driven harness, and
-the least addressed. Q1b and HG-0012 protect build *integrity* but are not model-risk
-*management*.
+The agent *is a model*. This cluster was the gap most specific to an AI-driven harness and the
+least addressed; roadmap Step 2 moved provenance from *absent* to *enforced*.
+
+*Shipped machinery (loom-adopt harness):* a `model-manifest.json` inventory seam +
+`model-provenance-check.mjs` — an HG-0006 CI gate that fails a release unless every model role
+pins its model + prompt version, declares a risk tier, and (at required tiers) carries a
+passing eval **run against the shipping pin** (the anti-stale-eval check, model-risk's analogue
+of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin agent for the
+② Assess challenge. See `references/model-risk.md`.
 
 ### C · Assurance & audit (three lines of defence)
 
@@ -161,6 +168,11 @@ Sequenced so each step buys the most credibility for the least motion.
    an org-separate challenge function and immutable, time-stamped auditor evidence.
 4. **Real-data surface + full register.** Synthetic-only is the caveat under everything
    else. Build and exercise the real-PII control surface against the complete taxonomy.
+
+*Progress:* Steps 1–2 are underway — the control-plane gate (HG-0002) and the model-provenance
+gate (HG-0006) now ship as enforced machinery, with their activation runbook and manifest
+seams. What remains in those steps is the org-side half a bundle cannot ship: real IAM/vault
+(HG-0004), an organisationally-independent model-risk function, and runtime drift monitoring.
 
 ## The rule under all of it
 

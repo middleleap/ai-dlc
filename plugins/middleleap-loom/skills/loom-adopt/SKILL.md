@@ -32,8 +32,10 @@ All sources are relative to this skill's directory. All destinations are repo-ro
 | `harness/discovery/brand/examples/` | `discovery/brand/examples/` | A second brand proving the seam swap |
 | `harness/scripts/discovery-link-check.mjs` | `scripts/discovery-link-check.mjs` | The waist gate (backlog item ↔ green hand-off) |
 | `harness/scripts/control-plane-check.mjs` | `scripts/control-plane-check.mjs` | The control-plane integrity gate (HG-0002) + its tests |
+| `harness/scripts/model-provenance-check.mjs` | `scripts/model-provenance-check.mjs` | The model-provenance gate (HG-0006) + its tests |
 | `harness/governance/CODEOWNERS.template` | `CODEOWNERS` (fill the team) | Immutable control-plane ownership (HG-0002) |
 | `harness/governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | Platform-admin runbook to activate HG-0001/0002/0004 |
+| `harness/governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory seam (HG-0006) — replace demo values |
 | `harness/skills/*/SKILL.md` | `.claude/skills/<name>/SKILL.md` | discovery · develop · next-story · implement-story · spec-change |
 | `harness/agents/*.md` | `.claude/agents/` | hard-stop-reviewer + contract-conformance-reviewer (templates — see step 3) |
 | `harness/hooks/*.sh` | `.claude/hooks/` | pii-guard · spec-tripwire · test-tripwire (`chmod +x`) |
@@ -43,9 +45,9 @@ All sources are relative to this skill's directory. All destinations are repo-ro
 Also create if missing: `discovery/runs/`, `docs/develop/`, `docs/adrs/`, `docs/backlog.yaml`
 (empty list is fine), `docs/build-log.md`.
 
-Three reviewers — `discovery-boundary-reviewer`, `data-governance-reviewer`, and the
-continuous-assurance scanner `change-watch` — ship as **plugin agents** and work as soon as
-the machinery lands; they need no copying.
+Four agents — `discovery-boundary-reviewer`, `data-governance-reviewer`, the
+continuous-assurance scanner `change-watch`, and the `model-risk-reviewer` (HG-0006) — ship
+as **plugin agents** and work as soon as the machinery lands; they need no copying.
 
 ## 2. Mount the seams
 
@@ -81,6 +83,7 @@ has none yet, write the Commands / Conventions / Do-Not sections before running 
 node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs   # bundled suites must pass as copied
 node scripts/discovery-link-check.mjs            # waist gate runs (green on an empty backlog)
 node scripts/control-plane-check.mjs             # control-plane gate (green once CODEOWNERS is filled)
+node scripts/model-provenance-check.mjs          # model-provenance gate (green on the demo manifest)
 ```
 
 Then prove the pipeline end to end: run the `discovery` skill on a small real (or synthetic)
@@ -90,10 +93,11 @@ one artifact with the renderer to confirm D7 conformance. Only then aim the deli
 
 ## 5. Wire CI and governance
 
-- CI: run the bundled test suites, `discovery-link-check.mjs`, `control-plane-check.mjs`, and
-  `validate.mjs` over every `discovery/runs/*` on each PR — a broken run, an untraced feature
-  item, or an unowned control file blocks merge like a failing test. Add the project's own
-  Q-gates per `../loom/references/delivery-harness.md`.
+- CI: run the bundled test suites, `discovery-link-check.mjs`, `control-plane-check.mjs`,
+  `model-provenance-check.mjs`, and `validate.mjs` over every `discovery/runs/*` on each PR — a
+  broken run, an untraced feature item, an unowned control file, or an unpinned/unevaluated
+  model blocks merge like a failing test. Add the project's own Q-gates per
+  `../loom/references/delivery-harness.md`.
 - Governance: walk `../loom/references/governance.md`, then run
   `governance/activation-runbook.md` (a platform admin, outside the agent's write scope) to
   activate HG-0001/HG-0002/HG-0004 — branch protection with required Code Owner review from a

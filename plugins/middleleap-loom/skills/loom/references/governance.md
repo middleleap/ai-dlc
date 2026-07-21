@@ -22,7 +22,7 @@ repository is the worked example); the ids below are the Loom's stable names for
 | **HG-0003** | Self-attested change records | Externally-anchored traceability + tamper-evident evidence — the release bundle is sealed, not narrated |
 | **HG-0004** | Broad agent credentials / secrets on disk | Least-privilege service identity for the agent + vaulted secrets |
 | **HG-0005** | Auto-deploy with no promotion or rollback | dev → staging → prod promotion with a human production gate and a rehearsed rollback |
-| **HG-0006** | The agent is an ungoverned model | AI/model-risk governance for the harness itself (aligned to the applicable AI-risk frameworks: regulator guidance, NIST AI RMF / GenAI Profile, ISO 42001) |
+| **HG-0006** | The agent is an ungoverned model | AI/model-risk governance for the harness itself (aligned to the applicable AI-risk frameworks: regulator guidance, NIST AI RMF / GenAI Profile, ISO 42001). See `model-risk.md` for the model manifest + provenance gate that enforce the repo-side half |
 | **HG-0007** | Delivery built the wrong thing / no problem trace | **Discovery precedes delivery** — a gated left diamond (D1–D9) feeds delivery via a hand-off; a waist gate makes a green hand-off the entry condition for a feature item |
 | **HG-0008** | Domain content hard-coded into the harness | **Solution-agnostic seams**: the data-risk register (D6) and the `design.md` brand profile (D7) are mounted, not embedded |
 | **HG-0009** | The right diamond was a straight line | **Develop diverges before delivery converges** — explore N solution directions, judge, converge to a Solution Direction Record + the discovery-linked backlog item |

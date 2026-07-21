@@ -1,0 +1,28 @@
+{
+  "_comment": "ADOPT: the model inventory the harness runs on (HG-0006). One entry per model ROLE. model_id and prompt_version MUST be pinned (no 'latest'/floating tags). high-tier roles need a passing eval run against THIS pin, plus an independent validation sign-off. Verified by scripts/model-provenance-check.mjs. Replace these demo values with your real models; keep the shape.",
+  "models": [
+    {
+      "role": "delivery-loop",
+      "provider": "example-provider",
+      "model_id": "example-model@2026-01",
+      "prompt_version": "loom-harness@1.4.0",
+      "risk_tier": "high",
+      "eval": {
+        "suite": "evals/delivery-loop",
+        "ran_at": "2026-07-20",
+        "result": "pass",
+        "threshold_met": true,
+        "evaluated_model_id": "example-model@2026-01",
+        "evaluated_prompt_version": "loom-harness@1.4.0"
+      },
+      "validated_by": "model-risk function (2nd line), 2026-07-20"
+    },
+    {
+      "role": "discovery-facilitator",
+      "provider": "example-provider",
+      "model_id": "example-model@2026-01",
+      "prompt_version": "loom-harness@1.4.0",
+      "risk_tier": "medium"
+    }
+  ]
+}
