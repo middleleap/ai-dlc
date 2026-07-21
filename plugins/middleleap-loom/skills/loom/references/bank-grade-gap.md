@@ -39,11 +39,12 @@ Across ~47 assessed capabilities, the bundled harness today grades roughly:
 
 | Enforced | Named-only | Absent |
 |---|---|---|
-| ~16 | ~15 | ~16 |
+| ~16 | ~16 | ~15 |
 
 **This is a defensible estimate of what ships today, not an audit.** It reflects the plugin
-bundle as-is — e.g. of the six continuous-assurance agents only step ① Watch (`change-watch`)
-ships so far, so the rest are graded *Named-only*; the bundled data-risk register is graded
+bundle as-is — e.g. of the six continuous-assurance agents only steps ① Watch (`change-watch`)
+and ② Assess (`risk-reviewer`) ship so far, so the rest are graded *Named-only*; the bundled
+data-risk register is graded
 against its shipped state (a one-record demo), not the full taxonomy an adopter mounts. Read
 the clusters below for the reasoning behind each grade. The headline it encodes: **build-time
 frame strong, run-the-bank sparse** — though the enforced column is growing as roadmap steps
@@ -105,7 +106,7 @@ of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin ag
 | Capability | State | What closes it |
 |---|---|---|
 | 1st-line reviewer agents (hard-stop · conformance · data-gov · boundary) | **Enforced** | — |
-| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Named-only | Step ① Watch (`change-watch`) now ships as a plugin agent; ②–⑥ remain described-not-shipped |
+| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Named-only | Steps ① Watch (`change-watch`) and ② Assess (`risk-reviewer`) now ship as plugin agents; ③–⑥ remain described-not-shipped |
 | Independent 2nd-line challenge function | Absent | Risk & compliance, organisationally separate |
 | 3rd-line internal audit · read-only evidence portal | Absent | Auditor access to the sealed evidence trail |
 | WORM · time-stamped evidence retention | Named-only | The evidence-seal gate makes the bundle tamper-evident and anchor-checkable; the immutable store + RFC-3161 timestamping authority + retention policy are the adopter's |
@@ -121,12 +122,19 @@ independent party — the difference between self-assurance and examinable assur
 | D6 register seam + data-governance-reviewer | **Enforced** | — |
 | Q4.5 lineage emission · pii-guard hook | **Enforced** | — |
 | Full risk taxonomy | Absent | The bundled register is a one-record demo (DR-1 only) — mount the real taxonomy |
-| Retention + right-to-erasure enforcement | Absent | INSERT-only audit is the *opposite* of deletion-on-request; needs a governed erasure path |
-| Real-data control surface (KMS · field encryption · tokenization · access logging) | Absent | The harness is synthetic-only by design; the real-PII surface is unbuilt and untested |
+| Retention + right-to-erasure enforcement | Named-only | The data-lifecycle gate makes a bounded retention + an erasure disposition a merge condition; executing the deletion/crypto-shred is the adopter's data platform |
+| Real-data control surface (KMS · field encryption · tokenization · access logging) | Absent | The harness is synthetic-only by design; the real-PII surface is unbuilt and untested (governance/data-protection-runbook.md) |
 | Data residency (HG-0011) | Named-only | Residency-controlled model traffic + execution |
 
 The *shape* is right; the depth is demo-grade. The real-data control surface being unbuilt
 is the caveat that sits under everything else.
+
+*Shipped machinery:* a `data-lifecycle.json` seam + `data-lifecycle-check.mjs` gate that fails a
+release unless every data category declares a classification, a lawful basis (for personal data),
+a **bounded retention** (or a justified indefinite hold), an **erasure disposition**
+(right-to-erasure, or a justified legal-hold exemption), and a residency. It enforces the
+*disposition is declared and bounded* — the KMS/tokenization/deletion execution stays the
+adopter's (see `governance/data-protection-runbook.md`).
 
 ### E · Security & resilience breadth (DORA · FAPI · Basel)
 
