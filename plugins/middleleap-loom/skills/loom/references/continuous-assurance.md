@@ -34,6 +34,10 @@ pulls in, with humans reserved for judgement and the approvals that must stay hu
 The loop is never "done": it re-runs on the next trigger. Every cycle writes back to the
 regulated-entity brain / evidence ledger.
 
+Most of those triggers fire from **Run/Operations** — the third arc where the shipped system
+lives. `operations.md` covers how operational signals feed this lifecycle and route back into
+Discovery to close the loop (the `operations-signal` seam keeps that feedback wire traceable).
+
 ## Why this is different
 
 | Before — point-in-time, meeting-driven | Now — continuous, agent-driven |

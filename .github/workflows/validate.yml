@@ -39,9 +39,12 @@ jobs:
           cp "$P/loom-adopt/harness/scripts/evidence-seal-check.test.mjs" "$A/scripts/"
           cp "$P/loom-adopt/harness/scripts/data-lifecycle-check.mjs" "$A/scripts/"
           cp "$P/loom-adopt/harness/scripts/data-lifecycle-check.test.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/scripts/operations-signal-check.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/scripts/operations-signal-check.test.mjs" "$A/scripts/"
           cp "$P/loom-adopt/harness/governance/CODEOWNERS.template" "$A/CODEOWNERS"
           cp "$P/loom-adopt/harness/governance/model-manifest.template.json" "$A/docs/governance/model-manifest.json"
           cp "$P/loom-adopt/harness/governance/data-lifecycle.template.json" "$A/docs/governance/data-lifecycle.json"
+          cp "$P/loom-adopt/harness/governance/operations-signal.template.json" "$A/docs/governance/operations-signal.json"
           mkdir -p "$A/docs/governance/evidence"
           cp "$P/loom-adopt/harness/governance/evidence-manifest.template.json" "$A/docs/governance/evidence/manifest.json"
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
@@ -53,3 +56,4 @@ jobs:
           node scripts/model-provenance-check.mjs
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
+          node scripts/operations-signal-check.mjs

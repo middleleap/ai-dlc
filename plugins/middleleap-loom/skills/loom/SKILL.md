@@ -30,7 +30,9 @@ The two harnesses form a double diamond. The first diamond is about the **proble
 about the **solution**. Each diverges (explore widely) then converges (decide). They meet at one
 artifact — the agreed problem statement, the PRD — the hand-off from discovery to delivery. The
 process is non-linear by design: evidence found during delivery can legitimately send you back a
-diamond. And a discovery is **allowed to fail** — stopping the wrong problem early is a win.
+diamond. And a discovery is **allowed to fail** — stopping the wrong problem early is a win. The
+diamonds also **close into a loop**: shipped software runs, and Run/Operations feeds signals back
+into Discovery as evidence — the third arc (`references/operations.md`).
 
 ```
    DISCOVER        DEFINE            │    DEVELOP         DELIVER
@@ -55,6 +57,9 @@ Full canon for each half:
   assurance agents through the six-step regulatory lifecycle (watch, assess, check, test,
   evidence, confirm) on every trigger, so compliance is current to the last commit rather than
   to the last meeting.
+- `references/operations.md` — the third arc: how **Run/Operations** feeds signals back into
+  Discovery to close the loop, the routing triage, and the `operations-signal` seam that keeps
+  the feedback wire triaged and traceable.
 - `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
   bar: which controls are enforced, which are named-only, and which are absent — plus the
   order to close them in.
