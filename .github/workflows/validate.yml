@@ -31,8 +31,12 @@ jobs:
           cp "$P/loom-adopt/harness/discovery/brand/design.md" "$A/discovery/brand/design.md"
           cp -r "$P/loom-adopt/harness/discovery/brand/examples" "$A/discovery/brand/examples"
           cp "$P/loom-adopt/harness/scripts/discovery-link-check.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/scripts/control-plane-check.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/scripts/control-plane-check.test.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/governance/CODEOWNERS.template" "$A/CODEOWNERS"
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
-          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs
+          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs
           node scripts/discovery-link-check.mjs
+          node scripts/control-plane-check.mjs

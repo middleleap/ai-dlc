@@ -39,7 +39,7 @@ Across ~47 assessed capabilities, the bundled harness today grades roughly:
 
 | Enforced | Named-only | Absent |
 |---|---|---|
-| ~13 | ~12 | ~22 |
+| ~14 | ~12 | ~21 |
 
 **This is a defensible estimate of what ships today, not an audit.** It reflects the plugin
 bundle as-is — e.g. the six continuous-assurance agents are graded *Named-only* because
@@ -69,6 +69,12 @@ behind each grade. The headline it encodes: **build-time frame strong, run-the-b
 Only four HG decisions are enforced by the bundled machinery; the rest are real ADRs
 awaiting platform enforcement. This is the single biggest, and fastest, credibility gap.
 
+*Shipped machinery for the control plane (loom-adopt harness):* a `control-plane-check.mjs`
+CI gate that fails if any control-plane file loses its CODEOWNERS owner, a `CODEOWNERS.template`,
+and an `activation-runbook.md` that walks a platform admin through activating HG-0001/0002/0004
+(branch protection, ownership, least-privilege identity). The runbook makes HG-0004 *adoptable*
+but not yet *enforced* — the real IAM/vault is still the adopter's to wire.
+
 ### B · Model risk & AI governance (SR 11-7 · PRA SS1/23 · EU AI Act · NIST AI RMF · ISO 42001)
 
 | Capability | State | What closes it |
@@ -90,7 +96,7 @@ the least addressed. Q1b and HG-0012 protect build *integrity* but are not model
 | Capability | State | What closes it |
 |---|---|---|
 | 1st-line reviewer agents (hard-stop · conformance · data-gov · boundary) | **Enforced** | — |
-| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Named-only | Ship the agents `continuous-assurance.md` describes |
+| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Named-only | Step ① Watch (`change-watch`) now ships as a plugin agent; ②–⑥ remain described-not-shipped |
 | Independent 2nd-line challenge function | Absent | Risk & compliance, organisationally separate |
 | 3rd-line internal audit · read-only evidence portal | Absent | Auditor access to the sealed evidence trail |
 | WORM · time-stamped evidence retention | Absent | Immutable store + trusted timestamping + retention policy |
