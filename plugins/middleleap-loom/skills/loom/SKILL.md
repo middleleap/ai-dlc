@@ -55,6 +55,9 @@ Full canon for each half:
   assurance agents through the six-step regulatory lifecycle (watch, assess, check, test,
   evidence, confirm) on every trigger, so compliance is current to the last commit rather than
   to the last meeting.
+- `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
+  bar: which controls are enforced, which are named-only, and which are absent — plus the
+  order to close them in.
 
 ## The context brain — why the method compounds
 
@@ -92,6 +95,9 @@ A method worth adopting names its own risks:
 - **The brain must be curated** — governed, versioned, quality-checked, not merely accumulated.
 - **AI model risk is real.** The agents need ongoing validation, monitoring, and independent
   challenge — that is what the HG catalog's model-risk decisions exist for.
+
+The method's own maturity self-grade against a regulated-bank bar — what is enforced,
+named-only, or absent — lives in `references/bank-grade-gap.md`.
 
 ## The one-sentence guardrail
 
