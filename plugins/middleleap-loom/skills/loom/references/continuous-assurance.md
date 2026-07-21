@@ -14,7 +14,8 @@ The harness pulls assurance agents in:
 - **on every change** — every commit / PR, every merge / deploy
 - **on a schedule** — daily / continuous monitors
 - **on events** — a new regulation, a certificate expiring within its warning window, a
-  scheme or risk signal
+  scheme or risk signal, a newly-disclosed CVE in a shipped dependency (see
+  `supply-chain-security.md`)
 
 ## The regulatory lifecycle — each step run by an agent
 

@@ -65,6 +65,10 @@ each gate answers one question, mechanically:
 The discovery gates (D1–D9) and the waist gate run in the same CI, so a broken discovery run
 or an untraced feature item blocks merge exactly like a failing test.
 
+Q2 (SAST) and Q4 (dependency audit, image + secrets scan) name *roles*, not vendors. For
+concrete fills — SCA, SAST, container and IaC scanning, hardened base images — see
+`supply-chain-security.md`.
+
 ## The guardrail hooks (enforced every session, every edit)
 
 The loop's discipline is not left to the agent's restraint. Pre-write hooks block the failure

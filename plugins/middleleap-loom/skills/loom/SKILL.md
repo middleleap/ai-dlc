@@ -58,6 +58,9 @@ Full canon for each half:
 - `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
   bar: which controls are enforced, which are named-only, and which are absent — plus the
   order to close them in.
+- `references/supply-chain-security.md` — how concrete SCA / SAST / image-scanning tooling
+  (Chainguard, Snyk) fills slots the frame already has (Q2, Q4, HG-0002, the evidence bundle,
+  continuous assurance) without changing the frame.
 
 ## The context brain — why the method compounds
 

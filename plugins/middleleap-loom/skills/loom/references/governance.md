@@ -18,7 +18,7 @@ repository is the worked example); the ids below are the Loom's stable names for
 | ID | Gap in an ungoverned harness | Decision |
 |---|---|---|
 | **HG-0001** | Self-merge / no human four-eyes | Human-approved merges + a production gate via enforced branch protection. The agent never merges its own work |
-| **HG-0002** | The agent can edit its own guardrails | Immutable control plane: CODEOWNERS + managed settings + protected CI, including supply-chain integrity. Hooks, gates, and workflows live outside the agent's write scope |
+| **HG-0002** | The agent can edit its own guardrails | Immutable control plane: CODEOWNERS + managed settings + protected CI, including supply-chain integrity (see `supply-chain-security.md` for how hardened images + signed SBOM + SLSA provenance evidence it). Hooks, gates, and workflows live outside the agent's write scope |
 | **HG-0003** | Self-attested change records | Externally-anchored traceability + tamper-evident evidence — the release bundle is sealed, not narrated |
 | **HG-0004** | Broad agent credentials / secrets on disk | Least-privilege service identity for the agent + vaulted secrets |
 | **HG-0005** | Auto-deploy with no promotion or rollback | dev → staging → prod promotion with a human production gate and a rehearsed rollback |
