@@ -37,6 +37,7 @@ All sources are relative to this skill's directory. All destinations are repo-ro
 | `harness/scripts/data-lifecycle-check.mjs` | `scripts/data-lifecycle-check.mjs` | The data-lifecycle gate (retention & right-to-erasure) + its tests |
 | `harness/governance/CODEOWNERS.template` | `CODEOWNERS` (fill the team) | Immutable control-plane ownership (HG-0002) |
 | `harness/governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | Platform-admin runbook to activate HG-0001/0002/0004 |
+| `harness/governance/runbooks/` | `docs/governance/runbooks/` | Org-side adoption runbooks — the gaps a bundle cannot enforce (identity, assurance, model-risk, data-protection, security/resilience, governance) |
 | `harness/governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory seam (HG-0006) — replace demo values |
 | `harness/governance/evidence-manifest.template.json` | `docs/governance/evidence/manifest.json` | Sealed evidence index seam (HG-0003) — reseal with real hashes |
 | `harness/governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data-lifecycle seam (retention & erasure) — replace demo categories |

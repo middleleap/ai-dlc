@@ -186,6 +186,26 @@ real IAM/vault (HG-0004), an organisationally-independent model-risk and 2nd-lin
 runtime drift monitoring, an external WORM/timestamping store, and the real-PII control surface
 (Step 4). Those need owners outside engineering — the honest edge of what a harness can enforce.
 
+## The org-side, in runbooks
+
+The items above that stay **Named-only** or **Absent** because they need owners outside
+engineering are not left as a shrug. The loom-adopt harness ships six adoption runbooks
+(`governance/runbooks/`) that say, honestly, what a plugin bundle cannot enforce and what the
+adopting institution must stand up — each with a "why a bundle cannot enforce this" note and a
+"verify — evidence, not vibes" checklist:
+
+| Runbook | Closes (cluster) |
+|---|---|
+| `identity-and-secrets-runbook.md` | Least-privilege agent identity + vaulted secrets (A · HG-0004) |
+| `independent-assurance-runbook.md` | 2nd/3rd lines, auditor portal, external WORM anchor (C) |
+| `model-risk-operating-model-runbook.md` | Independent MRM function, runtime drift monitoring (B · HG-0006) |
+| `data-protection-runbook.md` | Real-PII control surface, DSAR, full register (D) |
+| `security-testing-and-resilience-runbook.md` | DAST/pentest/threat-model, operational resilience (E) |
+| `governance-and-accountability-runbook.md` | Accountable Senior Manager, board oversight, production pilot (F) |
+
+A runbook is not a control — but it is the honest difference between a gap the method *named*
+and one it left you to *discover*.
+
 ## The rule under all of it
 
 A reviewer agent that honours a rule is hygiene; the **control** is the platform mechanism
