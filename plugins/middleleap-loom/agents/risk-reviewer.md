@@ -26,14 +26,24 @@ an unregistered risk needs a human, not a guess).
    the touched risks (the `data-governance-reviewer`'s coverage logic, applied to a change).
 4. **Does it cross a hard-stop or a data-lifecycle disposition?** New personal data without a
    lawful basis, retention, or erasure disposition; egress to a new counterparty; a control
-   dropped to one layer. These route to `check` (the hard-stop reviewer), not to auto-accept.
+   dropped to one layer. A build defect routes to `spec-fix`, escalated to the ③ Check /
+   hard-stop reviewer — never to auto-accept.
 5. **Is it novel — outside the register?** If the change bears a risk the register does not
-   describe, say so plainly and route to a human. An unregistered risk is not a low risk.
+   describe, say so plainly and route to `discovery` (reopen the problem), escalated to a human.
+   An unregistered risk is not a low risk.
 
 ## Output — an impact assessment
 
-For each touched risk: `ASSESS — <DR-*/CTRL-*> — <impact in one line> — <residual moved? y/n> — ROUTE: <accept | check | human>`.
+For each touched risk: `ASSESS — <DR-*/CTRL-*> — <impact in one line> — <residual moved? y/n> — ROUTE: <spec-fix | register | discovery | accepted>`.
+
+The four routes are the **operations-signal vocabulary** (`operations-signal-check.mjs`), so an
+assessed signal drops straight into the feedback log, triaged and traceable:
+- `spec-fix` — the build is wrong, the problem is fine → Delivery (a PR / `spec-change`).
+- `register` — the risk position moved → a `DR-*` update (Continuous Assurance).
+- `discovery` — the *problem* may be wrong, or the risk is unregistered → Discovery reopens.
+- `accepted` — a conscious no-op, closed with a stated justification.
+
 Order by residual severity. End with a verdict line: `VERDICT: ACCEPTABLE (routine)` when every
-item is covered and no residual moves, or `VERDICT: ESCALATE (<n> items to human/check)` otherwise.
-Assessment and routing only — the human, or the ③ Check step, disposes. Do not weaken a rating to
-clear the queue; an honest escalation is the point of the step.
+item is `accepted`/`spec-fix` and no residual moves, or `VERDICT: ESCALATE (<n> to discovery/human)`
+otherwise. Assessment and routing only — the human, or the ③ Check step, disposes. Do not weaken a
+rating to clear the queue; an honest escalation is the point of the step.

@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the Loom harness works · MiddleLeap</title>
+<meta name="description" content="The Loom's closed-loop build stream, its security & governance checkpoints, the Run to Discovery feedback loop, and a bank-grade maturity traffic-light. MiddleLeap brand, Paper mode.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='3' y='11' width='16' height='16' fill='%232A2925'/%3E%3Crect x='23' y='12' width='13' height='13' transform='rotate(45 29.5 18.5)' fill='%23CE451B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Fonts load via the <link> above; the family stacks below fall back to the brand's
+   declared system fonts (Georgia / system-ui / monospace) when offline. */
+:root{
+    --bg:#FAF9F5; --surface:#FFFFFF; --surface-2:#F4F2EC;
+    --head:#14130F; --ink:#2A2925; --muted:#6E6A60;
+    --line:#E7E4DC; --line-strong:#D6D2C8;
+    --ember:#CE451B; --ember-cta:#E65C2D; --ember-dim:rgba(206,69,27,.10);
+    --pos:#2F7048; --pos-dim:rgba(47,112,72,.12);
+    --caution:#8F6614; --crit:#B23434; --crit-dim:rgba(178,52,52,.12); --info:#3A6E86;
+    --shadow:0 1px 2px rgba(20,19,15,.05),0 8px 24px rgba(20,19,15,.07);
+    --serif:'Instrument Serif',Georgia,serif;
+    --sans:'DM Sans',system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  h1,h2,h3,h4{margin:0;color:var(--head);text-wrap:balance}
+  h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:0}
+  a{color:var(--ember)}
+  .mono{font-family:var(--mono)}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  em{font-style:italic;color:var(--ember)}
+
+  /* header */
+  header{padding:56px 0 20px}
+  .brandbar{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .wordmark{font-family:var(--sans);font-weight:600;font-size:1.04rem}
+  .wm-mid{color:var(--head)} .wm-leap{color:var(--ember)}
+  h1{font-size:clamp(2.3rem,5.2vw,3.7rem);line-height:1.05}
+  .lede{max-width:64ch;margin-top:16px;font-size:1.08rem;color:var(--muted)}
+  .lede b{color:var(--head);font-weight:600}
+
+  section{padding:26px 0}
+  .sec-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .sec-h h2{font-size:1.7rem}
+  .sec-sub{color:var(--muted);max-width:72ch;margin:4px 0 18px;font-size:.98rem}
+
+  /* hero diagram */
+  .schematic{background:var(--surface);border:1px solid var(--line);padding:22px 20px 12px;box-shadow:var(--shadow)}
+  .schematic svg{width:100%;height:auto;display:block;overflow:visible}
+  .dd-diamond{fill:none;stroke-width:2}
+  .dd-fillL{fill:var(--info);opacity:.07} .dd-fillR{fill:var(--ember);opacity:.07}
+  .dd-strokeL{stroke:#33322F;fill:none} .dd-strokeR{stroke:var(--ember);fill:none}
+  .dd-flow{stroke:var(--line-strong);stroke-width:2;fill:none}
+  .dd-lab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;fill:var(--muted);text-transform:uppercase}
+  .dd-mode{font-family:var(--sans);font-size:12.5px;font-weight:600;fill:var(--ink)}
+  .dd-h{font-family:var(--sans);font-size:13px;font-weight:700}
+  .dd-hL{fill:#33322F} .dd-hR{fill:var(--ember)}
+  rect.dd-waist{fill:var(--surface-2);stroke:var(--ember);stroke-width:1.5}
+  text.dd-waist{font-family:var(--mono);fill:var(--ember);letter-spacing:.04em}
+
+  /* ============ simulator ============ */
+  .sim{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);padding:0;overflow:hidden}
+  .sim-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+  .sim-controls label{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  select,.btn{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:0;cursor:pointer}
+  select{padding-right:8px}
+  .btn{text-transform:uppercase;letter-spacing:.06em;font-size:.72rem;transition:background .15s,color .15s,border-color .15s}
+  .btn:hover{border-color:var(--ink)}
+  .btn.primary{background:var(--ember-cta);color:#110D0A;border-color:var(--ember-cta);font-weight:600}
+  .btn.primary:hover{background:var(--ember)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn:focus-visible,select:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+  .spacer{flex:1}
+  .sim-status{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+
+  .sim-body{display:grid;grid-template-columns:1fr;gap:0}
+  .sim-track{padding:20px 18px 6px}
+  .phase{margin-bottom:14px}
+  .phase-lab{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:8px}
+  .phase-lab::after{content:"";flex:1;height:1px;background:var(--line)}
+  .nodes{display:flex;flex-wrap:wrap;gap:8px}
+  .node{position:relative;flex:0 0 auto;min-width:96px;border:1px solid var(--line);background:var(--surface);padding:9px 11px;cursor:pointer;transition:border-color .2s,background .2s,transform .2s}
+  .node:hover{border-color:var(--line-strong)}
+  .node .nlab{font-size:.82rem;font-weight:600;color:var(--head);line-height:1.15}
+  .node .ngate{font-family:var(--mono);font-size:.58rem;letter-spacing:.03em;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+  .node .nmark{position:absolute;top:6px;right:7px;font-family:var(--mono);font-size:.7rem;line-height:1}
+  .node[data-state="active"]{border-color:var(--ember);background:var(--ember-dim);box-shadow:0 0 0 2px var(--ember-dim)}
+  .node[data-state="pass"]{border-left:3px solid var(--pos)}
+  .node[data-state="pass"] .nmark{color:var(--pos)}
+  .node[data-state="block"]{border-color:var(--crit);background:var(--crit-dim)}
+  .node[data-state="block"] .nmark{color:var(--crit)}
+  .node[data-state="wait"]{border-color:var(--ember);background:var(--ember-dim)}
+  @media (prefers-reduced-motion:no-preference){.node[data-state="active"]{animation:pulse 1.1s ease-in-out infinite}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 2px var(--ember-dim)}50%{box-shadow:0 0 0 5px var(--ember-dim)}}
+
+  .sim-detail{border-top:1px solid var(--line);display:grid;grid-template-columns:1.2fr 1fr;gap:0}
+  @media (max-width:720px){.sim-detail{grid-template-columns:1fr}}
+  .detail-main{padding:18px}
+  .detail-main .dphase{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .detail-main h3{font-size:1.25rem;margin:3px 0 8px}
+  .detail-main .dgate{display:inline-block;font-family:var(--mono);font-size:.66rem;border:1px solid var(--line-strong);padding:2px 7px;border-radius:2px;color:var(--muted);margin-bottom:10px}
+  .detail-main p{margin:0;font-size:.94rem;color:var(--ink)}
+  .verdict{margin-top:12px;font-family:var(--mono);font-size:.8rem;padding:9px 12px;border-radius:2px;display:none}
+  .verdict.pass{display:block;color:var(--pos);background:var(--pos-dim);border:1px solid color-mix(in srgb,var(--pos) 40%,transparent)}
+  .verdict.block{display:block;color:var(--crit);background:var(--crit-dim);border:1px solid color-mix(in srgb,var(--crit) 40%,transparent)}
+  .verdict.wait{display:block;color:var(--ember);background:var(--ember-dim);border:1px solid color-mix(in srgb,var(--ember) 40%,transparent)}
+  .approve{margin-top:12px}
+  .detail-log{border-left:1px solid var(--line);padding:18px;background:var(--surface-2)}
+  .detail-log .llab{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .log{list-style:none;margin:0;padding:0;font-family:var(--mono);font-size:.72rem;max-height:210px;overflow-y:auto}
+  .log li{padding:3px 0;border-bottom:1px solid var(--line);color:var(--ink);display:flex;gap:8px}
+  .log li .g{flex:0 0 auto}
+  .log li.pass .g{color:var(--pos)} .log li.block .g{color:var(--crit)} .log li.wait .g{color:var(--ember)} .log li.info .g{color:var(--muted)}
+  .loopback{padding:12px 18px;border-top:1px dashed var(--line-strong);font-family:var(--mono);font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:10px;transition:color .3s,background .3s}
+  .loopback.fired{color:var(--ember);background:var(--ember-dim)}
+  .loopback .arrow{font-size:1rem}
+
+  /* gate reference / maturity */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
+  .card{background:var(--surface);border:1px solid var(--line);padding:14px 16px}
+  .card h4{font-size:.95rem;display:flex;align-items:center;gap:8px}
+  .card .gid{font-family:var(--mono);font-size:.6rem;color:var(--muted);border:1px solid var(--line-strong);padding:1px 5px;border-radius:2px}
+  .card p{margin:7px 0 0;font-size:.84rem;color:var(--muted)}
+
+  .scorebar{display:flex;height:15px;border:1px solid var(--line);overflow:hidden;margin:6px 0 10px}
+  .scorebar span{display:block}
+  .scorebar .enf{background:var(--pos)} .scorebar .nam{background:var(--caution)} .scorebar .abs{background:var(--crit)}
+  .scoretags{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--mono);font-size:.76rem}
+  .scoretags .sw{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px}
+  .scoretags .enf{background:var(--pos)} .scoretags .nam{background:var(--caution)} .scoretags .abs{background:var(--crit)}
+
+  .note{margin-top:20px;padding:14px 18px;border-left:3px solid var(--ember);background:var(--ember-dim)}
+  .note p{margin:0;font-size:.9rem;color:var(--ink)} .note p+p{margin-top:7px}
+  footer{padding:30px 0 56px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);margin-top:20px}
+  footer .mono{font-size:.74rem}
+  .reveal{opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brandbar">
+      <svg width="40" height="18" viewBox="0 0 40 18" aria-hidden="true">
+        <rect x="1" y="2.5" width="13" height="13" fill="#2A2925"/>
+        <rect x="24.5" y="3" width="10.6" height="10.6" transform="rotate(45 29.8 8.3)" fill="#CE451B"/>
+      </svg>
+      <span class="wordmark"><span class="wm-mid">Middle</span><span class="wm-leap">Leap</span></span>
+      <span class="eyebrow">· The Loom · AI-SDLC</span>
+    </div>
+    <h1>How the harness <em>actually works</em>.</h1>
+    <p class="lede">The Loom turns an idea into gated, audit-ready software and then lets <b>running reopen discovery</b>.
+      Below is the mental model — then <b>send a change through it yourself</b>: pick a scenario, watch each gate, hook,
+      and reviewer evaluate, approve the human four-eyes step, and see a Run signal loop back to Discovery.</p>
+  </header>
+
+  <!-- the mental model -->
+  <section class="reveal">
+    <div class="sec-h"><span class="eyebrow">The mental model</span><h2>A closed loop, not a line</h2></div>
+    <p class="sec-sub">Two diamonds — find the right problem, build it right — meet at a hand-off, ship, run, and feed
+      Run's signals back into Discovery. The <em>warp</em> (four-eyes, INSERT-only audit, lineage, residency) runs under all three arcs.</p>
+    <div class="schematic" id="hero"></div>
+  </section>
+
+  <!-- the simulator -->
+  <section class="reveal">
+    <div class="sec-h"><span class="eyebrow">Run it</span><h2>Send a change through the Loom</h2></div>
+    <p class="sec-sub">Every step below is a real gate, hook, or reviewer in the bundle. Pick a scenario that trips one,
+      press <b>Play</b>, and watch it <b>block the merge</b> — or approve four-eyes yourself and watch the loop close.</p>
+
+    <div class="sim">
+      <div class="sim-controls">
+        <label for="scenario">Scenario</label>
+        <select id="scenario" aria-label="Scenario"></select>
+        <button class="btn primary" id="play">▶ Play</button>
+        <button class="btn" id="step">⇢ Step</button>
+        <button class="btn" id="reset">↻ Reset</button>
+        <span class="spacer"></span>
+        <span class="sim-status" id="status">ready</span>
+      </div>
+      <div class="sim-body">
+        <div class="sim-track" id="track"></div>
+        <div class="sim-detail">
+          <div class="detail-main">
+            <div class="dphase" id="d-phase">Press Play or Step</div>
+            <h3 id="d-title">The change starts here</h3>
+            <span class="dgate" id="d-gate" hidden></span>
+            <p id="d-desc">Each stage is a control the harness actually ships. A gate that fails blocks merge — the agent proposes, a human disposes.</p>
+            <div class="verdict" id="d-verdict"></div>
+            <div class="approve" id="d-approve" hidden><button class="btn primary" id="approveBtn">✓ Approve merge (four-eyes)</button></div>
+          </div>
+          <div class="detail-log">
+            <div class="llab">Build log</div>
+            <ul class="log" id="log"></ul>
+          </div>
+        </div>
+        <div class="loopback" id="loopback"><span class="arrow">↻</span> <span id="loopback-text">Run → Discovery: a signal loops back here when the cycle completes.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- gate reference -->
+  <section class="reveal">
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Six gates, run every PR</h2></div>
+    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — wired so the agent identity can't bypass it.</p>
+    <div class="grid" id="gategrid"></div>
+  </section>
+
+  <!-- maturity -->
+  <section class="reveal">
+    <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
+    <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
+      real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
+    <div class="scorebar" role="img" aria-label="about 16 enforced, 16 named-only, 15 absent">
+      <span class="enf" style="width:34%"></span><span class="nam" style="width:34%"></span><span class="abs" style="width:32%"></span>
+    </div>
+    <div class="scoretags">
+      <span><span class="sw enf"></span>~16 enforced</span>
+      <span><span class="sw nam"></span>~16 named-only</span>
+      <span><span class="sw abs"></span>~15 absent</span>
+    </div>
+    <div class="note">
+      <p><b>The rule that keeps it honest:</b> a control the harness <em>narrates</em> is hygiene; the control is the
+        platform mechanism the agent can't bypass — a gate that blocks merge, branch protection, a vault. Everything the
+        bundle can't enforce is documented in a runbook, never faked with a green check.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom — a way for a regulated entity to build with AI.</p>
+  </footer>
+</div>
+
+<script>
+/* ---------- the closed-loop hero (drawn once) ---------- */
+document.getElementById('hero').innerHTML = `
+<svg viewBox="0 0 1040 300" role="img" aria-label="Closed loop: a discovery diamond and a delivery diamond meet at a hand-off; delivery feeds a Run node whose signals sweep back into discovery, closing the loop.">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#CE451B"/></marker></defs>
+  <text class="dd-h dd-hL" x="210" y="16" text-anchor="middle">DISCOVERY · the problem</text>
+  <text class="dd-h dd-hR" x="690" y="16" text-anchor="middle">DELIVERY · the solution</text>
+  <path class="dd-diamond dd-fillL" d="M30 105 L210 25 L390 105 L210 185 Z"/><path class="dd-strokeL" d="M30 105 L210 25 L390 105 L210 185 Z"/>
+  <path class="dd-diamond dd-fillR" d="M510 105 L690 25 L870 105 L690 185 Z"/><path class="dd-strokeR" d="M510 105 L690 25 L870 105 L690 185 Z"/>
+  <text class="dd-lab" x="150" y="99" text-anchor="middle">discover</text><text class="dd-mode" x="150" y="121" text-anchor="middle">diverge</text>
+  <text class="dd-lab" x="300" y="99" text-anchor="middle">define</text><text class="dd-mode" x="300" y="121" text-anchor="middle">converge</text>
+  <text class="dd-lab" x="600" y="99" text-anchor="middle">develop</text><text class="dd-mode" x="600" y="121" text-anchor="middle">diverge</text>
+  <text class="dd-lab" x="780" y="99" text-anchor="middle">deliver</text><text class="dd-mode" x="780" y="121" text-anchor="middle">converge</text>
+  <rect class="dd-waist" x="393" y="88" width="114" height="34"/><text class="dd-waist" x="450" y="103" text-anchor="middle" style="font-size:11px;font-weight:600">HAND-OFF</text><text class="dd-waist" x="450" y="116" text-anchor="middle" style="font-size:8px">waist gate ↦ PRD</text>
+  <path class="dd-flow" d="M872 105 L890 105" style="stroke:#CE451B;stroke-width:2;fill:none" marker-end="url(#a)"/>
+  <rect class="dd-waist" x="894" y="79" width="122" height="52" rx="10" style="stroke-width:2"/><text class="dd-waist" x="955" y="101" text-anchor="middle" style="font-size:10.5px;font-weight:600">RUN · OPERATIONS</text><text class="dd-lab" x="955" y="117" text-anchor="middle" style="font-size:8.5px">the cloth in use</text>
+  <path class="dd-flow" d="M955 131 C970 250 800 288 480 288 C200 288 46 232 30 108" style="stroke:#CE451B;stroke-width:2;fill:none" marker-end="url(#a)"/>
+  <text class="dd-lab" x="470" y="206" text-anchor="middle">warp — always-on controls run under all three arcs</text>
+  <text class="dd-lab" x="322" y="242" text-anchor="middle">spec-fix ↻ Delivery</text><text class="dd-lab" x="540" y="242" text-anchor="middle">register ↻ Assurance</text><text class="dd-lab" x="726" y="242" text-anchor="middle">re-discover ↻</text>
+  <text class="dd-lab" x="492" y="270" text-anchor="middle">sense → signals · fed to Discovery as evidence (D2)</text>
+</svg>`;
+
+/* ---------- the simulator ---------- */
+const STAGES = [
+  {id:'discover', ph:'Discovery', lab:'Discover', gate:'D1–D5', desc:'Explore the problem space and frame the one problem worth solving — every claim traced to a logged signal (D2).'},
+  {id:'define',   ph:'Discovery', lab:'Define', gate:'D6–D9', desc:'Data-governance feasibility against the register (D6), then a brand-real, stakeholder-tested prototype (D7–D9).'},
+  {id:'waist',    ph:'Hand-off',  lab:'Hand-off', gate:'HG-0007 · discovery-link-check', desc:'The waist gate: a feature may not enter delivery without a gate-green discovery hand-off. No unsourced requests.'},
+  {id:'develop',  ph:'Delivery',  lab:'Develop', gate:'develop skill', desc:'Diverge on N solution directions, converge on one, and append a discovery-linked backlog item.'},
+  {id:'spec',     ph:'Delivery',  lab:'Spec-first', gate:'spec-tripwire', desc:'Write the API contract + acceptance tests and show them RED before implementing. The contract changes only via its own PR.'},
+  {id:'implement',ph:'Delivery',  lab:'Implement', gate:'pii-guard', desc:'Implement to green against interfaces — synthetic data only; audit + lineage emitted in the same change.'},
+  {id:'review',   ph:'Delivery',  lab:'Review', gate:'reviewer agents', desc:'Local reviewer agents must pass on the diff: hard-stop (PASS) and contract-conformance (CONFORMANT).'},
+  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'6 gates', desc:'Every gate runs: control-plane (HG-0002), model-provenance (HG-0006), evidence-seal (HG-0003), data-lifecycle, the waist gate, and the Q-gates.'},
+  {id:'merge',    ph:'Delivery',  lab:'Merge', gate:'HG-0001 · human', desc:'The agent opens the PR and STOPS. A human holds four-eyes — the agent identity is not in the approver group and never merges its own work.'},
+  {id:'deploy',   ph:'Run',       lab:'Deploy', gate:'smoke', desc:'Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.'},
+  {id:'evidence', ph:'Run',       lab:'Evidence', gate:'HG-0003 · evidence-seal', desc:'Seal the release evidence bundle — a hash chain the gate re-reads and verifies, so altering any artifact breaks a seal.'},
+  {id:'run',      ph:'Run',       lab:'Run', gate:'continuous assurance', desc:'The cloth in use. Continuous assurance re-runs on schedule and on events; operations produces signals.'},
+  {id:'feedback', ph:'Loop',      lab:'Feedback', gate:'operations-signal', desc:'A signal is triaged (routed) and traceable, then re-enters Discovery as evidence (D2). The loop closes.'},
+];
+const SCENARIOS = {
+  clean:     {name:'A clean feature — ships', block:null},
+  nohandoff: {name:'No discovery hand-off', block:'waist', why:'The feature carries no discovery: link and is not exempt. The waist gate (HG-0007) rejects it — run the discovery harness first, or set discovery_exempt with a reason.'},
+  pii:       {name:'Real PII in a fixture', block:'implement', why:'pii-guard blocks a PII-shaped literal at write time. Synthetic data only, everywhere — the hook stops it before it lands.'},
+  unpinned:  {name:'An unpinned model', block:'gates', why:'model-provenance (HG-0006): a model role uses a floating tag, or ships with no passing eval against its pin. The gate fails the build.'},
+  tampered:  {name:'A tampered evidence bundle', block:'evidence', why:'evidence-seal (HG-0003): an artifact’s content sha256 no longer matches the manifest. The seal breaks — the bundle is not intact.'},
+};
+const PHASES = ['Discovery','Hand-off','Delivery','Run','Loop'];
+
+const $ = (id) => document.getElementById(id);
+const track = $('track'), logEl = $('log'), sel = $('scenario');
+let idx = -1, running = false, timer = null, approved = false, done = false;
+
+for (const [k,v] of Object.entries(SCENARIOS)) { const o=document.createElement('option'); o.value=k; o.textContent=v.name; sel.appendChild(o); }
+
+// build the track
+const nodeEls = {};
+for (const ph of PHASES) {
+  const g = document.createElement('div'); g.className='phase';
+  const lab = document.createElement('div'); lab.className='phase-lab'; lab.textContent=ph; g.appendChild(lab);
+  const nodes = document.createElement('div'); nodes.className='nodes';
+  STAGES.filter(s=>s.ph===ph).forEach(s=>{
+    const n=document.createElement('button'); n.className='node'; n.dataset.state='idle'; n.type='button';
+    n.innerHTML=`<div class="nmark"></div><div class="nlab">${s.lab}</div><div class="ngate">${s.gate}</div>`;
+    n.addEventListener('click',()=>showDetail(STAGES.indexOf(s), STAGES.indexOf(s)<=idx?null:'preview'));
+    nodes.appendChild(n); nodeEls[s.id]=n;
+  });
+  g.appendChild(nodes); track.appendChild(g);
+}
+
+function mark(id, state){ const n=nodeEls[id]; n.dataset.state=state; n.querySelector('.nmark').textContent = state==='pass'?'✓':state==='block'?'✕':state==='wait'?'⏸':''; }
+function addLog(stage, cls, msg){ const li=document.createElement('li'); li.className=cls; li.innerHTML=`<span class="g">${cls==='pass'?'✓':cls==='block'?'✕':cls==='wait'?'⏸':'·'}</span><span><b>${stage}</b> — ${msg}</span>`; logEl.appendChild(li); logEl.scrollTop=logEl.scrollHeight; }
+function setStatus(t){ $('status').textContent=t; }
+
+function showDetail(i, mode){
+  const s=STAGES[i]; $('d-phase').textContent=s.ph; $('d-title').textContent=s.lab;
+  const gate=$('d-gate'); gate.textContent=s.gate; gate.hidden=false;
+  $('d-desc').textContent=s.desc;
+  const v=$('d-verdict'); v.className='verdict'; v.textContent='';
+  $('d-approve').hidden=true;
+  if(mode==='preview'){ v.className='verdict'; }
+}
+
+function evaluate(i){
+  const s=STAGES[i], sc=SCENARIOS[sel.value];
+  showDetail(i);
+  // block?
+  if(sc.block===s.id){
+    mark(s.id,'block'); addLog(s.lab,'block',sc.why);
+    const v=$('d-verdict'); v.className='verdict block'; v.textContent='✕ BLOCKED — '+sc.why;
+    setStatus('blocked at '+s.lab); running=false; done=true;
+    return 'block';
+  }
+  // human four-eyes at merge
+  if(s.id==='merge' && !approved){
+    mark(s.id,'wait'); addLog(s.lab,'wait','Agent opened the PR and stopped. Waiting for a human to approve (four-eyes).');
+    const v=$('d-verdict'); v.className='verdict wait'; v.textContent='⏸ The agent proposes — a human disposes. Approve to continue.';
+    $('d-approve').hidden=false; setStatus('waiting for four-eyes'); running=false;
+    return 'wait';
+  }
+  // pass
+  mark(s.id,'pass');
+  addLog(s.lab,'pass', passMsg(s));
+  const v=$('d-verdict'); v.className='verdict pass'; v.textContent='✓ '+passMsg(s);
+  if(s.id==='feedback'){ fireLoop(); done=true; setStatus('cycle complete — the loop closed'); running=false; return 'done'; }
+  setStatus('at '+s.lab);
+  return 'ok';
+}
+function passMsg(s){
+  return ({
+    discover:'Problem framed from evidence (D1–D5 green).', define:'Data-governance verdict recorded; prototype reacted to (D6–D9 green).',
+    waist:'Feature traces to a gate-green hand-off (HG-0007).', develop:'One solution direction chosen; backlog item linked.',
+    spec:'Contract + acceptance tests written and shown RED.', implement:'Green against interfaces; synthetic data; lineage emitted.',
+    review:'hard-stop: PASS · contract-conformance: CONFORMANT.', gates:'control-plane · model-provenance · evidence-seal · data-lifecycle · waist · Q-gates — all green.',
+    merge:'Human approved — four-eyes merge (HG-0001).', deploy:'Deployed; smoke suite green against the live URL.',
+    evidence:'Evidence bundle sealed and verified — the hash chain is intact.', run:'Live. Continuous assurance watching on schedule + events.',
+    feedback:'Signal triaged and traceable → re-enters Discovery as evidence.'
+  })[s.id]||'ok';
+}
+function fireLoop(){ const lb=$('loopback'); lb.classList.add('fired'); $('loopback-text').textContent='Run → Discovery: a signal fed back as evidence. Reset and run it again to weave the next cycle.'; }
+
+function advance(){
+  if(done) return 'done';
+  if(idx>=STAGES.length-1) return 'done';
+  idx++; return evaluate(idx);
+}
+function play(){ if(running||done) return; running=true; setStatus('running…'); tick(); }
+function tick(){ if(!running) return; const r=advance(); if(r==='ok'){ const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches; timer=setTimeout(tick, reduce?60:850);} else { running=false; } }
+function step(){ if(running||done) return; advance(); }
+function reset(){
+  running=false; done=false; approved=false; idx=-1; clearTimeout(timer);
+  Object.values(nodeEls).forEach(n=>{n.dataset.state='idle'; n.querySelector('.nmark').textContent='';});
+  logEl.innerHTML=''; $('loopback').classList.remove('fired');
+  $('loopback-text').textContent='Run → Discovery: a signal loops back here when the cycle completes.';
+  $('d-phase').textContent='Press Play or Step'; $('d-title').textContent='The change starts here';
+  $('d-gate').hidden=true; $('d-desc').textContent='Each stage is a control the harness actually ships. A gate that fails blocks merge — the agent proposes, a human disposes.';
+  $('d-verdict').className='verdict'; $('d-approve').hidden=true;
+  setStatus('ready · '+SCENARIOS[sel.value].name);
+}
+$('play').addEventListener('click',play);
+$('step').addEventListener('click',step);
+$('reset').addEventListener('click',reset);
+$('approveBtn').addEventListener('click',()=>{ approved=true; $('d-approve').hidden=true; addLog('Merge','info','Human four-eyes approval recorded.'); evaluate(idx); play(); });
+sel.addEventListener('change',reset);
+reset();
+
+/* ---------- gate reference cards ---------- */
+const GATES=[
+ {id:'HG-0002',n:'control-plane-check',d:'Fails if any control-plane file (hooks, gates, workflows, CODEOWNERS) loses its owner — so the agent can’t edit its own guardrails.'},
+ {id:'HG-0006',n:'model-provenance-check',d:'Fails unless every model role is pinned, tiered, evaluated against its shipping pin, and independently validated (medium + high).'},
+ {id:'HG-0003',n:'evidence-seal-check',d:'Re-reads each release artifact and verifies its hash against an append-only chain — altering any artifact breaks a seal.'},
+ {id:'data-gov',n:'data-lifecycle-check',d:'Fails a release unless every data category declares a bounded retention and a right-to-erasure disposition.'},
+ {id:'HG-0007',n:'discovery-link-check',d:'The waist gate: a pending feature must trace to a gate-green discovery hand-off, or carry an explicit exemption.'},
+ {id:'loop',n:'operations-signal-check',d:'The Run→Discovery gate: an operational signal must be triaged (routed) and traceable, so nothing falls on the floor.'},
+];
+$('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
+
+/* ---------- scroll reveal ---------- */
+(function(){const els=document.querySelectorAll('.reveal');if(!('IntersectionObserver'in window)){els.forEach(e=>e.classList.add('in'));return;}const io=new IntersectionObserver(en=>en.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.06});els.forEach(e=>io.observe(e));})();
+</script>
+</body>
+</html>

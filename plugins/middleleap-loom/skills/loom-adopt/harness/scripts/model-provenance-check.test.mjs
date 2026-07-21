@@ -30,6 +30,12 @@ test('a low-tier model needs no eval or validation', () => {
   assert.deepEqual(evaluate({ models: [{ role: 'summariser', model_id: 'x@1', prompt_version: 'p@1', risk_tier: 'low' }] }), []);
 });
 
+test('a medium-tier model requires an eval and an independent validation (runbook §2.2)', () => {
+  const f = evaluate({ models: [{ role: 'facilitator', model_id: 'x@1', prompt_version: 'p@1', risk_tier: 'medium' }] });
+  assert.ok(f.some((x) => /has no eval block/.test(x)), 'medium needs an eval');
+  assert.ok(f.some((x) => /no independent validation/.test(x)), 'medium needs validated_by');
+});
+
 test('a floating model_id is not a pin', () => {
   const f = evaluate(manifest({ model_id: 'latest' }));
   assert.ok(f.some((x) => /model_id is not pinned/.test(x)));

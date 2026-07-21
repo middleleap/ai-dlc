@@ -46,7 +46,7 @@ jobs:
           cp "$P/loom-adopt/harness/governance/data-lifecycle.template.json" "$A/docs/governance/data-lifecycle.json"
           cp "$P/loom-adopt/harness/governance/operations-signal.template.json" "$A/docs/governance/operations-signal.json"
           mkdir -p "$A/docs/governance/evidence"
-          cp "$P/loom-adopt/harness/governance/evidence-manifest.template.json" "$A/docs/governance/evidence/manifest.json"
+          cp "$P/loom-adopt/harness/evidence-example/"*.json "$A/docs/governance/evidence/"
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
@@ -57,3 +57,8 @@ jobs:
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
+
+      - name: Loom — operations-signal adopter example stays green
+        run: |
+          cd plugins/middleleap-loom/skills/loom-adopt/harness/operations-example
+          node ../scripts/operations-signal-check.mjs

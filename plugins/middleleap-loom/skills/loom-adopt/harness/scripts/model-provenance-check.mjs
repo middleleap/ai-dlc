@@ -21,8 +21,10 @@ const MANIFEST_LOCATIONS = ['docs/governance/model-manifest.json', 'model-manife
 // ADOPT: a floating tag is not a pin — it can move under you between eval and release.
 export const FLOATING = new Set(['', 'latest', 'main', 'head', 'stable', 'edge', '*']);
 // ADOPT: which risk tiers must carry a passing eval / an independent validation before release.
-export const EVAL_REQUIRED_TIERS = new Set(['high']);
-export const VALIDATION_REQUIRED_TIERS = new Set(['high']);
+// Default follows the model-risk-operating-model-runbook §2.2 controls-by-tier matrix: eval and
+// validation are required at medium AND high (low is optional). Tighten or loosen per your tiering.
+export const EVAL_REQUIRED_TIERS = new Set(['high', 'medium']);
+export const VALIDATION_REQUIRED_TIERS = new Set(['high', 'medium']);
 const TIERS = new Set(['high', 'medium', 'low']);
 
 const isPinned = (v) => typeof v === 'string' && !FLOATING.has(v.trim().toLowerCase());

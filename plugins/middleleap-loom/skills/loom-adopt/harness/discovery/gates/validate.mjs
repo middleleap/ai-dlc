@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Discovery gate validator — D1..D8. Pure Node, zero deps, deterministic.
+// Discovery gate validator — D1..D9. Pure Node, zero deps, deterministic.
 //
 //   node discovery/gates/validate.mjs discovery/runs/<slug> [--register <dir>] [--brand <path>] [--json]
 //

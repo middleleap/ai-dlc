@@ -60,6 +60,9 @@ Full canon for each half:
 - `references/operations.md` — the third arc: how **Run/Operations** feeds signals back into
   Discovery to close the loop, the routing triage, and the `operations-signal` seam that keeps
   the feedback wire triaged and traceable.
+- `assets/loom-stream.html` — a standalone, brand-styled visualization of the whole stream: the
+  double diamond closed into a loop, the security / governance / business checkpoints, where
+  Chainguard & Snyk attach, and the bank-grade maturity traffic-light. Open it in a browser.
 - `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
   bar: which controls are enforced, which are named-only, and which are absent — plus the
   order to close them in.

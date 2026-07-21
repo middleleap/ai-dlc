@@ -1,0 +1,42 @@
+{
+  "_comment": "ADOPTER EXAMPLE — a real, self-contained, tamper-evident release evidence bundle (HG-0003). The delivery loop writes this at step 8. Each sha256 is the real hash of the sibling artifact; the seals form an append-only chain; anchor is the final seal (publish it to an external WORM + RFC-3161 store). Verified by scripts/evidence-seal-check.mjs, which now re-reads each artifact and fails on any hash mismatch. See README.md.",
+  "release": "v-demo",
+  "anchor": "a49e41bc26215f299945edcc0634e34256d3b380ffa26dee5b5dea50c59704c8",
+  "entries": [
+    {
+      "type": "tests",
+      "ref": "tests.json",
+      "sha256": "2d0c3fd69a0de6fe287ff926285048ec4fce5c16333f499dc05c371036df0e35",
+      "prev": "GENESIS",
+      "seal": "071e80e310f112b7c23f8d2292f73097b10334b9cf2c73618503a4fa9e3b0ff1"
+    },
+    {
+      "type": "reviews",
+      "ref": "reviews.json",
+      "sha256": "4e08be1989e547b6ae507ad5bb4812f9c027170d24c2e2bb47de776e07369666",
+      "prev": "071e80e310f112b7c23f8d2292f73097b10334b9cf2c73618503a4fa9e3b0ff1",
+      "seal": "caf9e0ca0de937dc58193c836c45c6b5c90a62346c393b3070bd3f52b57b50c1"
+    },
+    {
+      "type": "lineage",
+      "ref": "lineage.json",
+      "sha256": "7d2a2645b052da99764cec040fc82a366ff21dd4336a416b54d8a6b4586606a3",
+      "prev": "caf9e0ca0de937dc58193c836c45c6b5c90a62346c393b3070bd3f52b57b50c1",
+      "seal": "71335e3760923c9f4fd4e81f25c4cf626fe8527d487c857575e21e8a99723a23"
+    },
+    {
+      "type": "model-provenance",
+      "ref": "model-provenance.json",
+      "sha256": "67a9ee532b1234c04701e7078b92ec84d55186bf98fc1fbcd55394b506b6b6c4",
+      "prev": "71335e3760923c9f4fd4e81f25c4cf626fe8527d487c857575e21e8a99723a23",
+      "seal": "1c7f52fb68f88c36fc9fd3ef12553d5a21cb8ac3a22524bbdd3e190399be6203"
+    },
+    {
+      "type": "control-plane",
+      "ref": "control-plane.json",
+      "sha256": "217abc3e42dfeb825af0e842005c8f10d6201c8e2cae6d8439f4a2cddbfdd283",
+      "prev": "1c7f52fb68f88c36fc9fd3ef12553d5a21cb8ac3a22524bbdd3e190399be6203",
+      "seal": "a49e41bc26215f299945edcc0634e34256d3b380ffa26dee5b5dea50c59704c8"
+    }
+  ]
+}

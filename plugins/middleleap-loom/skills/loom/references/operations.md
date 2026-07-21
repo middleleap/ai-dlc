@@ -126,6 +126,8 @@ nothing more. Claiming otherwise would be the exact dishonesty cluster E exists 
 - `governance.md` — HG-0005 (promotion + rehearsed rollback) and HG-0010 (cease-use switch) —
   the seams Run hangs off.
 - `../../loom-adopt/harness/scripts/operations-signal-check.mjs` — the gate.
+- `../../loom-adopt/harness/operations-example/` — a worked example (Meridian Trust): a realistic
+  signal log across all four routes, showing the loop close end to end.
 - `../../loom-adopt/harness/governance/runbooks/security-testing-and-resilience-runbook.md` —
   the adopter-side Run operation, in full.
 - `SKILL.md` — the double diamond this arc closes into a loop.

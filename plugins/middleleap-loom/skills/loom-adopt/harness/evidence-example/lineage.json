@@ -1,0 +1,8 @@
+{
+  "stores": [
+    "audit",
+    "consent"
+  ],
+  "emits_lineage": true,
+  "insert_only": true
+}
