@@ -1,0 +1,80 @@
+{
+  "_comment": "ADOPTER EXAMPLE — Meridian Trust (DEMO, synthetic, non-production). A worked operations-signal log showing the Run -> Discovery loop close: every production signal is triaged (routed) and traceable, so nothing falls on the floor. Verified by scripts/operations-signal-check.mjs. See README.md. Replace with your own signals; keep the shape.",
+  "entity": "Meridian Trust (DEMO instance)",
+  "signals": [
+    {
+      "id": "OPS-2411",
+      "source": "pagerduty",
+      "type": "incident",
+      "severity": "high",
+      "detected": "2026-07-14",
+      "summary": "Consent-revoke acknowledgement lagged 9s p95 in prod after a deploy; within SLA but user-visible. The build is wrong, the problem is fine.",
+      "evidence_ref": "incident/OPS-2411.md",
+      "route": "spec-fix",
+      "link": "PR-482"
+    },
+    {
+      "id": "OPS-2418",
+      "source": "snyk",
+      "type": "cve",
+      "severity": "critical",
+      "detected": "2026-07-15",
+      "summary": "Newly-disclosed CVE in a shipped TLS dependency raised the residual position of the personal-data handling risk.",
+      "evidence_ref": "advisory/CVE-2026-04182.md",
+      "route": "register",
+      "link": "DR-1.1-001"
+    },
+    {
+      "id": "OPS-2423",
+      "source": "care-queue",
+      "type": "customer-signal",
+      "severity": "medium",
+      "detected": "2026-07-16",
+      "summary": "Recurring confusion about what 'revoke' actually cancels — the framing may be wrong, not the code. Being scoped into a discovery run; the loop reopens.",
+      "route": "discovery",
+      "status": "triaging"
+    },
+    {
+      "id": "OPS-2425",
+      "source": "grafana-slo",
+      "type": "slo-breach",
+      "severity": "medium",
+      "detected": "2026-07-17",
+      "summary": "Consent API error budget burned 18% in a transient spike; recovered, still within the quarterly budget.",
+      "route": "accepted",
+      "justification": "Within the error budget; no line change warranted this window. Re-assess if the next window also spikes."
+    },
+    {
+      "id": "OPS-2430",
+      "source": "change-watch",
+      "type": "regulatory",
+      "severity": "high",
+      "detected": "2026-07-18",
+      "summary": "Standards errata tightened consent-record retention wording; touches the personal-data category. The risk position moved.",
+      "evidence_ref": "horizon/errata-2026-07.md",
+      "route": "register",
+      "link": "DR-1.1"
+    },
+    {
+      "id": "OPS-2436",
+      "source": "model-monitor",
+      "type": "drift",
+      "severity": "medium",
+      "detected": "2026-07-19",
+      "summary": "Classifier confidence drifted on the revoke-reason field; a bounded prompt/patch restores it without touching the problem.",
+      "route": "spec-fix",
+      "link": "PR-490"
+    },
+    {
+      "id": "OPS-2440",
+      "source": "risk-review",
+      "type": "risk-materialised",
+      "severity": "high",
+      "detected": "2026-07-20",
+      "summary": "A previously-inherent access-scope risk materialised in a near-miss; residual position updated in the register with a compensating control.",
+      "evidence_ref": "incident/OPS-2440.md",
+      "route": "register",
+      "link": "DR-1.1-001"
+    }
+  ]
+}

@@ -52,6 +52,11 @@ All sources are relative to this skill's directory. All destinations are repo-ro
 Also create if missing: `discovery/runs/`, `docs/develop/`, `docs/adrs/`, `docs/backlog.yaml`
 (empty list is fine), `docs/build-log.md`.
 
+Worked examples to study in the bundle (not copied): `harness/register-example/` (the D6 chain),
+`harness/discovery/brand/examples/` (a second brand), and `harness/operations-example/` — a
+realistic Meridian Trust operations-signal log showing the Run→Discovery loop close across all
+four routes (`../loom/references/operations.md`).
+
 Five agents ship as **plugin agents** and work as soon as the machinery lands (no copying):
 `discovery-boundary-reviewer`, `data-governance-reviewer`, the `model-risk-reviewer` (HG-0006),
 and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (② Assess).

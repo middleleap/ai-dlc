@@ -57,3 +57,8 @@ jobs:
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
+
+      - name: Loom — operations-signal adopter example stays green
+        run: |
+          cd plugins/middleleap-loom/skills/loom-adopt/harness/operations-example
+          node ../scripts/operations-signal-check.mjs
