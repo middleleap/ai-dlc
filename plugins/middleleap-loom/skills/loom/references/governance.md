@@ -19,7 +19,7 @@ repository is the worked example); the ids below are the Loom's stable names for
 |---|---|---|
 | **HG-0001** | Self-merge / no human four-eyes | Human-approved merges + a production gate via enforced branch protection. The agent never merges its own work |
 | **HG-0002** | The agent can edit its own guardrails | Immutable control plane: CODEOWNERS + managed settings + protected CI, including supply-chain integrity (see `supply-chain-security.md` for how hardened images + signed SBOM + SLSA provenance evidence it). Hooks, gates, and workflows live outside the agent's write scope |
-| **HG-0003** | Self-attested change records | Externally-anchored traceability + tamper-evident evidence — the release bundle is sealed, not narrated |
+| **HG-0003** | Self-attested change records | Externally-anchored traceability + tamper-evident evidence — the release bundle is sealed, not narrated. Enforced repo-side by `evidence-seal-check.mjs` (a hash-chained evidence manifest); external WORM + timestamping is the anchor |
 | **HG-0004** | Broad agent credentials / secrets on disk | Least-privilege service identity for the agent + vaulted secrets |
 | **HG-0005** | Auto-deploy with no promotion or rollback | dev → staging → prod promotion with a human production gate and a rehearsed rollback |
 | **HG-0006** | The agent is an ungoverned model | AI/model-risk governance for the harness itself (aligned to the applicable AI-risk frameworks: regulator guidance, NIST AI RMF / GenAI Profile, ISO 42001). See `model-risk.md` for the model manifest + provenance gate that enforce the repo-side half |

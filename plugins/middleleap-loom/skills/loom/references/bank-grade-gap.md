@@ -39,7 +39,7 @@ Across ~47 assessed capabilities, the bundled harness today grades roughly:
 
 | Enforced | Named-only | Absent |
 |---|---|---|
-| ~15 | ~15 | ~17 |
+| ~16 | ~15 | ~16 |
 
 **This is a defensible estimate of what ships today, not an audit.** It reflects the plugin
 bundle as-is — e.g. of the six continuous-assurance agents only step ① Watch (`change-watch`)
@@ -59,7 +59,7 @@ land (control-plane gate, model-provenance gate).
 | HG-0002 immutable control plane · supply-chain integrity | **Enforced** | — |
 | HG-0007 / HG-0009 waist gate · develop diverges | **Enforced** | — |
 | HG-0008 solution-agnostic seams | **Enforced** | — |
-| HG-0003 tamper-evident sealed evidence | Named-only | Externally-anchored, tamper-evident evidence store |
+| HG-0003 tamper-evident sealed evidence | **Enforced** | — (the evidence-seal gate; external WORM + timestamping is the adopter's anchor) |
 | HG-0004 least-privilege identity · vaulted secrets | Named-only | Real IAM/PAM, HSM-backed vault, short-lived tokens, rotation |
 | HG-0005 promotion + rehearsed rollback | Named-only | Environment segregation, change-ticket linkage, rollback drills |
 | HG-0006 model-risk governance (see cluster B) | Named-only | The MRM apparatus in cluster B |
@@ -74,7 +74,9 @@ awaiting platform enforcement. This is the single biggest, and fastest, credibil
 CI gate that fails if any control-plane file loses its CODEOWNERS owner, a `CODEOWNERS.template`,
 and an `activation-runbook.md` that walks a platform admin through activating HG-0001/0002/0004
 (branch protection, ownership, least-privilege identity). The runbook makes HG-0004 *adoptable*
-but not yet *enforced* — the real IAM/vault is still the adopter's to wire.
+but not yet *enforced* — the real IAM/vault is still the adopter's to wire. For HG-0003, an
+`evidence-seal-check.mjs` gate + `evidence-manifest.json` seam make the release bundle a
+hash-chained, tamper-evident, completeness-checked chain (with an optional external anchor).
 
 ### B · Model risk & AI governance (SR 11-7 · PRA SS1/23 · EU AI Act · NIST AI RMF · ISO 42001)
 
@@ -106,7 +108,7 @@ of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin ag
 | Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Named-only | Step ① Watch (`change-watch`) now ships as a plugin agent; ②–⑥ remain described-not-shipped |
 | Independent 2nd-line challenge function | Absent | Risk & compliance, organisationally separate |
 | 3rd-line internal audit · read-only evidence portal | Absent | Auditor access to the sealed evidence trail |
-| WORM · time-stamped evidence retention | Absent | Immutable store + trusted timestamping + retention policy |
+| WORM · time-stamped evidence retention | Named-only | The evidence-seal gate makes the bundle tamper-evident and anchor-checkable; the immutable store + RFC-3161 timestamping authority + retention policy are the adopter's |
 | SOC 2 / ISO 27001 attestation of the harness | Absent | Third-party attestation of the harness itself |
 
 The evidence bundle is *sealed* but not shown to be WORM, time-stamped, or examinable by an
@@ -169,10 +171,12 @@ Sequenced so each step buys the most credibility for the least motion.
 4. **Real-data surface + full register.** Synthetic-only is the caveat under everything
    else. Build and exercise the real-PII control surface against the complete taxonomy.
 
-*Progress:* Steps 1–2 are underway — the control-plane gate (HG-0002) and the model-provenance
-gate (HG-0006) now ship as enforced machinery, with their activation runbook and manifest
-seams. What remains in those steps is the org-side half a bundle cannot ship: real IAM/vault
-(HG-0004), an organisationally-independent model-risk function, and runtime drift monitoring.
+*Progress:* Steps 1–3 are underway — the control-plane gate (HG-0002), the model-provenance
+gate (HG-0006), and the evidence-seal gate (HG-0003) now ship as enforced machinery, with their
+activation runbook and manifest seams. What remains is the org-side half a bundle cannot ship:
+real IAM/vault (HG-0004), an organisationally-independent model-risk and 2nd-line function,
+runtime drift monitoring, an external WORM/timestamping store, and the real-PII control surface
+(Step 4). Those need owners outside engineering — the honest edge of what a harness can enforce.
 
 ## The rule under all of it
 

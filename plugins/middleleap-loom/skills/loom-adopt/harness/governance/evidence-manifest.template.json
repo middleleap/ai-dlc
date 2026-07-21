@@ -1,0 +1,42 @@
+{
+  "_comment": "ADOPT: the sealed evidence index the delivery loop writes at release (step 8). Replace each sha256 with the real hash of the artifact at ref, then reseal with buildChain() from scripts/evidence-seal-check.mjs. Publish the final seal to an append-only, timestamped store and record it as anchor. Verified by scripts/evidence-seal-check.mjs.",
+  "release": "vX.Y.Z",
+  "anchor": "f7f49ef3b09379b88bf8c1f74be7c7d70fe04ecb33542e0fe68d81baa082f72e",
+  "entries": [
+    {
+      "type": "tests",
+      "ref": "evidence/tests.json",
+      "sha256": "REPLACE_WITH_SHA256_OF_tests",
+      "prev": "GENESIS",
+      "seal": "481ea8ff5a0cce3cd343b5a34d44883e0a5d19b9d4ef9dba9f2370a16ad7a5f7"
+    },
+    {
+      "type": "reviews",
+      "ref": "evidence/reviews.json",
+      "sha256": "REPLACE_WITH_SHA256_OF_reviews",
+      "prev": "481ea8ff5a0cce3cd343b5a34d44883e0a5d19b9d4ef9dba9f2370a16ad7a5f7",
+      "seal": "00640cd8ee1ad26db0ef1c0fa6f881224f5e77a44b1069e76b604df48015914b"
+    },
+    {
+      "type": "lineage",
+      "ref": "evidence/lineage.json",
+      "sha256": "REPLACE_WITH_SHA256_OF_lineage",
+      "prev": "00640cd8ee1ad26db0ef1c0fa6f881224f5e77a44b1069e76b604df48015914b",
+      "seal": "ed5d68f1b2cecd7ca86fbf8b18bfa85f7f08db3d864d069d71df19e15eaf1776"
+    },
+    {
+      "type": "model-provenance",
+      "ref": "evidence/model-provenance.json",
+      "sha256": "REPLACE_WITH_SHA256_OF_model-provenance",
+      "prev": "ed5d68f1b2cecd7ca86fbf8b18bfa85f7f08db3d864d069d71df19e15eaf1776",
+      "seal": "b9d0c5ac25ffc53c47d1ff459f8ce9bfc1b697e651593858031ba64de1841b03"
+    },
+    {
+      "type": "control-plane",
+      "ref": "evidence/control-plane.json",
+      "sha256": "REPLACE_WITH_SHA256_OF_control-plane",
+      "prev": "b9d0c5ac25ffc53c47d1ff459f8ce9bfc1b697e651593858031ba64de1841b03",
+      "seal": "f7f49ef3b09379b88bf8c1f74be7c7d70fe04ecb33542e0fe68d81baa082f72e"
+    }
+  ]
+}

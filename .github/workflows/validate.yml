@@ -35,8 +35,12 @@ jobs:
           cp "$P/loom-adopt/harness/scripts/control-plane-check.test.mjs" "$A/scripts/"
           cp "$P/loom-adopt/harness/scripts/model-provenance-check.mjs" "$A/scripts/"
           cp "$P/loom-adopt/harness/scripts/model-provenance-check.test.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/scripts/evidence-seal-check.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/scripts/evidence-seal-check.test.mjs" "$A/scripts/"
           cp "$P/loom-adopt/harness/governance/CODEOWNERS.template" "$A/CODEOWNERS"
           cp "$P/loom-adopt/harness/governance/model-manifest.template.json" "$A/docs/governance/model-manifest.json"
+          mkdir -p "$A/docs/governance/evidence"
+          cp "$P/loom-adopt/harness/governance/evidence-manifest.template.json" "$A/docs/governance/evidence/manifest.json"
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
@@ -44,3 +48,4 @@ jobs:
           node scripts/discovery-link-check.mjs
           node scripts/control-plane-check.mjs
           node scripts/model-provenance-check.mjs
+          node scripts/evidence-seal-check.mjs
