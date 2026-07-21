@@ -31,6 +31,18 @@ All sources are relative to this skill's directory. All destinations are repo-ro
 | `harness/discovery/brand/design.md` | `discovery/brand/design.md` | Brand seam (neutral demo instance) |
 | `harness/discovery/brand/examples/` | `discovery/brand/examples/` | A second brand proving the seam swap |
 | `harness/scripts/discovery-link-check.mjs` | `scripts/discovery-link-check.mjs` | The waist gate (backlog item ↔ green hand-off) |
+| `harness/scripts/control-plane-check.mjs` | `scripts/control-plane-check.mjs` | The control-plane integrity gate (HG-0002) + its tests |
+| `harness/scripts/model-provenance-check.mjs` | `scripts/model-provenance-check.mjs` | The model-provenance gate (HG-0006) + its tests |
+| `harness/scripts/evidence-seal-check.mjs` | `scripts/evidence-seal-check.mjs` | The evidence-seal gate (HG-0003) + its tests |
+| `harness/scripts/data-lifecycle-check.mjs` | `scripts/data-lifecycle-check.mjs` | The data-lifecycle gate (retention & right-to-erasure) + its tests |
+| `harness/scripts/operations-signal-check.mjs` | `scripts/operations-signal-check.mjs` | The Run→Discovery feedback gate + its tests |
+| `harness/governance/CODEOWNERS.template` | `CODEOWNERS` (fill the team) | Immutable control-plane ownership (HG-0002) |
+| `harness/governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | Platform-admin runbook to activate HG-0001/0002/0004 |
+| `harness/governance/runbooks/` | `docs/governance/runbooks/` | Org-side adoption runbooks — the gaps a bundle cannot enforce (identity, assurance, model-risk, data-protection, security/resilience, governance) |
+| `harness/governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory seam (HG-0006) — replace demo values |
+| `harness/governance/evidence-manifest.template.json` | `docs/governance/evidence/manifest.json` | Sealed evidence index seam (HG-0003) — reseal with real hashes |
+| `harness/governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data-lifecycle seam (retention & erasure) — replace demo categories |
+| `harness/governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | Operations-signal seam (Run→Discovery) — replace demo entries |
 | `harness/skills/*/SKILL.md` | `.claude/skills/<name>/SKILL.md` | discovery · develop · next-story · implement-story · spec-change |
 | `harness/agents/*.md` | `.claude/agents/` | hard-stop-reviewer + contract-conformance-reviewer (templates — see step 3) |
 | `harness/hooks/*.sh` | `.claude/hooks/` | pii-guard · spec-tripwire · test-tripwire (`chmod +x`) |
@@ -40,8 +52,9 @@ All sources are relative to this skill's directory. All destinations are repo-ro
 Also create if missing: `discovery/runs/`, `docs/develop/`, `docs/adrs/`, `docs/backlog.yaml`
 (empty list is fine), `docs/build-log.md`.
 
-The other two reviewers — `discovery-boundary-reviewer` and `data-governance-reviewer` — ship
-as **plugin agents** and work as soon as the machinery lands; they need no copying.
+Five agents ship as **plugin agents** and work as soon as the machinery lands (no copying):
+`discovery-boundary-reviewer`, `data-governance-reviewer`, the `model-risk-reviewer` (HG-0006),
+and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (② Assess).
 
 ## 2. Mount the seams
 
@@ -74,8 +87,13 @@ has none yet, write the Commands / Conventions / Do-Not sections before running 
 ## 4. Verify the adoption — evidence, not vibes
 
 ```bash
-node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs   # bundled suites must pass as copied
+node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs   # bundled suites must pass as copied
 node scripts/discovery-link-check.mjs            # waist gate runs (green on an empty backlog)
+node scripts/control-plane-check.mjs             # control-plane gate (green once CODEOWNERS is filled)
+node scripts/model-provenance-check.mjs          # model-provenance gate (green on the demo manifest)
+node scripts/evidence-seal-check.mjs             # evidence-seal gate (green on the demo manifest)
+node scripts/data-lifecycle-check.mjs            # data-lifecycle gate (green on the demo manifest)
+node scripts/operations-signal-check.mjs         # Run→Discovery feedback gate (green on empty or the demo log)
 ```
 
 Then prove the pipeline end to end: run the `discovery` skill on a small real (or synthetic)
@@ -85,13 +103,19 @@ one artifact with the renderer to confirm D7 conformance. Only then aim the deli
 
 ## 5. Wire CI and governance
 
-- CI: run the two test suites, `discovery-link-check.mjs`, and `validate.mjs` over every
-  `discovery/runs/*` on each PR — a broken run or untraced feature item blocks merge like a
-  failing test. Add the project's own Q-gates per `../loom/references/delivery-harness.md`.
-- Governance: walk `../loom/references/governance.md`. Activate HG-0001/HG-0002 first —
-  branch protection with required human review from a group the agent's identity is not in,
-  and the control files (hooks, workflows, CODEOWNERS) outside the agent's write scope. The
-  loop's merge policy depends on this being real, not configured-but-inert.
+- CI: run the bundled test suites, `discovery-link-check.mjs`, `control-plane-check.mjs`,
+  `model-provenance-check.mjs`, `evidence-seal-check.mjs`, `data-lifecycle-check.mjs`,
+  `operations-signal-check.mjs`, and `validate.mjs` over every `discovery/runs/*` on each PR — a
+  broken run, an untraced feature item, an unowned control file, an unpinned/unevaluated model, an
+  unsealed/tampered evidence bundle, a data category with no bounded retention or erasure
+  disposition, or an untriaged operational signal blocks merge like a failing test. Add the
+  project's own Q-gates per `../loom/references/delivery-harness.md`.
+- Governance: walk `../loom/references/governance.md`, then run
+  `governance/activation-runbook.md` (a platform admin, outside the agent's write scope) to
+  activate HG-0001/HG-0002/HG-0004 — branch protection with required Code Owner review from a
+  group the agent's identity is not in, the control files owned in CODEOWNERS (verified by
+  `control-plane-check.mjs`), and a least-privilege agent identity. The loop's merge policy
+  depends on this being real, not configured-but-inert.
 
 ## What adoption deliberately does NOT do
 

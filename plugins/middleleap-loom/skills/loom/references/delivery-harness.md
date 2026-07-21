@@ -38,7 +38,9 @@ only the merge is human.
             LIVE url and fails the deploy if broken
 ⑧ EVIDENCE  on release: re-run the gates at the released commit and seal the
             evidence bundle (test results, reviewer verdicts, lineage proof,
-            agent build-provenance) into the repository
+            agent build-provenance) into the repository — as a hash-chained
+            evidence manifest the evidence-seal gate (HG-0003) verifies is
+            complete and tamper-evident
 ```
 
 Mid-iteration, the loop never asks the user anything: a decision a human must make becomes a
@@ -64,6 +66,10 @@ each gate answers one question, mechanically:
 
 The discovery gates (D1–D9) and the waist gate run in the same CI, so a broken discovery run
 or an untraced feature item blocks merge exactly like a failing test.
+
+Q2 (SAST) and Q4 (dependency audit, image + secrets scan) name *roles*, not vendors. For
+concrete fills — SCA, SAST, container and IaC scanning, hardened base images — see
+`supply-chain-security.md`.
 
 ## The guardrail hooks (enforced every session, every edit)
 

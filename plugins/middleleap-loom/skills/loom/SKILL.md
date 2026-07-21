@@ -30,7 +30,9 @@ The two harnesses form a double diamond. The first diamond is about the **proble
 about the **solution**. Each diverges (explore widely) then converges (decide). They meet at one
 artifact — the agreed problem statement, the PRD — the hand-off from discovery to delivery. The
 process is non-linear by design: evidence found during delivery can legitimately send you back a
-diamond. And a discovery is **allowed to fail** — stopping the wrong problem early is a win.
+diamond. And a discovery is **allowed to fail** — stopping the wrong problem early is a win. The
+diamonds also **close into a loop**: shipped software runs, and Run/Operations feeds signals back
+into Discovery as evidence — the third arc (`references/operations.md`).
 
 ```
    DISCOVER        DEFINE            │    DEVELOP         DELIVER
@@ -55,6 +57,18 @@ Full canon for each half:
   assurance agents through the six-step regulatory lifecycle (watch, assess, check, test,
   evidence, confirm) on every trigger, so compliance is current to the last commit rather than
   to the last meeting.
+- `references/operations.md` — the third arc: how **Run/Operations** feeds signals back into
+  Discovery to close the loop, the routing triage, and the `operations-signal` seam that keeps
+  the feedback wire triaged and traceable.
+- `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
+  bar: which controls are enforced, which are named-only, and which are absent — plus the
+  order to close them in.
+- `references/supply-chain-security.md` — how concrete SCA / SAST / image-scanning tooling
+  (Chainguard, Snyk) fills slots the frame already has (Q2, Q4, HG-0002, the evidence bundle,
+  continuous assurance) without changing the frame.
+- `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
+  eval-before-release, and independent validation, with the model-provenance gate that enforces
+  the repo-side half.
 
 ## The context brain — why the method compounds
 
@@ -92,6 +106,9 @@ A method worth adopting names its own risks:
 - **The brain must be curated** — governed, versioned, quality-checked, not merely accumulated.
 - **AI model risk is real.** The agents need ongoing validation, monitoring, and independent
   challenge — that is what the HG catalog's model-risk decisions exist for.
+
+The method's own maturity self-grade against a regulated-bank bar — what is enforced,
+named-only, or absent — lives in `references/bank-grade-gap.md`.
 
 ## The one-sentence guardrail
 

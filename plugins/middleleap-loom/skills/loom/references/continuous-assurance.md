@@ -14,7 +14,8 @@ The harness pulls assurance agents in:
 - **on every change** — every commit / PR, every merge / deploy
 - **on a schedule** — daily / continuous monitors
 - **on events** — a new regulation, a certificate expiring within its warning window, a
-  scheme or risk signal
+  scheme or risk signal, a newly-disclosed CVE in a shipped dependency (see
+  `supply-chain-security.md`)
 
 ## The regulatory lifecycle — each step run by an agent
 
@@ -32,6 +33,10 @@ pulls in, with humans reserved for judgement and the approvals that must stay hu
 
 The loop is never "done": it re-runs on the next trigger. Every cycle writes back to the
 regulated-entity brain / evidence ledger.
+
+Most of those triggers fire from **Run/Operations** — the third arc where the shipped system
+lives. `operations.md` covers how operational signals feed this lifecycle and route back into
+Discovery to close the loop (the `operations-signal` seam keeps that feedback wire traceable).
 
 ## Why this is different
 

@@ -1,0 +1,24 @@
+# CODEOWNERS — the immutable control plane (HG-0002)
+#
+# ADOPT: replace @your-org/platform-admins with a REAL team the agent's identity is NOT a
+# member of. This file is what makes "the agent cannot edit its own guardrails" true: every
+# path below requires a Code Owner review before merge, enforced by branch protection (see
+# governance/activation-runbook.md). `scripts/control-plane-check.mjs` fails CI if any of
+# these paths loses its owner — the paper control and the check are defence in depth.
+#
+# Last match wins. Keep the control-plane rules LAST so nothing later un-owns them.
+
+# Sensible default owner for the whole repo (optional — remove if you prefer explicit-only).
+*                                       @your-org/engineering
+
+# --- Control plane: hooks, gates, workflows, settings, governance data, and CODEOWNERS itself ---
+/.claude/hooks/                         @your-org/platform-admins
+/.claude/settings.json                  @your-org/platform-admins
+/.claude/agents/                        @your-org/platform-admins
+/discovery/gates/                       @your-org/platform-admins
+/discovery/render/                      @your-org/platform-admins
+/scripts/discovery-link-check.mjs       @your-org/platform-admins
+/scripts/control-plane-check.mjs        @your-org/platform-admins
+/.github/workflows/                     @your-org/platform-admins
+/docs/governance/                       @your-org/platform-admins
+/CODEOWNERS                             @your-org/platform-admins
