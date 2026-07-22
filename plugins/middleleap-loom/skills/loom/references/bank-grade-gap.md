@@ -39,7 +39,7 @@ Across ~47 assessed capabilities, the bundled harness today grades roughly:
 
 | Enforced | Named-only | Absent |
 |---|---|---|
-| ~16 | ~16 | ~15 |
+| ~15 | ~17 | ~15 |
 
 **This is a defensible estimate of what ships today, not an audit.** It reflects the plugin
 bundle as-is — e.g. of the six continuous-assurance agents only steps ① Watch (`change-watch`)
@@ -83,7 +83,7 @@ hash-chained, tamper-evident, completeness-checked chain (with an optional exter
 
 | Capability | State | What closes it |
 |---|---|---|
-| Q1b anti-reward-hacking gate | **Enforced** | — |
+| Q1b anti-reward-hacking gate | Named-only | The `test-tripwire.sh` hook ships (session-side defence); the CI-side test-integrity gate itself is not yet bundled — Loom 2.0 release 1.10 ships it |
 | Model + prompt version pinning in evidence bundle | **Enforced** | — (the model-provenance gate) |
 | Agent eval harness · challenger models | Named-only | The gate requires a fresh passing eval before release; the eval *rig* + challengers are the adopter's to build |
 | Independent model validation function | Named-only | `validated_by` + the `model-risk-reviewer` challenge agent ship; the org-separate MRM *function* is the adopter's |

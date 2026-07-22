@@ -50,6 +50,14 @@ jobs:
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
+          # Negative test: the unadopted template (placeholder @your-org team) must FAIL the
+          # control-plane gate — a copied-but-never-adopted control plane is not a control.
+          if node scripts/control-plane-check.mjs; then
+            echo "::error::control-plane gate passed on the placeholder CODEOWNERS template — the false green is back"
+            exit 1
+          fi
+          # The ADOPT step: replace the placeholder with a real team, as an adopter would.
+          sed -i 's|@your-org/|@dryrun-bank/|g' CODEOWNERS
           node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs
           node scripts/discovery-link-check.mjs
           node scripts/control-plane-check.mjs

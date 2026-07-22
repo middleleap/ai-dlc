@@ -1,7 +1,9 @@
 # CODEOWNERS — the immutable control plane (HG-0002)
 #
 # ADOPT: replace @your-org/platform-admins with a REAL team the agent's identity is NOT a
-# member of. This file is what makes "the agent cannot edit its own guardrails" true: every
+# member of. Until you do, `scripts/control-plane-check.mjs` FAILS on the placeholder by
+# design — a copied-but-never-adopted template must not read as a green control.
+# This file is what makes "the agent cannot edit its own guardrails" true: every
 # path below requires a Code Owner review before merge, enforced by branch protection (see
 # governance/activation-runbook.md). `scripts/control-plane-check.mjs` fails CI if any of
 # these paths loses its owner — the paper control and the check are defence in depth.

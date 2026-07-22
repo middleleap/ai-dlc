@@ -33,6 +33,11 @@ export const CONTROL_TARGETS = [
 
 const CODEOWNERS_LOCATIONS = ['CODEOWNERS', '.github/CODEOWNERS', 'docs/CODEOWNERS'];
 
+// The shipped template's placeholder owner. A control plane "owned" by @your-org/… is not
+// owned by anyone — the gate fails until the ADOPT step replaces it with a real team, so a
+// copied-but-never-adopted template cannot read as a green control.
+export const PLACEHOLDER_OWNER = /^@your-org(\/|$)/i;
+
 /** Parse CODEOWNERS into ordered rules. Comments and blank lines are dropped. */
 export function parseCodeowners(text) {
   const rules = [];
@@ -67,8 +72,11 @@ export function evaluate(codeownersText, targets = CONTROL_TARGETS) {
   const rules = parseCodeowners(codeownersText);
   const findings = [];
   for (const target of targets) {
-    if (ownersFor(rules, target).length === 0) {
+    const owners = ownersFor(rules, target);
+    if (owners.length === 0) {
       findings.push(`${target} — not owned in CODEOWNERS (a change would not require Code Owner review)`);
+    } else if (owners.every((o) => PLACEHOLDER_OWNER.test(o))) {
+      findings.push(`${target} — owned only by the placeholder team ${owners.join(', ')} (replace @your-org/… with a real team the agent is not a member of)`);
     }
   }
   return findings;
