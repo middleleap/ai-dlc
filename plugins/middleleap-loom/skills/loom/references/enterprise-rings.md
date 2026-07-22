@@ -53,8 +53,10 @@ mistake silence for coverage:
   discovery-linked, sealed eval; the *rig* that actually scores a success measure — the
   dataset, the runner, the harness — is domain-specific and the adopter's to build. The gate
   proves an eval was run and passed against the shipping commit; it cannot author the eval.
-- **Token/value economics (macro).** Outcome = tokens × operating model. The Loom explicitly
-  disclaims measured ROI (`SKILL.md` Limits); the macro loop's instrumentation is unbuilt.
+- **Token/value economics (macro).** Outcome = tokens × operating model. **Spend** is now
+  instrumented — the token ledger + `token-report` make per-iteration and per-milestone
+  output-token cost measurable on the worked example. The **value** half, and the ROI it
+  implies, is still unbuilt; the Loom explicitly disclaims measured ROI (`SKILL.md` Limits).
 
 ## The rule under it
 

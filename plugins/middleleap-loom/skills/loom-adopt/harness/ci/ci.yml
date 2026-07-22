@@ -69,6 +69,9 @@ jobs:
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
 
+      - name: Cost telemetry (report, never a gate)
+        run: node scripts/token-report.mjs --check   # validate the token ledger is well-formed; spend never blocks a merge
+
       - name: Discovery runs are gate-green (D1–D9)
         run: |
           shopt -s nullglob

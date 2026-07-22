@@ -76,7 +76,9 @@ comprehension debt named as a standing limit, HG-0013 graduated autonomy, and th
 routine-change lane — a second-line-owned, expiring envelope that lets a narrow class of
 low-risk changes auto-merge behind an absolute control-plane floor; 2.0-rc.4: the
 product-eval gate — a release links its discovery hand-off and scores every D1 success
-measure against the shipping commit, so discovery → delivery → measurement closes).
+measure against the shipping commit, so discovery → delivery → measurement closes; 2.0-rc.5:
+token-spend telemetry — a report, not a gate (cost is a signal for humans, never a merge
+control), the macro ring's first instrument).
 
 ## Six clusters, graded
 

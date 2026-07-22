@@ -82,12 +82,20 @@ the control of record.
 
 Append to `docs/build-log.md`: date, item, PR #, what the PR contains (it is **not** merged — a
 human disposes), test counts, reviewer verdicts, anything parked. Commit log/backlog blocker
-updates to main directly.
+updates to main directly. Also append one entry to `docs/governance/token-ledger.json` — the
+iteration id, milestone, and the output-token spend for the iteration — so cost is measurable
+per story and per milestone (`token-report.mjs`). This is telemetry, not a gate: it is recorded
+and reported, never used to block a merge.
 
 Push a notification on: (a) **a PR is ready for human merge** — the normal end of a successful
 iteration; (b) a milestone fully done; (c) the eligible queue is empty but blocked items need the
 user; (d) the same item failed its gates twice — park it `blocked` with the failure evidence
 after the second attempt; never thrash a third time.
+
+The loop's non-done exits map to the deck's terminal-state vocabulary: a mid-iteration decision
+a human must make is an **ESCALATE** (recorded as a `blocked` item, notification (c)); an item
+parked after failing its gates twice is an **ABSTAIN** (notification (d)) — a bounded stop, not
+a silent give-up. Naming them makes the loop's stops legible in the run record.
 
 ## Red flags — stop and re-read this skill
 - Asking the user a question mid-iteration ("should I…?") — record a blocker instead

@@ -108,7 +108,10 @@ A method worth adopting names its own risks:
   proved the loop; a second problem ran through the discovery machinery. Legacy integration,
   real data, and organisational change are the true costs elsewhere, and are not yet in the
   cost curve.
-- **The cost/moat curve is illustrative** — directional, not measured ROI.
+- **The cost/moat curve is illustrative** — directional, not measured ROI. The token ledger
+  + `token-report` now make per-iteration and per-milestone *spend* measurable on the worked
+  example (the macro ring's first instrument); the *value* half of the curve, and the ROI it
+  implies, remains unbuilt.
 - **The brain must be curated** — governed, versioned, quality-checked, not merely accumulated.
 - **AI model risk is real.** The agents need ongoing validation, monitoring, and independent
   challenge — that is what the HG catalog's model-risk decisions exist for.

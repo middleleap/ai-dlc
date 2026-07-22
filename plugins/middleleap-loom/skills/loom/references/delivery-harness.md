@@ -38,9 +38,9 @@ only the merge is human.
             LIVE url and fails the deploy if broken
 ⑧ EVIDENCE  on release: re-run the gates at the released commit and seal the
             evidence bundle (test results, reviewer verdicts, lineage proof,
-            agent build-provenance) into the repository — as a hash-chained
-            evidence manifest the evidence-seal gate (HG-0003) verifies is
-            complete and tamper-evident
+            agent build-provenance, the token-spend ledger) into the repository
+            — as a hash-chained evidence manifest the evidence-seal gate
+            (HG-0003) verifies is complete and tamper-evident
 ```
 
 Mid-iteration, the loop never asks the user anything: a decision a human must make becomes a
