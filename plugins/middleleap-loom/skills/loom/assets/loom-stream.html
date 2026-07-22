@@ -223,7 +223,7 @@
 
   <!-- gate reference -->
   <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Nineteen gates — run by a risk-scoped runner</h2></div>
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2><span id="gatecount">The</span> gates — run by a risk-scoped runner</h2></div>
     <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — with a CI negative test showing an attempted
       bypass being rejected. The gate runner reads the control catalog's lanes (pr · release · scheduled) and path scopes,
       so a documentation fix does not take a lending model's route — and every skipped gate is recorded with its reason,
@@ -324,7 +324,7 @@ const STAGES = [
   {id:'spec',     ph:'Delivery',  lab:'Spec-first', gate:'spec-tripwire', desc:'Write the API contract + acceptance tests and show them RED before implementing. The contract changes only via its own PR.'},
   {id:'implement',ph:'Delivery',  lab:'Implement', gate:'pii-guard', desc:'Implement to green against interfaces — synthetic data only; audit + lineage emitted in the same change.'},
   {id:'review',   ph:'Delivery',  lab:'Review', gate:'reviewer agents', desc:'Local reviewer agents must pass on the diff: hard-stop (PASS) and contract-conformance (CONFORMANT).'},
-  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'18 gates', desc:'The risk-scoped runner executes what the diff implicates and records every skip. The full set: control-plane, control-catalog, identity-registry, change-envelope (incl. compound production authorization + the second-line hold), routine-change (HG-0013 graduated autonomy), product-approval (PA1/PA2), product-eval (discovery-linked outcome evals), architecture-assurance (A1–A5), operational-readiness (R1–R6), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
+  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'the gate set', desc:'The risk-scoped runner executes what the diff implicates and records every skip. The full set: control-plane, control-catalog, identity-registry, change-envelope (incl. compound production authorization + the second-line hold), routine-change (HG-0013 graduated autonomy), product-approval (PA1/PA2), product-eval (discovery-linked outcome evals), architecture-assurance (A1–A5), operational-readiness (R1–R6), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
   {id:'merge',    ph:'Delivery',  lab:'Merge', gate:'HG-0001 · human', desc:'The agent opens the PR and STOPS. A human holds four-eyes — the agent identity is not in the approver group and never merges its own work.'},
   {id:'deploy',   ph:'Run',       lab:'Deploy', gate:'smoke', desc:'Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.'},
   {id:'evidence', ph:'Run',       lab:'Evidence', gate:'HG-0003 · evidence-seal', desc:'Seal the release evidence bundle — a hash chain the gate re-reads and verifies, so altering any artifact breaks a seal.'},
@@ -447,6 +447,8 @@ const GATES=[
  {id:'HG-0003',n:'evidence-seal-check',d:'Re-reads each release artifact and verifies its hash against an append-only chain — altering any artifact breaks a seal.'},
  {id:'data-gov',n:'data-lifecycle-check',d:'Fails a release unless every data category declares a bounded retention and a right-to-erasure disposition.'},
  {id:'HG-0007',n:'discovery-link-check',d:'The waist gate: a pending feature must trace to a gate-green discovery hand-off, or carry an explicit exemption.'},
+ {id:'HG-0013',n:'routine-change-check',d:'Graduated autonomy: a claimed routine change must fit a second-line-owned, expiring envelope — class, path scope, diff cap, gates green — and an absolute in-code floor keeps the control plane, contract, auth and migrations out of the lane. Anything else re-evaluates to human merge. New in 2.0-rc.'},
+ {id:'product-eval',n:'product-eval-check',d:'Evals-as-product-management: a released product links its discovery hand-off and scores every D1 success measure against the shipping commit, with a sealed report — a regression or a stale eval blocks the release. New in 2.0-rc.'},
  {id:'loop',n:'operations-signal-check',d:'The Run→Discovery gate: an operational signal must be triaged (routed) and traceable, so nothing falls on the floor.'},
  {id:'Q1b',n:'test-integrity-check',d:'Diffs the test surface against the merge base: deleted tests, net assertion loss, added skips, commented-out assertions — the anti-reward-hacking gate. New in 1.10.'},
  {id:'Q2',n:'sast-check',d:'Validates the SAST scanner’s OUTPUT: real SARIF from a named tool, error-level findings ≤ policy. A missing report is a gap, not a pass. New in 1.10.'},
@@ -467,6 +469,7 @@ const GATES=[
  {id:'§16',n:'adapter-check',d:'Enterprise adapters map an external system to a real catalog control via a typed envelope, keeping the core vendor-neutral — a mapping to nothing fails. New in 2.0-rc.'},
 ];
 $('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
+{ const gc=$('gatecount'); if(gc) gc.textContent = String(GATES.length); }
 
 /* ---------- scroll reveal ---------- */
 (function(){const els=document.querySelectorAll('.reveal');if(!('IntersectionObserver'in window)){els.forEach(e=>e.classList.add('in'));return;}const io=new IntersectionObserver(en=>en.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.06});els.forEach(e=>io.observe(e));})();
