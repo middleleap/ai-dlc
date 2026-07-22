@@ -144,6 +144,56 @@ td.mono{font:400 12.5px var(--mono);color:var(--ember-300);white-space:nowrap}
 footer{border-top:1px solid var(--ink-border);padding:40px 0;margin-top:72px}
 footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
 footer p{font-size:12.5px;color:var(--bone-3)}
+/* reading-progress bar */
+.progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--ember-grad);z-index:60;transition:width .1s linear}
+/* right-side dot nav + scroll-spy */
+.dotnav{position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:55;display:flex;flex-direction:column;gap:14px}
+.dotnav button{all:unset;cursor:pointer;width:22px;height:22px;display:flex;align-items:center;justify-content:center;position:relative}
+.dotnav .d{width:8px;height:8px;transform:rotate(45deg);background:var(--ink-4);transition:background .2s var(--ease-out),transform .2s var(--ease-leap)}
+.dotnav button:hover .d{background:var(--bone-3)}
+.dotnav button.active .d{background:var(--ember-500);transform:rotate(45deg) scale(1.35)}
+.dotnav button::after{content:attr(data-label);position:absolute;right:28px;top:50%;transform:translateY(-50%);white-space:nowrap;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--bone-1);background:var(--ink-3);border:1px solid var(--ink-4);padding:5px 9px;opacity:0;pointer-events:none;transition:opacity .16s var(--ease-out)}
+.dotnav button:hover::after,.dotnav button:focus-visible::after{opacity:1}
+.dotnav button:focus-visible .d{outline:2px solid var(--ember-400);outline-offset:3px}
+@media(max-width:1000px){.dotnav{display:none}}
+/* anchor link on headings */
+.h-anchor{opacity:0;margin-left:10px;font:400 20px var(--mono);color:var(--ember-400);vertical-align:baseline;transition:opacity .15s}
+h2:hover .h-anchor,.h-anchor:focus-visible{opacity:.7}
+.h-anchor:hover{opacity:1;color:var(--ember-300)}
+:target{scroll-margin-top:24px}
+@keyframes flash{0%,100%{background:transparent}30%{background:var(--ember-dim)}}
+.flash{animation:flash 1.4s var(--ease-out)}
+/* fold / unfold */
+.fold{border:1px solid var(--ink-border);background:var(--ink-2);margin-top:12px}
+.fold>summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;gap:12px;font:500 13.5px var(--sans);color:var(--bone-1)}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary .fdia{width:8px;height:8px;transform:rotate(45deg);background:var(--ember-500);flex:none;transition:transform .2s var(--ease-leap)}
+.fold[open]>summary .fdia{transform:rotate(45deg) scale(1.3);background:var(--ember-400)}
+.fold>summary .fid{font:500 12px var(--mono);color:var(--ember-300);letter-spacing:.06em}
+.fold>summary .fgap{color:var(--bone-3);font-weight:400}
+.fold>summary:hover{background:var(--ink-1)}
+.fold .fbody{padding:0 20px 18px 40px;font-size:14px;color:var(--bone-2)}
+.fold .fbody p{max-width:none}.fold .fbody p+p{margin-top:8px}
+.fold .fmeta{margin-top:10px;font:400 11.5px var(--mono);color:var(--bone-3);display:flex;gap:14px;flex-wrap:wrap}
+.foldwrap{margin-top:28px}
+.foldctl{display:flex;gap:14px;margin-bottom:6px}
+.foldctl button{all:unset;cursor:pointer;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--bone-3)}
+.foldctl button:hover{color:var(--ember-300)}
+/* clickable detail chip + popover */
+.chip[data-detail]{cursor:pointer}
+.chip[data-detail]:hover,.chip[data-detail]:focus-visible{background:rgba(230,92,45,.24);outline:none}
+.chip[data-detail].pop-open{background:rgba(230,92,45,.28);box-shadow:0 0 0 1px var(--ember-500) inset}
+.chip[data-detail]::after{content:"+";margin-left:3px;opacity:.5;font-weight:600}
+.chip[data-detail]:hover::after,.chip[data-detail].pop-open::after{opacity:1}
+.pop{position:absolute;z-index:80;width:min(340px,86vw);background:var(--ink-3);border:1px solid var(--ink-4);box-shadow:0 10px 40px rgba(0,0,0,.6);padding:16px 18px;opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .14s var(--ease-out),transform .14s var(--ease-out)}
+.pop.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.pop .pt{font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ember-400);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.pop .pt .x{margin-left:auto;cursor:pointer;color:var(--bone-3);font-size:16px;line-height:1}
+.pop .pt .x:hover{color:var(--bone-1)}
+.pop dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.pop dt{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--bone-3);padding-top:2px}
+.pop dd{color:var(--bone-1);line-height:1.5}
+.pop .plinks{margin-top:12px;display:flex;gap:14px;font:500 11.5px var(--mono)}
 @media(max-width:900px){.flow{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:720px){
   .g2,.g3,.ba{grid-template-columns:1fr}
@@ -158,6 +208,8 @@ footer p{font-size:12.5px;color:var(--bone-3)}
 </style>
 </head>
 <body>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<nav class="dotnav" id="dotnav" aria-label="Section navigation"></nav>
 
 <header>
   <div class="wrap">
@@ -347,15 +399,15 @@ footer p{font-size:12.5px;color:var(--bone-3)}
     gated.</p>
 
     <div class="chips" aria-label="The nine discovery gates">
-      <span class="chip" tabindex="0" data-tip="Fails when the problem statement lacks a falsifiable problem, target user, or success measure."><span class="dia"></span>D1 FRAMING</span>
-      <span class="chip" tabindex="0" data-tip="Fails when claims aren't traceable to a logged signal — assertion without source."><span class="dia"></span>D2 EVIDENCE</span>
-      <span class="chip" tabindex="0" data-tip="Fails when stakeholders aren't named or scope boundaries (in/out) are absent."><span class="dia"></span>D3 SCOPE</span>
-      <span class="chip" tabindex="0" data-tip="Fails when discovery artifacts specify a build — endpoints, schemas, tech choices. Discovery names the problem; delivery owns the solution."><span class="dia"></span>D4 NO-SOLUTIONING</span>
-      <span class="chip" tabindex="0" data-tip="Fails when themes don't trace to signals or prioritisation lacks a stated method."><span class="dia"></span>D5 SYNTHESIS</span>
-      <span class="chip" tabindex="0" data-tip="Fails when the run doesn't cite resolvable risk categories and a regulatory driver from the mounted data-risk register, with a residual-risk verdict."><span class="dia"></span>D6 DATA-GOVERNANCE</span>
-      <span class="chip" tabindex="0" data-tip="Fails when any visual artifact skips the brand profile or inlines raw hex/px/font instead of design tokens."><span class="dia"></span>D7 BRAND</span>
-      <span class="chip" tabindex="0" data-tip="Fails when the prototype stage produced nothing tangible — or over-specified into delivery fidelity."><span class="dia"></span>D8 TANGIBILITY</span>
-      <span class="chip" tabindex="0" data-tip="Fails when a prototype exists but no stakeholder reaction was recorded per hypothesis. A prototype no one reacted to tested nothing."><span class="dia"></span>D9 VALIDATION</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D1"><span class="dia"></span>D1 FRAMING</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D2"><span class="dia"></span>D2 EVIDENCE</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D3"><span class="dia"></span>D3 SCOPE</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D4"><span class="dia"></span>D4 NO-SOLUTIONING</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D5"><span class="dia"></span>D5 SYNTHESIS</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D6"><span class="dia"></span>D6 DATA-GOVERNANCE</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D7"><span class="dia"></span>D7 BRAND</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D8"><span class="dia"></span>D8 TANGIBILITY</span>
+      <span class="chip" tabindex="0" role="button" data-detail="D9"><span class="dia"></span>D9 VALIDATION</span>
     </div>
 
     <div class="grid g3">
@@ -394,14 +446,14 @@ footer p{font-size:12.5px;color:var(--bone-3)}
       <div class="step"><h4>Evidence</h4><p>On release: gates re-run at the released commit; the evidence bundle is sealed into the repo.</p></div>
     </div>
 
-    <div class="chips" aria-label="The CI quality gates">
-      <span class="chip" tabindex="0" data-tip="Build + unit tests; generated artifacts committed and in sync."><span class="dia"></span>Q1 BUILD</span>
-      <span class="chip gold" tabindex="0" data-tip="The anti-reward-hacking gate: diffs against the merge base and counts net assertions, so a red bar can't go green by weakening a test."><span class="dia"></span>Q1b TEST INTEGRITY</span>
-      <span class="chip" tabindex="0" data-tip="Lint, types, security static analysis."><span class="dia"></span>Q2 STATIC + SAST</span>
-      <span class="chip" tabindex="0" data-tip="Integration against real local stores; contract tests end to end."><span class="dia"></span>Q3 INTEGRATION</span>
-      <span class="chip" tabindex="0" data-tip="Dependency audit and secrets scan."><span class="dia"></span>Q4 SECURITY</span>
-      <span class="chip" tabindex="0" data-tip="Every data store emits the lineage the regulator expects — in the same change, never retrofit."><span class="dia"></span>Q4.5 LINEAGE</span>
-      <span class="chip green" tabindex="0" data-tip="A human, at release time — evidenced, not implied."><span class="dia"></span>Q5 PROD APPROVAL</span>
+    <div class="chips" aria-label="The CI quality gates — select any gate for detail">
+      <span class="chip" tabindex="0" role="button" data-detail="Q1"><span class="dia"></span>Q1 BUILD</span>
+      <span class="chip gold" tabindex="0" role="button" data-detail="Q1b"><span class="dia"></span>Q1b TEST INTEGRITY</span>
+      <span class="chip" tabindex="0" role="button" data-detail="Q2"><span class="dia"></span>Q2 STATIC + SAST</span>
+      <span class="chip" tabindex="0" role="button" data-detail="Q3"><span class="dia"></span>Q3 INTEGRATION</span>
+      <span class="chip" tabindex="0" role="button" data-detail="Q4"><span class="dia"></span>Q4 SECURITY</span>
+      <span class="chip" tabindex="0" role="button" data-detail="Q4.5"><span class="dia"></span>Q4.5 LINEAGE</span>
+      <span class="chip green" tabindex="0" role="button" data-detail="Q5"><span class="dia"></span>Q5 PROD APPROVAL</span>
     </div>
 
     <div class="callout"><span class="dia" aria-hidden="true"></span>
@@ -501,27 +553,39 @@ footer p{font-size:12.5px;color:var(--bone-3)}
     own guardrails. The HG catalog is the set of decisions that closes each of those gaps —
     written as real ADRs by the adopting institution, each naming its enforcement of record.</p>
 
-    <div class="tbl"><table>
-      <thead><tr><th>ID</th><th>Gap in an ungoverned harness</th><th>Decision</th></tr></thead>
-      <tbody>
-        <tr><td class="mono">HG-0001</td><td>Self-merge, no human four-eyes</td><td>Human-approved merges via enforced branch protection</td></tr>
-        <tr><td class="mono">HG-0002</td><td>Agent can edit its own guardrails</td><td>Immutable control plane — hooks, gates, CI outside the agent's write scope</td></tr>
-        <tr><td class="mono">HG-0003</td><td>Self-attested change records</td><td>Externally-anchored, tamper-evident evidence</td></tr>
-        <tr><td class="mono">HG-0004</td><td>Broad agent credentials</td><td>Least-privilege identity + vaulted secrets</td></tr>
-        <tr><td class="mono">HG-0005</td><td>Auto-deploy, no promotion</td><td>Staged promotion with a human production gate + rollback</td></tr>
-        <tr><td class="mono">HG-0006</td><td>The agent is an ungoverned model</td><td>Model-risk governance for the harness itself</td></tr>
-        <tr><td class="mono">HG-0007</td><td>Delivery built the wrong thing</td><td>Discovery precedes delivery — the waist gate</td></tr>
-        <tr><td class="mono">HG-0008</td><td>Domain hard-coded into the harness</td><td>Solution-agnostic seams: register + brand profile</td></tr>
-        <tr><td class="mono">HG-0009</td><td>The right diamond was a straight line</td><td>Develop diverges before delivery converges</td></tr>
-        <tr><td class="mono">HG-0010</td><td>No cease-use capability</td><td>Kill-switch + a named accountable officer</td></tr>
-        <tr><td class="mono">HG-0011</td><td>Residency-uncontrolled AI traffic</td><td>Onshore model gateway + pre-egress DLP</td></tr>
-        <tr><td class="mono">HG-0012</td><td>"Green" by retrieval, not derivation</td><td>Controlled build runtime + derivation audit</td></tr>
-        <tr><td class="mono">HG-0013</td><td>Autonomy uncalibrated — a lint fix is merged like an auth rewrite</td><td>Graduated autonomy — a routine lane behind a second-line-owned, expiring envelope; the PR stays the light switch</td></tr>
-      </tbody>
-    </table></div>
+    <div class="foldwrap" id="hgcatalog">
+      <div class="foldctl"><button type="button" data-fold="open" data-scope="hgcatalog">＋ Expand all</button><button type="button" data-fold="close" data-scope="hgcatalog">− Collapse all</button></div>
+      <details class="fold" id="hg-0001"><summary><span class="fdia"></span><span class="fid">HG-0001</span> <span class="fgap">Self-merge, no human four-eyes</span></summary>
+        <div class="fbody"><p><strong>Human-approved merges via enforced branch protection.</strong> The agent authors and verifies; a human disposes. The agent identity is not in the approver group and can't toggle the protection.</p><div class="fmeta"><span>1st line · platform-enforced when activated</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/governance.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0002"><summary><span class="fdia"></span><span class="fid">HG-0002</span> <span class="fgap">Agent can edit its own guardrails</span></summary>
+        <div class="fbody"><p><strong>An immutable control plane.</strong> Hooks, gates, workflows, settings and the register live outside the agent's write scope — CODEOWNERS-owned, verified by <span class="mono">control-plane-check</span>, which also rejects placeholder owners.</p><div class="fmeta"><span>1st line · mechanically-validated</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/governance.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0003"><summary><span class="fdia"></span><span class="fid">HG-0003</span> <span class="fgap">Self-attested change records</span></summary>
+        <div class="fbody"><p><strong>Externally-anchored, tamper-evident evidence.</strong> The release bundle is a hash-chained manifest <span class="mono">evidence-seal-check</span> re-reads and verifies — altering any artifact breaks a seal. External WORM + timestamping is the adopter's anchor.</p><div class="fmeta"><span>1st line · mechanically-validated</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/governance.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0004"><summary><span class="fdia"></span><span class="fid">HG-0004</span> <span class="fgap">Broad agent credentials / secrets on disk</span></summary>
+        <div class="fbody"><p><strong>Least-privilege service identity + vaulted secrets.</strong> The activation runbook makes it adoptable; the real IAM/PAM and HSM-backed vault are the adopter's to wire.</p><div class="fmeta"><span>1st line · defined</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom-adopt/harness/governance/runbooks/identity-and-secrets-runbook.md">runbook ↗</a></div></div></details>
+      <details class="fold" id="hg-0005"><summary><span class="fdia"></span><span class="fid">HG-0005</span> <span class="fgap">Auto-deploy with no promotion or rollback</span></summary>
+        <div class="fbody"><p><strong>dev → staging → prod promotion with a human production gate and a rehearsed rollback.</strong> Environment segregation and rollback drills are the adopter's.</p><div class="fmeta"><span>1st line · defined</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/governance.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0006"><summary><span class="fdia"></span><span class="fid">HG-0006</span> <span class="fgap">The agent is an ungoverned model</span></summary>
+        <div class="fbody"><p><strong>Model-risk governance for the harness itself.</strong> Every model role is pinned, tiered, evaluated against its shipping pin and independently validated — <span class="mono">model-provenance-check</span>. High-tier roles also declare runtime monitoring, a suspension threshold and a fallback.</p><div class="fmeta"><span>2nd line · mechanically-validated</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/model-risk.md">model-risk ↗</a></div></div></details>
+      <details class="fold" id="hg-0007"><summary><span class="fdia"></span><span class="fid">HG-0007</span> <span class="fgap">Delivery built the wrong thing / no problem trace</span></summary>
+        <div class="fbody"><p><strong>Discovery precedes delivery — the waist gate.</strong> A gated left diamond (D1–D9) feeds delivery via a hand-off; <span class="mono">discovery-link-check</span> makes a green hand-off the entry condition for a feature item.</p><div class="fmeta"><span>1st line · mechanically-validated</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/discovery-harness.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0008"><summary><span class="fdia"></span><span class="fid">HG-0008</span> <span class="fgap">Domain content hard-coded into the harness</span></summary>
+        <div class="fbody"><p><strong>Solution-agnostic seams.</strong> The data-risk register (D6) and the <span class="mono">design.md</span> brand profile (D7) are mounted, not embedded — swap the seams and the same machinery serves a different organisation.</p><div class="fmeta"><span>1st line · mechanically-validated</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/governance.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0009"><summary><span class="fdia"></span><span class="fid">HG-0009</span> <span class="fgap">The right diamond was a straight line</span></summary>
+        <div class="fbody"><p><strong>Develop diverges before delivery converges.</strong> Explore N solution directions, judge, converge to a Solution Direction Record + the discovery-linked backlog item — before the loop builds.</p><div class="fmeta"><span>1st line · mechanically-validated</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/discovery-harness.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0010"><summary><span class="fdia"></span><span class="fid">HG-0010</span> <span class="fgap">No mandatory cease-use capability</span></summary>
+        <div class="fbody"><p><strong>An immediate cease-use kill-switch + a named accountable officer.</strong> A wired kill-switch and a named Senior Manager over the autonomous system — the adopter's to appoint and document.</p><div class="fmeta"><span>1st line · defined</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom-adopt/harness/governance/runbooks/governance-and-accountability-runbook.md">runbook ↗</a></div></div></details>
+      <details class="fold" id="hg-0011"><summary><span class="fdia"></span><span class="fid">HG-0011</span> <span class="fgap">AI traffic + execution not residency-controlled</span></summary>
+        <div class="fbody"><p><strong>Onshore model gateway + pre-egress DLP + attested sandbox execution</strong>, where residency rules apply. The gateway and DLP are the adopter's to wire.</p><div class="fmeta"><span>1st line · defined</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom-adopt/harness/governance/runbooks/data-protection-runbook.md">runbook ↗</a></div></div></details>
+      <details class="fold" id="hg-0012"><summary><span class="fdia"></span><span class="fid">HG-0012</span> <span class="fgap">"Green" by retrieval, not derivation</span></summary>
+        <div class="fbody"><p><strong>A controlled build/eval runtime.</strong> Sealed history + an egress allow-list + an independent derivation-vs-retrieval audit, so the agent can't reach green by mining <span class="mono">.git</span> or looking up the fix.</p><div class="fmeta"><span>1st line · defined</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/governance.md">canon ↗</a></div></div></details>
+      <details class="fold" id="hg-0013"><summary><span class="fdia"></span><span class="fid">HG-0013</span> <span class="fgap">Autonomy uncalibrated — a lint fix merges like an auth rewrite</span></summary>
+        <div class="fbody"><p><strong>Graduated autonomy with a fixed dark boundary.</strong> The loop runs autonomous to <em>proposal</em>, never through <em>disposal</em> — the PR is the light switch. A narrow routine class may auto-merge only inside a second-line-owned, expiring envelope (<span class="mono">routine-change-check</span>), behind an absolute floor that keeps the control plane, contract, auth and migrations out of the lane. Approval moves from per-change to per-envelope; it never disappears.</p><div class="fmeta"><span>2nd line · mechanically-validated · new in 2.0-rc</span><a href="https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/governance.md">canon ↗</a></div></div></details>
+    </div>
     <p class="caption">A skill that honours a rule is hygiene; the control is the platform
     mechanism the agent cannot bypass. An HG id with no ADR behind it is a label, not a
-    control.</p>
+    control. Select any decision to unfold it, or link straight to one — e.g.
+    <a href="#hg-0013">#hg-0013</a>.</p>
   </div>
 </section>
 
@@ -532,7 +596,7 @@ footer p{font-size:12.5px;color:var(--bone-3)}
     <p class="lede">Beyond building software right, Loom 2.0 adds a bank product-governance
     plane: a change's risk classification <b>compiles</b> the gates, control functions, and
     evidence it must carry, so a documentation fix and a lending-decision model take different
-    routes by construction. Nineteen gates, executed by a risk-scoped runner that records
+    routes by construction. The full gate set is executed by a risk-scoped runner that records
     every skip. Each stage below is shipped machinery with a negative bypass test.</p>
 
     <div class="grid g3">
@@ -665,6 +729,97 @@ footer p{font-size:12.5px;color:var(--bone-3)}
     b.addEventListener('click',function(){activate(b.dataset.part)});
     b.addEventListener('mouseenter',function(){activate(b.dataset.part)});
   });
+})();
+</script>
+
+<script>
+(function(){
+  var CANON='https://github.com/middleleap/ai-dlc/blob/main/plugins/middleleap-loom/skills/loom/references/';
+  /* ---------- navigation: progress bar, dot nav, scroll-spy ---------- */
+  var SECTIONS=[['loom','Idea'],['diamond','Diamond'],['discovery','Discovery'],['delivery','Delivery'],['brain','Brain'],['assurance','Assurance'],['governance','Governance'],['chain','Chain'],['proof','Proof'],['adopt','Adopt']];
+  var nav=document.getElementById('dotnav'),prog=document.getElementById('progress'),secEls=[];
+  SECTIONS.forEach(function(s){
+    var el=document.getElementById(s[0]); if(!el){return;} secEls.push(el);
+    var b=document.createElement('button'); b.dataset.target=s[0]; b.setAttribute('data-label',s[1]); b.setAttribute('aria-label','Go to '+s[1]);
+    b.innerHTML='<span class="d"></span>';
+    b.addEventListener('click',function(){el.scrollIntoView({behavior:'smooth',block:'start'});});
+    nav.appendChild(b);
+  });
+  var dots=nav.querySelectorAll('button');
+  function onScroll(){var h=document.documentElement,sc=h.scrollTop,max=h.scrollHeight-h.clientHeight;prog.style.width=(max>0?sc/max*100:0)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){dots.forEach(function(d){d.classList.toggle('active',d.dataset.target===e.target.id);});}});},{rootMargin:'-45% 0px -50% 0px'});
+    secEls.forEach(function(el){io.observe(el);});
+  }
+  /* ---------- copy-anchor links on section headings ---------- */
+  secEls.forEach(function(el){
+    var h=el.querySelector('h2'); if(!h){return;}
+    var a=document.createElement('a'); a.className='h-anchor'; a.href='#'+el.id; a.textContent='#'; a.title='Copy link to this section';
+    a.addEventListener('click',function(ev){history.replaceState(null,'','#'+el.id); if(navigator.clipboard){ev.preventDefault(); navigator.clipboard.writeText(location.href).catch(function(){}); el.scrollIntoView({behavior:'smooth'});}});
+    h.appendChild(a);
+  });
+  /* ---------- fold: expand/collapse all + open-on-hash ---------- */
+  document.querySelectorAll('.foldctl button').forEach(function(b){
+    b.addEventListener('click',function(){var scope=document.getElementById(b.dataset.scope)||document;var open=b.dataset.fold==='open';scope.querySelectorAll('details.fold').forEach(function(d){d.open=open;});});
+  });
+  function openHash(){
+    var id=decodeURIComponent(location.hash.slice(1)); if(!id){return;}
+    var el=document.getElementById(id); if(!el){return;}
+    var d=el.matches('details')?el:(el.closest?el.closest('details'):null); if(d){d.open=true;}
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  }
+  window.addEventListener('hashchange',openHash);
+  /* ---------- detail popover ---------- */
+  var DETAIL={
+    D1:{t:'D1 · Framing',what:'The problem statement carries a falsifiable problem, a target user, and a success measure.',fails:'No falsifiable problem, no named user, or no success measure.',canon:CANON+'discovery-harness.md'},
+    D2:{t:'D2 · Evidence',what:'Every claim in synthesis and the problem statement traces to a logged signal in evidence/.',fails:'An assertion with no source. This is the gate that lets a production signal re-enter later as evidence.',canon:CANON+'discovery-harness.md'},
+    D3:{t:'D3 · Scope & stakeholders',what:'Named stakeholders and explicit in/out scope boundaries.',fails:'No stakeholders named, or scope boundaries absent.',canon:CANON+'discovery-harness.md'},
+    D4:{t:'D4 · No-solutioning',what:'Discovery names the problem; delivery owns the solution.',fails:'Discovery artifacts specify a build — endpoints, schemas, tech choices, stories. Wireframes are the one sanctioned exception, at validation fidelity only.',canon:CANON+'discovery-harness.md'},
+    D5:{t:'D5 · Synthesis integrity',what:'Themes trace to signals; prioritisation states its method.',fails:'Themes don’t trace to signals, or prioritisation has no stated method.',canon:CANON+'discovery-harness.md'},
+    D6:{t:'D6 · Data-governance feasibility',what:'Classify the data the direction touches against the mounted register; cite ≥1 DR risk category, a regulatory driver, and a residual-risk verdict.',fails:'No resolvable DR-*/CTRL-* ids, no regulatory driver, or no residual-risk verdict.',canon:CANON+'discovery-harness.md'},
+    D7:{t:'D7 · Brand conformance',what:'Every visual artifact renders against the brand profile using design tokens.',fails:'A visual artifact skips design.md or inlines raw hex/px/font.',canon:CANON+'discovery-harness.md'},
+    D8:{t:'D8 · Tangibility',what:'The prototype stage produced a brand-conformant wireframe at validation fidelity.',fails:'Nothing tangible was produced — or the prototype over-specified into delivery fidelity.',canon:CANON+'discovery-harness.md'},
+    D9:{t:'D9 · Validation loop',what:'A stakeholder reacted to the prototype and the reaction was logged as evidence.',fails:'A prototype exists but no reaction was recorded per hypothesis. A prototype no one reacted to tested nothing.',canon:CANON+'discovery-harness.md'},
+    Q1:{t:'Q1 · Build + unit',what:'It compiles and passes its own unit tests; generated artifacts are committed and in sync.',fails:'A build or unit failure, or a generated artifact out of sync with its source.',canon:CANON+'delivery-harness.md'},
+    Q1b:{t:'Q1b · Test integrity',what:'The anti-reward-hacking gate: diffs the test surface against the merge base and counts net assertions.',fails:'A red bar went green by weakening a test — deleted tests, net assertion loss, added skips, commented-out assertions.',canon:CANON+'delivery-harness.md'},
+    Q2:{t:'Q2 · Static + SAST',what:'Lint, types, and security static analysis; the SAST scanner’s output is validated, not just run.',fails:'A lint/type error, or a SAST report that is missing or carries error-level findings above policy.',canon:CANON+'delivery-harness.md'},
+    Q3:{t:'Q3 · Integration + contract',what:'Integration against real local stores; contract tests honour the API end to end.',fails:'A behaviour that diverges from the OpenAPI contract, or an integration failure against a real store.',canon:CANON+'delivery-harness.md'},
+    Q4:{t:'Q4 · Security + dependencies',what:'Dependency audit + secrets scan across the tree and the reachable git history.',fails:'A vulnerable dependency, or secret-shaped content in the tree or history — a deleted secret is still leaked.',canon:CANON+'delivery-harness.md'},
+    'Q4.5':{t:'Q4.5 · Lineage',what:'Every data store emits the lineage the regulator expects — in the same change, never retrofit.',fails:'A data store ships without its lineage emission. Lineage is Definition-of-Done, not a later task.',canon:CANON+'delivery-harness.md'},
+    Q5:{t:'Q5 · Production approval',what:'A human, at release time — evidenced, not implied. The agent proposes; a human disposes.',fails:'A release with no human production approval on record.',canon:CANON+'delivery-harness.md'}
+  };
+  var pop=document.createElement('div'); pop.className='pop'; pop.setAttribute('role','dialog'); document.body.appendChild(pop);
+  var openChip=null;
+  function closePop(){pop.classList.remove('show'); if(openChip){openChip.classList.remove('pop-open'); openChip=null;}}
+  function showPop(chip){
+    var d=DETAIL[chip.dataset.detail]; if(!d){return;}
+    var rows=''; if(d.what){rows+='<dt>Checks</dt><dd>'+d.what+'</dd>';} if(d.fails){rows+='<dt>Fails when</dt><dd>'+d.fails+'</dd>';} if(d.since){rows+='<dt>Since</dt><dd>'+d.since+'</dd>';}
+    var links=d.canon?'<div class="plinks"><a href="'+d.canon+'">canon ↗</a></div>':'';
+    pop.innerHTML='<div class="pt">'+d.t+'<span class="x" role="button" aria-label="Close" tabindex="0">×</span></div><dl>'+rows+'</dl>'+links;
+    pop.querySelector('.x').addEventListener('click',closePop);
+    pop.classList.add('show');
+    if(openChip){openChip.classList.remove('pop-open');} openChip=chip; chip.classList.add('pop-open');
+    positionPop();
+  }
+  function positionPop(){
+    if(!openChip){return;}
+    var r=openChip.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight,m=10;
+    var left=window.scrollX+r.left, top=window.scrollY+r.bottom+8;
+    if(left+pw>window.scrollX+window.innerWidth-m){left=window.scrollX+window.innerWidth-pw-m;}
+    if(left<window.scrollX+m){left=window.scrollX+m;}
+    if(r.bottom+8+ph>window.innerHeight-m && r.top-8-ph>0){top=window.scrollY+r.top-ph-8;}
+    pop.style.left=left+'px'; pop.style.top=top+'px';
+  }
+  document.querySelectorAll('[data-detail]').forEach(function(chip){
+    chip.addEventListener('click',function(e){e.stopPropagation(); if(openChip===chip){closePop();}else{showPop(chip);}});
+    chip.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault(); if(openChip===chip){closePop();}else{showPop(chip);}}});
+  });
+  document.addEventListener('click',function(e){if(pop.classList.contains('show') && !pop.contains(e.target)){closePop();}});
+  window.addEventListener('keydown',function(e){if(e.key==='Escape'){closePop();}});
+  window.addEventListener('scroll',positionPop,{passive:true});
+  window.addEventListener('resize',positionPop);
+  openHash();
 })();
 </script>
 </body>
