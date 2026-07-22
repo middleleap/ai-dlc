@@ -223,8 +223,9 @@
 
   <!-- gate reference -->
   <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Six gates, run every PR</h2></div>
-    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — wired so the agent identity can't bypass it.</p>
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Eleven gates, run every PR</h2></div>
+    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — wired so the agent identity can't bypass it,
+      and each has a negative test in CI showing an attempted bypass being rejected.</p>
     <div class="grid" id="gategrid"></div>
   </section>
 
@@ -233,23 +234,23 @@
     <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
     <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
       real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
-    <div class="scorebar" role="img" aria-label="about 15 enforced, 17 named-only, 15 absent">
-      <span class="enf" style="width:32%"></span><span class="nam" style="width:36%"></span><span class="abs" style="width:32%"></span>
+    <div class="scorebar" role="img" aria-label="about 17 mechanically validated, 17 defined, 15 absent; zero platform-enforced or organisationally-enforced as shipped">
+      <span class="enf" style="width:35%"></span><span class="nam" style="width:35%"></span><span class="abs" style="width:30%"></span>
     </div>
     <div class="scoretags">
-      <span><span class="sw enf"></span>~15 enforced</span>
-      <span><span class="sw nam"></span>~17 named-only</span>
+      <span><span class="sw enf"></span>~17 mechanically validated</span>
+      <span><span class="sw nam"></span>~17 defined</span>
       <span><span class="sw abs"></span>~15 absent</span>
     </div>
     <div class="note">
-      <p><b>The rule that keeps it honest:</b> a control the harness <em>narrates</em> is hygiene; the control is the
-        platform mechanism the agent can't bypass — a gate that blocks merge, branch protection, a vault. Everything the
-        bundle can't enforce is documented in a runbook, never faked with a green check.</p>
-      <p>The 1.9.1 truth pass applied the rule to the grade itself: Q1b was re-graded (the CI gate isn't bundled yet — the
-        hook is), and an unadopted CODEOWNERS template now <b>fails</b> the control-plane gate instead of reading green.
-        Release 1.10 replaces these three states with five: <span class="mono" style="font-size:.8em">Absent · Defined ·
-        Mechanically validated · Platform enforced · Organisationally enforced</span> — most of today's "enforced" rows
-        grade <em>mechanically validated</em> under it, honestly.</p>
+      <p><b>The rule that keeps it honest:</b> a gate that validates a <em>declaration</em> is <b>mechanically
+        validated</b>, never "enforced" — the word enforced is earned by the platform control plus a negative test
+        showing an attempted bypass being rejected. As shipped: <b>platform enforced 0 · organisationally enforced 0</b>;
+        those states are the adopter's to claim, per control, with activation evidence.</p>
+      <p>The five states (1.10): <span class="mono" style="font-size:.8em">Absent · Defined · Mechanically validated ·
+        Platform enforced · Organisationally enforced</span>. The state of record is the machine-readable
+        <span class="mono" style="font-size:.8em">control-catalog.json</span>, checked by its own gate — an entry claiming
+        a state without its receipts fails the build. This traffic-light is the narrative view; the catalog wins.</p>
     </div>
   </section>
 
@@ -264,7 +265,7 @@
       <div class="chip"><div class="clab">Discovery</div><div class="cgate">D1–D9</div></div><span class="arr">→</span>
       <div class="chip planned"><div class="clab">PA1</div><div class="cgate">develop? · 1.11</div></div><span class="arr">→</span>
       <div class="chip planned"><div class="clab">Architecture</div><div class="cgate">A1–A5 · 1.11</div></div><span class="arr">→</span>
-      <div class="chip"><div class="clab">Delivery</div><div class="cgate">Q-gates · hardened 1.10</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Delivery</div><div class="cgate">Q-gates · 11 shipped</div></div><span class="arr">→</span>
       <div class="chip planned"><div class="clab">PA2</div><div class="cgate">launch? · 1.11</div></div><span class="arr">→</span>
       <div class="chip planned"><div class="clab">Readiness</div><div class="cgate">R1–R6 · 1.12</div></div><span class="arr">→</span>
       <div class="chip planned"><div class="clab">Authorize</div><div class="cgate">2nd-line hold · 1.12</div></div><span class="arr">→</span>
@@ -276,7 +277,7 @@
     </div>
     <div class="train">
       <div class="rel done"><b>1.9.1 · truth pass</b>placeholder false-green killed · Q1b re-graded</div>
-      <div class="rel"><b>1.10 · truthful enforcement</b>5-state model · control catalog · Q1b gate · evidence semantics</div>
+      <div class="rel done"><b>1.10 · truthful enforcement</b>5-state model · control catalog · Q1b gate · evidence semantics</div>
       <div class="rel"><b>1.11 · bank profile</b>policy compiler · change envelope · PA1/PA2 · A-gates</div>
       <div class="rel"><b>1.12 · production controls</b>R-gates · 2nd-line hold · external anchor</div>
       <div class="rel"><b>2.0 · pilot-proven</b>supervised pilot · independent review — adopter-side evidence</div>
@@ -285,7 +286,7 @@
 
   <footer>
     <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check. Roadmap chips map to docs/loom-2.0-plan.md.</p>
-    <p style="margin-top:8px">MiddleLeap · The Loom 1.9.1 — a way for a regulated entity to build with AI.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom 1.10.0 — a way for a regulated entity to build with AI.</p>
   </footer>
 </div>
 
@@ -442,6 +443,11 @@ const GATES=[
  {id:'data-gov',n:'data-lifecycle-check',d:'Fails a release unless every data category declares a bounded retention and a right-to-erasure disposition.'},
  {id:'HG-0007',n:'discovery-link-check',d:'The waist gate: a pending feature must trace to a gate-green discovery hand-off, or carry an explicit exemption.'},
  {id:'loop',n:'operations-signal-check',d:'The Run→Discovery gate: an operational signal must be triaged (routed) and traceable, so nothing falls on the floor.'},
+ {id:'Q1b',n:'test-integrity-check',d:'Diffs the test surface against the merge base: deleted tests, net assertion loss, added skips, commented-out assertions — the anti-reward-hacking gate. New in 1.10.'},
+ {id:'Q2',n:'sast-check',d:'Validates the SAST scanner’s OUTPUT: real SARIF from a named tool, error-level findings ≤ policy. A missing report is a gap, not a pass. New in 1.10.'},
+ {id:'Q4',n:'secrets-scan',d:'Secret-shaped content in the current tree OR the reachable git history fails — a deleted secret is still leaked; rotate it. New in 1.10.'},
+ {id:'Q4',n:'supply-chain-check',d:'The release must carry a real SBOM, an in-policy dependency audit, and builder-bound provenance — validated semantically. New in 1.10.'},
+ {id:'catalog',n:'control-catalog-check',d:'The control state of record cannot overstate itself: every state needs its receipts, and no cited mechanism or test may be missing. New in 1.10.'},
 ];
 $('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
 

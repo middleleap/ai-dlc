@@ -19,8 +19,7 @@
 /.claude/agents/                        @your-org/platform-admins
 /discovery/gates/                       @your-org/platform-admins
 /discovery/render/                      @your-org/platform-admins
-/scripts/discovery-link-check.mjs       @your-org/platform-admins
-/scripts/control-plane-check.mjs        @your-org/platform-admins
+/scripts/                               @your-org/platform-admins
 /.github/workflows/                     @your-org/platform-admins
 /docs/governance/                       @your-org/platform-admins
 /CODEOWNERS                             @your-org/platform-admins

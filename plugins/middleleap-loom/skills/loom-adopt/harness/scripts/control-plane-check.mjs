@@ -15,19 +15,32 @@
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 
-// ADOPT: the control-plane files the agent must never change without four-eyes. Use
-// representative concrete paths (a covered path proves its directory is covered). Add yours;
-// remove any this repo doesn't have. Keep CODEOWNERS and this gate in the list — a control
-// plane that doesn't protect itself isn't one.
+// ADOPT: the control-plane files the agent must never change without four-eyes — EVERY gate,
+// hook, workflow, and governance manifest, not representative samples (1.10: an unlisted gate
+// is an unprotected gate). Add yours; remove any this repo doesn't have. Keep CODEOWNERS and
+// this gate in the list — a control plane that doesn't protect itself isn't one.
 export const CONTROL_TARGETS = [
   '.claude/hooks/pii-guard.sh',
   '.claude/hooks/spec-tripwire.sh',
+  '.claude/hooks/test-tripwire.sh',
   '.claude/settings.json',
   'discovery/gates/validate.mjs',
   'scripts/discovery-link-check.mjs',
   'scripts/control-plane-check.mjs',
+  'scripts/model-provenance-check.mjs',
+  'scripts/evidence-seal-check.mjs',
+  'scripts/data-lifecycle-check.mjs',
+  'scripts/operations-signal-check.mjs',
+  'scripts/test-integrity-check.mjs',
+  'scripts/secrets-scan.mjs',
+  'scripts/sast-check.mjs',
+  'scripts/supply-chain-check.mjs',
+  'scripts/control-catalog-check.mjs',
   '.github/workflows/ci.yml',
   'docs/governance/data-risk-register/controls.json',
+  'docs/governance/control-catalog.json',
+  'docs/governance/model-manifest.json',
+  'docs/governance/evidence/manifest.json',
   'CODEOWNERS',
 ];
 

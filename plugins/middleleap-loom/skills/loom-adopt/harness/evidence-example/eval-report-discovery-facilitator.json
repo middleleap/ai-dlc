@@ -1,0 +1,14 @@
+{
+  "suite": "evals/discovery-facilitator",
+  "dataset_version": "evalset@3",
+  "runner_version": "loom-eval-runner@1.2.0",
+  "ran_at": "2026-07-20",
+  "evaluated_model_id": "example-model@2026-01",
+  "evaluated_prompt_version": "loom-harness@1.4.0",
+  "cases": 30,
+  "passed": 30,
+  "failed": 0,
+  "threshold": 0.9,
+  "score": 1,
+  "result": "pass"
+}

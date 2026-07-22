@@ -18,37 +18,51 @@ The three ways the bar rises:
    monitoring, real-data handling.
 
 > This is the maturity of the **bundled harness as it ships**, not of any given bank. An
-> adopting institution that wires HG-0004/0005 to its real IAM and change process flips
-> those rows from Named-only to Enforced. The point of the seams is that adopters raise
-> their own grade.
+> adopting institution that activates branch protection and wires HG-0004/0005 to its real
+> IAM and change process flips those rows from Mechanically validated to Platform enforced.
+> The point of the seams is that adopters raise their own grade.
 
-## The three states
+## The five states (Loom 2.0 §3)
 
 | State | Meaning |
 |---|---|
-| **Enforced** | Wired by the bundled machinery — CI gate, hook, validator, or branch protection. Non-bypassable in a correctly activated adoption. |
-| **Named-only** | Decided and documented, but with no enforcement of record. Most of the HG catalog is here: a real ADR, an inert control. |
-| **Absent** | The capability is not present in the harness at all. |
+| **Absent** | The capability is not present in the harness or the adoption at all |
+| **Defined** | Requirement exists only in documentation — a real ADR, an inert control |
+| **Mechanically validated** | A bundled gate validates a declaration or artifact and blocks merge on failure |
+| **Platform enforced** | A non-bypassable technical control enforces it, with a passing negative bypass test and activation evidence |
+| **Organisationally enforced** | Independent authority, operating process, and evidence exist |
 
-The main axis of maturity is **Named-only → Enforced**: the governance catalog already
-*names* the right decisions; bank-grade is largely the work of making them non-bypassable.
+A gate that validates a *declaration* grades **Mechanically validated**, never "enforced" —
+the word enforced is earned by the platform (branch protection, protected CI, a vault) plus a
+negative test showing an attempted bypass being rejected. The axis of maturity is **Defined →
+Mechanically validated → Platform enforced**: the governance catalog already *names* the right
+decisions; bank-grade is the work of making them non-bypassable and proving it.
+
+> **The state of record is the control catalog** — `governance/control-catalog.template.json`,
+> mounted as `docs/governance/control-catalog.json` and checked by `control-catalog-check.mjs`,
+> which fails the build on any entry claiming a state without its receipts. This file is the
+> narrative view; where they disagree, the catalog wins.
 
 ## Scorecard
 
-Across ~47 assessed capabilities, the bundled harness today grades roughly:
+Across ~49 assessed capabilities, the bundled harness today grades roughly:
 
-| Enforced | Named-only | Absent |
+| Mechanically validated | Defined | Absent |
 |---|---|---|
-| ~15 | ~17 | ~15 |
+| ~17 | ~17 | ~15 |
+
+**Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
+activate branch protection or stand up an independent function — those states are the
+adopter's to claim, per control, in the catalog, with activation evidence.
 
 **This is a defensible estimate of what ships today, not an audit.** It reflects the plugin
 bundle as-is — e.g. of the six continuous-assurance agents only steps ① Watch (`change-watch`)
-and ② Assess (`risk-reviewer`) ship so far, so the rest are graded *Named-only*; the bundled
+and ② Assess (`risk-reviewer`) ship so far, so the rest are graded *Defined*; the bundled
 data-risk register is graded
 against its shipped state (a one-record demo), not the full taxonomy an adopter mounts. Read
 the clusters below for the reasoning behind each grade. The headline it encodes: **build-time
-frame strong, run-the-bank sparse** — though the enforced column is growing as roadmap steps
-land (control-plane gate, model-provenance gate).
+frame strong, run-the-bank sparse** — though the mechanically-validated column is growing as
+Loom 2.0 releases land (1.10: Q1b, secrets-history, SAST/SBOM output validation, the catalog).
 
 ## Six clusters, graded
 
@@ -56,48 +70,51 @@ land (control-plane gate, model-provenance gate).
 
 | Capability | State | What closes it |
 |---|---|---|
-| HG-0001 four-eyes merge · branch protection | **Enforced** | — |
-| HG-0002 immutable control plane · supply-chain integrity | **Enforced** | — |
-| HG-0007 / HG-0009 waist gate · develop diverges | **Enforced** | — |
-| HG-0008 solution-agnostic seams | **Enforced** | — |
-| HG-0003 tamper-evident sealed evidence | **Enforced** | — (the evidence-seal gate; external WORM + timestamping is the adopter's anchor) |
-| HG-0004 least-privilege identity · vaulted secrets | Named-only | Real IAM/PAM, HSM-backed vault, short-lived tokens, rotation |
-| HG-0005 promotion + rehearsed rollback | Named-only | Environment segregation, change-ticket linkage, rollback drills |
-| HG-0006 model-risk governance (see cluster B) | Named-only | The MRM apparatus in cluster B |
-| HG-0010 cease-use switch · accountable officer | Named-only | A wired kill-switch + a named Senior Manager |
-| HG-0011 onshore gateway · pre-egress DLP · attested sandbox | Named-only | Model gateway, DLP, sandbox execution where residency applies |
-| HG-0012 controlled build/eval runtime | Named-only | Sealed history + egress allow-list + derivation-vs-retrieval audit |
+| HG-0001 four-eyes merge · branch protection | Defined | Branch protection is a platform setting: activate it (activation runbook), record the rejected direct-push probe, then claim Platform enforced in the catalog |
+| HG-0002 immutable control plane · supply-chain integrity | **Mechanically validated** | — |
+| HG-0007 / HG-0009 waist gate · develop diverges | **Mechanically validated** | — |
+| HG-0008 solution-agnostic seams | **Mechanically validated** | — |
+| HG-0003 tamper-evident sealed evidence | **Mechanically validated** | — (the evidence-seal gate; external WORM + timestamping is the adopter's anchor) |
+| HG-0004 least-privilege identity · vaulted secrets | Defined | Real IAM/PAM, HSM-backed vault, short-lived tokens, rotation |
+| HG-0005 promotion + rehearsed rollback | Defined | Environment segregation, change-ticket linkage, rollback drills |
+| HG-0006 model-risk governance (see cluster B) | Defined | The MRM apparatus in cluster B |
+| HG-0010 cease-use switch · accountable officer | Defined | A wired kill-switch + a named Senior Manager |
+| HG-0011 onshore gateway · pre-egress DLP · attested sandbox | Defined | Model gateway, DLP, sandbox execution where residency applies |
+| HG-0012 controlled build/eval runtime | Defined | Sealed history + egress allow-list + derivation-vs-retrieval audit |
 
-Only four HG decisions are enforced by the bundled machinery; the rest are real ADRs
-awaiting platform enforcement. This is the single biggest, and fastest, credibility gap.
+Most HG decisions the bundle can check are mechanically validated; none are platform
+enforced until the adopter activates the platform half and records the evidence. This is
+the single biggest, and fastest, credibility gap.
 
 *Shipped machinery for the control plane (loom-adopt harness):* a `control-plane-check.mjs`
-CI gate that fails if any control-plane file loses its CODEOWNERS owner, a `CODEOWNERS.template`,
+CI gate that fails if any control-plane file loses its CODEOWNERS owner — or is owned only by
+the placeholder team (1.9.1) — over an exhaustive target list covering every bundled gate,
+hook, workflow, and governance manifest (1.10), a `CODEOWNERS.template`,
 and an `activation-runbook.md` that walks a platform admin through activating HG-0001/0002/0004
 (branch protection, ownership, least-privilege identity). The runbook makes HG-0004 *adoptable*
 but not yet *enforced* — the real IAM/vault is still the adopter's to wire. For HG-0003, an
 `evidence-seal-check.mjs` gate + `evidence-manifest.json` seam make the release bundle a
-hash-chained, tamper-evident, completeness-checked chain (with an optional external anchor).
+hash-chained, tamper-evident, completeness-checked, commit-bound and SEMANTICALLY verified chain — sealed tests must pass, verdicts must be PASS/CONFORMANT, scans must be clean (1.10) — with an optional external anchor.
 
 ### B · Model risk & AI governance (SR 11-7 · PRA SS1/23 · EU AI Act · NIST AI RMF · ISO 42001)
 
 | Capability | State | What closes it |
 |---|---|---|
-| Q1b anti-reward-hacking gate | Named-only | The `test-tripwire.sh` hook ships (session-side defence); the CI-side test-integrity gate itself is not yet bundled — Loom 2.0 release 1.10 ships it |
-| Model + prompt version pinning in evidence bundle | **Enforced** | — (the model-provenance gate) |
-| Agent eval harness · challenger models | Named-only | The gate requires a fresh passing eval before release; the eval *rig* + challengers are the adopter's to build |
-| Independent model validation function | Named-only | `validated_by` + the `model-risk-reviewer` challenge agent ship; the org-separate MRM *function* is the adopter's |
-| Production drift monitoring | Named-only | `change-watch` catches model/eval drift on a schedule/event; continuous *runtime* monitoring is a run-the-bank control |
+| Q1b anti-reward-hacking gate | **Mechanically validated** | — (`test-integrity-check.mjs` diffs the test surface against the merge base, 1.10; `test-tripwire.sh` is the session-side defence in depth) |
+| Model + prompt version pinning in evidence bundle | **Mechanically validated** | — (the model-provenance gate) |
+| Agent eval harness · challenger models | Defined | The gate requires a fresh passing eval before release; the eval *rig* + challengers are the adopter's to build |
+| Independent model validation function | Defined | `validated_by` + the `model-risk-reviewer` challenge agent ship; the org-separate MRM *function* is the adopter's |
+| Production drift monitoring | Defined | `change-watch` catches model/eval drift on a schedule/event; continuous *runtime* monitoring is a run-the-bank control |
 | Replayable decision log | Absent | A reconstructable log of what the agent did and why |
 | Fairness/bias testing · explainability · AI incident runbook | Absent | Where applicable to the use case |
 
 The agent *is a model*. This cluster was the gap most specific to an AI-driven harness and the
-least addressed; roadmap Step 2 moved provenance from *absent* to *enforced*.
+least addressed; roadmap Step 2 moved provenance from *absent* to *mechanically validated*.
 
 *Shipped machinery (loom-adopt harness):* a `model-manifest.json` inventory seam +
 `model-provenance-check.mjs` — an HG-0006 CI gate that fails a release unless every model role
 pins its model + prompt version, declares a risk tier, and (at required tiers) carries a
-passing eval **run against the shipping pin** (the anti-stale-eval check, model-risk's analogue
+passing eval **run against the shipping pin** whose report artifact is cited by ref + sha256 and re-hashed by the gate (1.10: a declared pass is not evidence; the anti-stale-eval check, model-risk's analogue
 of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin agent for the
 ② Assess challenge. See `references/model-risk.md`.
 
@@ -105,11 +122,11 @@ of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin ag
 
 | Capability | State | What closes it |
 |---|---|---|
-| 1st-line reviewer agents (hard-stop · conformance · data-gov · boundary) | **Enforced** | — |
-| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Named-only | Steps ① Watch (`change-watch`) and ② Assess (`risk-reviewer`) now ship as plugin agents; ③–⑥ remain described-not-shipped |
+| 1st-line reviewer agents (hard-stop · conformance · data-gov · boundary) | **Mechanically validated** | — |
+| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Defined | Steps ① Watch (`change-watch`) and ② Assess (`risk-reviewer`) now ship as plugin agents; ③–⑥ remain described-not-shipped |
 | Independent 2nd-line challenge function | Absent | Risk & compliance, organisationally separate |
 | 3rd-line internal audit · read-only evidence portal | Absent | Auditor access to the sealed evidence trail |
-| WORM · time-stamped evidence retention | Named-only | The evidence-seal gate makes the bundle tamper-evident and anchor-checkable; the immutable store + RFC-3161 timestamping authority + retention policy are the adopter's |
+| WORM · time-stamped evidence retention | Defined | The evidence-seal gate makes the bundle tamper-evident and anchor-checkable; the immutable store + RFC-3161 timestamping authority + retention policy are the adopter's |
 | SOC 2 / ISO 27001 attestation of the harness | Absent | Third-party attestation of the harness itself |
 
 The evidence bundle is *sealed* but not shown to be WORM, time-stamped, or examinable by an
@@ -119,12 +136,12 @@ independent party — the difference between self-assurance and examinable assur
 
 | Capability | State | What closes it |
 |---|---|---|
-| D6 register seam + data-governance-reviewer | **Enforced** | — |
-| Q4.5 lineage emission · pii-guard hook | **Enforced** | — |
+| D6 register seam + data-governance-reviewer | **Mechanically validated** | — |
+| Q4.5 lineage emission · pii-guard hook | **Mechanically validated** | — |
 | Full risk taxonomy | Absent | The bundled register is a one-record demo (DR-1 only) — mount the real taxonomy |
-| Retention + right-to-erasure enforcement | Named-only | The data-lifecycle gate makes a bounded retention + an erasure disposition a merge condition; executing the deletion/crypto-shred is the adopter's data platform |
+| Retention + right-to-erasure enforcement | Defined | The data-lifecycle gate makes a bounded retention + an erasure disposition a merge condition; executing the deletion/crypto-shred is the adopter's data platform |
 | Real-data control surface (KMS · field encryption · tokenization · access logging) | Absent | The harness is synthetic-only by design; the real-PII surface is unbuilt and untested (governance/data-protection-runbook.md) |
-| Data residency (HG-0011) | Named-only | Residency-controlled model traffic + execution |
+| Data residency (HG-0011) | Defined | Residency-controlled model traffic + execution |
 
 The *shape* is right; the depth is demo-grade. The real-data control surface being unbuilt
 is the caveat that sits under everything else.
@@ -140,22 +157,25 @@ adopter's (see `governance/data-protection-runbook.md`).
 
 | Capability | State | What closes it |
 |---|---|---|
-| Q2 SAST · Q4 SCA + secrets (current) | **Enforced** | Gates exist — fill with real scanners (e.g. Snyk Code/Open Source/Container, Chainguard images) |
+| Q2 SAST · Q4 SCA/SBOM/provenance output validation | **Mechanically validated** | — (`sast-check.mjs` + `supply-chain-check.mjs` validate the scanners' OUTPUT semantically, 1.10; the scanners themselves are the adopter's fill — Snyk, Chainguard, CodeQL) |
+| Secrets scanning — current tree AND git history | **Mechanically validated** | — (`secrets-scan.mjs`, 1.10: a deleted secret is still leaked) |
 | DAST · penetration testing | Absent | Add as gates / scheduled assurance |
-| Threat modelling (STRIDE) gate · secrets-history scan | Absent | A threat-model gate; history-aware secret scanning |
+| Threat modelling (STRIDE) gate | Absent | A threat-model gate — arrives with A2 in the Loom 2.0 architecture-assurance plane (1.11) |
 | Operational resilience (BCP/DR · RTO/RPO · chaos · SEV · SLOs) | Absent | The run-the-bank surface — entirely outside a build-time frame |
-| Pre-egress DLP (HG-0011) | Named-only | Wired DLP on model egress |
-| FAPI 2.0 / mTLS conformance | Named-only | Conformance suite as a gate (domain-specific) |
+| Pre-egress DLP (HG-0011) | Defined | Wired DLP on model egress |
+| FAPI 2.0 / mTLS conformance | Defined | Conformance suite as a gate (domain-specific) |
 
-Security testing stops at SAST + SCA. Operational resilience is absent because the Loom
-governs the build, not the running system — a whole domain a bank needs and this harness
-does not touch.
+The Q2/Q4 gates now validate scanner *output* semantically — a missing report, an
+error-level SARIF finding, an empty SBOM, or a critical vulnerability fails the build
+(1.10) — but the scanners themselves remain the adopter's fill. Operational resilience is
+absent because the Loom governs the build, not the running system — a whole domain a bank
+needs, arriving as the R-gates in Loom 2.0 release 1.12.
 
 ### F · Operating model & production proof (SMR/SMCR · examination)
 
 | Capability | State | What closes it |
 |---|---|---|
-| Named accountable officer (HG-0010) | Named-only | Appoint and document the Senior Manager |
+| Named accountable officer (HG-0010) | Defined | Appoint and document the Senior Manager |
 | Senior-manager regime · board oversight · RACI | Absent | The governance operating model around the loop |
 | Supervised production pilot | Absent | A real, supervised run on non-synthetic scope |
 | Legacy / core-banking integration patterns | Absent | The integration cost the demo never paid |
@@ -168,7 +188,7 @@ in one greenfield domain, permanently non-production, no legacy integration, no 
 
 Sequenced so each step buys the most credibility for the least motion.
 
-1. **Enforce the whole HG catalog.** Take the enforced set from 4 → 12 (IAM/secrets,
+1. **Enforce the whole HG catalog.** Take the platform-enforceable set through activation (IAM/secrets,
    promotion + rollback, DLP/gateway). The paper-to-platform gap is the fastest win, and it
    is decisions already made — only the enforcement of record is missing.
 2. **Stand up model-risk management.** Eval harness + drift monitoring + independent
@@ -180,7 +200,7 @@ Sequenced so each step buys the most credibility for the least motion.
    else. Build and exercise the real-PII control surface against the complete taxonomy.
 
 *Progress:* Steps 1–3 are underway — the control-plane gate (HG-0002), the model-provenance
-gate (HG-0006), and the evidence-seal gate (HG-0003) now ship as enforced machinery, with their
+gate (HG-0006), and the evidence-seal gate (HG-0003) now ship as mechanically-validated machinery, with their
 activation runbook and manifest seams. What remains is the org-side half a bundle cannot ship:
 real IAM/vault (HG-0004), an organisationally-independent model-risk and 2nd-line function,
 runtime drift monitoring, an external WORM/timestamping store, and the real-PII control surface
@@ -188,7 +208,7 @@ runtime drift monitoring, an external WORM/timestamping store, and the real-PII 
 
 ## The org-side, in runbooks
 
-The items above that stay **Named-only** or **Absent** because they need owners outside
+The items above that stay **Defined** or **Absent** because they need owners outside
 engineering are not left as a shrug. The loom-adopt harness ships six adoption runbooks
 (`governance/runbooks/`) that say, honestly, what a plugin bundle cannot enforce and what the
 adopting institution must stand up — each with a "why a bundle cannot enforce this" note and a
@@ -211,7 +231,7 @@ and one it left you to *discover*.
 A reviewer agent that honours a rule is hygiene; the **control** is the platform mechanism
 the agent cannot bypass (branch protection, protected CI, managed settings, a vault, a
 gateway). Most of this gap is not "the Loom decided wrong" — the HG catalog decides right.
-It is **Named-only → Enforced**, plus the run-the-bank domains a build-time frame was never
+It is **Defined → Mechanically validated → Platform enforced**, plus the run-the-bank domains a build-time frame was never
 scoped to cover. See `governance.md` (the HG catalog and its enforcement-of-record rule),
 `delivery-harness.md` (the Q-gates), `continuous-assurance.md` (the assurance lifecycle),
 and `discovery-harness.md` §5.1 (the data-risk register seam).

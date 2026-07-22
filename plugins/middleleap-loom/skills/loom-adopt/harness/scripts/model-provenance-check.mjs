@@ -13,6 +13,7 @@
 // enforces that a release cannot claim green without a fresh, pinned, tier-appropriate eval.
 //
 // Run from the repo root: `node scripts/model-provenance-check.mjs` (exit 1 on any finding).
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 
@@ -29,8 +30,10 @@ const TIERS = new Set(['high', 'medium', 'low']);
 
 const isPinned = (v) => typeof v === 'string' && !FLOATING.has(v.trim().toLowerCase());
 
-/** Findings (one per violation). Empty ⇒ every model role is pinned, tiered, and eval-fresh. */
-export function evaluate(manifest) {
+/** Findings (one per violation). Empty ⇒ every model role is pinned, tiered, and eval-fresh.
+ *  With `baseDir`, each eval's report artifact is read and its sha256 verified — the CLI
+ *  always passes it, so a manifest cannot cite a report that is absent or altered. */
+export function evaluate(manifest, { baseDir = null } = {}) {
   const findings = [];
   const models = manifest && manifest.models;
   if (!Array.isArray(models) || models.length === 0) {
@@ -55,6 +58,25 @@ export function evaluate(manifest) {
         if (e.evaluated_model_id !== m.model_id || e.evaluated_prompt_version !== m.prompt_version) {
           findings.push(`${role}: stale eval — it was run against a different model/prompt pin than the one shipping`);
         }
+        // 1.10 — a declared pass is not evidence. The eval must identify its dataset, runner,
+        // and timestamp, and point at the actual REPORT artifact, hashed. (`result: "pass"`
+        // alone is exactly the false green this gate exists to kill.)
+        for (const field of ['dataset_version', 'runner_version', 'ran_at']) {
+          if (!(typeof e[field] === 'string' && e[field].trim())) {
+            findings.push(`${role}: eval declares no ${field} — an unidentified eval is a claim, not evidence`);
+          }
+        }
+        const r = e.report;
+        if (!r || typeof r.ref !== 'string' || !/^[0-9a-f]{64}$/.test(r.sha256 || '')) {
+          findings.push(`${role}: eval has no report {ref, sha256} — the evaluation artifact itself must be sealed, not just its verdict`);
+        } else if (baseDir) {
+          const p = `${baseDir}/${r.ref}`;
+          if (!existsSync(p)) {
+            findings.push(`${role}: eval report ${r.ref} not found — a referenced artifact must exist`);
+          } else if (createHash('sha256').update(readFileSync(p)).digest('hex') !== r.sha256) {
+            findings.push(`${role}: eval report ${r.ref} does not match its declared sha256 — the report was altered after the manifest was written`);
+          }
+        }
       }
     }
     if (VALIDATION_REQUIRED_TIERS.has(m.risk_tier) && !(typeof m.validated_by === 'string' && m.validated_by.trim())) {
@@ -70,7 +92,7 @@ function run(cwd = process.cwd()) {
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
   catch (e) { return [`model manifest is not valid JSON: ${e.message}`]; }
-  return evaluate(manifest);
+  return evaluate(manifest, { baseDir: cwd });
 }
 
 // CLI (skipped when imported by the test suite).

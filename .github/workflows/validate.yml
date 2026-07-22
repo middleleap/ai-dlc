@@ -45,8 +45,14 @@ jobs:
           cp "$P/loom-adopt/harness/governance/model-manifest.template.json" "$A/docs/governance/model-manifest.json"
           cp "$P/loom-adopt/harness/governance/data-lifecycle.template.json" "$A/docs/governance/data-lifecycle.json"
           cp "$P/loom-adopt/harness/governance/operations-signal.template.json" "$A/docs/governance/operations-signal.json"
-          mkdir -p "$A/docs/governance/evidence"
+          cp "$P/loom-adopt/harness/governance/control-catalog.template.json" "$A/docs/governance/control-catalog.json"
+          mkdir -p "$A/docs/governance/evidence" "$A/docs/governance/runbooks" "$A/.claude/hooks"
           cp "$P/loom-adopt/harness/evidence-example/"*.json "$A/docs/governance/evidence/"
+          cp "$P/loom-adopt/harness/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
+          cp "$P/loom-adopt/harness/governance/runbooks/"*.md "$A/docs/governance/runbooks/"
+          cp "$P/loom-adopt/harness/governance/activation-runbook.md" "$A/docs/governance/"
+          cp "$P/loom-adopt/harness/hooks/"*.sh "$A/.claude/hooks/"
+          cp "$P/loom-adopt/harness/hooks/settings.hooks.json" "$A/.claude/settings.json"
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
@@ -59,12 +65,52 @@ jobs:
           # The ADOPT step: replace the placeholder with a real team, as an adopter would.
           sed -i 's|@your-org/|@dryrun-bank/|g' CODEOWNERS
           node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs
+          # Q1b + the secrets history scan diff against git — give the adopted layout a history.
+          git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
+          git add -A && git commit -qm base
           node scripts/discovery-link-check.mjs
           node scripts/control-plane-check.mjs
+          node scripts/control-catalog-check.mjs
+          node scripts/test-integrity-check.mjs --base main
+          node scripts/sast-check.mjs
+          node scripts/secrets-scan.mjs
+          node scripts/supply-chain-check.mjs
           node scripts/model-provenance-check.mjs
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
+
+      - name: Loom bundle — negative bypass tests (a bypassed control must be SEEN failing)
+        run: |
+          A="$RUNNER_TEMP/loom-adopt-dryrun"
+          cd "$A"
+          # 1 · Tampered evidence: alter a sealed artifact — the seal gate must break.
+          sed -i 's/"failed": 0/"failed": 1/' docs/governance/evidence/tests.json
+          if node scripts/evidence-seal-check.mjs; then
+            echo "::error::evidence-seal gate passed on a tampered artifact"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/tests.json
+          # 2 · Weakened tests: delete a test file on a branch — Q1b must reject it.
+          git checkout -qb weaken
+          git rm -q discovery/render/render.test.mjs && git commit -qm "delete a test"
+          if node scripts/test-integrity-check.mjs --base main; then
+            echo "::error::test-integrity gate passed a deleted test file"; exit 1
+          fi
+          git checkout -q main
+          # 3 · Committed secret: a key in history must fail even after the file is gone.
+          printf 'aws_access_key_id = AKIAIOSFODNN7DRYRUN0\n' > leak.txt
+          git add leak.txt && git commit -qm "leak" && git rm -q leak.txt && git commit -qm "remove leak"
+          if node scripts/secrets-scan.mjs; then
+            echo "::error::secrets gate passed a secret that lives in git history"; exit 1
+          fi
+          git reset -q --hard HEAD~2
+          # 4 · Failing SAST report: an error-level SARIF finding must block.
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/sast.sarif";const s=JSON.parse(fs.readFileSync(p));s.runs[0].results=[{ruleId:"demo-sqli",level:"error",message:{text:"injected"}}];fs.writeFileSync(p,JSON.stringify(s))'
+          if node scripts/sast-check.mjs; then
+            echo "::error::SAST gate passed an error-level finding"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/sast.sarif
+          echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green
         run: |

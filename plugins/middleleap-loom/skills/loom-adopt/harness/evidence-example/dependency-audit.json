@@ -1,0 +1,8 @@
+{
+  "tool": "demo-sca",
+  "critical": 0,
+  "high": 0,
+  "moderate": 1,
+  "low": 3,
+  "scanned_at": "2026-07-20"
+}

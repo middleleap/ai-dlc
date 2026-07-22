@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Q1b + secrets history need real git history, not a shallow clone
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -28,12 +30,20 @@ jobs:
       - name: Warp & control-plane gates
         run: |
           node scripts/control-plane-check.mjs        # HG-0002 — control-plane owned in CODEOWNERS
+          node scripts/control-catalog-check.mjs       # control state of record cannot overstate itself
           node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
+
+      - name: Test integrity & security gates (Q1b · Q2 · Q4)
+        run: |
+          node scripts/test-integrity-check.mjs        # Q1b — tests didn't get weaker on the way to green
+          node scripts/sast-check.mjs                   # Q2 — SAST output is real and within policy
+          node scripts/secrets-scan.mjs                 # Q4 — no secrets in tree OR history
+          node scripts/supply-chain-check.mjs           # Q4 — SBOM + audit + provenance are real
 
       - name: Model, evidence, data & feedback gates
         run: |
-          node scripts/model-provenance-check.mjs      # HG-0006 — models pinned/tiered/evaluated
-          node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence is sealed & intact
+          node scripts/model-provenance-check.mjs      # HG-0006 — models pinned/tiered/evaluated, reports sealed
+          node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence sealed, commit-bound, semantically verified
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
 

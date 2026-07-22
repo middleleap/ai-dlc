@@ -13,10 +13,13 @@ const HIGH = {
   eval: {
     suite: 'evals/delivery-loop',
     ran_at: '2026-07-20',
+    dataset_version: 'evalset@3',
+    runner_version: 'loom-eval-runner@1.2.0',
     result: 'pass',
     threshold_met: true,
     evaluated_model_id: 'example-model@2026-01',
     evaluated_prompt_version: 'harness@1.4.0',
+    report: { ref: 'docs/governance/evidence/eval-report-delivery-loop.json', sha256: 'ab'.repeat(32) },
   },
   validated_by: 'model-risk (2nd line)',
 };
@@ -67,6 +70,37 @@ test('a stale eval (pin mismatch) is caught', () => {
 test('a high-tier model with no independent validation fails', () => {
   const f = evaluate(manifest({ validated_by: '   ' }));
   assert.ok(f.some((x) => /no independent validation/.test(x)));
+});
+
+test('an eval with no dataset/runner/timestamp identification is a claim, not evidence (1.10)', () => {
+  const f = evaluate(manifest({ eval: { ...HIGH.eval, dataset_version: undefined, runner_version: '' } }));
+  assert.ok(f.some((x) => /no dataset_version/.test(x)));
+  assert.ok(f.some((x) => /no runner_version/.test(x)));
+});
+
+test('an eval without a hashed report artifact fails — `result: pass` alone is the false green (1.10)', () => {
+  const f = evaluate(manifest({ eval: { ...HIGH.eval, report: undefined } }));
+  assert.ok(f.some((x) => /no report \{ref, sha256\}/.test(x)));
+  const g = evaluate(manifest({ eval: { ...HIGH.eval, report: { ref: 'x.json', sha256: 'not-a-hash' } } }));
+  assert.ok(g.some((x) => /no report \{ref, sha256\}/.test(x)));
+});
+
+test('with baseDir, a missing or altered report artifact is caught', async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { createHash } = await import('node:crypto');
+  const dir = mkdtempSync(join(tmpdir(), 'mp-'));
+  try {
+    const missing = evaluate(manifest(), { baseDir: dir });
+    assert.ok(missing.some((x) => /report .* not found/.test(x)));
+    const body = '{"cases":12,"pass":12}\n';
+    writeFileSync(join(dir, 'report.json'), body);
+    const good = createHash('sha256').update(body).digest('hex');
+    assert.deepEqual(evaluate(manifest({ eval: { ...HIGH.eval, report: { ref: 'report.json', sha256: good } } }), { baseDir: dir }), []);
+    const bad = evaluate(manifest({ eval: { ...HIGH.eval, report: { ref: 'report.json', sha256: 'cd'.repeat(32) } } }), { baseDir: dir });
+    assert.ok(bad.some((x) => /does not match its declared sha256/.test(x)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('an empty inventory is a finding', () => {
