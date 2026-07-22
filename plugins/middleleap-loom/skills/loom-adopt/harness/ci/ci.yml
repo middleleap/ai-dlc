@@ -64,6 +64,7 @@ jobs:
       - name: Model, evidence, data & feedback gates
         run: |
           node scripts/model-provenance-check.mjs      # HG-0006 — models pinned/tiered/evaluated, reports sealed
+          node scripts/product-eval-check.mjs           # product-outcome evals: discovery-linked, measures green, fresh (--commit "$GITHUB_SHA")
           node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence sealed, commit-bound, semantically verified
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable

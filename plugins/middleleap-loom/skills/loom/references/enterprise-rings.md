@@ -11,7 +11,7 @@ adopter- and advisory-side rather than pretending the bundle ships it.
 | Ring | Scale | The loop | Who ships it |
 |---|---|---|---|
 | **Micro** | one change | plan → work → review → merge → deploy → signal (the delivery + discovery harnesses) | **The Loom** — mechanically validated machinery |
-| **Meso** | one product | dogfood → evals → staged launch → feedback (the product loop) | **Partly the Loom** — staged rollout ships (pilot playbook); the product-eval gate is the open slice |
+| **Meso** | one product | dogfood → evals → staged launch → feedback (the product loop) | **Mostly the Loom** — staged rollout (pilot playbook) and the product-eval gate now ship; the eval *rig* and enterprise reach remain the open edge |
 | **Macro** | the enterprise | intent → execution → value → strategy, across every function | **Adopter / advisory** — the Loom does not ship an operating model |
 
 The same shape — bounded reasoning inside a node, a governed gate between nodes, a feedback
@@ -23,10 +23,15 @@ rigorously and hands the outer ones their vocabulary.
 
 Everything in the other references. The micro ring is the double diamond closed into a loop
 (`SKILL.md`): discovery finds the right problem, delivery ships it under control, Run feeds
-signals back (`operations.md`). The shipped half of the meso ring is staged rollout — the
+signals back (`operations.md`). The shipped half of the meso ring is now two things. **Staged rollout** — the
 supervised-pilot playbook's six cohorts (synthetic → internal → beta-without-execution →
 capped → expanded → normal) with dual-run/shadow comparison
-(`../../loom-adopt/harness/governance/runbooks/pilot-playbook.md`).
+(`../../loom-adopt/harness/governance/runbooks/pilot-playbook.md`). And **evals-as-product-
+management** — the `product-eval-check` gate: a release links its discovery hand-off, scores
+every D1 success measure, and carries a fresh eval bound to the shipping commit; a regression
+blocks the release. The Loom-native move is that the D1 measure *is* the eval target, so
+discovery → delivery → measurement closes. The eval *rig* that scores a measure stays the
+adopter's to build.
 
 ## What the Loom is not (the macro ring, and half of meso)
 
@@ -44,10 +49,10 @@ mistake silence for coverage:
 - **The people ramp.** Proficiency expectations in hiring and performance, mandate sequenced
   behind capability. `loom-adopt` installs machinery; the human change-management ramp is the
   adopter's.
-- **The product-eval gate (meso, open).** Evals-as-product-management — a product-outcome
-  eval library that blocks a release on regression, distinct from the *model* eval the
-  model-provenance gate already enforces (`model-risk.md`). This is the one outer-ring slice
-  close enough to the frame to be worth pulling in; see the rc-train plan.
+- **The eval rig itself (meso, open).** The `product-eval` gate ships and enforces a fresh,
+  discovery-linked, sealed eval; the *rig* that actually scores a success measure — the
+  dataset, the runner, the harness — is domain-specific and the adopter's to build. The gate
+  proves an eval was run and passed against the shipping commit; it cannot author the eval.
 - **Token/value economics (macro).** Outcome = tokens × operating model. The Loom explicitly
   disclaims measured ROI (`SKILL.md` Limits); the macro loop's instrumentation is unbuilt.
 

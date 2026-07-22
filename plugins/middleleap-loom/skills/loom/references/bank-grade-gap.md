@@ -45,11 +45,11 @@ decisions; bank-grade is the work of making them non-bypassable and proving it.
 
 ## Scorecard
 
-Across ~61 assessed capabilities, the bundled harness today grades roughly:
+Across ~62 assessed capabilities, the bundled harness today grades roughly:
 
 | Mechanically validated | Defined | Absent |
 |---|---|---|
-| ~31 | ~17 | ~12 |
+| ~32 | ~17 | ~12 |
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
 activate branch protection or stand up an independent function — those states are the
@@ -74,7 +74,9 @@ plus enterprise adapters, high-tier model runtime governance, and the supervised
 playbook with its adversarial checklist mapped to the gates that catch each attack; 2.0-rc.3:
 comprehension debt named as a standing limit, HG-0013 graduated autonomy, and the
 routine-change lane — a second-line-owned, expiring envelope that lets a narrow class of
-low-risk changes auto-merge behind an absolute control-plane floor).
+low-risk changes auto-merge behind an absolute control-plane floor; 2.0-rc.4: the
+product-eval gate — a release links its discovery hand-off and scores every D1 success
+measure against the shipping commit, so discovery → delivery → measurement closes).
 
 ## Six clusters, graded
 
@@ -136,6 +138,7 @@ of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin ag
 | Capability | State | What closes it |
 |---|---|---|
 | 1st-line reviewer agents (hard-stop · conformance · data-gov · boundary) | **Mechanically validated** | — |
+| Product-outcome eval gate (evals-as-product-management) | **Mechanically validated** | — (`product-eval-check.mjs`: a release links its discovery hand-off, scores every D1 success measure, and carries a fresh eval bound to the shipping commit; a regression blocks. The eval *rig* is the adopter's) |
 | Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Defined | Steps ① Watch and ② Assess ship as plugin agents; the **signed cycle record** with an unresolved-findings register now ships as `assurance-cycle-check.mjs` (2.0-rc), so a cycle leaves examinable evidence — but agents ③–⑥ remain described-not-shipped |
 | Independent 2nd-line challenge function | Absent | The release-hold MECHANISM ships (fail closed, second-line-owned, 1.12); the organisationally-separate function operating it is the adopter's |
 | 3rd-line internal audit · read-only evidence portal | Absent | Auditor access to the sealed evidence trail |
