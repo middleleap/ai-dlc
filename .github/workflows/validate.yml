@@ -31,11 +31,17 @@ jobs:
           cp "$P/loom-adopt/harness/discovery/brand/design.md" "$A/discovery/brand/design.md"
           cp -r "$P/loom-adopt/harness/discovery/brand/examples" "$A/discovery/brand/examples"
           cp "$P/loom-adopt/harness/scripts/"*.mjs "$A/scripts/"   # every gate + its tests — a per-file list silently drops new gates
+          cp -r "$P/loom-adopt/harness/core" "$A/core"             # the policy compiler (control plane)
+          cp -r "$P/loom-adopt/harness/profiles" "$A/profiles"     # profiles are data: base + jurisdiction + product
           cp "$P/loom-adopt/harness/governance/CODEOWNERS.template" "$A/CODEOWNERS"
           cp "$P/loom-adopt/harness/governance/model-manifest.template.json" "$A/docs/governance/model-manifest.json"
           cp "$P/loom-adopt/harness/governance/data-lifecycle.template.json" "$A/docs/governance/data-lifecycle.json"
           cp "$P/loom-adopt/harness/governance/operations-signal.template.json" "$A/docs/governance/operations-signal.json"
           cp "$P/loom-adopt/harness/governance/control-catalog.template.json" "$A/docs/governance/control-catalog.json"
+          cp "$P/loom-adopt/harness/governance/identities.template.json" "$A/docs/governance/identities.json"
+          cp "$P/loom-adopt/harness/governance/attestation-issuers.template.json" "$A/docs/governance/attestation-issuers.json"
+          mkdir -p "$A/docs/governance/changes"
+          cp -r "$P/loom-adopt/harness/change-example" "$A/docs/governance/changes/CHG-2026-0042"
           mkdir -p "$A/docs/governance/evidence" "$A/docs/governance/runbooks" "$A/.claude/hooks"
           cp "$P/loom-adopt/harness/evidence-example/"*.json "$A/docs/governance/evidence/"
           cp "$P/loom-adopt/harness/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
@@ -54,13 +60,17 @@ jobs:
           fi
           # The ADOPT step: replace the placeholder with a real team, as an adopter would.
           sed -i 's|@your-org/|@dryrun-bank/|g' CODEOWNERS
-          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs
+          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
           # Q1b + the secrets history scan diff against git — give the adopted layout a history.
           git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
           git add -A && git commit -qm base
           node scripts/discovery-link-check.mjs
           node scripts/control-plane-check.mjs
           node scripts/control-catalog-check.mjs
+          node scripts/identity-registry-check.mjs
+          node scripts/change-envelope-check.mjs
+          node scripts/product-approval-check.mjs
+          node scripts/architecture-assurance-check.mjs
           node scripts/test-integrity-check.mjs --base main
           node scripts/sast-check.mjs
           node scripts/secrets-scan.mjs
@@ -100,6 +110,25 @@ jobs:
             echo "::error::SAST gate passed an error-level finding"; exit 1
           fi
           git checkout -- docs/governance/evidence/sast.sarif
+          # 5 · Doctored control plan: hand-editing PA1 out of the compiled plan must fail
+          #     reconciliation (classification-time rigor survives to execution time).
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/control-plan.json";const s=JSON.parse(fs.readFileSync(p));s.required_gates=s.required_gates.filter(g=>g!=="PA1");fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs; then
+            echo "::error::change-envelope gate accepted a hand-edited control plan"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/control-plan.json
+          # 6 · PA1 revoked: a high-risk change in Develop without PA1 must be blocked.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/product-passport.json";const s=JSON.parse(fs.readFileSync(p));s.pa1.decision="pending";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs; then
+            echo "::error::a high-risk change entered Develop without PA1"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/product-passport.json
+          # 7 · Agent as approver: an agent identity signing PA1 must be rejected.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/product-passport.json";const s=JSON.parse(fs.readFileSync(p));s.pa1.approvals=s.pa1.approvals.map(a=>a.role==="risk-second-line"?{...a,by:"agent-loom-delivery"}:a);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/product-approval-check.mjs; then
+            echo "::error::an AGENT approval was accepted for a control function"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/product-passport.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

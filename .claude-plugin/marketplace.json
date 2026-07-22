@@ -69,7 +69,7 @@
       "name": "middleleap-loom",
       "source": "./plugins/middleleap-loom",
       "description": "The Loom — MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.",
-      "version": "1.10.0",
+      "version": "1.11.0",
       "author": {
         "name": "MiddleLeap"
       },

@@ -223,7 +223,7 @@
 
   <!-- gate reference -->
   <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Eleven gates, run every PR</h2></div>
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Fifteen gates, run every PR</h2></div>
     <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — wired so the agent identity can't bypass it,
       and each has a negative test in CI showing an attempted bypass being rejected.</p>
     <div class="grid" id="gategrid"></div>
@@ -261,24 +261,24 @@
       traceable control chain: a policy compiler reads a change's risk classification and <b>compiles</b> the gates, approvers, and
       evidence it must carry. Solid chips ship today; dashed chips are planned — presented as roadmap, never as shipped controls.</p>
     <div class="chain" role="img" aria-label="The Loom 2.0 chain: mandate, discovery, PA1 permission to develop, architecture assurance, delivery Q-gates, PA2 permission to launch, operational readiness, production authorization, run — with run feeding back to discovery.">
-      <div class="chip planned"><div class="clab">Mandate</div><div class="cgate">materiality · 1.11</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Mandate</div><div class="cgate">change envelope · shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Discovery</div><div class="cgate">D1–D9</div></div><span class="arr">→</span>
-      <div class="chip planned"><div class="clab">PA1</div><div class="cgate">develop? · 1.11</div></div><span class="arr">→</span>
-      <div class="chip planned"><div class="clab">Architecture</div><div class="cgate">A1–A5 · 1.11</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">PA1</div><div class="cgate">develop? · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Architecture</div><div class="cgate">A1–A5 · shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Delivery</div><div class="cgate">Q-gates · 11 shipped</div></div><span class="arr">→</span>
-      <div class="chip planned"><div class="clab">PA2</div><div class="cgate">launch? · 1.11</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">PA2</div><div class="cgate">launch? · shipped</div></div><span class="arr">→</span>
       <div class="chip planned"><div class="clab">Readiness</div><div class="cgate">R1–R6 · 1.12</div></div><span class="arr">→</span>
       <div class="chip planned"><div class="clab">Authorize</div><div class="cgate">2nd-line hold · 1.12</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Run</div><div class="cgate">signals ↻ Discovery</div></div>
     </div>
     <div class="chain-legend">
-      <span><span class="sw"></span>shipped in the bundle (1.9.1)</span>
+      <span><span class="sw"></span>shipped in the bundle (1.11)</span>
       <span><span class="sw planned"></span>planned — release noted</span>
     </div>
     <div class="train">
       <div class="rel done"><b>1.9.1 · truth pass</b>placeholder false-green killed · Q1b re-graded</div>
       <div class="rel done"><b>1.10 · truthful enforcement</b>5-state model · control catalog · Q1b gate · evidence semantics</div>
-      <div class="rel"><b>1.11 · bank profile</b>policy compiler · change envelope · PA1/PA2 · A-gates</div>
+      <div class="rel done"><b>1.11 · bank profile</b>policy compiler · change envelope · PA1/PA2 · A-gates</div>
       <div class="rel"><b>1.12 · production controls</b>R-gates · 2nd-line hold · external anchor</div>
       <div class="rel"><b>2.0 · pilot-proven</b>supervised pilot · independent review — adopter-side evidence</div>
     </div>
@@ -286,7 +286,7 @@
 
   <footer>
     <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check. Roadmap chips map to docs/loom-2.0-plan.md.</p>
-    <p style="margin-top:8px">MiddleLeap · The Loom 1.10.0 — a way for a regulated entity to build with AI.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom 1.11.0 — a way for a regulated entity to build with AI.</p>
   </footer>
 </div>
 
@@ -321,7 +321,7 @@ const STAGES = [
   {id:'spec',     ph:'Delivery',  lab:'Spec-first', gate:'spec-tripwire', desc:'Write the API contract + acceptance tests and show them RED before implementing. The contract changes only via its own PR.'},
   {id:'implement',ph:'Delivery',  lab:'Implement', gate:'pii-guard', desc:'Implement to green against interfaces — synthetic data only; audit + lineage emitted in the same change.'},
   {id:'review',   ph:'Delivery',  lab:'Review', gate:'reviewer agents', desc:'Local reviewer agents must pass on the diff: hard-stop (PASS) and contract-conformance (CONFORMANT).'},
-  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'6 gates', desc:'Every gate runs: control-plane (HG-0002), model-provenance (HG-0006), evidence-seal (HG-0003), data-lifecycle, the waist gate, and the Q-gates.'},
+  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'15 gates', desc:'Every gate runs: control-plane, control-catalog, identity-registry, change-envelope, product-approval (PA1/PA2), architecture-assurance (A1–A5), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
   {id:'merge',    ph:'Delivery',  lab:'Merge', gate:'HG-0001 · human', desc:'The agent opens the PR and STOPS. A human holds four-eyes — the agent identity is not in the approver group and never merges its own work.'},
   {id:'deploy',   ph:'Run',       lab:'Deploy', gate:'smoke', desc:'Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.'},
   {id:'evidence', ph:'Run',       lab:'Evidence', gate:'HG-0003 · evidence-seal', desc:'Seal the release evidence bundle — a hash chain the gate re-reads and verifies, so altering any artifact breaks a seal.'},
@@ -334,6 +334,7 @@ const SCENARIOS = {
   pii:       {name:'Real PII in a fixture', block:'implement', why:'pii-guard blocks a PII-shaped literal at write time. Synthetic data only, everywhere — the hook stops it before it lands.'},
   unpinned:  {name:'An unpinned model', block:'gates', why:'model-provenance (HG-0006): a model role uses a floating tag, or ships with no passing eval against its pin. The gate fails the build.'},
   placeholder:{name:'An unadopted CODEOWNERS template', block:'gates', why:'control-plane (HG-0002): the control plane is “owned” only by the placeholder @your-org team. A copied-but-never-adopted template is not a control — the gate fails until a real team owns the guardrails. (New in 1.9.1.)'},
+  agentapproval:{name:'An agent signs the PA1 approval', block:'gates', why:'product-approval (PA1): the risk-second-line approval resolves to an AGENT identity in the registry. Agents prepare evidence and findings — they never approve; a builder holding a second-line role is rejected the same way. (New in 1.11.)'},
   tampered:  {name:'A tampered evidence bundle', block:'evidence', why:'evidence-seal (HG-0003): an artifact’s content sha256 no longer matches the manifest. The seal breaks — the bundle is not intact.'},
 };
 const PHASES = ['Discovery','Hand-off','Delivery','Run','Loop'];
@@ -448,6 +449,11 @@ const GATES=[
  {id:'Q4',n:'secrets-scan',d:'Secret-shaped content in the current tree OR the reachable git history fails — a deleted secret is still leaked; rotate it. New in 1.10.'},
  {id:'Q4',n:'supply-chain-check',d:'The release must carry a real SBOM, an in-policy dependency audit, and builder-bound provenance — validated semantically. New in 1.10.'},
  {id:'catalog',n:'control-catalog-check',d:'The control state of record cannot overstate itself: every state needs its receipts, and no cited mechanism or test may be missing. New in 1.10.'},
+ {id:'§5',n:'policy-compiler',d:'A change’s risk classification COMPILES its path: gates, control functions, evidence. Monotonic by construction — higher tiers only add. New in 1.11.'},
+ {id:'§4',n:'change-envelope-check',d:'The governed change object: classified by a human with authority, plan-reconciled at execution (a hand-edited plan fails), advancing states only with receipts. New in 1.11.'},
+ {id:'PA',n:'product-approval-check',d:'PA1 before Develop, PA2 before launch: compiled passport sections + approvals that RESOLVE to human identities holding the role. A name in a text field does not count. New in 1.11.'},
+ {id:'A1–A5',n:'architecture-assurance-check',d:'Data/privacy, threat model (incl. the AI harness itself) with threat→control→test traceability, resilience, model risk, financial integrity. Material open findings block. New in 1.11.'},
+ {id:'§8',n:'identity-registry-check',d:'Approvals resolve against the registry: agents approve nothing; second-line membership is disjoint from builders. New in 1.11.'},
 ];
 $('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
 

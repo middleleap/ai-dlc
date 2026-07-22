@@ -21,5 +21,13 @@
 /discovery/render/                      @your-org/platform-admins
 /scripts/                               @your-org/platform-admins
 /.github/workflows/                     @your-org/platform-admins
+/core/                                  @your-org/platform-admins
+/profiles/                              @your-org/platform-admins
 /docs/governance/                       @your-org/platform-admins
+
+# Classification, approvals and the identity registry are owned by the SECOND LINE, not the
+# builders — this is what makes "the agent cannot lower the risk tier" a mechanism.
+/docs/governance/changes/               @your-org/risk-second-line
+/docs/governance/identities.json        @your-org/risk-second-line
+
 /CODEOWNERS                             @your-org/platform-admins

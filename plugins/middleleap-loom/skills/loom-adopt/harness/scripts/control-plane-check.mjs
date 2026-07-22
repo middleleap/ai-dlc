@@ -36,11 +36,19 @@ export const CONTROL_TARGETS = [
   'scripts/sast-check.mjs',
   'scripts/supply-chain-check.mjs',
   'scripts/control-catalog-check.mjs',
+  'scripts/identity-registry-check.mjs',
+  'scripts/change-envelope-check.mjs',
+  'scripts/product-approval-check.mjs',
+  'scripts/architecture-assurance-check.mjs',
+  'core/policy-compiler.mjs',
+  'profiles/regulated-bank.json',
   '.github/workflows/ci.yml',
   'docs/governance/data-risk-register/controls.json',
   'docs/governance/control-catalog.json',
   'docs/governance/model-manifest.json',
   'docs/governance/evidence/manifest.json',
+  'docs/governance/identities.json',
+  'docs/governance/changes/any/change-envelope.json', // ownership probe: the whole changes/ tree must be owned (by the second line, not builders)
   'CODEOWNERS',
 ];
 

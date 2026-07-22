@@ -1,0 +1,74 @@
+{
+  "change_id": "CHG-2026-0042",
+  "risk_tier": "high",
+  "profiles": [
+    "lending",
+    "regulated-bank",
+    "uae-bank"
+  ],
+  "required_gates": [
+    "A",
+    "D",
+    "PA1",
+    "PA2",
+    "Q"
+  ],
+  "required_approver_roles": [
+    "accountable-executive",
+    "compliance",
+    "credit-risk",
+    "data-protection",
+    "engineering",
+    "finance-treasury",
+    "information-security",
+    "legal",
+    "model-validator",
+    "operations",
+    "product-owner",
+    "risk-second-line"
+  ],
+  "required_evidence": [
+    "control-plane",
+    "dependency-audit",
+    "lineage",
+    "model-provenance",
+    "provenance",
+    "reviews",
+    "sast",
+    "sbom",
+    "tests"
+  ],
+  "pa1_sections": [
+    "cbuae-notification-assessment",
+    "classification",
+    "credit-risk-appetite",
+    "data-and-models",
+    "inherent-risks",
+    "ownership",
+    "regulatory-obligations",
+    "target-market",
+    "third-parties"
+  ],
+  "pa2_sections": [
+    "affordability-assessment",
+    "arabic-and-accessibility",
+    "capital-and-provisioning-treatment",
+    "collections-and-forbearance",
+    "complaints-remediation",
+    "consumer-protection-conformance",
+    "disclosures",
+    "emiratisation-of-disclosures",
+    "finance-prudential",
+    "financial-crime",
+    "key-facts-statement",
+    "model-validation",
+    "operational-readiness",
+    "pdpl-and-residency",
+    "post-launch-monitoring",
+    "pricing-conduct",
+    "responsible-lending-disclosures",
+    "security-privacy-residency",
+    "vulnerable-customer-treatment"
+  ],
+  "plan_hash": "63a90c1ec64d9a886a7cccbc13e669257a0ff6aa9757d57704c8aec3df91fd32"
+}

@@ -1,0 +1,21 @@
+{
+  "profile": "uae-bank",
+  "kind": "jurisdiction",
+  "_comment": "UAE jurisdiction profile — CBUAE product governance (Consumer Protection Standards: comprehensive product approval, inherent-risk assessment, documented control-function sign-off; Operational Risk Art. 11: new/materially changed products and systems). Pure data, composed over regulated-bank; authored with the open-finance-uae skill as reference, never a runtime dependency.",
+  "requirements": {
+    "medium": {
+      "gates": [],
+      "approver_roles": [],
+      "evidence": [],
+      "pa1_sections": ["cbuae-notification-assessment"],
+      "pa2_sections": ["key-facts-statement", "arabic-and-accessibility", "vulnerable-customer-treatment"]
+    },
+    "high": {
+      "pa2_sections": ["consumer-protection-conformance", "emiratisation-of-disclosures"]
+    }
+  },
+  "conditional": [
+    { "when": "islamic", "adds": { "approver_roles": ["shariah-committee"], "pa1_sections": ["shariah-applicability"], "pa2_sections": ["shariah-approval"] } },
+    { "when": "personal_data", "adds": { "pa2_sections": ["pdpl-and-residency"] } }
+  ]
+}

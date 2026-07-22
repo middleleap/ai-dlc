@@ -1,0 +1,19 @@
+{
+  "profile": "lending",
+  "kind": "product",
+  "_comment": "Lending / financing product-type profile. A lending product compiles affordability, credit-risk and collections requirements a payments product never sees.",
+  "requirements": {
+    "medium": {
+      "approver_roles": ["credit-risk"],
+      "pa1_sections": ["credit-risk-appetite"],
+      "pa2_sections": ["affordability-assessment", "responsible-lending-disclosures", "collections-and-forbearance"]
+    },
+    "high": {
+      "approver_roles": ["finance-treasury"],
+      "pa2_sections": ["capital-and-provisioning-treatment"]
+    }
+  },
+  "conditional": [
+    { "when": "islamic", "adds": { "pa2_sections": ["profit-rate-structure"] } }
+  ]
+}

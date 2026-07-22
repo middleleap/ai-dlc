@@ -74,3 +74,42 @@ the second-line hold (1.12); identity resolution against a registry and
 builder/validator group separation (1.11, needs the identity-registry seam).
 Scorecard after 1.10: **~17 mechanically validated · ~17 defined · ~15
 absent · 0 platform enforced · 0 organisationally enforced (as shipped).**
+
+## 1.11 addendum — the bank profile preview, delivered
+
+The product-governance plane (the review's largest named gap) now ships as
+mechanically-validated machinery:
+
+- **Policy compiler** (`core/policy-compiler.mjs`): classification compiles
+  the path — gates, control functions, evidence, passport sections — from
+  pure-data profiles (`regulated-bank` + `uae-bank` jurisdiction + `lending`
+  / `payments` product types). Monotonic by construction (cumulative union),
+  proven by a property test across profile combinations, tiers, and flags.
+  A product change cannot classify itself low; an unclassified or
+  unprofiled change is blocked.
+- **Change envelope** (`change-envelope-check.mjs`): the governed change
+  object. Stored plans are RECONCILED against a fresh compile (hand-edited
+  or stale plans fail); the classifier must be a human with classification
+  authority (agents cannot set or lower a tier — envelope files are
+  CODEOWNERS-owned by the second line); state transitions require receipts;
+  exemptions need owner, rationale, compensating control, unexpired expiry,
+  and second-line approval; production states cannot be claimed before the
+  1.12 machinery exists.
+- **PA1/PA2** (`product-approval-check.mjs`): a high-risk product cannot
+  enter Develop without PA1 or claim launch without PA2 — sections compiled
+  per profile, approvals resolving to HUMAN registry identities holding the
+  role; builders cannot issue second-line approvals; `by: "Risk"` fails.
+- **A1–A5** (`architecture-assurance-check.mjs`): threat → control → test
+  traceability (the threat model covers the AI harness itself); material
+  open findings block.
+- **Identity registry seam** (`identities.template.json` +
+  `identity-registry-check.mjs`): agents hold no approver roles;
+  second-line ∩ builders = ∅. The attestation-issuers registry ships as the
+  §6 contract; signature *verification* lands in 1.12.
+
+CI dry-run: 8 negative bypass tests (adds: hand-edited control plan,
+PA1 revoked mid-develop, agent-signed approval). Worked example:
+`change-example/` (CHG-2026-0042, high-tier UAE retail lending,
+in-delivery). Scorecard after 1.11: **~22 mechanically validated · ~17
+defined · ~15 absent · 0 platform / organisationally enforced (as
+shipped).**

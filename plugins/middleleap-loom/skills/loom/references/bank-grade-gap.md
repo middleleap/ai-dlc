@@ -45,11 +45,11 @@ decisions; bank-grade is the work of making them non-bypassable and proving it.
 
 ## Scorecard
 
-Across ~49 assessed capabilities, the bundled harness today grades roughly:
+Across ~54 assessed capabilities, the bundled harness today grades roughly:
 
 | Mechanically validated | Defined | Absent |
 |---|---|---|
-| ~17 | ~17 | ~15 |
+| ~22 | ~17 | ~15 |
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
 activate branch protection or stand up an independent function — those states are the
@@ -62,7 +62,10 @@ data-risk register is graded
 against its shipped state (a one-record demo), not the full taxonomy an adopter mounts. Read
 the clusters below for the reasoning behind each grade. The headline it encodes: **build-time
 frame strong, run-the-bank sparse** — though the mechanically-validated column is growing as
-Loom 2.0 releases land (1.10: Q1b, secrets-history, SAST/SBOM output validation, the catalog).
+Loom 2.0 releases land (1.10: Q1b, secrets-history, SAST/SBOM output validation, the catalog;
+1.11: the policy compiler, the change envelope, PA1/PA2 product approval, architecture
+assurance A1–A5, and the identity registry — the product-governance plane the review named
+as the largest gap, now mechanically validated with negative tests).
 
 ## Six clusters, graded
 

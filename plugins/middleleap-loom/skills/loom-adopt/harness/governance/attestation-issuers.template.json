@@ -1,0 +1,17 @@
+{
+  "_comment": "ADOPT: the allowed-issuers registry — the attestation contract's key-distribution half (Loom 2.0 §6). Signature VERIFICATION lands with the production-authorization machinery (1.12); this file is the contract it will verify against: only attestations from an issuer listed here, verified by the named mechanism, count as authenticated. Own this file in CODEOWNERS by a non-builder group. A gate that merely checks a signature field is non-empty is a field check, not a control — do not claim platform-enforced approvals until verification against this registry is wired and negative-tested.",
+  "issuers": [
+    {
+      "id": "bank-ci",
+      "mechanism": "ci-oidc",
+      "description": "The protected CI runner's OIDC identity — gate evidence envelopes",
+      "verify": { "kind": "github-attestation", "repository_owner": "your-org" }
+    },
+    {
+      "id": "bank-approvals",
+      "mechanism": "sigstore",
+      "description": "Human approval attestations (control functions) via sigstore/cosign",
+      "verify": { "kind": "sigstore-identity", "issuer": "https://your-idp.example/oidc", "subject_pattern": "*@your-org.example" }
+    }
+  ]
+}
