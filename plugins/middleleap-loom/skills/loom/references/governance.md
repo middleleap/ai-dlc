@@ -29,12 +29,14 @@ repository is the worked example); the ids below are the Loom's stable names for
 | **HG-0010** | No mandatory cease-use capability | Immediate cease-use kill-switch + a named accountable officer for autonomous systems |
 | **HG-0011** | Agent LLM traffic and execution not residency-controlled | Onshore model gateway + pre-egress DLP + attested sandbox execution, where residency rules apply |
 | **HG-0012** | The agent can reach "green" by retrieval, not derivation (mine `.git`, look up the fix) | Controlled build/eval runtime — sealed history + egress allow-list + an independent derivation-vs-retrieval audit |
+| **HG-0013** | Autonomy is uncalibrated — one lighting policy governs a lint fix and an auth rewrite alike | **Graduated autonomy with a fixed dark boundary**: the loop runs fully autonomous up to *proposal*, never through *disposal* — the PR is the light switch. Per-change-class relaxation happens only through a second-line-owned, expiring **routine envelope** (`routine-change-check`), never ad hoc; the envelope moves human approval from per-change to per-envelope, it never removes it. Enforcement of record: a merge-queue/ruleset that auto-merges only with the routine gate among passing required checks |
 
 ## How to adopt the catalog
 
-1. **Start with the four that are pure repo mechanics** — HG-0001, HG-0002, HG-0007, HG-0009.
-   They are wire-in-the-repo decisions (branch protection, CODEOWNERS, the waist gate, the
-   Develop skill) and they are the ones the Loom's bundled machinery enforces directly.
+1. **Start with the five that are pure repo mechanics** — HG-0001, HG-0002, HG-0007, HG-0009,
+   HG-0013. They are wire-in-the-repo decisions (branch protection, CODEOWNERS, the waist gate,
+   the Develop skill, the routine envelope) and they are the ones the Loom's bundled machinery
+   enforces directly.
 2. **Take the rest to your change/risk governance** as proposals — HG-0003–HG-0006,
    HG-0008, HG-0010–HG-0012 are organisational decisions (identity, promotion, model risk,
    residency) that need owners outside engineering.

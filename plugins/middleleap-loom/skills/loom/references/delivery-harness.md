@@ -101,3 +101,5 @@ catalog (`governance.md`), HG-0001 and HG-0002.
 - "We'll add audit/lineage after the demo"
 - The agent merging anything, including "just this once"
 - A feature item building without a `discovery:` link and without an explicit, reasoned exemption
+- Merge throughput per reviewer climbing while review depth stays invisible — comprehension
+  debt accruing behind a green board (the gate passed; did anyone read it?)

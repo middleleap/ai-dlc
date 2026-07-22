@@ -60,6 +60,9 @@ Full canon for each half:
 - `references/operations.md` — the third arc: how **Run/Operations** feeds signals back into
   Discovery to close the loop, the routing triage, and the `operations-signal` seam that keeps
   the feedback wire triaged and traceable.
+- `references/enterprise-rings.md` — the fractal framing: the Loom as the micro ring (one
+  change) plus the shipped half of the meso ring (one product), and an honest naming of the
+  macro ring (the enterprise operating model) as adopter- and advisory-side, not bundled.
 - `assets/loom-stream.html` — a standalone, brand-styled visualization of the whole stream: the
   double diamond closed into a loop, the security / governance / business checkpoints, where
   Chainguard & Snyk attach, and the bank-grade maturity traffic-light. Open it in a browser.
@@ -109,6 +112,13 @@ A method worth adopting names its own risks:
 - **The brain must be curated** — governed, versioned, quality-checked, not merely accumulated.
 - **AI model risk is real.** The agents need ongoing validation, monitoring, and independent
   challenge — that is what the HG catalog's model-risk decisions exist for.
+- **Comprehension debt is the method's standing risk.** The review gate is the one resource
+  that does not scale; at sustained throughput, four-eyes can decay into ceremony while every
+  gate stays green — the gap between the code that exists and the code a human still
+  understands widening quietly. The decision log (2.0-rc) makes the agent's *reasoning*
+  replayable, which pays down half of it; the other half — whether the human at the gate is
+  still reading — the method names here (delivery-harness red flags, HG-0013) but does not yet
+  measure. Naming a debt is not paying it.
 
 The method's own maturity self-grade against a regulated-bank bar — five states: absent,
 defined, mechanically validated, platform enforced, organisationally enforced — lives in
