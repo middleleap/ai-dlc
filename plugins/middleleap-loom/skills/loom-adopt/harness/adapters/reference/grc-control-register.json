@@ -1,0 +1,16 @@
+{
+  "_comment": "REFERENCE MAPPING — a GRC control register (ServiceNow / Archer / OpenPages) → the operational-readiness control (OPS-READINESS). The bank's GRC system is the system of record for many controls; this adapter reconciles the Loom's readiness declarations against it, so the two do not drift.",
+  "adapter_id": "grc-control-register",
+  "system": "servicenow-grc",
+  "satisfies_control": "OPS-READINESS",
+  "capability": "The enterprise control register's live status for the service's operational-resilience controls",
+  "evidence": {
+    "kind": "control-register",
+    "envelope_fields": ["service_id", "controls", "control_status", "last_attested", "attested_by", "fetched_at"]
+  },
+  "activation_evidence": {
+    "_comment": "ADOPT: fill from a real GRC export reconciled against docs/governance/services/<id>.json.",
+    "fetched_at": "ADOPT: timestamp of your GRC export",
+    "reconciled": "ADOPT: 'true' once the register status matches the readiness manifest"
+  }
+}

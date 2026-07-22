@@ -54,6 +54,11 @@ jobs:
           cp "$P/loom-adopt/harness/hooks/"*.sh "$A/.claude/hooks/"
           cp "$P/loom-adopt/harness/hooks/settings.hooks.json" "$A/.claude/settings.json"
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
+          # 2.0-rc runtime + adapter artifacts
+          mkdir -p "$A/docs/governance/assurance-cycles" "$A/docs/governance/adapters"
+          cp "$P/loom-adopt/harness/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
+          cp "$P/loom-adopt/harness/assurance-example/decision-log.json" "$A/docs/governance/decision-log.json"
+          cp "$P/loom-adopt/harness/adapters/reference/"*.json "$A/docs/governance/adapters/"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
           # Negative test: the unadopted template (placeholder @your-org team) must FAIL the
@@ -84,6 +89,9 @@ jobs:
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
+          node scripts/assurance-cycle-check.mjs
+          node scripts/decision-log-check.mjs
+          node scripts/adapter-check.mjs
           # The gate runner: a README-only diff must run the always-on core and RECORD the
           # rest as skipped — risk-proportionate execution with no silent skips.
           node core/gate-runner.mjs --lane pr --base main --out /tmp/gate-run.json
@@ -155,6 +163,24 @@ jobs:
             echo "::error::an EMPTY operations log passed while a change claims production — silence after launch must fail"; exit 1
           fi
           git checkout -- docs/governance/changes/CHG-2026-0042/change-envelope.json docs/governance/operations-signal.json
+          # 10 · Tampered assurance cycle: editing a step after signing must fail verification.
+          node -e 'const fs=require("fs");const p="docs/governance/assurance-cycles/AC-2026-W29.json";const s=JSON.parse(fs.readFileSync(p));s.steps.check.status="fail";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/assurance-cycle-check.mjs; then
+            echo "::error::assurance-cycle gate passed a record edited after signing"; exit 1
+          fi
+          git checkout -- docs/governance/assurance-cycles/AC-2026-W29.json
+          # 11 · Rewritten decision: editing a logged decision must break the hash chain.
+          node -e 'const fs=require("fs");const p="docs/governance/decision-log.json";const s=JSON.parse(fs.readFileSync(p));s.entries[1].decision="rewritten after the fact";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/decision-log-check.mjs; then
+            echo "::error::decision-log gate passed an entry edited after logging"; exit 1
+          fi
+          git checkout -- docs/governance/decision-log.json
+          # 12 · Adapter to a non-existent control: a mapping to nothing must fail.
+          node -e 'const fs=require("fs");const p="docs/governance/adapters/github-branch-protection.json";const s=JSON.parse(fs.readFileSync(p));s.satisfies_control="NO-SUCH-CONTROL";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/adapter-check.mjs; then
+            echo "::error::adapter gate passed a mapping to a control the catalog does not have"; exit 1
+          fi
+          git checkout -- docs/governance/adapters/github-branch-protection.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

@@ -21,14 +21,13 @@ export function loadIssuers(cwd = process.cwd()) {
 }
 
 /**
- * Verify an evidence manifest's anchor attestation against the issuers registry.
- * Findings ([] ⇒ the anchor is authentically signed by a registered issuer).
+ * Verify one attestation ({issuer, signature}) over an arbitrary payload STRING against the
+ * issuers registry. This is the general primitive: a record counts as authentically signed
+ * only when its issuer is registered and the signature cryptographically checks out.
+ * `what` labels the payload for the message. Findings ([] ⇒ authentically signed).
  */
-export function verifyAnchorAttestation(manifest, issuers) {
-  const findings = [];
-  const att = manifest?.attestation;
-  if (!att) return ['evidence manifest carries no attestation — the anchor is unsigned'];
-  if (!manifest?.anchor) return ['evidence manifest has no anchor to attest'];
+export function verifySignatureOver(payload, att, issuers, what = 'payload') {
+  if (!att) return [`no attestation — the ${what} is unsigned`];
   const issuer = (issuers?.issuers || []).find((i) => i.id === att.issuer);
   if (!issuer) return [`attestation issuer ${JSON.stringify(att.issuer)} is not in the allowed-issuers registry — an unregistered signer does not count`];
   if (issuer.mechanism === 'ed25519') {
@@ -36,13 +35,23 @@ export function verifyAnchorAttestation(manifest, issuers) {
     if (!pem) return [`issuer ${issuer.id}: mechanism ed25519 but no public_key in the registry`];
     let ok = false;
     try {
-      ok = cryptoVerify(null, Buffer.from(manifest.anchor, 'utf8'), createPublicKey(pem), Buffer.from(att.signature || '', 'base64'));
+      ok = cryptoVerify(null, Buffer.from(payload, 'utf8'), createPublicKey(pem), Buffer.from(att.signature || '', 'base64'));
     } catch (e) {
       return [`issuer ${issuer.id}: signature verification errored (${e.message})`];
     }
-    if (!ok) findings.push(`attestation signature does NOT verify over the anchor for issuer ${issuer.id} — the seal is not authentically anchored`);
-  } else {
-    findings.push(`issuer ${issuer.id}: mechanism ${JSON.stringify(issuer.mechanism)} is verified by the platform (CI), not by this module — wire it per the registry and record activation evidence; until then this attestation is UNVERIFIED-HERE`);
+    if (!ok) return [`attestation signature does NOT verify over the ${what} for issuer ${issuer.id}`];
+    return [];
   }
-  return findings;
+  return [`issuer ${issuer.id}: mechanism ${JSON.stringify(issuer.mechanism)} is verified by the platform (CI), not by this module — wire it per the registry and record activation evidence; until then this attestation is UNVERIFIED-HERE`];
+}
+
+/**
+ * Verify an evidence manifest's anchor attestation against the issuers registry.
+ * Findings ([] ⇒ the anchor is authentically signed by a registered issuer).
+ */
+export function verifyAnchorAttestation(manifest, issuers) {
+  if (!manifest?.attestation) return ['evidence manifest carries no attestation — the anchor is unsigned'];
+  if (!manifest?.anchor) return ['evidence manifest has no anchor to attest'];
+  return verifySignatureOver(manifest.anchor, manifest.attestation, issuers, 'anchor')
+    .map((f) => f.replace('does NOT verify over the anchor', 'does NOT verify over the anchor — the seal is not authentically anchored'));
 }

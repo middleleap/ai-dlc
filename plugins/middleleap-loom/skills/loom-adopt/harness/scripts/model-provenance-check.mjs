@@ -26,6 +26,9 @@ export const FLOATING = new Set(['', 'latest', 'main', 'head', 'stable', 'edge',
 // validation are required at medium AND high (low is optional). Tighten or loosen per your tiering.
 export const EVAL_REQUIRED_TIERS = new Set(['high', 'medium']);
 export const VALIDATION_REQUIRED_TIERS = new Set(['high', 'medium']);
+// ADOPT: which tiers must declare runtime governance (monitoring · suspension · fallback).
+// High only by default — a high-risk model that RUNS needs a live control loop (§10, 2.0-rc).
+export const RUNTIME_REQUIRED_TIERS = new Set(['high']);
 const TIERS = new Set(['high', 'medium', 'low']);
 
 const isPinned = (v) => typeof v === 'string' && !FLOATING.has(v.trim().toLowerCase());
@@ -81,6 +84,20 @@ export function evaluate(manifest, { baseDir = null } = {}) {
     }
     if (VALIDATION_REQUIRED_TIERS.has(m.risk_tier) && !(typeof m.validated_by === 'string' && m.validated_by.trim())) {
       findings.push(`${role}: ${m.risk_tier}-tier model has no independent validation (validated_by) — HG-0006`);
+    }
+    // 2.0-rc — a model is not just built and validated once; it RUNS. At high tier the
+    // manifest must declare the runtime governance: what is monitored, when it is suspended,
+    // and what happens when the model or its provider is unavailable. Declaring the plan is
+    // the repo-side half; executing the monitoring is the adopter's model-risk function.
+    if (RUNTIME_REQUIRED_TIERS.has(m.risk_tier)) {
+      const rt = m.runtime;
+      if (!rt || typeof rt !== 'object') {
+        findings.push(`${role}: ${m.risk_tier}-tier model has no runtime block — a running model needs monitoring, suspension thresholds, and a fallback (§10)`);
+      } else {
+        if (!(Array.isArray(rt.monitoring) && rt.monitoring.length > 0)) findings.push(`${role}: runtime.monitoring must list the metrics watched in production`);
+        if (!(typeof rt.suspension === 'string' && rt.suspension.trim())) findings.push(`${role}: runtime.suspension must state the threshold that suspends the model`);
+        if (!(typeof rt.fallback === 'string' && rt.fallback.trim())) findings.push(`${role}: runtime.fallback must state what happens on model/provider outage`);
+      }
     }
   }
   return findings;

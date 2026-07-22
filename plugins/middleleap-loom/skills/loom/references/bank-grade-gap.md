@@ -45,11 +45,11 @@ decisions; bank-grade is the work of making them non-bypassable and proving it.
 
 ## Scorecard
 
-Across ~58 assessed capabilities, the bundled harness today grades roughly:
+Across ~60 assessed capabilities, the bundled harness today grades roughly:
 
 | Mechanically validated | Defined | Absent |
 |---|---|---|
-| ~27 | ~17 | ~14 |
+| ~30 | ~17 | ~12 |
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
 activate branch protection or stand up an independent function — those states are the
@@ -68,7 +68,10 @@ assurance A1–A5, and the identity registry — the product-governance plane th
 as the largest gap; 1.12: R1–R6 operational readiness with freshness windows, the compound
 production authorization, the second-line release hold (fail closed), real ed25519 anchor
 attestation, the silence-after-launch rule, and the risk-scoped gate runner with lanes —
-every skip recorded, never silent).
+every skip recorded, never silent; 2.0-rc: the signed assurance-cycle record and the
+replayable decision log — the last two bundle-side rows that were honestly `absent` in 1.12 —
+plus enterprise adapters, high-tier model runtime governance, and the supervised-pilot
+playbook with its adversarial checklist mapped to the gates that catch each attack).
 
 ## Six clusters, graded
 
@@ -110,8 +113,8 @@ hash-chained, tamper-evident, completeness-checked, commit-bound and SEMANTICALL
 | Model + prompt version pinning in evidence bundle | **Mechanically validated** | — (the model-provenance gate) |
 | Agent eval harness · challenger models | Defined | The gate requires a fresh passing eval before release; the eval *rig* + challengers are the adopter's to build |
 | Independent model validation function | Defined | `validated_by` + the `model-risk-reviewer` challenge agent ship; the org-separate MRM *function* is the adopter's |
-| Production drift monitoring | Defined | `change-watch` catches model/eval drift on a schedule/event; continuous *runtime* monitoring is a run-the-bank control |
-| Replayable decision log | Absent | A reconstructable log of what the agent did and why |
+| Production drift monitoring | Defined | The model manifest now REQUIRES runtime monitoring/suspension/fallback declarations at high tier (`model-provenance-check`, 2.0-rc); executing the live monitoring is the adopter's model-risk function |
+| Replayable decision log | **Mechanically validated** | — (`decision-log-check.mjs`, 2.0-rc: an append-only hash chain of the agent's decisions; CAPTURE is the adopter's harness wiring) |
 | Fairness/bias testing · explainability · AI incident runbook | Absent | Where applicable to the use case |
 
 The agent *is a model*. This cluster was the gap most specific to an AI-driven harness and the
@@ -129,7 +132,7 @@ of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin ag
 | Capability | State | What closes it |
 |---|---|---|
 | 1st-line reviewer agents (hard-stop · conformance · data-gov · boundary) | **Mechanically validated** | — |
-| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Defined | Steps ① Watch (`change-watch`) and ② Assess (`risk-reviewer`) now ship as plugin agents; ③–⑥ remain described-not-shipped |
+| Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Defined | Steps ① Watch and ② Assess ship as plugin agents; the **signed cycle record** with an unresolved-findings register now ships as `assurance-cycle-check.mjs` (2.0-rc), so a cycle leaves examinable evidence — but agents ③–⑥ remain described-not-shipped |
 | Independent 2nd-line challenge function | Absent | The release-hold MECHANISM ships (fail closed, second-line-owned, 1.12); the organisationally-separate function operating it is the adopter's |
 | 3rd-line internal audit · read-only evidence portal | Absent | Auditor access to the sealed evidence trail |
 | WORM · time-stamped evidence retention | Defined | The evidence-seal gate makes the bundle tamper-evident and anchor-checkable; the immutable store + RFC-3161 timestamping authority + retention policy are the adopter's |

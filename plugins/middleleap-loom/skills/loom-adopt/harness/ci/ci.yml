@@ -40,8 +40,14 @@ jobs:
           node scripts/product-approval-check.mjs       # PA1 before Develop, PA2 before launch — approvals resolve
           node scripts/architecture-assurance-check.mjs # A1–A5 with threat→control→test traceability
           node scripts/operational-readiness-check.mjs  # R1–R6 with freshness windows — stale drills block
+          node scripts/adapter-check.mjs                 # enterprise adapters map to real catalog controls
 
-      # Risk-proportionate alternative to the explicit list above: the runner reads the
+      - name: Runtime assurance gates (scheduled lane — also safe to run per PR)
+        run: |
+          node scripts/assurance-cycle-check.mjs        # signed six-step cycle records, second-line confirmed
+          node scripts/decision-log-check.mjs           # replayable, append-only agent decision log
+
+      # Risk-proportionate alternative to the explicit lists above: the runner reads the
       # catalog's lanes + path scopes and executes only what this diff implicates —
       # recording every skip. Use it once your catalog lanes are tuned:
       #   node core/gate-runner.mjs --lane pr --base origin/main --out gate-run.json
