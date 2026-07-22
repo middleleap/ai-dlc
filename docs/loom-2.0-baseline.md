@@ -150,3 +150,48 @@ production-authorized with the hold still held, empty ops log after
 launch) + a runner-skips-are-recorded assertion. Scorecard after 1.12:
 **~27 mechanically validated · ~17 defined · ~14 absent · 0 platform /
 organisationally enforced (as shipped).**
+
+## 2.0-rc addendum — the release candidate, bundle-side complete
+
+The last bundle-side deliverables of the 2.0 plan, closing the two
+`absent` rows 1.12 deferred honestly and adding the remaining §10/§16
+machinery:
+
+- **Signed assurance-cycle record** (`assurance-cycle-check.mjs`):
+  each continuous-assurance run leaves a record covering all six
+  lifecycle steps, signed with real ed25519 over its canonical hash
+  and confirmed by a second-line human, with an unresolved-findings
+  register — an open, overdue finding blocks. `ASSURANCE-CYCLE` moves
+  absent → mechanically-validated.
+- **Replayable decision log** (`decision-log-check.mjs`): an
+  append-only hash chain of the agent's decisions — editing,
+  reordering or dropping an entry breaks the chain; entries must be
+  contiguous and reconstructable (actor = agent, decision, rationale,
+  inputs, tools, timestamp). Capture is adopter wiring; integrity
+  ships. `DECISION-LOG` moves absent → mechanically-validated.
+- **Enterprise adapters** (`adapter-check.mjs` + `adapters/`): a
+  neutral contract mapping external systems (branch protection, GRC)
+  to catalog controls via signed envelopes; a mapping to a
+  non-existent control fails; a reference mapping with only ADOPT
+  placeholders is reported "declared, not active".
+- **High-tier model runtime governance** (extends
+  `model-provenance-check`): a high-tier model must declare monitoring
+  metrics, a suspension threshold, and an outage fallback.
+- **Supervised-pilot playbook** (`runbooks/pilot-playbook.md`): staged
+  cohorts + an adversarial checklist mapping each attack to the gate
+  that catches it, marked CI-proven vs live.
+
+CI dry-run: **242 tests, 17 gates, 14 negative bypass tests** (adds:
+tampered assurance cycle, rewritten decision-log entry, adapter to a
+non-existent control). Scorecard after 2.0-rc: **~30 mechanically
+validated · ~17 defined · ~12 absent · 0 platform / organisationally
+enforced (as shipped).**
+
+## What 2.0-STABLE still needs (adopter-side, not in this repo)
+
+Deliberately gated on evidence from outside a plugin bundle: a
+supervised production pilot run end to end, an independent risk
+review, internal-audit re-performance of a release assessment, and the
+ofbo back-port of every gate change. Until those exist, the honest
+status is **release candidate, not certified** — and adoption of the
+Loom is not, and does not substitute for, regulatory approval.

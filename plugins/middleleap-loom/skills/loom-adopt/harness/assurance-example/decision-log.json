@@ -1,0 +1,65 @@
+{
+  "_comment": "ADOPTER EXAMPLE — the replayable decision log (Loom 2.0 §10), mounted as docs/governance/decision-log.json. An append-only hash chain: each seal = sha256(prev | canonical entry), so editing, reordering or dropping a decision breaks the chain (scripts/decision-log-check.mjs). Capture is the adopter harness wiring; this shows the shape and integrity.",
+  "change_id": "CHG-2026-0042",
+  "entries": [
+    {
+      "seq": 0,
+      "at": "2026-07-20T09:02:00Z",
+      "actor": "agent-loom-delivery",
+      "change_id": "CHG-2026-0042",
+      "decision": "Adopt the affordability contract from the discovery hand-off; write contract + acceptance tests RED first.",
+      "rationale": "Spec-first is binding (CLAUDE.md); the hand-off is gate-green.",
+      "inputs_ref": "discovery/runs/credit-limit-review/handoff.md",
+      "tool_calls": [
+        {
+          "tool": "read",
+          "target": "specs/affordability.yaml"
+        },
+        {
+          "tool": "write",
+          "target": "test/affordability.contract.test.ts"
+        }
+      ],
+      "prev": "GENESIS",
+      "seal": "4258f2befeb114177c7534fc444f272afd4804772741a5debb543bd18f7eebac"
+    },
+    {
+      "seq": 1,
+      "at": "2026-07-20T10:15:00Z",
+      "actor": "agent-loom-delivery",
+      "change_id": "CHG-2026-0042",
+      "decision": "Implement affordability scoring against the interface, synthetic data only; emit lineage in the same change.",
+      "rationale": "No real PII (pii-guard); audit/lineage never retrofitted.",
+      "inputs_ref": "test/affordability.contract.test.ts",
+      "tool_calls": [
+        {
+          "tool": "write",
+          "target": "src/affordability.ts"
+        },
+        {
+          "tool": "run",
+          "target": "npm test"
+        }
+      ],
+      "prev": "4258f2befeb114177c7534fc444f272afd4804772741a5debb543bd18f7eebac",
+      "seal": "c85960712783475dceb1b02326e58de315ed659bebac6eee4e41deac4c7fada8"
+    },
+    {
+      "seq": 2,
+      "at": "2026-07-20T11:40:00Z",
+      "actor": "agent-loom-delivery",
+      "change_id": "CHG-2026-0042",
+      "decision": "Open PR, cite the story, stop for human four-eyes merge.",
+      "rationale": "The agent proposes; a human disposes (HG-0001). The loop never merges its own work.",
+      "inputs_ref": "src/affordability.ts",
+      "tool_calls": [
+        {
+          "tool": "pr",
+          "target": "feature/PRD-017-affordability"
+        }
+      ],
+      "prev": "c85960712783475dceb1b02326e58de315ed659bebac6eee4e41deac4c7fada8",
+      "seal": "7d341e6e4740c51d3c6b240b95e957408f4ef74d7652ecd221b6449a34f0aff2"
+    }
+  ]
+}

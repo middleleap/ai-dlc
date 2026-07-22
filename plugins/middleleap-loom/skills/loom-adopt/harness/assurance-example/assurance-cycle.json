@@ -1,0 +1,55 @@
+{
+  "cycle_id": "AC-2026-W29",
+  "ran_at": "2026-07-20T02:00:00Z",
+  "trigger": "schedule",
+  "scope": "CHG-2026-0042 + the standing control set",
+  "steps": {
+    "watch": {
+      "status": "pass",
+      "note": "No new CBUAE bulletins, CVEs, cert expiries or model-drift alerts this cycle."
+    },
+    "assess": {
+      "status": "pass",
+      "note": "One medium finding routed to the owner; no material change to the risk posture."
+    },
+    "check": {
+      "status": "pass",
+      "note": "Policy, contract, product and architecture conformance re-checked green."
+    },
+    "test": {
+      "status": "pass",
+      "note": "Scheduled control tests re-run; all gate negative tests still reject their bypass."
+    },
+    "evidence": {
+      "status": "pass",
+      "note": "This record is signed and anchored; the release evidence chain re-verified."
+    },
+    "confirm": {
+      "status": "pass",
+      "note": "Second line confirmed the cycle and the findings register."
+    }
+  },
+  "findings": [
+    {
+      "id": "AC-F-1",
+      "severity": "medium",
+      "owner": "mrm-aisha",
+      "due": "2026-08-15",
+      "status": "open",
+      "summary": "Affordability model override-rate trending up; schedule an out-of-cycle drift review before the next cycle."
+    },
+    {
+      "id": "AC-F-2",
+      "severity": "low",
+      "owner": "ops-dana",
+      "due": "2026-07-31",
+      "status": "resolved",
+      "summary": "Stale runbook link in the DR plan; corrected."
+    }
+  ],
+  "attestation": {
+    "issuer": "demo-anchor-signer",
+    "confirmed_by": "risk-lena",
+    "signature": "sAogd/mKUWeBi5Fw7YtIGKF/qEucR6Qwq9y8rV8ho227eQPTyHZolwFu7PFXgPqnLE47bUzVIk7iP19RX4N2AA=="
+  }
+}

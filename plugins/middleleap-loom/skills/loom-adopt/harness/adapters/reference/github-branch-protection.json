@@ -1,0 +1,16 @@
+{
+  "_comment": "REFERENCE MAPPING — GitHub branch protection → the four-eyes control (HG-0001). Copy to docs/governance/adapters/, point at your org/repo, and wire the fetch that fills activation_evidence. This is what turns HG-0001 from Defined toward Platform enforced: the platform setting is real, and the adapter brings its state into the evidence plane.",
+  "adapter_id": "github-branch-protection",
+  "system": "github",
+  "satisfies_control": "HG-0001",
+  "capability": "Required CODEOWNERS review + no direct pushes to main, enforced by the forge, not the agent",
+  "evidence": {
+    "kind": "branch-protection",
+    "envelope_fields": ["repository", "branch", "required_reviews", "require_code_owner_reviews", "enforce_admins", "allow_force_pushes", "fetched_at"]
+  },
+  "activation_evidence": {
+    "_comment": "ADOPT: fill from a real API read + a rejected-direct-push probe; sign the envelope with a registry issuer.",
+    "fetched_at": "ADOPT: timestamp of your branch-protection API read",
+    "direct_push_probe": "ADOPT: 'rejected' once you have tested that a direct push to main is refused"
+  }
+}

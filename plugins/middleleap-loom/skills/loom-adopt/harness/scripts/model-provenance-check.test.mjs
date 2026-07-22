@@ -22,6 +22,11 @@ const HIGH = {
     report: { ref: 'docs/governance/evidence/eval-report-delivery-loop.json', sha256: 'ab'.repeat(32) },
   },
   validated_by: 'model-risk (2nd line)',
+  runtime: {
+    monitoring: ['decision-vs-outcome drift', 'override rate'],
+    suspension: 'suspend to manual on override rate > 15% over 2 weeks',
+    fallback: 'manual underwriting queue on model/provider outage',
+  },
 };
 const manifest = (m) => ({ models: [{ ...HIGH, ...m }] });
 
@@ -101,6 +106,21 @@ test('with baseDir, a missing or altered report artifact is caught', async () =>
     const bad = evaluate(manifest({ eval: { ...HIGH.eval, report: { ref: 'report.json', sha256: 'cd'.repeat(32) } } }), { baseDir: dir });
     assert.ok(bad.some((x) => /does not match its declared sha256/.test(x)));
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a high-tier model must declare runtime governance — monitoring, suspension, fallback (§10, 2.0-rc)', () => {
+  assert.ok(evaluate(manifest({ runtime: undefined })).some((x) => /has no runtime block/.test(x)));
+  const partial = evaluate(manifest({ runtime: { monitoring: ['x'] } }));
+  assert.ok(partial.some((x) => /runtime.suspension must state/.test(x)));
+  assert.ok(partial.some((x) => /runtime.fallback must state/.test(x)));
+});
+
+test('a medium-tier model does not require a runtime block (tier-proportionate)', () => {
+  const med = { role: 'facilitator', model_id: 'x@1', prompt_version: 'p@1', risk_tier: 'medium',
+    eval: { suite: 'e', ran_at: '2026-07-20', dataset_version: 'd@1', runner_version: 'r@1', result: 'pass', threshold_met: true,
+      evaluated_model_id: 'x@1', evaluated_prompt_version: 'p@1', report: { ref: HIGH.eval.report.ref, sha256: HIGH.eval.report.sha256 } },
+    validated_by: 'mrm' };
+  assert.deepEqual(evaluate({ models: [med] }), []);
 });
 
 test('an empty inventory is a finding', () => {
