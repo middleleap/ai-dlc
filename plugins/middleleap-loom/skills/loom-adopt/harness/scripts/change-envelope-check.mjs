@@ -8,7 +8,10 @@
 //   the classifier is a HUMAN with classification authority (the agent cannot set or lower
 //   a risk tier; the envelope directory is CODEOWNERS-owned by a non-builder group) ·
 //   state transitions carry their receipts (PA1 before develop, A before delivery,
-//   PA2 before launch; production states are 1.12 machinery and cannot be claimed yet) ·
+//   PA2 before launch) · production authorization is COMPOUND (1.12): PA2 + R-gate-green
+//   readiness for every declared service + the second-line release hold RELEASED by a
+//   second-line human (missing hold = held, fail closed) + externally-anchored, issuer-
+//   verified evidence at high/critical tiers ·
 //   exemptions have an owner, rationale, compensating control, expiry, second-line approval.
 //
 // Run from the repo root: `node scripts/change-envelope-check.mjs`.
@@ -16,12 +19,14 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { compile, loadProfiles, planHash } from '../core/policy-compiler.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
+import { evaluate as evaluateReadiness, SERVICES_DIR } from './operational-readiness-check.mjs';
+import { loadIssuers, verifyAnchorAttestation } from '../core/attestations.mjs';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 export const STATES = ['classified', 'permission-to-develop', 'in-delivery', 'delivery-complete',
   'permission-to-launch', 'operationally-ready', 'production-authorized', 'in-production'];
-const NOT_YET_SHIPPED = new Set(['operationally-ready', 'production-authorized', 'in-production']);
 export const CLASSIFIER_ROLES = ['product-owner', 'risk-second-line'];
+export const ANCHOR_REQUIRED_TIERS = new Set(['high', 'critical']);
 
 const at = (state) => STATES.indexOf(state);
 
@@ -29,7 +34,7 @@ const at = (state) => STATES.indexOf(state);
  * Findings for one change. `files` gives the sibling artifacts already parsed:
  * { plan, passport, architecture (booleans/objects) }; `registry` resolves identities.
  */
-export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan } = {}) {
+export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence } = {}) {
   const findings = [];
   const id = envelope?.change_id || '(no id)';
   if (!STATES.includes(envelope?.current_state)) {
@@ -78,9 +83,44 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
     if (at(state) >= at('permission-to-launch') && gates.has('PA2') && passport?.pa2?.decision !== 'approved') {
       findings.push(`${id}: state ${state} requires PA2 approved — the product passport says ${JSON.stringify(passport?.pa2?.decision)}`);
     }
-  }
-  if (NOT_YET_SHIPPED.has(state)) {
-    findings.push(`${id}: state ${state} needs the operational-readiness and production-authorization machinery (Loom 2.0 release 1.12) — it cannot be claimed yet`);
+
+    // Operational readiness: every declared service must be R-gate green (1.12).
+    if (at(state) >= at('operationally-ready')) {
+      const services = envelope.service_ids;
+      if (!Array.isArray(services) || services.length === 0) {
+        findings.push(`${id}: state ${state} but the envelope declares no service_ids — readiness of nothing is not readiness`);
+      }
+      for (const s of readiness?.missing || []) {
+        findings.push(`${id}: state ${state} requires operational readiness for service ${s} — docs/governance/services/${s}.json is missing`);
+      }
+      for (const f of readiness?.findings || []) findings.push(`${id}: ${f}`);
+    }
+
+    // Production authorization is COMPOUND (1.12): PA2 + readiness (above) + the second-line
+    // hold released by a second-line human + externally-attested evidence for high tiers.
+    // "A human approved" is not production authorization.
+    if (at(state) >= at('production-authorized')) {
+      if (!hold) {
+        findings.push(`${id}: state ${state} with no release-hold.json — a missing hold means HELD (fail closed), and only the second line releases it`);
+      } else {
+        if (hold.status !== 'released') {
+          findings.push(`${id}: state ${state} but the second-line release hold is ${JSON.stringify(hold.status)} — builders and agents cannot release it`);
+        }
+        if (registry) {
+          const who = identityOf(registry, hold.by);
+          if (!who || who.kind === 'agent' || !(who.groups || []).includes('second-line')) {
+            findings.push(`${id}: release hold ${hold.status} by ${JSON.stringify(hold.by)} — the hold is operated only by a second-line HUMAN identity`);
+          }
+        }
+      }
+      if (ANCHOR_REQUIRED_TIERS.has(envelope.risk_tier)) {
+        if (!evidence?.anchor) {
+          findings.push(`${id}: ${envelope.risk_tier}-tier production authorization requires externally-anchored evidence — the evidence manifest has no anchor`);
+        } else {
+          for (const f of evidence.attestationFindings || []) findings.push(`${id}: ${f}`);
+        }
+      }
+    }
   }
 
   // Exemptions: owned, reasoned, compensated, expiring, second-line approved. Expired blocks.
@@ -122,7 +162,20 @@ export function run(cwd = process.cwd()) {
     findings.push(...pf.map((f) => `${envelope.change_id}: ${f}`));
     const { plan: freshPlan, findings: cf } = compile(envelope, profiles);
     findings.push(...cf.map((f) => `${envelope.change_id}: ${f}`));
-    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan }));
+    // 1.12 context: R-gate results per declared service, the second-line hold, the evidence anchor.
+    const readiness = { missing: [], findings: [] };
+    for (const s of envelope.service_ids || []) {
+      const sr = readJson(`${cwd}/${SERVICES_DIR}/${s}.json`);
+      if (!sr) readiness.missing.push(s);
+      else readiness.findings.push(...evaluateReadiness(sr));
+    }
+    const hold = readJson(`${base}/release-hold.json`);
+    const manifest = readJson(`${cwd}/docs/governance/evidence/manifest.json`);
+    const evidence = manifest && {
+      anchor: manifest.anchor,
+      attestationFindings: verifyAnchorAttestation(manifest, loadIssuers(cwd)),
+    };
+    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence }));
   }
   return { findings, count };
 }

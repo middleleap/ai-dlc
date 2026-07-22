@@ -223,9 +223,11 @@
 
   <!-- gate reference -->
   <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Fifteen gates, run every PR</h2></div>
-    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — wired so the agent identity can't bypass it,
-      and each has a negative test in CI showing an attempted bypass being rejected.</p>
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Sixteen gates — run by a risk-scoped runner</h2></div>
+    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — with a CI negative test showing an attempted
+      bypass being rejected. The gate runner reads the control catalog's lanes (pr · release · scheduled) and path scopes,
+      so a documentation fix does not take a lending model's route — and every skipped gate is recorded with its reason,
+      never silent.</p>
     <div class="grid" id="gategrid"></div>
   </section>
 
@@ -267,26 +269,26 @@
       <div class="chip"><div class="clab">Architecture</div><div class="cgate">A1–A5 · shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Delivery</div><div class="cgate">Q-gates · 11 shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">PA2</div><div class="cgate">launch? · shipped</div></div><span class="arr">→</span>
-      <div class="chip planned"><div class="clab">Readiness</div><div class="cgate">R1–R6 · 1.12</div></div><span class="arr">→</span>
-      <div class="chip planned"><div class="clab">Authorize</div><div class="cgate">2nd-line hold · 1.12</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Readiness</div><div class="cgate">R1–R6 · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Authorize</div><div class="cgate">compound · shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Run</div><div class="cgate">signals ↻ Discovery</div></div>
     </div>
     <div class="chain-legend">
-      <span><span class="sw"></span>shipped in the bundle (1.11)</span>
+      <span><span class="sw"></span>shipped in the bundle (1.12)</span>
       <span><span class="sw planned"></span>planned — release noted</span>
     </div>
     <div class="train">
       <div class="rel done"><b>1.9.1 · truth pass</b>placeholder false-green killed · Q1b re-graded</div>
       <div class="rel done"><b>1.10 · truthful enforcement</b>5-state model · control catalog · Q1b gate · evidence semantics</div>
       <div class="rel done"><b>1.11 · bank profile</b>policy compiler · change envelope · PA1/PA2 · A-gates</div>
-      <div class="rel"><b>1.12 · production controls</b>R-gates · 2nd-line hold · external anchor</div>
+      <div class="rel done"><b>1.12 · production controls</b>R-gates · 2nd-line hold · ed25519 anchor · gate runner</div>
       <div class="rel"><b>2.0 · pilot-proven</b>supervised pilot · independent review — adopter-side evidence</div>
     </div>
   </section>
 
   <footer>
     <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check. Roadmap chips map to docs/loom-2.0-plan.md.</p>
-    <p style="margin-top:8px">MiddleLeap · The Loom 1.11.0 — a way for a regulated entity to build with AI.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom 1.12.0 — a way for a regulated entity to build with AI.</p>
   </footer>
 </div>
 
@@ -335,6 +337,7 @@ const SCENARIOS = {
   unpinned:  {name:'An unpinned model', block:'gates', why:'model-provenance (HG-0006): a model role uses a floating tag, or ships with no passing eval against its pin. The gate fails the build.'},
   placeholder:{name:'An unadopted CODEOWNERS template', block:'gates', why:'control-plane (HG-0002): the control plane is “owned” only by the placeholder @your-org team. A copied-but-never-adopted template is not a control — the gate fails until a real team owns the guardrails. (New in 1.9.1.)'},
   agentapproval:{name:'An agent signs the PA1 approval', block:'gates', why:'product-approval (PA1): the risk-second-line approval resolves to an AGENT identity in the registry. Agents prepare evidence and findings — they never approve; a builder holding a second-line role is rejected the same way. (New in 1.11.)'},
+  stalekill:{name:'A stale kill-switch, straight to prod', block:'gates', why:'operational-readiness (R3) + production authorization: the kill-switch was last tested outside its 90-day window, and the second-line release hold is still HELD. An expired drill is history, not readiness — production is blocked. (New in 1.12.)'},
   tampered:  {name:'A tampered evidence bundle', block:'evidence', why:'evidence-seal (HG-0003): an artifact’s content sha256 no longer matches the manifest. The seal breaks — the bundle is not intact.'},
 };
 const PHASES = ['Discovery','Hand-off','Delivery','Run','Loop'];
@@ -454,6 +457,10 @@ const GATES=[
  {id:'PA',n:'product-approval-check',d:'PA1 before Develop, PA2 before launch: compiled passport sections + approvals that RESOLVE to human identities holding the role. A name in a text field does not count. New in 1.11.'},
  {id:'A1–A5',n:'architecture-assurance-check',d:'Data/privacy, threat model (incl. the AI harness itself) with threat→control→test traceability, resilience, model risk, financial integrity. Material open findings block. New in 1.11.'},
  {id:'§8',n:'identity-registry-check',d:'Approvals resolve against the registry: agents approve nothing; second-line membership is disjoint from builders. New in 1.11.'},
+ {id:'R1–R6',n:'operational-readiness-check',d:'Freshness-windowed readiness: an expired DR exercise (365d), undrilled rollback (180d) or untested kill-switch (90d) blocks production. New in 1.12.'},
+ {id:'§7.4',n:'production authorization',d:'Compound, not “a human approved”: PA2 + R-gate-green readiness + the second-line hold RELEASED (missing = held, fail closed) + ed25519-verified anchored evidence at high tiers. New in 1.12.'},
+ {id:'§6',n:'attestation verification',d:'An anchor counts only when signed by a registry issuer and cryptographically verified — a flipped byte fails. Platform mechanisms report UNVERIFIED-HERE until wired. New in 1.12.'},
+ {id:'runner',n:'gate-runner',d:'Lanes + diff scoping from the catalog: the always-on tamper core never skips; everything else runs only when implicated — and every skip is recorded with a reason. New in 1.12.'},
 ];
 $('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
 

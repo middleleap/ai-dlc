@@ -29,5 +29,7 @@
 # builders — this is what makes "the agent cannot lower the risk tier" a mechanism.
 /docs/governance/changes/               @your-org/risk-second-line
 /docs/governance/identities.json        @your-org/risk-second-line
+/docs/governance/attestation-issuers.json  @your-org/risk-second-line
+/docs/governance/services/              @your-org/platform-admins
 
 /CODEOWNERS                             @your-org/platform-admins

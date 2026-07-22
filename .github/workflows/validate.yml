@@ -40,8 +40,12 @@ jobs:
           cp "$P/loom-adopt/harness/governance/control-catalog.template.json" "$A/docs/governance/control-catalog.json"
           cp "$P/loom-adopt/harness/governance/identities.template.json" "$A/docs/governance/identities.json"
           cp "$P/loom-adopt/harness/governance/attestation-issuers.template.json" "$A/docs/governance/attestation-issuers.json"
-          mkdir -p "$A/docs/governance/changes"
+          mkdir -p "$A/docs/governance/changes" "$A/docs/governance/services"
           cp -r "$P/loom-adopt/harness/change-example" "$A/docs/governance/changes/CHG-2026-0042"
+          # The readiness template ships with unparseable ADOPT dates (fails until exercised);
+          # the dry-run "adopts" it by recording drill dates, as a real adopter would.
+          TODAY=$(date +%F)
+          node -e 'const fs=require("fs");const t=JSON.parse(fs.readFileSync(process.argv[1]));const d=process.argv[2];t.bcp_dr.last_exercised=d;t.rollback.last_drilled=d;t.kill_switch.last_tested=d;t.capacity.last_run=d;fs.writeFileSync(process.argv[3],JSON.stringify(t,null,2))' "$P/loom-adopt/harness/governance/service-readiness.template.json" "$TODAY" "$A/docs/governance/services/credit-origination.json"
           mkdir -p "$A/docs/governance/evidence" "$A/docs/governance/runbooks" "$A/.claude/hooks"
           cp "$P/loom-adopt/harness/evidence-example/"*.json "$A/docs/governance/evidence/"
           cp "$P/loom-adopt/harness/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
@@ -71,6 +75,7 @@ jobs:
           node scripts/change-envelope-check.mjs
           node scripts/product-approval-check.mjs
           node scripts/architecture-assurance-check.mjs
+          node scripts/operational-readiness-check.mjs
           node scripts/test-integrity-check.mjs --base main
           node scripts/sast-check.mjs
           node scripts/secrets-scan.mjs
@@ -79,6 +84,10 @@ jobs:
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
+          # The gate runner: a README-only diff must run the always-on core and RECORD the
+          # rest as skipped — risk-proportionate execution with no silent skips.
+          node core/gate-runner.mjs --lane pr --base main --out /tmp/gate-run.json
+          node -e 'const r=require("/tmp/gate-run.json");if(!r.skipped.length||r.skipped.some(s=>!s.reason))throw new Error("runner must record every skip with a reason");console.log(`gate-runner: ${r.executed.length} run, ${r.skipped.length} skipped — all recorded`)'
 
       - name: Loom bundle — negative bypass tests (a bypassed control must be SEEN failing)
         run: |
@@ -129,6 +138,23 @@ jobs:
             echo "::error::an AGENT approval was accepted for a control function"; exit 1
           fi
           git checkout -- docs/governance/changes/CHG-2026-0042/product-passport.json
+          # 8 · Stale kill-switch: a test older than its 90d window must block readiness.
+          node -e 'const fs=require("fs");const p="docs/governance/services/credit-origination.json";const s=JSON.parse(fs.readFileSync(p));s.kill_switch.last_tested="2024-01-01";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operational-readiness-check.mjs; then
+            echo "::error::readiness gate passed a stale kill-switch test"; exit 1
+          fi
+          git checkout -- docs/governance/services/credit-origination.json
+          # 9 · Held release: production-authorized with the second-line hold still held must
+          #     block — and the silence-after-launch rule must fire on the empty ops log.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/change-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.current_state="production-authorized";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs; then
+            echo "::error::a production authorization passed with the second-line hold still HELD"; exit 1
+          fi
+          node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals=[];fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operations-signal-check.mjs; then
+            echo "::error::an EMPTY operations log passed while a change claims production — silence after launch must fail"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/change-envelope.json docs/governance/operations-signal.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

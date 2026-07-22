@@ -54,3 +54,11 @@ test('a high/critical signal needs an evidence_ref', () => {
 test('a missing signals array is a finding', () => {
   assert.match(evaluate({})[0], /no `signals` array/);
 });
+
+test('an empty log is valid before launch — and a finding once anything is in production (1.12)', () => {
+  assert.deepEqual(evaluate({ signals: [] }), []);
+  assert.deepEqual(evaluate({ signals: [] }, { inProduction: false }), []);
+  const f = evaluate({ signals: [] }, { inProduction: true });
+  assert.equal(f.length, 1);
+  assert.match(f[0], /EMPTY while a governed change is in production/);
+});

@@ -71,9 +71,43 @@ test('an AGENT cannot be the classifier; nor can a role-less human', () => {
   assert.ok(engineer.some((x) => /holds none of the classification roles/.test(x)));
 });
 
-test('production states cannot be claimed before the 1.12 machinery exists', () => {
-  const f = ok({ current_state: 'production-authorized' });
-  assert.ok(f.some((x) => /release 1\.12/.test(x)));
+/* ---- 1.12: compound production authorization ---- */
+
+// This gate sequences on pa2.decision; the full approval/section validation is the
+// product-approval gate's job (tested there).
+const PA2_OK = { ...PASSPORT, pa2: { decision: 'approved' } };
+const READY = { missing: [], findings: [] };
+const HOLD_RELEASED = { change_id: 'CHG-2026-0042', status: 'released', by: 'risk-lena', at: '2026-07-21' };
+const EVIDENCE_OK = { anchor: 'abc123', attestationFindings: [] };
+const prod = (ctx = {}) => ok({ current_state: 'production-authorized' }, {
+  passport: PA2_OK, readiness: READY, hold: HOLD_RELEASED, evidence: EVIDENCE_OK, ...ctx,
+});
+
+test('the full compound authorization passes: PA2 + readiness + hold released + anchored evidence', () => {
+  assert.deepEqual(prod(), []);
+});
+
+test('FAIL CLOSED — a missing release hold means held', () => {
+  assert.ok(prod({ hold: null }).some((x) => /missing hold means HELD/.test(x)));
+});
+
+test('a held release blocks; a hold released by a builder or an agent does not count', () => {
+  assert.ok(prod({ hold: { ...HOLD_RELEASED, status: 'held' } }).some((x) => /release hold is "held"/.test(x)));
+  assert.ok(prod({ hold: { ...HOLD_RELEASED, by: 'eng-omar' } }).some((x) => /only by a second-line HUMAN/.test(x)));
+  assert.ok(prod({ hold: { ...HOLD_RELEASED, by: 'agent-loom-delivery' } }).some((x) => /only by a second-line HUMAN/.test(x)));
+});
+
+test('a high-tier authorization requires anchored, issuer-verified evidence', () => {
+  assert.ok(prod({ evidence: { anchor: null } }).some((x) => /no anchor/.test(x)));
+  const badSig = prod({ evidence: { anchor: 'abc', attestationFindings: ['attestation signature does NOT verify'] } });
+  assert.ok(badSig.some((x) => /does NOT verify/.test(x)));
+});
+
+test('unready services block: missing readiness file or R-gate findings', () => {
+  assert.ok(prod({ readiness: { missing: ['credit-origination'], findings: [] } })
+    .some((x) => /requires operational readiness for service credit-origination/.test(x)));
+  assert.ok(prod({ readiness: { missing: [], findings: ['credit-origination: kill-switch test: STALE'] } })
+    .some((x) => /kill-switch test: STALE/.test(x)));
 });
 
 test('an exemption must be owned, reasoned, compensated, expiring, and second-line approved', () => {

@@ -67,5 +67,9 @@
       "prev": "247bc49fc3bbdff52c6b3cd185be767d1a0c9cb85a763759262c5cee4d5df239",
       "seal": "3446fb6da9451a77f35096404e27de9a5fd8350dab27d8ea7eb63758e2fb6760"
     }
-  ]
+  ],
+  "attestation": {
+    "issuer": "demo-anchor-signer",
+    "signature": "44ndYLWoZG4y+G7uj+e9tkvQRucqOzelti70pajDyODW1ef9s0i0vZ5r2vUqIH8NOFxvCIvWUzCQ2q+UEjA7Cw=="
+  }
 }

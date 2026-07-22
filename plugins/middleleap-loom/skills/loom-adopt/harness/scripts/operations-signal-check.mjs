@@ -16,7 +16,7 @@
 // An empty log is valid (operations may not have started). A signal with no route is the
 // failure this gate exists to prevent. Run from repo root:
 //   `node scripts/operations-signal-check.mjs` (exit 1 on any finding).
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import process from 'node:process';
 
 const MANIFEST_LOCATIONS = ['docs/governance/operations-signal.json', 'operations-signal.json'];
@@ -28,11 +28,20 @@ export const ROUTES = new Set(['spec-fix', 'register', 'discovery', 'accepted'])
 
 const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
 
-/** Findings (one per untriaged/untraceable signal). Empty ⇒ every signal is routed and traceable. */
-export function evaluate(manifest) {
+/**
+ * Findings (one per untriaged/untraceable signal). Empty ⇒ every signal is routed and traceable.
+ * `inProduction`: true once any governed change holds a production state — from that moment an
+ * EMPTY log is itself a finding (1.12): a live product that has never produced one incident,
+ * complaint, drift or SLO measurement means the sensing is missing, not that Run is perfect.
+ */
+export function evaluate(manifest, { inProduction = false } = {}) {
   const signals = manifest && manifest.signals;
   if (!Array.isArray(signals)) return ['operations-signal manifest has no `signals` array'];
-  if (signals.length === 0) return []; // an empty operations log is valid
+  if (signals.length === 0) {
+    return inProduction
+      ? ['operations log is EMPTY while a governed change is in production — silence after launch means the sensing is unwired, not that nothing happened']
+      : []; // an empty operations log is valid before anything runs
+  }
 
   const findings = [];
   for (const s of signals) {
@@ -67,13 +76,32 @@ export function evaluate(manifest) {
   return findings;
 }
 
+/** True once any governed change under docs/governance/changes/ holds a production state. */
+export function anyChangeInProduction(cwd = process.cwd()) {
+  const dir = `${cwd}/docs/governance/changes`;
+  if (!existsSync(dir)) return false;
+  const PROD = new Set(['production-authorized', 'in-production']);
+  for (const name of readdirSync(dir)) {
+    try {
+      const env = JSON.parse(readFileSync(`${dir}/${name}/change-envelope.json`, 'utf8'));
+      if (PROD.has(env.current_state)) return true;
+    } catch { /* the envelope gate reports unparseable envelopes */ }
+  }
+  return false;
+}
+
 function run(cwd = process.cwd()) {
+  const inProduction = anyChangeInProduction(cwd);
   const path = MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
-  if (!path) return []; // operations not yet wired — the feedback seam is optional until Run begins
+  if (!path) {
+    return inProduction
+      ? ['no operations-signal manifest while a governed change is in production — the feedback seam is MANDATORY after launch']
+      : []; // operations not yet wired — the feedback seam is optional until Run begins
+  }
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
   catch (e) { return [`operations-signal manifest is not valid JSON: ${e.message}`]; }
-  return evaluate(manifest);
+  return evaluate(manifest, { inProduction });
 }
 
 // CLI (skipped when imported by the test suite).

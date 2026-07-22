@@ -36,9 +36,16 @@ jobs:
       - name: Product-governance gates (envelope · PA1/PA2 · A1–A5 · identities)
         run: |
           node scripts/identity-registry-check.mjs     # approvals resolve; agents never approve; 2nd line ∩ builders = ∅
-          node scripts/change-envelope-check.mjs        # classified, compiled, reconciled, state receipts
+          node scripts/change-envelope-check.mjs        # classified, compiled, reconciled, state receipts + compound prod auth
           node scripts/product-approval-check.mjs       # PA1 before Develop, PA2 before launch — approvals resolve
           node scripts/architecture-assurance-check.mjs # A1–A5 with threat→control→test traceability
+          node scripts/operational-readiness-check.mjs  # R1–R6 with freshness windows — stale drills block
+
+      # Risk-proportionate alternative to the explicit list above: the runner reads the
+      # catalog's lanes + path scopes and executes only what this diff implicates —
+      # recording every skip. Use it once your catalog lanes are tuned:
+      #   node core/gate-runner.mjs --lane pr --base origin/main --out gate-run.json
+      # and on release:  node core/gate-runner.mjs --lane release --out gate-run-release.json
 
       - name: Test integrity & security gates (Q1b · Q2 · Q4)
         run: |

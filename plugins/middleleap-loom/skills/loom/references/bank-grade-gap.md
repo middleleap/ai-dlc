@@ -45,11 +45,11 @@ decisions; bank-grade is the work of making them non-bypassable and proving it.
 
 ## Scorecard
 
-Across ~54 assessed capabilities, the bundled harness today grades roughly:
+Across ~58 assessed capabilities, the bundled harness today grades roughly:
 
 | Mechanically validated | Defined | Absent |
 |---|---|---|
-| ~22 | ~17 | ~15 |
+| ~27 | ~17 | ~14 |
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
 activate branch protection or stand up an independent function — those states are the
@@ -65,7 +65,10 @@ frame strong, run-the-bank sparse** — though the mechanically-validated column
 Loom 2.0 releases land (1.10: Q1b, secrets-history, SAST/SBOM output validation, the catalog;
 1.11: the policy compiler, the change envelope, PA1/PA2 product approval, architecture
 assurance A1–A5, and the identity registry — the product-governance plane the review named
-as the largest gap, now mechanically validated with negative tests).
+as the largest gap; 1.12: R1–R6 operational readiness with freshness windows, the compound
+production authorization, the second-line release hold (fail closed), real ed25519 anchor
+attestation, the silence-after-launch rule, and the risk-scoped gate runner with lanes —
+every skip recorded, never silent).
 
 ## Six clusters, graded
 
@@ -127,7 +130,7 @@ of Q1b) plus an independent validation. Plus the `model-risk-reviewer` plugin ag
 |---|---|---|
 | 1st-line reviewer agents (hard-stop · conformance · data-gov · boundary) | **Mechanically validated** | — |
 | Continuous-assurance agents (change-watch · risk-reviewer · attest · report · lineage) | Defined | Steps ① Watch (`change-watch`) and ② Assess (`risk-reviewer`) now ship as plugin agents; ③–⑥ remain described-not-shipped |
-| Independent 2nd-line challenge function | Absent | Risk & compliance, organisationally separate |
+| Independent 2nd-line challenge function | Absent | The release-hold MECHANISM ships (fail closed, second-line-owned, 1.12); the organisationally-separate function operating it is the adopter's |
 | 3rd-line internal audit · read-only evidence portal | Absent | Auditor access to the sealed evidence trail |
 | WORM · time-stamped evidence retention | Defined | The evidence-seal gate makes the bundle tamper-evident and anchor-checkable; the immutable store + RFC-3161 timestamping authority + retention policy are the adopter's |
 | SOC 2 / ISO 27001 attestation of the harness | Absent | Third-party attestation of the harness itself |
@@ -164,7 +167,7 @@ adopter's (see `governance/data-protection-runbook.md`).
 | Secrets scanning — current tree AND git history | **Mechanically validated** | — (`secrets-scan.mjs`, 1.10: a deleted secret is still leaked) |
 | DAST · penetration testing | Absent | Add as gates / scheduled assurance |
 | Threat modelling (STRIDE) gate | Absent | A threat-model gate — arrives with A2 in the Loom 2.0 architecture-assurance plane (1.11) |
-| Operational resilience (BCP/DR · RTO/RPO · chaos · SEV · SLOs) | Absent | The run-the-bank surface — entirely outside a build-time frame |
+| Operational readiness R1–R6 (BCP/DR · RTO/RPO · rollback drills · kill-switch, freshness-windowed) | **Mechanically validated** | — (`operational-readiness-check.mjs`, 1.12; running the drills and telling the truth about them is the adopter's) |
 | Pre-egress DLP (HG-0011) | Defined | Wired DLP on model egress |
 | FAPI 2.0 / mTLS conformance | Defined | Conformance suite as a gate (domain-specific) |
 

@@ -51,6 +51,14 @@ export function evaluate(catalog, exists = existsSync) {
     }
     if (c.state === 'organisationally-enforced') need('independent_owner', 'organisational enforcement requires a named independent owner');
 
+    // Execution metadata (read by core/gate-runner.mjs) must be well-formed.
+    if (c.lane !== undefined && !['pr', 'release', 'scheduled'].includes(c.lane)) {
+      findings.push(`${id}: lane must be pr|release|scheduled (got ${JSON.stringify(c.lane)})`);
+    }
+    if (c.paths !== undefined && !(Array.isArray(c.paths) && c.paths.every((p) => typeof p === 'string' && p.trim()))) {
+      findings.push(`${id}: paths must be an array of non-empty path prefixes`);
+    }
+
     // Any referenced file must actually exist — a catalog may not cite ghosts.
     for (const field of ['mechanism_ref', 'test_ref', 'doc_ref']) {
       const ref = c[field];

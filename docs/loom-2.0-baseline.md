@@ -113,3 +113,40 @@ PA1 revoked mid-develop, agent-signed approval). Worked example:
 in-delivery). Scorecard after 1.11: **~22 mechanically validated · ~17
 defined · ~15 absent · 0 platform / organisationally enforced (as
 shipped).**
+
+## 1.12 addendum — production controls + the risk-scoped gate runner
+
+- **R-gates** (`operational-readiness-check.mjs` + `service-readiness`
+  template): R1–R6 with freshness windows (BCP/DR 365d, rollback 180d,
+  kill-switch 90d, capacity 365d). The template ships with unparseable
+  ADOPT dates — copied-but-never-exercised fails, like the CODEOWNERS
+  placeholder. Freshness is checkable; the truth of a drill is the
+  adopter's attestation, stated as such.
+- **Compound production authorization** (in the envelope gate): the
+  1.11 refusal of production states is replaced by receipts — PA2 +
+  R-gate-green readiness for every declared service + the second-line
+  release hold RELEASED by a second-line human (missing hold = HELD,
+  fail closed; builders/agents cannot release it) + anchored,
+  issuer-verified evidence at high/critical tiers.
+- **Real attestation verification** (`core/attestations.mjs`): ed25519
+  in-process — the shipped example anchor is signed by a demo issuer
+  whose public key lives in the registry; a flipped byte fails
+  (negative-tested). Platform mechanisms (sigstore, CI-OIDC) report
+  UNVERIFIED-HERE until wired — an honest gap, not a silent pass.
+- **Silence-after-launch**: an empty (or missing) operations-signal
+  log FAILS once any governed change holds a production state.
+- **Gate runner** (`core/gate-runner.mjs`): lanes (pr · release ·
+  scheduled) + path scoping read from the control catalog — governed
+  data, not CI editing. The always-on tamper core never skips; an
+  unknown diff fails open to running MORE; every skip is recorded with
+  its reason. Closes the "15 gates on every PR" efficiency critique
+  structurally.
+- **Deliberately deferred to 2.0-rc** (recorded as `absent` in the
+  catalog, not gestured at): the signed continuous-assurance cycle
+  record, and the replayable agent decision log.
+
+CI dry-run: 11 negative bypass tests (adds: stale kill-switch,
+production-authorized with the hold still held, empty ops log after
+launch) + a runner-skips-are-recorded assertion. Scorecard after 1.12:
+**~27 mechanically validated · ~17 defined · ~14 absent · 0 platform /
+organisationally enforced (as shipped).**
