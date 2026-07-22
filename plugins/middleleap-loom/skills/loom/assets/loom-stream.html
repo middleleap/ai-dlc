@@ -236,13 +236,13 @@
     <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
     <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
       real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
-    <div class="scorebar" role="img" aria-label="about 17 mechanically validated, 17 defined, 15 absent; zero platform-enforced or organisationally-enforced as shipped">
-      <span class="enf" style="width:35%"></span><span class="nam" style="width:35%"></span><span class="abs" style="width:30%"></span>
+    <div class="scorebar" role="img" aria-label="about 27 mechanically validated, 17 defined, 14 absent; zero platform-enforced or organisationally-enforced as shipped">
+      <span class="enf" style="width:47%"></span><span class="nam" style="width:29%"></span><span class="abs" style="width:24%"></span>
     </div>
     <div class="scoretags">
-      <span><span class="sw enf"></span>~17 mechanically validated</span>
+      <span><span class="sw enf"></span>~27 mechanically validated</span>
       <span><span class="sw nam"></span>~17 defined</span>
-      <span><span class="sw abs"></span>~15 absent</span>
+      <span><span class="sw abs"></span>~14 absent</span>
     </div>
     <div class="note">
       <p><b>The rule that keeps it honest:</b> a gate that validates a <em>declaration</em> is <b>mechanically
@@ -267,7 +267,7 @@
       <div class="chip"><div class="clab">Discovery</div><div class="cgate">D1–D9</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">PA1</div><div class="cgate">develop? · shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Architecture</div><div class="cgate">A1–A5 · shipped</div></div><span class="arr">→</span>
-      <div class="chip"><div class="clab">Delivery</div><div class="cgate">Q-gates · 11 shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Delivery</div><div class="cgate">Q-gates · runner-scoped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">PA2</div><div class="cgate">launch? · shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Readiness</div><div class="cgate">R1–R6 · shipped</div></div><span class="arr">→</span>
       <div class="chip"><div class="clab">Authorize</div><div class="cgate">compound · shipped</div></div><span class="arr">→</span>
@@ -323,7 +323,7 @@ const STAGES = [
   {id:'spec',     ph:'Delivery',  lab:'Spec-first', gate:'spec-tripwire', desc:'Write the API contract + acceptance tests and show them RED before implementing. The contract changes only via its own PR.'},
   {id:'implement',ph:'Delivery',  lab:'Implement', gate:'pii-guard', desc:'Implement to green against interfaces — synthetic data only; audit + lineage emitted in the same change.'},
   {id:'review',   ph:'Delivery',  lab:'Review', gate:'reviewer agents', desc:'Local reviewer agents must pass on the diff: hard-stop (PASS) and contract-conformance (CONFORMANT).'},
-  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'15 gates', desc:'Every gate runs: control-plane, control-catalog, identity-registry, change-envelope, product-approval (PA1/PA2), architecture-assurance (A1–A5), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
+  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'16 gates', desc:'The risk-scoped runner executes what the diff implicates and records every skip. The full set: control-plane, control-catalog, identity-registry, change-envelope (incl. compound production authorization + the second-line hold), product-approval (PA1/PA2), architecture-assurance (A1–A5), operational-readiness (R1–R6), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
   {id:'merge',    ph:'Delivery',  lab:'Merge', gate:'HG-0001 · human', desc:'The agent opens the PR and STOPS. A human holds four-eyes — the agent identity is not in the approver group and never merges its own work.'},
   {id:'deploy',   ph:'Run',       lab:'Deploy', gate:'smoke', desc:'Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.'},
   {id:'evidence', ph:'Run',       lab:'Evidence', gate:'HG-0003 · evidence-seal', desc:'Seal the release evidence bundle — a hash chain the gate re-reads and verifies, so altering any artifact breaks a seal.'},
