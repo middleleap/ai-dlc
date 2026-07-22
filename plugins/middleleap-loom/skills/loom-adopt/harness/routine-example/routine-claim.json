@@ -1,0 +1,8 @@
+{
+  "_comment": "EXAMPLE — what one routine PR asserts. In CI, changed_paths and diff_lines are RE-DERIVED from the real git diff (git diff --numstat <base>...HEAD), so these declared values are a fallback for offline inspection only, never the basis of the decision. Mounts at docs/governance/routine-claim.json.",
+  "envelope": "RTE-2026-Q3",
+  "class": "doc-fix",
+  "changed_paths": ["docs/adopting-notes.md"],
+  "diff_lines": 12,
+  "gates_green": ["Q1", "Q1b", "Q2", "Q4-SECRETS"]
+}

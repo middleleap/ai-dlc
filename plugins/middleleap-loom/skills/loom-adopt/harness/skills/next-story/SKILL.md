@@ -64,6 +64,14 @@ reviewing AI is not four-eyes for a regulated production change.
   branch. The item stays `in-progress` until a human merges it; its `depends_on` dependents
   wait — that back-pressure is intended.
 - Spec PRs, ADRs, decision changes → never merge; queue for the user.
+- **Routine lane (HG-0013), the one calibrated exception**: if the change is a pre-named
+  routine class (dependency patch, lint fix, doc fix) that fits the second-line-owned
+  `routine-envelope.json` — inside its path scope, under its diff cap, required gates green,
+  clear of the absolute floor (control plane, contract, auth, migrations) — write the
+  `routine-claim.json`, and the change may auto-merge once `routine-change-check` passes among
+  the required checks. This is not you disposing of your own work: a human pre-authorized the
+  class, per envelope, with an expiry. If the change does not fit in *any* respect, drop the
+  claim and take the normal lane above — no arguing the envelope wider.
 
 Branch protection on `main` (required human review from a CODEOWNERS group the agent isn't in,
 required checks, no bypass) is the enforcement of record; this skill honours it so the loop

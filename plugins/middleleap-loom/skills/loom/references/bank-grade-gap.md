@@ -45,11 +45,11 @@ decisions; bank-grade is the work of making them non-bypassable and proving it.
 
 ## Scorecard
 
-Across ~60 assessed capabilities, the bundled harness today grades roughly:
+Across ~61 assessed capabilities, the bundled harness today grades roughly:
 
 | Mechanically validated | Defined | Absent |
 |---|---|---|
-| ~30 | ~17 | ~12 |
+| ~31 | ~17 | ~12 |
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
 activate branch protection or stand up an independent function — those states are the
@@ -71,7 +71,10 @@ attestation, the silence-after-launch rule, and the risk-scoped gate runner with
 every skip recorded, never silent; 2.0-rc: the signed assurance-cycle record and the
 replayable decision log — the last two bundle-side rows that were honestly `absent` in 1.12 —
 plus enterprise adapters, high-tier model runtime governance, and the supervised-pilot
-playbook with its adversarial checklist mapped to the gates that catch each attack).
+playbook with its adversarial checklist mapped to the gates that catch each attack; 2.0-rc.3:
+comprehension debt named as a standing limit, HG-0013 graduated autonomy, and the
+routine-change lane — a second-line-owned, expiring envelope that lets a narrow class of
+low-risk changes auto-merge behind an absolute control-plane floor).
 
 ## Six clusters, graded
 
@@ -80,6 +83,7 @@ playbook with its adversarial checklist mapped to the gates that catch each atta
 | Capability | State | What closes it |
 |---|---|---|
 | HG-0001 four-eyes merge · branch protection | Defined | Branch protection is a platform setting: activate it (activation runbook), record the rejected direct-push probe, then claim Platform enforced in the catalog |
+| HG-0013 graduated autonomy · routine-change lane | **Mechanically validated** | — (`routine-change-check.mjs`: a claimed routine change must fit a second-line-owned, expiring envelope, under a diff cap with required gates green; an absolute in-code floor keeps the control plane, contract, auth and migrations out of the lane. Platform enforced is the adopter's: a merge-queue that auto-merges only with this gate among the passing required checks) |
 | HG-0002 immutable control plane · supply-chain integrity | **Mechanically validated** | — |
 | HG-0007 / HG-0009 waist gate · develop diverges | **Mechanically validated** | — |
 | HG-0008 solution-agnostic seams | **Mechanically validated** | — |
