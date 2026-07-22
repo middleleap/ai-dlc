@@ -1,0 +1,29 @@
+{
+  "_comment": "ADOPTER EXAMPLE — the product passport (Loom 2.0 §7.1). Section keys are compiled by the policy compiler from the profiles; the product-approval gate verifies every required section has substance and every approval resolves to a HUMAN registry identity holding the role. PA1 is approved (the change is in delivery); PA2 is pending until launch.",
+  "change_id": "CHG-2026-0042",
+  "product_id": "PRD-017",
+  "sections": {
+    "classification": { "materiality": "material", "new_or_changed": "material-change", "summary": "Affordability model added to retail credit-limit decisioning." },
+    "target-market": { "included": "Existing retail credit customers, salaried, resident in the UAE", "excluded": "Customers in collections or forbearance; income below AED 5,000/month", "foreseeable_harm": "Over-extension of credit to borderline-affordability customers" },
+    "inherent-risks": { "ratings": { "credit": "high", "conduct": "medium", "operational": "medium", "model": "high" }, "assessed_by": "risk-lena" },
+    "regulatory-obligations": { "regimes": ["CBUAE Consumer Protection Standards", "CBUAE Model Management Standards", "PDPL"], "notes": "Affordability and suitability obligations apply; model in the decision path." },
+    "ownership": { "product_owner": "po-fatima", "accountable_executive": "exec-rashid" },
+    "data-and-models": { "personal_data": true, "categories": ["income", "obligations", "bureau"], "model_roles": ["affordability-assessment"], "manifest": "docs/governance/model-manifest.json" },
+    "third-parties": { "dependencies": ["credit bureau (existing contract)"], "new_outsourcing": false },
+    "cbuae-notification-assessment": { "notification_required": false, "rationale": "Material change within existing product licence; monitored threshold not crossed.", "assessed_by": "comp-imran" },
+    "credit-risk-appetite": { "within_appetite": true, "limit_changes": "Per-customer limit unchanged; portfolio cap unchanged", "assessed_by": "credit-hassan" }
+  },
+  "pa1": {
+    "decision": "approved",
+    "decided_at": "2026-07-19",
+    "approvals": [
+      { "role": "product-owner", "by": "po-fatima", "at": "2026-07-19" },
+      { "role": "risk-second-line", "by": "risk-lena", "at": "2026-07-19" },
+      { "role": "accountable-executive", "by": "exec-rashid", "at": "2026-07-19" }
+    ]
+  },
+  "pa2": {
+    "decision": "pending",
+    "_comment": "PA2 (permission to launch) requires the full section set and every compiled control-function approval — completed after delivery, before launch."
+  }
+}

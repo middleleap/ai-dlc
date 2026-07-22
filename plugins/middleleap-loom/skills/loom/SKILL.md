@@ -64,8 +64,8 @@ Full canon for each half:
   double diamond closed into a loop, the security / governance / business checkpoints, where
   Chainguard & Snyk attach, and the bank-grade maturity traffic-light. Open it in a browser.
 - `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
-  bar: which controls are enforced, which are named-only, and which are absent — plus the
-  order to close them in.
+  bar, on the five-state model (absent → defined → mechanically validated → platform
+  enforced → organisationally enforced) — plus the order to close the gaps in.
 - `references/supply-chain-security.md` — how concrete SCA / SAST / image-scanning tooling
   (Chainguard, Snyk) fills slots the frame already has (Q2, Q4, HG-0002, the evidence bundle,
   continuous assurance) without changing the frame.
@@ -110,8 +110,10 @@ A method worth adopting names its own risks:
 - **AI model risk is real.** The agents need ongoing validation, monitoring, and independent
   challenge — that is what the HG catalog's model-risk decisions exist for.
 
-The method's own maturity self-grade against a regulated-bank bar — what is enforced,
-named-only, or absent — lives in `references/bank-grade-gap.md`.
+The method's own maturity self-grade against a regulated-bank bar — five states: absent,
+defined, mechanically validated, platform enforced, organisationally enforced — lives in
+`references/bank-grade-gap.md`, with the machine-readable state of record in the adopted
+`docs/governance/control-catalog.json` (checked by its own gate).
 
 ## The one-sentence guardrail
 

@@ -4,7 +4,9 @@
 // SEALED, not narrated. This gate enforces the repo-side half deterministically over an
 // evidence manifest (the index the delivery loop writes at step ⑧):
 //
-//   The evidence entries form an append-only HASH CHAIN, and the required evidence is complete.
+//   The evidence entries form an append-only HASH CHAIN, the required evidence is complete,
+//   the bundle is BOUND to a release commit, and each sealed artifact is verified for what it
+//   SAYS (tests pass, verdicts are PASS/CONFORMANT, scans are clean) — not just for its bytes.
 //
 // Each entry seals `sha256(prev | type | ref | sha256-of-artifact)`, so altering any artifact
 // (without recomputing every downstream seal), reordering entries, or dropping one breaks the
@@ -18,12 +20,35 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
+import { evaluate as evaluateSarif } from './sast-check.mjs';
 
 const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
 const GENESIS = 'GENESIS';
 
-// ADOPT: the evidence every release must carry. Add yours (smoke results, SBOM, attestations).
-export const REQUIRED_TYPES = ['tests', 'reviews', 'lineage', 'model-provenance', 'control-plane'];
+// ADOPT: the evidence every release must carry. Add yours (smoke results, attestations).
+export const REQUIRED_TYPES = ['tests', 'reviews', 'lineage', 'model-provenance', 'control-plane', 'sast', 'sbom', 'dependency-audit', 'provenance'];
+
+// Semantic validation — 1.10's rule: a sealed artifact is verified for what it SAYS, not just
+// that its bytes are intact. A sealed bundle of failing tests is tamper-evident and worthless.
+export const SEMANTICS = {
+  tests: (a, ctx) => {
+    const f = [];
+    if (a.failed !== 0) f.push(`sealed test results are not clean (failed=${JSON.stringify(a.failed)})`);
+    if (!(a.passed > 0)) f.push('sealed test results show no passing tests');
+    if (ctx.releaseCommit && a.commit !== ctx.releaseCommit) f.push(`sealed test results were produced at ${JSON.stringify(a.commit)}, not the release commit ${JSON.stringify(ctx.releaseCommit)}`);
+    return f;
+  },
+  reviews: (a) => Object.entries(a).filter(([k]) => !k.startsWith('_'))
+    .flatMap(([k, v]) => (v === 'PASS' || v === 'CONFORMANT') ? [] : [`sealed reviewer verdict ${k}=${JSON.stringify(v)} is not PASS/CONFORMANT`]),
+  'model-provenance': (a) => a.result === 'OK' ? [] : ['sealed model-provenance record does not show the gate passing'],
+  'control-plane': (a) => a.result === 'OK' ? [] : ['sealed control-plane record does not show the gate passing'],
+  lineage: (a) => (a.emits_lineage === true && a.insert_only === true) ? [] : ['sealed lineage evidence does not show insert-only stores emitting lineage'],
+  sast: (a) => evaluateSarif(a).map((f) => `sealed SAST report: ${f}`),
+  sbom: (a) => (a.bomFormat === 'CycloneDX' && Array.isArray(a.components) && a.components.length > 0) ? [] : ['sealed SBOM is empty or not CycloneDX'],
+  'dependency-audit': (a) => (a.critical === 0 && a.high === 0) ? [] : ['sealed dependency audit shows critical/high vulnerabilities'],
+  provenance: (a) => (Array.isArray(a.subject) && a.subject.length > 0 && a.subject.every((s) => s?.digest?.sha256)
+    && (a.predicate?.builder?.id || a.builder?.id)) ? [] : ['sealed provenance lacks subject digests or a builder'],
+};
 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 const sha256File = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
@@ -56,6 +81,10 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
   if (!Array.isArray(entries) || entries.length === 0) {
     return ['evidence manifest has no `entries` — the release is narrated, not sealed (HG-0003)'];
   }
+  const releaseCommit = manifest.release_commit;
+  if (!releaseCommit) {
+    findings.push('manifest has no `release_commit` — the evidence is not bound to a released commit (semantic binding, 1.10)');
+  }
   let prev = GENESIS;
   entries.forEach((e, i) => {
     const expectSeal = sealOf(prev, e);
@@ -71,6 +100,15 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
         findings.push(`entry ${i} (${e.type}): sealed artifact ${e.ref} not found — a sealed bundle must contain its evidence`);
       } else if (sha256File(p) !== e.sha256) {
         findings.push(`entry ${i} (${e.type}): artifact ${e.ref} was altered after sealing — its content sha256 no longer matches the manifest`);
+      } else if (SEMANTICS[e.type]) {
+        // Bytes intact ⇒ now verify what the artifact SAYS. Intact-but-failing is a failure.
+        try {
+          for (const f of SEMANTICS[e.type](JSON.parse(readFileSync(p, 'utf8')), { releaseCommit })) {
+            findings.push(`entry ${i} (${e.type}): ${f}`);
+          }
+        } catch {
+          findings.push(`entry ${i} (${e.type}): sealed artifact ${e.ref} is not parseable JSON — its meaning cannot be verified`);
+        }
       }
     }
     prev = expectSeal; // continue from the recomputed seal so errors localise, not cascade

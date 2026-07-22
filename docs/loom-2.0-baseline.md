@@ -1,0 +1,152 @@
+# Loom 2.0 — recorded baseline (release 1.9.1)
+
+**Date:** 2026-07-22 · **Recorded against:** `middleleap-loom` 1.9.1
+Companion to `docs/loom-2.0-plan.md` §0/§13. This is the measured state the
+2.0 release train starts from — future reviews diff against this file.
+
+## Verified state
+
+| Check | Result |
+|---|---|
+| Plugin version (`plugin.json` = `marketplace.json`) | 1.9.1 in both |
+| `node scripts/validate-marketplace.mjs` | pass |
+| Adopted-layout dry-run (`.github/workflows/validate.yml`) | 106/106 tests green |
+| Six bundled gates on shipped templates (control-plane, model-provenance, evidence-seal, data-lifecycle, operations-signal, discovery-link) | all green *after* the ADOPT step; control-plane now **fails by design on the unadopted template** |
+| Packaging contaminants (`.DS_Store` etc.) | none |
+
+## Scorecard baseline (three-state model, superseded in 1.10)
+
+Per `plugins/middleleap-loom/skills/loom/references/bank-grade-gap.md`, across
+~47 assessed capabilities: **~15 Enforced · ~17 Named-only · ~15 Absent.**
+Release 1.10 replaces this three-state grading with the five-state model
+(Absent / Defined / Mechanically validated / Platform enforced /
+Organisationally enforced) and moves the state of record into the control
+catalog. Honest note for the re-grading: most rows currently marked
+"Enforced" are gates that validate *declarations* — under the five-state
+model they will grade **Mechanically validated**, not Platform enforced.
+
+## False greens fixed in 1.9.1
+
+- The placeholder CODEOWNERS team (`@your-org/…`) passed the control-plane
+  gate. Now: a placeholder-only owner **fails** the gate, with a unit test
+  and a CI negative test proving the unadopted template is rejected.
+- `bank-grade-gap.md` graded "Q1b anti-reward-hacking gate — Enforced" for
+  the bundle; no Q1b CI script ships (only the `test-tripwire.sh` hook).
+  Re-graded Named-only; the gate itself ships in 1.10.
+
+## Known false greens remaining (scheduled for 1.10)
+
+- `model-provenance-check.mjs` accepts `result: "pass"` /
+  `threshold_met: true` as declarations — no evaluation artifact, hash,
+  identity resolution, or builder/validator separation.
+- `evidence-seal-check.mjs` verifies chain integrity and completeness-by-type
+  but not the *semantics* of sealed artifacts, and nothing binds the bundle
+  to the released commit.
+- Q2/Q4 scanner fills, history-aware secrets scanning, SBOM/provenance
+  verification are "ADOPT" seams with no output validation.
+- `operations-signal-check.mjs` passes green on the shipped template even
+  though an empty manifest should fail once a production authorization
+  exists (rule lands in 1.12).
+
+## 1.10 addendum — truthful enforcement, delivered
+
+Of the four remaining false greens above, 1.10 closed the first three:
+
+- **Model provenance:** eval blocks now require dataset/runner versions, a
+  timestamp, and the report artifact by `ref` + `sha256` — re-hashed by the
+  gate. A declared pass without its report fails.
+- **Evidence seal:** the manifest must carry `release_commit`, and every
+  sealed artifact is verified *semantically* — failing tests, non-PASS
+  verdicts, error-level SARIF, or a critical vulnerability fail even when
+  the chain is byte-intact. Required types grew to nine (adds sast, sbom,
+  dependency-audit, provenance).
+- **Q-gates:** `test-integrity-check.mjs` (Q1b), `sast-check.mjs` (Q2
+  output validation), `secrets-scan.mjs` (tree + history), and
+  `supply-chain-check.mjs` (SBOM/audit/provenance) now ship, each with unit
+  tests and a CI negative bypass test.
+- **New:** the five-state maturity model is canon; the control catalog
+  (`control-catalog.template.json` + `control-catalog-check.mjs`) is the
+  state of record and cannot overstate itself; `CONTROL_TARGETS` covers
+  every bundled gate, hook, workflow, and governance manifest.
+
+Still open, by design: the operations-manifest fails-after-launch rule and
+the second-line hold (1.12); identity resolution against a registry and
+builder/validator group separation (1.11, needs the identity-registry seam).
+Scorecard after 1.10: **~17 mechanically validated · ~17 defined · ~15
+absent · 0 platform enforced · 0 organisationally enforced (as shipped).**
+
+## 1.11 addendum — the bank profile preview, delivered
+
+The product-governance plane (the review's largest named gap) now ships as
+mechanically-validated machinery:
+
+- **Policy compiler** (`core/policy-compiler.mjs`): classification compiles
+  the path — gates, control functions, evidence, passport sections — from
+  pure-data profiles (`regulated-bank` + `uae-bank` jurisdiction + `lending`
+  / `payments` product types). Monotonic by construction (cumulative union),
+  proven by a property test across profile combinations, tiers, and flags.
+  A product change cannot classify itself low; an unclassified or
+  unprofiled change is blocked.
+- **Change envelope** (`change-envelope-check.mjs`): the governed change
+  object. Stored plans are RECONCILED against a fresh compile (hand-edited
+  or stale plans fail); the classifier must be a human with classification
+  authority (agents cannot set or lower a tier — envelope files are
+  CODEOWNERS-owned by the second line); state transitions require receipts;
+  exemptions need owner, rationale, compensating control, unexpired expiry,
+  and second-line approval; production states cannot be claimed before the
+  1.12 machinery exists.
+- **PA1/PA2** (`product-approval-check.mjs`): a high-risk product cannot
+  enter Develop without PA1 or claim launch without PA2 — sections compiled
+  per profile, approvals resolving to HUMAN registry identities holding the
+  role; builders cannot issue second-line approvals; `by: "Risk"` fails.
+- **A1–A5** (`architecture-assurance-check.mjs`): threat → control → test
+  traceability (the threat model covers the AI harness itself); material
+  open findings block.
+- **Identity registry seam** (`identities.template.json` +
+  `identity-registry-check.mjs`): agents hold no approver roles;
+  second-line ∩ builders = ∅. The attestation-issuers registry ships as the
+  §6 contract; signature *verification* lands in 1.12.
+
+CI dry-run: 8 negative bypass tests (adds: hand-edited control plan,
+PA1 revoked mid-develop, agent-signed approval). Worked example:
+`change-example/` (CHG-2026-0042, high-tier UAE retail lending,
+in-delivery). Scorecard after 1.11: **~22 mechanically validated · ~17
+defined · ~15 absent · 0 platform / organisationally enforced (as
+shipped).**
+
+## 1.12 addendum — production controls + the risk-scoped gate runner
+
+- **R-gates** (`operational-readiness-check.mjs` + `service-readiness`
+  template): R1–R6 with freshness windows (BCP/DR 365d, rollback 180d,
+  kill-switch 90d, capacity 365d). The template ships with unparseable
+  ADOPT dates — copied-but-never-exercised fails, like the CODEOWNERS
+  placeholder. Freshness is checkable; the truth of a drill is the
+  adopter's attestation, stated as such.
+- **Compound production authorization** (in the envelope gate): the
+  1.11 refusal of production states is replaced by receipts — PA2 +
+  R-gate-green readiness for every declared service + the second-line
+  release hold RELEASED by a second-line human (missing hold = HELD,
+  fail closed; builders/agents cannot release it) + anchored,
+  issuer-verified evidence at high/critical tiers.
+- **Real attestation verification** (`core/attestations.mjs`): ed25519
+  in-process — the shipped example anchor is signed by a demo issuer
+  whose public key lives in the registry; a flipped byte fails
+  (negative-tested). Platform mechanisms (sigstore, CI-OIDC) report
+  UNVERIFIED-HERE until wired — an honest gap, not a silent pass.
+- **Silence-after-launch**: an empty (or missing) operations-signal
+  log FAILS once any governed change holds a production state.
+- **Gate runner** (`core/gate-runner.mjs`): lanes (pr · release ·
+  scheduled) + path scoping read from the control catalog — governed
+  data, not CI editing. The always-on tamper core never skips; an
+  unknown diff fails open to running MORE; every skip is recorded with
+  its reason. Closes the "15 gates on every PR" efficiency critique
+  structurally.
+- **Deliberately deferred to 2.0-rc** (recorded as `absent` in the
+  catalog, not gestured at): the signed continuous-assurance cycle
+  record, and the replayable agent decision log.
+
+CI dry-run: 11 negative bypass tests (adds: stale kill-switch,
+production-authorized with the hold still held, empty ops log after
+launch) + a runner-skips-are-recorded assertion. Scorecard after 1.12:
+**~27 mechanically validated · ~17 defined · ~14 absent · 0 platform /
+organisationally enforced (as shipped).**

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How the Loom harness works · MiddleLeap</title>
-<meta name="description" content="The Loom's closed-loop build stream, its security & governance checkpoints, the Run to Discovery feedback loop, and a bank-grade maturity traffic-light. MiddleLeap brand, Paper mode.">
+<meta name="description" content="The Loom's closed-loop build stream, its security & governance checkpoints, the Run to Discovery feedback loop, a bank-grade maturity traffic-light, and the Loom 2.0 mandate-to-outcome roadmap. MiddleLeap brand, Paper mode.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='3' y='11' width='16' height='16' fill='%232A2925'/%3E%3Crect x='23' y='12' width='13' height='13' transform='rotate(45 29.5 18.5)' fill='%23CE451B'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -133,6 +133,23 @@
   .scoretags .sw{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px}
   .scoretags .enf{background:var(--pos)} .scoretags .nam{background:var(--caution)} .scoretags .abs{background:var(--crit)}
 
+  /* loom 2.0 roadmap chain */
+  .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch}
+  .chip{border:1px solid var(--line-strong);background:var(--surface);padding:8px 11px;min-width:92px}
+  .chip .clab{font-size:.8rem;font-weight:600;color:var(--head);line-height:1.15}
+  .chip .cgate{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:2px;white-space:nowrap}
+  .chip.planned{border-style:dashed;background:var(--surface-2)}
+  .chip.planned .clab{color:var(--muted)}
+  .chain .arr{align-self:center;color:var(--muted);font-family:var(--mono);font-size:.8rem}
+  .chain-legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:12px}
+  .chain-legend .sw{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;border:1px solid var(--line-strong);background:var(--surface)}
+  .chain-legend .sw.planned{border-style:dashed;background:var(--surface-2)}
+  .train{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .rel{border:1px solid var(--line);background:var(--surface);padding:8px 12px;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .rel b{display:block;color:var(--head);font-size:.78rem;font-family:var(--sans)}
+  .rel.done{border-left:3px solid var(--pos)}
+  .rel.done b::after{content:" ✓";color:var(--pos)}
+
   .note{margin-top:20px;padding:14px 18px;border-left:3px solid var(--ember);background:var(--ember-dim)}
   .note p{margin:0;font-size:.9rem;color:var(--ink)} .note p+p{margin-top:7px}
   footer{padding:30px 0 56px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);margin-top:20px}
@@ -206,8 +223,11 @@
 
   <!-- gate reference -->
   <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Six gates, run every PR</h2></div>
-    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — wired so the agent identity can't bypass it.</p>
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Sixteen gates — run by a risk-scoped runner</h2></div>
+    <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — with a CI negative test showing an attempted
+      bypass being rejected. The gate runner reads the control catalog's lanes (pr · release · scheduled) and path scopes,
+      so a documentation fix does not take a lending model's route — and every skipped gate is recorded with its reason,
+      never silent.</p>
     <div class="grid" id="gategrid"></div>
   </section>
 
@@ -216,24 +236,59 @@
     <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
     <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
       real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
-    <div class="scorebar" role="img" aria-label="about 16 enforced, 16 named-only, 15 absent">
-      <span class="enf" style="width:34%"></span><span class="nam" style="width:34%"></span><span class="abs" style="width:32%"></span>
+    <div class="scorebar" role="img" aria-label="about 27 mechanically validated, 17 defined, 14 absent; zero platform-enforced or organisationally-enforced as shipped">
+      <span class="enf" style="width:47%"></span><span class="nam" style="width:29%"></span><span class="abs" style="width:24%"></span>
     </div>
     <div class="scoretags">
-      <span><span class="sw enf"></span>~16 enforced</span>
-      <span><span class="sw nam"></span>~16 named-only</span>
-      <span><span class="sw abs"></span>~15 absent</span>
+      <span><span class="sw enf"></span>~27 mechanically validated</span>
+      <span><span class="sw nam"></span>~17 defined</span>
+      <span><span class="sw abs"></span>~14 absent</span>
     </div>
     <div class="note">
-      <p><b>The rule that keeps it honest:</b> a control the harness <em>narrates</em> is hygiene; the control is the
-        platform mechanism the agent can't bypass — a gate that blocks merge, branch protection, a vault. Everything the
-        bundle can't enforce is documented in a runbook, never faked with a green check.</p>
+      <p><b>The rule that keeps it honest:</b> a gate that validates a <em>declaration</em> is <b>mechanically
+        validated</b>, never "enforced" — the word enforced is earned by the platform control plus a negative test
+        showing an attempted bypass being rejected. As shipped: <b>platform enforced 0 · organisationally enforced 0</b>;
+        those states are the adopter's to claim, per control, with activation evidence.</p>
+      <p>The five states (1.10): <span class="mono" style="font-size:.8em">Absent · Defined · Mechanically validated ·
+        Platform enforced · Organisationally enforced</span>. The state of record is the machine-readable
+        <span class="mono" style="font-size:.8em">control-catalog.json</span>, checked by its own gate — an entry claiming
+        a state without its receipts fails the build. This traffic-light is the narrative view; the catalog wins.</p>
+    </div>
+  </section>
+
+  <!-- loom 2.0 roadmap -->
+  <section class="reveal">
+    <div class="sec-h"><span class="eyebrow">Where it goes</span><h2>Loom 2.0 — mandate to customer outcome</h2></div>
+    <p class="sec-sub">The plan (<span class="mono" style="font-size:.85em">docs/loom-2.0-plan.md</span>) extends the stream into one
+      traceable control chain: a policy compiler reads a change's risk classification and <b>compiles</b> the gates, approvers, and
+      evidence it must carry. Solid chips ship today; dashed chips are planned — presented as roadmap, never as shipped controls.</p>
+    <div class="chain" role="img" aria-label="The Loom 2.0 chain: mandate, discovery, PA1 permission to develop, architecture assurance, delivery Q-gates, PA2 permission to launch, operational readiness, production authorization, run — with run feeding back to discovery.">
+      <div class="chip"><div class="clab">Mandate</div><div class="cgate">change envelope · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Discovery</div><div class="cgate">D1–D9</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">PA1</div><div class="cgate">develop? · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Architecture</div><div class="cgate">A1–A5 · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Delivery</div><div class="cgate">Q-gates · runner-scoped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">PA2</div><div class="cgate">launch? · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Readiness</div><div class="cgate">R1–R6 · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Authorize</div><div class="cgate">compound · shipped</div></div><span class="arr">→</span>
+      <div class="chip"><div class="clab">Run</div><div class="cgate">signals ↻ Discovery</div></div>
+    </div>
+    <div class="chain-legend">
+      <span><span class="sw"></span>shipped in the bundle (1.12)</span>
+      <span><span class="sw planned"></span>planned — release noted</span>
+    </div>
+    <div class="train">
+      <div class="rel done"><b>1.9.1 · truth pass</b>placeholder false-green killed · Q1b re-graded</div>
+      <div class="rel done"><b>1.10 · truthful enforcement</b>5-state model · control catalog · Q1b gate · evidence semantics</div>
+      <div class="rel done"><b>1.11 · bank profile</b>policy compiler · change envelope · PA1/PA2 · A-gates</div>
+      <div class="rel done"><b>1.12 · production controls</b>R-gates · 2nd-line hold · ed25519 anchor · gate runner</div>
+      <div class="rel"><b>2.0 · pilot-proven</b>supervised pilot · independent review — adopter-side evidence</div>
     </div>
   </section>
 
   <footer>
-    <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check.</p>
-    <p style="margin-top:8px">MiddleLeap · The Loom — a way for a regulated entity to build with AI.</p>
+    <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check. Roadmap chips map to docs/loom-2.0-plan.md.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom 1.12.0 — a way for a regulated entity to build with AI.</p>
   </footer>
 </div>
 
@@ -268,7 +323,7 @@ const STAGES = [
   {id:'spec',     ph:'Delivery',  lab:'Spec-first', gate:'spec-tripwire', desc:'Write the API contract + acceptance tests and show them RED before implementing. The contract changes only via its own PR.'},
   {id:'implement',ph:'Delivery',  lab:'Implement', gate:'pii-guard', desc:'Implement to green against interfaces — synthetic data only; audit + lineage emitted in the same change.'},
   {id:'review',   ph:'Delivery',  lab:'Review', gate:'reviewer agents', desc:'Local reviewer agents must pass on the diff: hard-stop (PASS) and contract-conformance (CONFORMANT).'},
-  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'6 gates', desc:'Every gate runs: control-plane (HG-0002), model-provenance (HG-0006), evidence-seal (HG-0003), data-lifecycle, the waist gate, and the Q-gates.'},
+  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'16 gates', desc:'The risk-scoped runner executes what the diff implicates and records every skip. The full set: control-plane, control-catalog, identity-registry, change-envelope (incl. compound production authorization + the second-line hold), product-approval (PA1/PA2), architecture-assurance (A1–A5), operational-readiness (R1–R6), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
   {id:'merge',    ph:'Delivery',  lab:'Merge', gate:'HG-0001 · human', desc:'The agent opens the PR and STOPS. A human holds four-eyes — the agent identity is not in the approver group and never merges its own work.'},
   {id:'deploy',   ph:'Run',       lab:'Deploy', gate:'smoke', desc:'Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.'},
   {id:'evidence', ph:'Run',       lab:'Evidence', gate:'HG-0003 · evidence-seal', desc:'Seal the release evidence bundle — a hash chain the gate re-reads and verifies, so altering any artifact breaks a seal.'},
@@ -280,6 +335,9 @@ const SCENARIOS = {
   nohandoff: {name:'No discovery hand-off', block:'waist', why:'The feature carries no discovery: link and is not exempt. The waist gate (HG-0007) rejects it — run the discovery harness first, or set discovery_exempt with a reason.'},
   pii:       {name:'Real PII in a fixture', block:'implement', why:'pii-guard blocks a PII-shaped literal at write time. Synthetic data only, everywhere — the hook stops it before it lands.'},
   unpinned:  {name:'An unpinned model', block:'gates', why:'model-provenance (HG-0006): a model role uses a floating tag, or ships with no passing eval against its pin. The gate fails the build.'},
+  placeholder:{name:'An unadopted CODEOWNERS template', block:'gates', why:'control-plane (HG-0002): the control plane is “owned” only by the placeholder @your-org team. A copied-but-never-adopted template is not a control — the gate fails until a real team owns the guardrails. (New in 1.9.1.)'},
+  agentapproval:{name:'An agent signs the PA1 approval', block:'gates', why:'product-approval (PA1): the risk-second-line approval resolves to an AGENT identity in the registry. Agents prepare evidence and findings — they never approve; a builder holding a second-line role is rejected the same way. (New in 1.11.)'},
+  stalekill:{name:'A stale kill-switch, straight to prod', block:'gates', why:'operational-readiness (R3) + production authorization: the kill-switch was last tested outside its 90-day window, and the second-line release hold is still HELD. An expired drill is history, not readiness — production is blocked. (New in 1.12.)'},
   tampered:  {name:'A tampered evidence bundle', block:'evidence', why:'evidence-seal (HG-0003): an artifact’s content sha256 no longer matches the manifest. The seal breaks — the bundle is not intact.'},
 };
 const PHASES = ['Discovery','Hand-off','Delivery','Run','Loop'];
@@ -383,12 +441,26 @@ reset();
 
 /* ---------- gate reference cards ---------- */
 const GATES=[
- {id:'HG-0002',n:'control-plane-check',d:'Fails if any control-plane file (hooks, gates, workflows, CODEOWNERS) loses its owner — so the agent can’t edit its own guardrails.'},
+ {id:'HG-0002',n:'control-plane-check',d:'Fails if any control-plane file (hooks, gates, workflows, CODEOWNERS) loses its owner — or is owned only by the placeholder @your-org team — so the agent can’t edit its own guardrails and an unadopted template can’t read green.'},
  {id:'HG-0006',n:'model-provenance-check',d:'Fails unless every model role is pinned, tiered, evaluated against its shipping pin, and independently validated (medium + high).'},
  {id:'HG-0003',n:'evidence-seal-check',d:'Re-reads each release artifact and verifies its hash against an append-only chain — altering any artifact breaks a seal.'},
  {id:'data-gov',n:'data-lifecycle-check',d:'Fails a release unless every data category declares a bounded retention and a right-to-erasure disposition.'},
  {id:'HG-0007',n:'discovery-link-check',d:'The waist gate: a pending feature must trace to a gate-green discovery hand-off, or carry an explicit exemption.'},
  {id:'loop',n:'operations-signal-check',d:'The Run→Discovery gate: an operational signal must be triaged (routed) and traceable, so nothing falls on the floor.'},
+ {id:'Q1b',n:'test-integrity-check',d:'Diffs the test surface against the merge base: deleted tests, net assertion loss, added skips, commented-out assertions — the anti-reward-hacking gate. New in 1.10.'},
+ {id:'Q2',n:'sast-check',d:'Validates the SAST scanner’s OUTPUT: real SARIF from a named tool, error-level findings ≤ policy. A missing report is a gap, not a pass. New in 1.10.'},
+ {id:'Q4',n:'secrets-scan',d:'Secret-shaped content in the current tree OR the reachable git history fails — a deleted secret is still leaked; rotate it. New in 1.10.'},
+ {id:'Q4',n:'supply-chain-check',d:'The release must carry a real SBOM, an in-policy dependency audit, and builder-bound provenance — validated semantically. New in 1.10.'},
+ {id:'catalog',n:'control-catalog-check',d:'The control state of record cannot overstate itself: every state needs its receipts, and no cited mechanism or test may be missing. New in 1.10.'},
+ {id:'§5',n:'policy-compiler',d:'A change’s risk classification COMPILES its path: gates, control functions, evidence. Monotonic by construction — higher tiers only add. New in 1.11.'},
+ {id:'§4',n:'change-envelope-check',d:'The governed change object: classified by a human with authority, plan-reconciled at execution (a hand-edited plan fails), advancing states only with receipts. New in 1.11.'},
+ {id:'PA',n:'product-approval-check',d:'PA1 before Develop, PA2 before launch: compiled passport sections + approvals that RESOLVE to human identities holding the role. A name in a text field does not count. New in 1.11.'},
+ {id:'A1–A5',n:'architecture-assurance-check',d:'Data/privacy, threat model (incl. the AI harness itself) with threat→control→test traceability, resilience, model risk, financial integrity. Material open findings block. New in 1.11.'},
+ {id:'§8',n:'identity-registry-check',d:'Approvals resolve against the registry: agents approve nothing; second-line membership is disjoint from builders. New in 1.11.'},
+ {id:'R1–R6',n:'operational-readiness-check',d:'Freshness-windowed readiness: an expired DR exercise (365d), undrilled rollback (180d) or untested kill-switch (90d) blocks production. New in 1.12.'},
+ {id:'§7.4',n:'production authorization',d:'Compound, not “a human approved”: PA2 + R-gate-green readiness + the second-line hold RELEASED (missing = held, fail closed) + ed25519-verified anchored evidence at high tiers. New in 1.12.'},
+ {id:'§6',n:'attestation verification',d:'An anchor counts only when signed by a registry issuer and cryptographically verified — a flipped byte fails. Platform mechanisms report UNVERIFIED-HERE until wired. New in 1.12.'},
+ {id:'runner',n:'gate-runner',d:'Lanes + diff scoping from the catalog: the always-on tamper core never skips; everything else runs only when implicated — and every skip is recorded with a reason. New in 1.12.'},
 ];
 $('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
 

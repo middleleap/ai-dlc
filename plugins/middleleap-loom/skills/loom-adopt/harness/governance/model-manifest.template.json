@@ -1,5 +1,5 @@
 {
-  "_comment": "ADOPT: the model inventory the harness runs on (HG-0006). One entry per model ROLE. model_id and prompt_version MUST be pinned (no 'latest'/floating tags). Per the model-risk-operating-model-runbook §2.2 matrix, medium AND high tiers need a passing eval run against THIS pin plus an independent validation sign-off (low is optional). Verified by scripts/model-provenance-check.mjs. Replace these demo values with your real models; keep the shape.",
+  "_comment": "ADOPT: the model inventory the harness runs on (HG-0006). One entry per model ROLE. model_id and prompt_version MUST be pinned (no 'latest'/floating tags). Per the model-risk-operating-model-runbook §2.2 matrix, medium AND high tiers need a passing eval run against THIS pin plus an independent validation sign-off (low is optional). Each eval must identify its dataset, runner and timestamp, and cite its REPORT artifact by ref + sha256 (1.10: a declared pass is not evidence). Verified by scripts/model-provenance-check.mjs, which also re-hashes the report. Replace these demo values with your real models; keep the shape.",
   "models": [
     {
       "role": "delivery-loop",
@@ -13,7 +13,13 @@
         "result": "pass",
         "threshold_met": true,
         "evaluated_model_id": "example-model@2026-01",
-        "evaluated_prompt_version": "loom-harness@1.4.0"
+        "evaluated_prompt_version": "loom-harness@1.4.0",
+        "dataset_version": "evalset@3",
+        "runner_version": "loom-eval-runner@1.2.0",
+        "report": {
+          "ref": "docs/governance/evidence/eval-report-delivery-loop.json",
+          "sha256": "ba54e3d7d4f8f19df5c860b54c525e49b7c8fe07e6a776a6a426147318afecbb"
+        }
       },
       "validated_by": "model-risk function (2nd line), 2026-07-20"
     },
@@ -29,7 +35,13 @@
         "result": "pass",
         "threshold_met": true,
         "evaluated_model_id": "example-model@2026-01",
-        "evaluated_prompt_version": "loom-harness@1.4.0"
+        "evaluated_prompt_version": "loom-harness@1.4.0",
+        "dataset_version": "evalset@3",
+        "runner_version": "loom-eval-runner@1.2.0",
+        "report": {
+          "ref": "docs/governance/evidence/eval-report-discovery-facilitator.json",
+          "sha256": "36f150eb2f8c9f8d5166b0b366eab5e7c0c1ee72ef2a73fc8b26f6e5215524b7"
+        }
       },
       "validated_by": "model-risk function (2nd line), 2026-07-20"
     }

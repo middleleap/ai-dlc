@@ -1,0 +1,40 @@
+{
+  "profile": "regulated-bank",
+  "kind": "base",
+  "_comment": "The base regulated-bank profile (Loom 2.0 §2). Requirements are CUMULATIVE by tier: the compiler unions everything at or below the envelope's tier, so higher tiers only add. Gates: D = discovery D1-D9, PA1/PA2 = product approval, A = architecture assurance A1-A5, Q = delivery Q-gates, R = operational readiness (1.12). ADOPT: tighten to your policy; you cannot loosen a lower tier from a higher one.",
+  "requirements": {
+    "low": {
+      "gates": ["D", "Q"],
+      "approver_roles": ["product-owner", "engineering"],
+      "evidence": ["tests", "reviews"],
+      "pa1_sections": [],
+      "pa2_sections": []
+    },
+    "medium": {
+      "gates": ["PA1", "PA2"],
+      "approver_roles": ["risk-second-line", "compliance", "legal", "operations"],
+      "evidence": ["control-plane", "model-provenance", "lineage"],
+      "pa1_sections": ["classification", "target-market", "inherent-risks", "regulatory-obligations", "ownership"],
+      "pa2_sections": ["pricing-conduct", "disclosures", "financial-crime", "finance-prudential", "complaints-remediation", "post-launch-monitoring"]
+    },
+    "high": {
+      "gates": ["A"],
+      "approver_roles": ["information-security", "accountable-executive"],
+      "evidence": ["sast", "sbom", "dependency-audit", "provenance"],
+      "pa1_sections": ["data-and-models", "third-parties"],
+      "pa2_sections": ["security-privacy-residency", "model-validation", "operational-readiness"]
+    },
+    "critical": {
+      "gates": ["R", "second-line-hold"],
+      "approver_roles": ["board-or-cab"],
+      "evidence": ["external-anchor"],
+      "pa1_sections": ["regulatory-notification"],
+      "pa2_sections": ["regulatory-clearance"]
+    }
+  },
+  "conditional": [
+    { "when": "model_involved", "adds": { "approver_roles": ["model-validator"], "evidence": ["model-provenance"], "pa2_sections": ["model-validation"] } },
+    { "when": "personal_data", "adds": { "approver_roles": ["data-protection"], "pa2_sections": ["security-privacy-residency"] } },
+    { "when": "third_party", "adds": { "pa1_sections": ["third-parties"], "pa2_sections": ["third-party-continuity"] } }
+  ]
+}

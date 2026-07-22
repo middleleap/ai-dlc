@@ -1,7 +1,9 @@
 # CODEOWNERS — the immutable control plane (HG-0002)
 #
 # ADOPT: replace @your-org/platform-admins with a REAL team the agent's identity is NOT a
-# member of. This file is what makes "the agent cannot edit its own guardrails" true: every
+# member of. Until you do, `scripts/control-plane-check.mjs` FAILS on the placeholder by
+# design — a copied-but-never-adopted template must not read as a green control.
+# This file is what makes "the agent cannot edit its own guardrails" true: every
 # path below requires a Code Owner review before merge, enforced by branch protection (see
 # governance/activation-runbook.md). `scripts/control-plane-check.mjs` fails CI if any of
 # these paths loses its owner — the paper control and the check are defence in depth.
@@ -17,8 +19,17 @@
 /.claude/agents/                        @your-org/platform-admins
 /discovery/gates/                       @your-org/platform-admins
 /discovery/render/                      @your-org/platform-admins
-/scripts/discovery-link-check.mjs       @your-org/platform-admins
-/scripts/control-plane-check.mjs        @your-org/platform-admins
+/scripts/                               @your-org/platform-admins
 /.github/workflows/                     @your-org/platform-admins
+/core/                                  @your-org/platform-admins
+/profiles/                              @your-org/platform-admins
 /docs/governance/                       @your-org/platform-admins
+
+# Classification, approvals and the identity registry are owned by the SECOND LINE, not the
+# builders — this is what makes "the agent cannot lower the risk tier" a mechanism.
+/docs/governance/changes/               @your-org/risk-second-line
+/docs/governance/identities.json        @your-org/risk-second-line
+/docs/governance/attestation-issuers.json  @your-org/risk-second-line
+/docs/governance/services/              @your-org/platform-admins
+
 /CODEOWNERS                             @your-org/platform-admins

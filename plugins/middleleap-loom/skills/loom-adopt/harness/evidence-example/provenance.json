@@ -1,0 +1,18 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "release-v-demo.tar",
+      "digest": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "predicateType": "https://slsa.dev/provenance/v1",
+  "predicate": {
+    "builder": {
+      "id": "https://ci.example.invalid/loom-gates"
+    },
+    "buildType": "loom-delivery-loop"
+  }
+}

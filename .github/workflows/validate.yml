@@ -30,33 +30,132 @@ jobs:
           cp -r "$P/loom-adopt/harness/discovery/templates" "$A/discovery/templates"
           cp "$P/loom-adopt/harness/discovery/brand/design.md" "$A/discovery/brand/design.md"
           cp -r "$P/loom-adopt/harness/discovery/brand/examples" "$A/discovery/brand/examples"
-          cp "$P/loom-adopt/harness/scripts/discovery-link-check.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/control-plane-check.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/control-plane-check.test.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/model-provenance-check.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/model-provenance-check.test.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/evidence-seal-check.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/evidence-seal-check.test.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/data-lifecycle-check.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/data-lifecycle-check.test.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/operations-signal-check.mjs" "$A/scripts/"
-          cp "$P/loom-adopt/harness/scripts/operations-signal-check.test.mjs" "$A/scripts/"
+          cp "$P/loom-adopt/harness/scripts/"*.mjs "$A/scripts/"   # every gate + its tests — a per-file list silently drops new gates
+          cp -r "$P/loom-adopt/harness/core" "$A/core"             # the policy compiler (control plane)
+          cp -r "$P/loom-adopt/harness/profiles" "$A/profiles"     # profiles are data: base + jurisdiction + product
           cp "$P/loom-adopt/harness/governance/CODEOWNERS.template" "$A/CODEOWNERS"
           cp "$P/loom-adopt/harness/governance/model-manifest.template.json" "$A/docs/governance/model-manifest.json"
           cp "$P/loom-adopt/harness/governance/data-lifecycle.template.json" "$A/docs/governance/data-lifecycle.json"
           cp "$P/loom-adopt/harness/governance/operations-signal.template.json" "$A/docs/governance/operations-signal.json"
-          mkdir -p "$A/docs/governance/evidence"
+          cp "$P/loom-adopt/harness/governance/control-catalog.template.json" "$A/docs/governance/control-catalog.json"
+          cp "$P/loom-adopt/harness/governance/identities.template.json" "$A/docs/governance/identities.json"
+          cp "$P/loom-adopt/harness/governance/attestation-issuers.template.json" "$A/docs/governance/attestation-issuers.json"
+          mkdir -p "$A/docs/governance/changes" "$A/docs/governance/services"
+          cp -r "$P/loom-adopt/harness/change-example" "$A/docs/governance/changes/CHG-2026-0042"
+          # The readiness template ships with unparseable ADOPT dates (fails until exercised);
+          # the dry-run "adopts" it by recording drill dates, as a real adopter would.
+          TODAY=$(date +%F)
+          node -e 'const fs=require("fs");const t=JSON.parse(fs.readFileSync(process.argv[1]));const d=process.argv[2];t.bcp_dr.last_exercised=d;t.rollback.last_drilled=d;t.kill_switch.last_tested=d;t.capacity.last_run=d;fs.writeFileSync(process.argv[3],JSON.stringify(t,null,2))' "$P/loom-adopt/harness/governance/service-readiness.template.json" "$TODAY" "$A/docs/governance/services/credit-origination.json"
+          mkdir -p "$A/docs/governance/evidence" "$A/docs/governance/runbooks" "$A/.claude/hooks"
           cp "$P/loom-adopt/harness/evidence-example/"*.json "$A/docs/governance/evidence/"
+          cp "$P/loom-adopt/harness/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
+          cp "$P/loom-adopt/harness/governance/runbooks/"*.md "$A/docs/governance/runbooks/"
+          cp "$P/loom-adopt/harness/governance/activation-runbook.md" "$A/docs/governance/"
+          cp "$P/loom-adopt/harness/hooks/"*.sh "$A/.claude/hooks/"
+          cp "$P/loom-adopt/harness/hooks/settings.hooks.json" "$A/.claude/settings.json"
           cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
-          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs
+          # Negative test: the unadopted template (placeholder @your-org team) must FAIL the
+          # control-plane gate — a copied-but-never-adopted control plane is not a control.
+          if node scripts/control-plane-check.mjs; then
+            echo "::error::control-plane gate passed on the placeholder CODEOWNERS template — the false green is back"
+            exit 1
+          fi
+          # The ADOPT step: replace the placeholder with a real team, as an adopter would.
+          sed -i 's|@your-org/|@dryrun-bank/|g' CODEOWNERS
+          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+          # Q1b + the secrets history scan diff against git — give the adopted layout a history.
+          git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
+          git add -A && git commit -qm base
           node scripts/discovery-link-check.mjs
           node scripts/control-plane-check.mjs
+          node scripts/control-catalog-check.mjs
+          node scripts/identity-registry-check.mjs
+          node scripts/change-envelope-check.mjs
+          node scripts/product-approval-check.mjs
+          node scripts/architecture-assurance-check.mjs
+          node scripts/operational-readiness-check.mjs
+          node scripts/test-integrity-check.mjs --base main
+          node scripts/sast-check.mjs
+          node scripts/secrets-scan.mjs
+          node scripts/supply-chain-check.mjs
           node scripts/model-provenance-check.mjs
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
+          # The gate runner: a README-only diff must run the always-on core and RECORD the
+          # rest as skipped — risk-proportionate execution with no silent skips.
+          node core/gate-runner.mjs --lane pr --base main --out /tmp/gate-run.json
+          node -e 'const r=require("/tmp/gate-run.json");if(!r.skipped.length||r.skipped.some(s=>!s.reason))throw new Error("runner must record every skip with a reason");console.log(`gate-runner: ${r.executed.length} run, ${r.skipped.length} skipped — all recorded`)'
+
+      - name: Loom bundle — negative bypass tests (a bypassed control must be SEEN failing)
+        run: |
+          A="$RUNNER_TEMP/loom-adopt-dryrun"
+          cd "$A"
+          # 1 · Tampered evidence: alter a sealed artifact — the seal gate must break.
+          sed -i 's/"failed": 0/"failed": 1/' docs/governance/evidence/tests.json
+          if node scripts/evidence-seal-check.mjs; then
+            echo "::error::evidence-seal gate passed on a tampered artifact"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/tests.json
+          # 2 · Weakened tests: delete a test file on a branch — Q1b must reject it.
+          git checkout -qb weaken
+          git rm -q discovery/render/render.test.mjs && git commit -qm "delete a test"
+          if node scripts/test-integrity-check.mjs --base main; then
+            echo "::error::test-integrity gate passed a deleted test file"; exit 1
+          fi
+          git checkout -q main
+          # 3 · Committed secret: a key in history must fail even after the file is gone.
+          printf 'aws_access_key_id = AKIAIOSFODNN7DRYRUN0\n' > leak.txt
+          git add leak.txt && git commit -qm "leak" && git rm -q leak.txt && git commit -qm "remove leak"
+          if node scripts/secrets-scan.mjs; then
+            echo "::error::secrets gate passed a secret that lives in git history"; exit 1
+          fi
+          git reset -q --hard HEAD~2
+          # 4 · Failing SAST report: an error-level SARIF finding must block.
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/sast.sarif";const s=JSON.parse(fs.readFileSync(p));s.runs[0].results=[{ruleId:"demo-sqli",level:"error",message:{text:"injected"}}];fs.writeFileSync(p,JSON.stringify(s))'
+          if node scripts/sast-check.mjs; then
+            echo "::error::SAST gate passed an error-level finding"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/sast.sarif
+          # 5 · Doctored control plan: hand-editing PA1 out of the compiled plan must fail
+          #     reconciliation (classification-time rigor survives to execution time).
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/control-plan.json";const s=JSON.parse(fs.readFileSync(p));s.required_gates=s.required_gates.filter(g=>g!=="PA1");fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs; then
+            echo "::error::change-envelope gate accepted a hand-edited control plan"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/control-plan.json
+          # 6 · PA1 revoked: a high-risk change in Develop without PA1 must be blocked.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/product-passport.json";const s=JSON.parse(fs.readFileSync(p));s.pa1.decision="pending";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs; then
+            echo "::error::a high-risk change entered Develop without PA1"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/product-passport.json
+          # 7 · Agent as approver: an agent identity signing PA1 must be rejected.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/product-passport.json";const s=JSON.parse(fs.readFileSync(p));s.pa1.approvals=s.pa1.approvals.map(a=>a.role==="risk-second-line"?{...a,by:"agent-loom-delivery"}:a);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/product-approval-check.mjs; then
+            echo "::error::an AGENT approval was accepted for a control function"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/product-passport.json
+          # 8 · Stale kill-switch: a test older than its 90d window must block readiness.
+          node -e 'const fs=require("fs");const p="docs/governance/services/credit-origination.json";const s=JSON.parse(fs.readFileSync(p));s.kill_switch.last_tested="2024-01-01";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operational-readiness-check.mjs; then
+            echo "::error::readiness gate passed a stale kill-switch test"; exit 1
+          fi
+          git checkout -- docs/governance/services/credit-origination.json
+          # 9 · Held release: production-authorized with the second-line hold still held must
+          #     block — and the silence-after-launch rule must fire on the empty ops log.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/change-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.current_state="production-authorized";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs; then
+            echo "::error::a production authorization passed with the second-line hold still HELD"; exit 1
+          fi
+          node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals=[];fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operations-signal-check.mjs; then
+            echo "::error::an EMPTY operations log passed while a change claims production — silence after launch must fail"; exit 1
+          fi
+          git checkout -- docs/governance/changes/CHG-2026-0042/change-envelope.json docs/governance/operations-signal.json
+          echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green
         run: |

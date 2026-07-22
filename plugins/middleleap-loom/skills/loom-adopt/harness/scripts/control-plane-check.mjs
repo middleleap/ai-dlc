@@ -15,23 +15,55 @@
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 
-// ADOPT: the control-plane files the agent must never change without four-eyes. Use
-// representative concrete paths (a covered path proves its directory is covered). Add yours;
-// remove any this repo doesn't have. Keep CODEOWNERS and this gate in the list — a control
-// plane that doesn't protect itself isn't one.
+// ADOPT: the control-plane files the agent must never change without four-eyes — EVERY gate,
+// hook, workflow, and governance manifest, not representative samples (1.10: an unlisted gate
+// is an unprotected gate). Add yours; remove any this repo doesn't have. Keep CODEOWNERS and
+// this gate in the list — a control plane that doesn't protect itself isn't one.
 export const CONTROL_TARGETS = [
   '.claude/hooks/pii-guard.sh',
   '.claude/hooks/spec-tripwire.sh',
+  '.claude/hooks/test-tripwire.sh',
   '.claude/settings.json',
   'discovery/gates/validate.mjs',
   'scripts/discovery-link-check.mjs',
   'scripts/control-plane-check.mjs',
+  'scripts/model-provenance-check.mjs',
+  'scripts/evidence-seal-check.mjs',
+  'scripts/data-lifecycle-check.mjs',
+  'scripts/operations-signal-check.mjs',
+  'scripts/test-integrity-check.mjs',
+  'scripts/secrets-scan.mjs',
+  'scripts/sast-check.mjs',
+  'scripts/supply-chain-check.mjs',
+  'scripts/control-catalog-check.mjs',
+  'scripts/identity-registry-check.mjs',
+  'scripts/change-envelope-check.mjs',
+  'scripts/product-approval-check.mjs',
+  'scripts/architecture-assurance-check.mjs',
+  'scripts/operational-readiness-check.mjs',
+  'core/policy-compiler.mjs',
+  'core/gate-runner.mjs',
+  'core/attestations.mjs',
+  'profiles/regulated-bank.json',
   '.github/workflows/ci.yml',
   'docs/governance/data-risk-register/controls.json',
+  'docs/governance/control-catalog.json',
+  'docs/governance/model-manifest.json',
+  'docs/governance/evidence/manifest.json',
+  'docs/governance/identities.json',
+  'docs/governance/attestation-issuers.json',
+  'docs/governance/changes/any/change-envelope.json', // ownership probe: the whole changes/ tree must be owned (by the second line, not builders)
+  'docs/governance/changes/any/release-hold.json',    // ownership probe: only the second line can touch the hold
+  'docs/governance/services/any.json',                // ownership probe: readiness declarations are owned
   'CODEOWNERS',
 ];
 
 const CODEOWNERS_LOCATIONS = ['CODEOWNERS', '.github/CODEOWNERS', 'docs/CODEOWNERS'];
+
+// The shipped template's placeholder owner. A control plane "owned" by @your-org/… is not
+// owned by anyone — the gate fails until the ADOPT step replaces it with a real team, so a
+// copied-but-never-adopted template cannot read as a green control.
+export const PLACEHOLDER_OWNER = /^@your-org(\/|$)/i;
 
 /** Parse CODEOWNERS into ordered rules. Comments and blank lines are dropped. */
 export function parseCodeowners(text) {
@@ -67,8 +99,11 @@ export function evaluate(codeownersText, targets = CONTROL_TARGETS) {
   const rules = parseCodeowners(codeownersText);
   const findings = [];
   for (const target of targets) {
-    if (ownersFor(rules, target).length === 0) {
+    const owners = ownersFor(rules, target);
+    if (owners.length === 0) {
       findings.push(`${target} — not owned in CODEOWNERS (a change would not require Code Owner review)`);
+    } else if (owners.every((o) => PLACEHOLDER_OWNER.test(o))) {
+      findings.push(`${target} — owned only by the placeholder team ${owners.join(', ')} (replace @your-org/… with a real team the agent is not a member of)`);
     }
   }
   return findings;

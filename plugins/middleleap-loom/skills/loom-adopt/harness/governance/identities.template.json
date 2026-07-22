@@ -1,0 +1,23 @@
+{
+  "_comment": "ADOPT: the identity registry seam (Loom 2.0 §8) — mounted as docs/governance/identities.json, CODEOWNERS-owned by a NON-builder group. Every approver, validator and classifier field resolves against this registry: `validated_by: 'Risk'` does not pass; an identity must exist, hold the required role, and satisfy the separation rules (agents approve nothing; second-line members are not builders). Authentication of these identities (SSO/signing) is the platform's half — see attestation-issuers.template.json; this registry is the repo-side contract the gates enforce deterministically.",
+  "groups": {
+    "builders": "first-line identities that author changes (humans and agents)",
+    "second-line": "independent risk / compliance / validation identities — MUST be disjoint from builders",
+    "platform-admins": "control-plane owners"
+  },
+  "identities": [
+    { "id": "agent-loom-delivery", "kind": "agent", "display": "Loom delivery loop (service identity)", "roles": [], "groups": ["builders"] },
+    { "id": "eng-omar", "kind": "human", "display": "Omar (Engineering)", "roles": ["engineering"], "groups": ["builders"] },
+    { "id": "po-fatima", "kind": "human", "display": "Fatima (Product)", "roles": ["product-owner"], "groups": [] },
+    { "id": "risk-lena", "kind": "human", "display": "Lena (Risk, 2nd line)", "roles": ["risk-second-line"], "groups": ["second-line"] },
+    { "id": "comp-imran", "kind": "human", "display": "Imran (Compliance)", "roles": ["compliance"], "groups": ["second-line"] },
+    { "id": "legal-sara", "kind": "human", "display": "Sara (Legal)", "roles": ["legal"], "groups": [] },
+    { "id": "ops-dana", "kind": "human", "display": "Dana (Operations)", "roles": ["operations"], "groups": [] },
+    { "id": "infosec-noor", "kind": "human", "display": "Noor (Information Security)", "roles": ["information-security"], "groups": [] },
+    { "id": "credit-hassan", "kind": "human", "display": "Hassan (Credit Risk)", "roles": ["credit-risk"], "groups": ["second-line"] },
+    { "id": "mrm-aisha", "kind": "human", "display": "Aisha (Model Risk)", "roles": ["model-validator"], "groups": ["second-line"] },
+    { "id": "dp-yusuf", "kind": "human", "display": "Yusuf (Data Protection)", "roles": ["data-protection"], "groups": ["second-line"] },
+    { "id": "exec-rashid", "kind": "human", "display": "Rashid (Accountable Executive)", "roles": ["accountable-executive"], "groups": [] },
+    { "id": "padmin-zoe", "kind": "human", "display": "Zoe (Platform Admin)", "roles": ["platform-admin"], "groups": ["platform-admins"] }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "_comment": "ADOPTER EXAMPLE — one governed change (Loom 2.0 §4), mounted as docs/governance/changes/CHG-2026-0042/. The envelope is the traceability root: every sibling artifact carries this change_id. control-plan.json is COMPILED (node core/policy-compiler.mjs ... --write), never hand-written — the change-envelope gate recompiles and rejects a stale or edited plan.",
+  "change_id": "CHG-2026-0042",
+  "product_id": "PRD-017",
+  "change_type": "material-product-change",
+  "risk_tier": "high",
+  "discovery_run": "credit-limit-review",
+  "product_profile": "uae-retail-credit",
+  "service_ids": ["credit-origination"],
+  "model_roles": ["affordability-assessment"],
+  "required_profiles": ["regulated-bank", "uae-bank", "lending"],
+  "flags": { "model_involved": true, "personal_data": true, "islamic": false, "third_party": false },
+  "classification": {
+    "classified_by": "po-fatima",
+    "classified_at": "2026-07-18",
+    "rationale": "Material change to an existing retail credit product: new affordability model in the decision path, personal data in scope."
+  },
+  "current_state": "in-delivery",
+  "control_plan": "control-plan.json",
+  "evidence_bundle": "docs/governance/evidence/",
+  "exemptions": []
+}

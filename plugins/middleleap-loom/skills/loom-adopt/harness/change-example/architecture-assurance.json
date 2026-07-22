@@ -1,0 +1,47 @@
+{
+  "_comment": "ADOPTER EXAMPLE — architecture assurance A1–A5 (Loom 2.0 §7.2). Every A2 threat traces to a control and a test; a material open finding blocks backlog creation.",
+  "change_id": "CHG-2026-0042",
+  "A1-data-privacy": {
+    "status": "complete",
+    "inventory": "income, obligations, bureau score — classified per docs/governance/data-lifecycle.json",
+    "lawful_basis": "contract performance + CBUAE affordability obligation",
+    "residency": "UAE-resident stores only; no cross-border model traffic",
+    "retention": "per data-lifecycle manifest; erasure via crypto-shred"
+  },
+  "A2-security-threat-model": {
+    "status": "complete",
+    "threats": [
+      { "threat": "Prompt injection via repository content steers the delivery agent", "control": "pii-guard + spec/test tripwires + protected control plane (HG-0002)", "test": "scripts/control-plane-check.test.mjs" },
+      { "threat": "Agent weakens tests to reach green", "control": "test-tripwire hook + Q1b test-integrity gate", "test": "scripts/test-integrity-check.test.mjs" },
+      { "threat": "Evidence forgery in the release bundle", "control": "hash-chained, semantically-verified evidence seal (HG-0003)", "test": "scripts/evidence-seal-check.test.mjs" },
+      { "threat": "Credential leakage into repo or history", "control": "history-aware secrets gate (Q4)", "test": "scripts/secrets-scan.test.mjs" },
+      { "threat": "Affordability model produces unsafe limits", "control": "model-provenance gate: pinned eval with sealed report + independent validation", "test": "scripts/model-provenance-check.test.mjs" }
+    ]
+  },
+  "A3-operational-resilience": {
+    "status": "complete",
+    "criticality": "important-business-service (credit decisioning)",
+    "dependencies": ["core banking ledger", "credit bureau API"],
+    "degraded_mode": "manual underwriting queue; decisioning suspended, not improvised",
+    "recovery": "stateless decision service; RTO 4h target pending R-gate machinery (1.12)"
+  },
+  "A4-model-risk": {
+    "status": "complete",
+    "purpose": "affordability assessment in the credit-limit decision path",
+    "tier": "high",
+    "human_override": "underwriter can override with reason code; overrides monitored",
+    "evaluation_plan": "evals/affordability — dataset evalset@3, threshold 0.95",
+    "monitoring_plan": "monthly drift + override-rate review by model risk",
+    "suspension": "model-risk function can suspend to manual underwriting"
+  },
+  "A5-financial-integrity": {
+    "status": "complete",
+    "idempotency": "limit-change commands carry idempotency keys",
+    "maker_checker": "limit increases above threshold require checker approval",
+    "reconciliation": "daily limits-vs-ledger reconciliation; breaks page operations",
+    "audit": "INSERT-only audit trail with lineage emission (Q4.5)"
+  },
+  "findings": [
+    { "id": "AF-1", "materiality": "minor", "status": "accepted", "note": "Bureau sandbox lacks latency parity; accepted for delivery, revisit at PA2." }
+  ]
+}

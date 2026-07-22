@@ -1,0 +1,8 @@
+{
+  "_comment": "ADOPTER EXAMPLE — the second-line release hold (Loom 2.0 §7.4). This file lives under docs/governance/changes/, which CODEOWNERS assigns to the second line: builders and agents CANNOT edit it without a second-line review. Production authorization requires status 'released' by a second-line human; a missing file means HELD (fail closed). This change is in delivery, so the hold is in its default state.",
+  "change_id": "CHG-2026-0042",
+  "status": "held",
+  "by": "risk-lena",
+  "at": "2026-07-19",
+  "reason": "Default hold until PA2 and operational readiness complete."
+}

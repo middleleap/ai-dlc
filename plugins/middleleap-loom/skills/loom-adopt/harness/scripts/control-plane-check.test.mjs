@@ -65,6 +65,16 @@ test('ruleMatches handles global, anchored dir, and exact forms', () => {
   assert.equal(ruleMatches('/discovery/gates/', 'discovery/render/x.mjs'), false);
 });
 
+test('a placeholder-only owner fails the gate (an unadopted template is not a control)', () => {
+  const findings = evaluate('* @your-org/platform-admins\n', TARGETS);
+  assert.equal(findings.length, TARGETS.length);
+  assert.match(findings[0], /placeholder team @your-org\/platform-admins/);
+});
+
+test('a real owner alongside a placeholder still protects the target', () => {
+  assert.deepEqual(evaluate('* @your-org/platform-admins @acme-bank/platform\n', TARGETS), []);
+});
+
 test('the shipped default control-target list is non-empty and self-protecting', () => {
   assert.ok(CONTROL_TARGETS.length > 0);
   assert.ok(CONTROL_TARGETS.includes('CODEOWNERS'));

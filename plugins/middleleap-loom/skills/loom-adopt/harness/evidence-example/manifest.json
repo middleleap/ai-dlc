@@ -1,7 +1,8 @@
 {
-  "_comment": "ADOPTER EXAMPLE — a real, self-contained, tamper-evident release evidence bundle (HG-0003). The delivery loop writes this at step 8. Each sha256 is the real hash of the sibling artifact; the seals form an append-only chain; anchor is the final seal (publish it to an external WORM + RFC-3161 store). Verified by scripts/evidence-seal-check.mjs, which now re-reads each artifact and fails on any hash mismatch. See README.md.",
+  "_comment": "ADOPTER EXAMPLE — a real, self-contained, tamper-evident release evidence bundle (HG-0003). The delivery loop writes this at step 8. Each sha256 is the real hash of the sibling artifact; the seals form an append-only chain; anchor is the final seal (publish it to an external WORM + RFC-3161 store). release_commit binds the bundle to the released commit, and evidence-seal-check.mjs verifies each sealed artifact SEMANTICALLY (tests pass, verdicts PASS/CONFORMANT, scans clean) as well as byte-for-byte. See README.md.",
   "release": "v-demo",
-  "anchor": "a49e41bc26215f299945edcc0634e34256d3b380ffa26dee5b5dea50c59704c8",
+  "release_commit": "release-v-demo",
+  "anchor": "3446fb6da9451a77f35096404e27de9a5fd8350dab27d8ea7eb63758e2fb6760",
   "entries": [
     {
       "type": "tests",
@@ -37,6 +38,38 @@
       "sha256": "217abc3e42dfeb825af0e842005c8f10d6201c8e2cae6d8439f4a2cddbfdd283",
       "prev": "1c7f52fb68f88c36fc9fd3ef12553d5a21cb8ac3a22524bbdd3e190399be6203",
       "seal": "a49e41bc26215f299945edcc0634e34256d3b380ffa26dee5b5dea50c59704c8"
+    },
+    {
+      "type": "sast",
+      "ref": "sast.sarif",
+      "sha256": "b8f276124eb68d972682f73d2fe3fbd6f1770b9e3fe920cdfcc3c34db4a90b63",
+      "prev": "a49e41bc26215f299945edcc0634e34256d3b380ffa26dee5b5dea50c59704c8",
+      "seal": "bd7a1cb56f7f3a223adee0d63613d238aeb11d3c00f4b91f2e38da063e087b62"
+    },
+    {
+      "type": "sbom",
+      "ref": "sbom.cdx.json",
+      "sha256": "359573fdf38f79103f737bd2d2351e6c19a6b19ca364e4ceff5eebc20d90e823",
+      "prev": "bd7a1cb56f7f3a223adee0d63613d238aeb11d3c00f4b91f2e38da063e087b62",
+      "seal": "baa722e69b8ad50b9a325b9e66dc8fd6cd47426b03866ebd9f3a3ee8847e6982"
+    },
+    {
+      "type": "dependency-audit",
+      "ref": "dependency-audit.json",
+      "sha256": "d2ab65582f8b3eef17afbe69a020992c56d489b673b63260e7cb258a51f8ea8d",
+      "prev": "baa722e69b8ad50b9a325b9e66dc8fd6cd47426b03866ebd9f3a3ee8847e6982",
+      "seal": "247bc49fc3bbdff52c6b3cd185be767d1a0c9cb85a763759262c5cee4d5df239"
+    },
+    {
+      "type": "provenance",
+      "ref": "provenance.json",
+      "sha256": "6d73284f2a0590c7b17159c42ebaf38514101a8bbcf8eb690474cb9613a07ca2",
+      "prev": "247bc49fc3bbdff52c6b3cd185be767d1a0c9cb85a763759262c5cee4d5df239",
+      "seal": "3446fb6da9451a77f35096404e27de9a5fd8350dab27d8ea7eb63758e2fb6760"
     }
-  ]
+  ],
+  "attestation": {
+    "issuer": "demo-anchor-signer",
+    "signature": "44ndYLWoZG4y+G7uj+e9tkvQRucqOzelti70pajDyODW1ef9s0i0vZ5r2vUqIH8NOFxvCIvWUzCQ2q+UEjA7Cw=="
+  }
 }
