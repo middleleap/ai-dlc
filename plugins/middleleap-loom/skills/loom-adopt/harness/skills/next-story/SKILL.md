@@ -64,6 +64,14 @@ reviewing AI is not four-eyes for a regulated production change.
   branch. The item stays `in-progress` until a human merges it; its `depends_on` dependents
   wait — that back-pressure is intended.
 - Spec PRs, ADRs, decision changes → never merge; queue for the user.
+- **Routine lane (HG-0013), the one calibrated exception**: if the change is a pre-named
+  routine class (dependency patch, lint fix, doc fix) that fits the second-line-owned
+  `routine-envelope.json` — inside its path scope, under its diff cap, required gates green,
+  clear of the absolute floor (control plane, contract, auth, migrations) — write the
+  `routine-claim.json`, and the change may auto-merge once `routine-change-check` passes among
+  the required checks. This is not you disposing of your own work: a human pre-authorized the
+  class, per envelope, with an expiry. If the change does not fit in *any* respect, drop the
+  claim and take the normal lane above — no arguing the envelope wider.
 
 Branch protection on `main` (required human review from a CODEOWNERS group the agent isn't in,
 required checks, no bypass) is the enforcement of record; this skill honours it so the loop
@@ -74,12 +82,20 @@ the control of record.
 
 Append to `docs/build-log.md`: date, item, PR #, what the PR contains (it is **not** merged — a
 human disposes), test counts, reviewer verdicts, anything parked. Commit log/backlog blocker
-updates to main directly.
+updates to main directly. Also append one entry to `docs/governance/token-ledger.json` — the
+iteration id, milestone, and the output-token spend for the iteration — so cost is measurable
+per story and per milestone (`token-report.mjs`). This is telemetry, not a gate: it is recorded
+and reported, never used to block a merge.
 
 Push a notification on: (a) **a PR is ready for human merge** — the normal end of a successful
 iteration; (b) a milestone fully done; (c) the eligible queue is empty but blocked items need the
 user; (d) the same item failed its gates twice — park it `blocked` with the failure evidence
 after the second attempt; never thrash a third time.
+
+The loop's non-done exits map to the deck's terminal-state vocabulary: a mid-iteration decision
+a human must make is an **ESCALATE** (recorded as a `blocked` item, notification (c)); an item
+parked after failing its gates twice is an **ABSTAIN** (notification (d)) — a bounded stop, not
+a silent give-up. Naming them makes the loop's stops legible in the run record.
 
 ## Red flags — stop and re-read this skill
 - Asking the user a question mid-iteration ("should I…?") — record a blocker instead

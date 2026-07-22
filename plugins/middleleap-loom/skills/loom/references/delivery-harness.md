@@ -38,9 +38,9 @@ only the merge is human.
             LIVE url and fails the deploy if broken
 ⑧ EVIDENCE  on release: re-run the gates at the released commit and seal the
             evidence bundle (test results, reviewer verdicts, lineage proof,
-            agent build-provenance) into the repository — as a hash-chained
-            evidence manifest the evidence-seal gate (HG-0003) verifies is
-            complete and tamper-evident
+            agent build-provenance, the token-spend ledger) into the repository
+            — as a hash-chained evidence manifest the evidence-seal gate
+            (HG-0003) verifies is complete and tamper-evident
 ```
 
 Mid-iteration, the loop never asks the user anything: a decision a human must make becomes a
@@ -94,6 +94,18 @@ checks, no bypass) — the skills and reviewer agents honour the rule so the loo
 on restraint, but the platform control is what makes it non-bypassable. See the governance
 catalog (`governance.md`), HG-0001 and HG-0002.
 
+**The one calibrated exception — the routine lane (HG-0013).** The dark boundary is the PR,
+but a lint fix and an auth rewrite should not cost the reviewer the same attention. A **routine
+change** — a narrow, pre-named class (dependency patch, lint fix, doc fix), inside a
+second-line-owned, expiring **routine envelope**, under a diff cap, with every required gate
+green — may auto-merge. The human approval already happened, once, per envelope, and a routine
+change *inherits* it instead of being individually reviewed (`routine-change-check`,
+`routine-envelope.json`). An **absolute floor in code** keeps the control plane, the API
+contract, auth, and migrations out of the lane no matter how the envelope is configured, and
+anything that does not fit re-evaluates to the normal human-merge lane. Approval moves from
+per-change to per-envelope; it never disappears. This is graduated autonomy, not a hole in
+four-eyes.
+
 ## Red flags (the loop is drifting)
 
 - A test shown green that was never shown red
@@ -101,3 +113,5 @@ catalog (`governance.md`), HG-0001 and HG-0002.
 - "We'll add audit/lineage after the demo"
 - The agent merging anything, including "just this once"
 - A feature item building without a `discovery:` link and without an explicit, reasoned exemption
+- Merge throughput per reviewer climbing while review depth stays invisible — comprehension
+  debt accruing behind a green board (the gate passed; did anyone read it?)

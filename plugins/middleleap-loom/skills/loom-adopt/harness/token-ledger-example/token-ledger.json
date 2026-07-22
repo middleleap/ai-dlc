@@ -1,0 +1,9 @@
+{
+  "_comment": "EXAMPLE — a handful of build-loop iterations across two milestones. Mounts at docs/governance/token-ledger.json.",
+  "entries": [
+    { "iteration": "STORY-12", "milestone": "M2", "output_tokens": 18420, "pr": 128, "ts": "2026-07-18" },
+    { "iteration": "STORY-13", "milestone": "M2", "output_tokens": 9310, "pr": 129, "ts": "2026-07-18" },
+    { "iteration": "STORY-14", "milestone": "M2", "output_tokens": 24875, "pr": 131, "ts": "2026-07-19" },
+    { "iteration": "STORY-15", "milestone": "M3", "output_tokens": 12640, "pr": 134, "ts": "2026-07-20" }
+  ]
+}

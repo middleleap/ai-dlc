@@ -44,6 +44,8 @@ export const CONTROL_TARGETS = [
   'scripts/assurance-cycle-check.mjs',
   'scripts/decision-log-check.mjs',
   'scripts/adapter-check.mjs',
+  'scripts/routine-change-check.mjs',
+  'scripts/product-eval-check.mjs',
   'core/policy-compiler.mjs',
   'core/gate-runner.mjs',
   'core/attestations.mjs',
@@ -55,6 +57,8 @@ export const CONTROL_TARGETS = [
   'docs/governance/evidence/manifest.json',
   'docs/governance/identities.json',
   'docs/governance/attestation-issuers.json',
+  'docs/governance/routine-envelope.json', // HG-0013 — the standing routine authorization is second-line-owned, not agent-writable
+  'docs/governance/product-evals.json',    // product-outcome evals are product-owner-owned, not agent-writable
   'docs/governance/changes/any/change-envelope.json', // ownership probe: the whole changes/ tree must be owned (by the second line, not builders)
   'docs/governance/changes/any/release-hold.json',    // ownership probe: only the second line can touch the hold
   'docs/governance/services/any.json',                // ownership probe: readiness declarations are owned

@@ -1,0 +1,12 @@
+{
+  "_comment": "EXAMPLE — a real, conforming standing authorization. Owner sara-2l resolves to a second-line human in the shipped identities example. Mounts at docs/governance/routine-envelope.json.",
+  "envelope_id": "RTE-2026-Q3",
+  "owner": "sara-2l",
+  "expires": "2026-09-30",
+  "allowed_classes": ["dependency-patch", "lint-fix", "doc-fix"],
+  "path_allow": ["docs/", "CHANGELOG.md", "package-lock.json", "pnpm-lock.yaml"],
+  "path_deny": ["docs/governance/"],
+  "max_diff_lines": 40,
+  "required_green_gates": ["Q1", "Q1b", "Q2", "Q4-SECRETS"],
+  "merge_mode": "envelope-approved"
+}

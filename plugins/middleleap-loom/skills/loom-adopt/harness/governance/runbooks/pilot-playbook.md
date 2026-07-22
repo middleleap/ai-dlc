@@ -40,6 +40,7 @@ the platform/organisational half in the pilot.
 | Adversarial exercise | Control that catches it | Status |
 |---|---|---|
 | Agent attempts a direct push / self-merge | Branch protection (HG-0001) + protected control plane (HG-0002) | control-plane **CI-proven**; branch protection **live** (activation evidence) |
+| Agent claims the routine lane for an out-of-envelope diff (control-plane path, oversized diff, expired or agent-owned envelope) | `routine-change-check` (HG-0013): absolute floor + second-line-owned expiring envelope; a non-fit re-evaluates to human merge | **CI-proven** (floor / expiry / agent-owner / oversize negative tests); auto-merge-only-on-green **live** (merge-queue activation evidence) |
 | Agent modifies a gate | `control-plane-check` (control plane owned, non-builder CODEOWNERS) | **CI-proven** (placeholder-owner negative test) |
 | Placeholder / fake control-function approval | `product-approval-check` + identity registry (approvals resolve to real humans) | **CI-proven** (agent-as-approver negative test) |
 | Builder impersonates second line | Disjoint builders ∩ second-line; release hold is second-line-owned | **CI-proven** (held-release negative test) |

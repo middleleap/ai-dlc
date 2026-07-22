@@ -1,0 +1,22 @@
+{
+  "_comment": "EXAMPLE — a product (PRD-017, from the credit-limit-review discovery run) whose two D1 success measures are scored green by a sealed eval. report.json's sha256 is real; evaluated_commit is illustrative — in CI it must equal the shipping commit (GITHUB_SHA). Mounts at docs/governance/product-evals.json, with report.json under docs/governance/evidence/.",
+  "products": [
+    {
+      "product_id": "PRD-017",
+      "discovery": "credit-limit-review",
+      "success_measures": [
+        { "id": "SM-1", "statement": "time-to-decision under 5s at p95", "threshold": "<5s", "result": "pass", "threshold_met": true },
+        { "id": "SM-2", "statement": "affordability false-decline rate below baseline", "threshold": "<= baseline", "result": "pass", "threshold_met": true }
+      ],
+      "eval": {
+        "evaluated_commit": "0123456789abcdef0123456789abcdef01234567",
+        "dataset_version": "credit-scenarios-2026.3",
+        "runner_version": "eval-harness-2.1",
+        "ran_at": "2026-07-20T09:14:00Z",
+        "result": "pass",
+        "threshold_met": true,
+        "report": { "ref": "product-eval-example/report.json", "sha256": "66c57a97efa6c22d1ec0a2de738a3086699ca8a864470d3ab94dfc91b76f3b43" }
+      }
+    }
+  ]
+}

@@ -32,6 +32,7 @@ jobs:
           node scripts/control-plane-check.mjs        # HG-0002 — control-plane owned in CODEOWNERS
           node scripts/control-catalog-check.mjs       # control state of record cannot overstate itself
           node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
+          node scripts/routine-change-check.mjs        # HG-0013 — a routine claim fits the second-line envelope (else normal lane)
 
       - name: Product-governance gates (envelope · PA1/PA2 · A1–A5 · identities)
         run: |
@@ -63,9 +64,13 @@ jobs:
       - name: Model, evidence, data & feedback gates
         run: |
           node scripts/model-provenance-check.mjs      # HG-0006 — models pinned/tiered/evaluated, reports sealed
+          node scripts/product-eval-check.mjs           # product-outcome evals: discovery-linked, measures green, fresh (--commit "$GITHUB_SHA")
           node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence sealed, commit-bound, semantically verified
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
+
+      - name: Cost telemetry (report, never a gate)
+        run: node scripts/token-report.mjs --check   # validate the token ledger is well-formed; spend never blocks a merge
 
       - name: Discovery runs are gate-green (D1–D9)
         run: |
