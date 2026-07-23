@@ -456,6 +456,23 @@
       "gate_family": "product-eval"
     },
     {
+      "control_id": "BRAINKIT",
+      "objective": "Institutional conformance: a governed change in a BrainKit-enabled repository binds to an approved, sealed, owner-accountable, source-grounded Institutional BrainKit; a draft/expired/retired or tampered BrainKit, an unresolved owner, a stale D7 compatibility projection, or a plan pinning the wrong BrainKit digest blocks the change. Institutionally conformant, not regulatorily compliant",
+      "owner_role": "institutional-context-owner",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/brainkit-check.mjs",
+      "test_ref": "scripts/brainkit-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "institution/brainkit/",
+        "discovery/brand/design.md",
+        "profiles/institutions/"
+      ],
+      "note": "Mandatory-when-compiled: enforced when a change's compiled plan carries the brainkit-conformance family (an institution profile is in the envelope); a dormant, adopt-pending BrainKit that no change pins is skipped. The BrainKit CONTENT is the institution's to author and approve — the gate enforces its integrity, not its correctness",
+      "gate_family": "brainkit-conformance"
+    },
+    {
       "control_id": "DOC-INTEGRITY",
       "objective": "Generated docs (copy table, scorecard) cannot drift from their source of truth \u2014 drift fails the build",
       "owner_role": "platform-admin",

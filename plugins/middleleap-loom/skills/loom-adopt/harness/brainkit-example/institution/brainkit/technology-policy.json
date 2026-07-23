@@ -1,0 +1,15 @@
+{
+  "_comment": "NEUTRAL FICTIONAL EXAMPLE — Meridian Trust technology policy. Each entry grounds in an approved source id present in source-register.json.",
+  "allowed": [
+    { "technology": "TypeScript / Node.js (standard service runtime)", "source": "mt-tech-2026" }
+  ],
+  "consult": [
+    { "technology": "New managed datastore", "authority": "ctx-mariam", "source": "mt-tech-2026" }
+  ],
+  "forbidden": [
+    { "technology": "Unpinned dependency ranges in production services", "reason": "supply-chain integrity (see the supply-chain policy)", "source": "mt-tech-2026" }
+  ],
+  "standards": [
+    { "standard": "All customer-facing copy passes the plain-language readability bar", "source": "mt-identity-2026" }
+  ]
+}

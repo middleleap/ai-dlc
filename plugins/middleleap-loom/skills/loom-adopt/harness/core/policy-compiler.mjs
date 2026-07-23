@@ -16,7 +16,9 @@
 // compile itself an easier path.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import process from 'node:process';
+import { loadBrainkit, livePackageDigest } from './brainkit.mjs';
 
 export const TIERS = ['low', 'medium', 'high', 'critical'];
 export const CHANGE_TYPES = ['documentation', 'software-change', 'new-product', 'material-product-change'];
@@ -89,6 +91,21 @@ export function resolveBindings(names, baseDir = process.cwd()) {
       version: typeof data.version === 'string' ? data.version : null,
       digest: 'sha256:' + createHash('sha256').update(canonical(data)).digest('hex'),
     };
+    // rc.8 WS7: an institution profile pins a BrainKit. Fold the LIVE package digest into the
+    // binding, so a one-byte BrainKit edit changes the plan hash and makes a stored plan stale —
+    // the BrainKit tamper cannot ride an old plan. A named institution profile with no resolvable
+    // BrainKit is a finding, not a silent pass.
+    if (kind === 'institution') {
+      const rel = data.brainkit?.path ? dirname(data.brainkit.path) : 'institution/brainkit';
+      const bk = loadBrainkit(baseDir, rel);
+      if (!bk || !bk.manifest) {
+        findings.push(`institution profile ${name} pins a BrainKit at ${rel} but it is missing or unparseable — cannot bind an unresolvable BrainKit`);
+      } else {
+        binding.brainkit_id = bk.manifest.brainkit_id ?? null;
+        binding.brainkit_version = bk.manifest.version ?? null;
+        binding.brainkit_digest = livePackageDigest(bk.dir, bk.manifest);
+      }
+    }
     bindings.push(binding);
   }
   bindings.sort((a, b) => a.profile.localeCompare(b.profile));

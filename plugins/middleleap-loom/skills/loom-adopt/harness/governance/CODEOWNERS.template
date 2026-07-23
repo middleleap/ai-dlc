@@ -32,4 +32,9 @@
 /docs/governance/attestation-issuers.json  @your-org/risk-second-line
 /docs/governance/services/              @your-org/platform-admins
 
+# The Institutional BrainKit is institution-owned context — owned by the accountable
+# context owners, not the builders. A change to it requires their review (rc.8).
+/institution/                           @your-org/institutional-context-owners
+/profiles/institutions/                 @your-org/institutional-context-owners
+
 /CODEOWNERS                             @your-org/platform-admins

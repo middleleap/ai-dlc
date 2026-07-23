@@ -88,6 +88,7 @@ jobs:
           node scripts/assurance-cycle-check.mjs
           node scripts/decision-log-check.mjs
           node scripts/adapter-check.mjs
+          node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
           # rc.7: product evals (commit-bound); the example's evaluated_commit is stamped to HEAD
           # as a real adopter's CI would, then verified against the shipping commit.
           HEAD_SHA=$(git rev-parse HEAD)
@@ -206,3 +207,13 @@ jobs:
         run: |
           cd plugins/middleleap-loom/skills/loom-adopt/harness/operations-example
           node ../scripts/operations-signal-check.mjs
+
+      - name: Loom — BrainKit conformance (rc.8 WS7 · positive path + negative bypass suite)
+        working-directory: plugins/middleleap-loom/skills/loom-adopt/harness
+        run: |
+          # The negative bypass suite: an unapproved/expired BrainKit, a tampered section, an
+          # unresolved owner, a stale D7 projection, and a plan pinning the wrong digest must all
+          # be SEEN failing (12 cases). Runs the compiler + digest module + gate together.
+          node --test scripts/brainkit-check.test.mjs core/policy-compiler.test.mjs core/brainkit.test.mjs
+          # The positive path: the sealed, approved Meridian BrainKit passes end to end.
+          ( cd brainkit-example && node ../scripts/brainkit-check.mjs )

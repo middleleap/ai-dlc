@@ -1,0 +1,71 @@
+{
+  "_comment": "NEUTRAL FICTIONAL EXAMPLE — a fully-formed, APPROVED, sealed Meridian Trust BrainKit (Loom 2.0-rc.8). It exists so brainkit-check has a green positive path and the negative-bypass suite has something real to tamper. Digests are sealed from the section files (node scripts/brainkit-check.mjs --seal). No real institutional content.",
+  "schema_version": "1.0",
+  "brainkit_id": "meridian-trust-brainkit",
+  "institution_id": "meridian-trust",
+  "version": "1.0.0",
+  "status": "approved",
+  "effective_at": "2026-07-01",
+  "expires_at": null,
+  "owners": {
+    "identity": "ctx-mariam",
+    "terminology": "ctx-mariam",
+    "architecture": "ctx-mariam",
+    "technology-policy": "ctx-mariam",
+    "governance": "ctx-mariam",
+    "source-register": "ctx-mariam"
+  },
+  "sections": [
+    {
+      "section": "identity",
+      "path": "identity/design.md",
+      "digest": "sha256:2878a0f9d0218b549fb65268bdfb86853a7359cdd26913de6d7d41ccce058ef3"
+    },
+    {
+      "section": "terminology",
+      "path": "terminology.md",
+      "digest": "sha256:8a9da363504bd75a7bfc41f52de89597be9564dac97f6e6c0033c6b9e9e43b73"
+    },
+    {
+      "section": "architecture",
+      "path": "architecture.md",
+      "digest": "sha256:b99640c98935f27a4607c42763430b1db5d233f82b1904ce3bc1ea6a18e603fb"
+    },
+    {
+      "section": "technology-policy",
+      "path": "technology-policy.json",
+      "digest": "sha256:0938079dfc8ea9fc21857fc443236273c7b61d423ed97b7826ec1d8902303b04"
+    },
+    {
+      "section": "governance",
+      "path": "governance.md",
+      "digest": "sha256:ea234b7aae78a9f6009a6c9ebd0ce6820faa395d71e1ec2b798bdc1f277449a4"
+    },
+    {
+      "section": "source-register",
+      "path": "source-register.json",
+      "digest": "sha256:96cdb10d3f6a4e16669e9705333f449a7561a49b1be3eaf4d14786d90e98b902"
+    }
+  ],
+  "package_digest": "sha256:7d72a0968c928ec70c65786998be376061e5cbd3e3baf9a068071918619bc5bc",
+  "approved_sources": [
+    "mt-identity-2026",
+    "mt-brand-2026",
+    "mt-glossary-2026",
+    "mt-arch-2026",
+    "mt-tech-2026",
+    "mt-governance-2026"
+  ],
+  "compatibility_projection": {
+    "d7_brand": "discovery/brand/design.md",
+    "source": "identity/design.md"
+  },
+  "approvals": [
+    {
+      "by": "ctx-mariam",
+      "at": "2026-07-01",
+      "version": "1.0.0",
+      "note": "Approved for the Loom worked example."
+    }
+  ]
+}
