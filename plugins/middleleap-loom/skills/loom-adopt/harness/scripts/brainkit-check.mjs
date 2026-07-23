@@ -138,8 +138,21 @@ export function evaluate(brainkit, { required = false, registry = null, institut
     if (b.brainkit_digest && b.brainkit_digest !== live) {
       findings.push(`change ${b.change_id}: its compiled plan pins BrainKit digest ${String(b.brainkit_digest).slice(0, 20)}… but the live BrainKit is ${live.slice(0, 20)}… — the plan is stale or the artifact cites the wrong BrainKit`);
     }
+    // rc.8 WS9 — multi-repo distribution: a repo may pin the approved RELEASE digest in its
+    // institution profile. The mounted snapshot must match it, or the repo is running an
+    // unadopted BrainKit version (adopt a new version through a reviewed PR; no live service).
+    if (b.release_digest && b.release_digest !== live) {
+      findings.push(`the mounted BrainKit snapshot (${live.slice(0, 20)}…) does not match the release digest pinned by profile ${b.profile} (${String(b.release_digest).slice(0, 20)}…) — mount the approved release, or adopt a new version through a reviewed PR`);
+    }
   }
   return findings;
+}
+
+/** The approved release digest a profile pins (rc.8 WS9), or undefined. */
+function releaseDigestOf(cwd, profileName) {
+  const p = join(cwd, 'profiles', 'institutions', `${profileName}.json`);
+  const profile = readJson(p);
+  return profile?.brainkit?.release_digest;
 }
 
 /** Collect, per governed change, any institution profile_bindings in its stored plan. */
@@ -152,7 +165,7 @@ function institutionBindingsOf(cwd) {
     if (!envelope) continue;
     const plan = readJson(join(dir, name, envelope.control_plan || 'control-plan.json'));
     for (const b of plan?.profile_bindings || []) {
-      if (b.kind === 'institution') out.push({ ...b, change_id: envelope.change_id || name });
+      if (b.kind === 'institution') out.push({ ...b, change_id: envelope.change_id || name, release_digest: releaseDigestOf(cwd, b.profile) });
     }
   }
   return out;

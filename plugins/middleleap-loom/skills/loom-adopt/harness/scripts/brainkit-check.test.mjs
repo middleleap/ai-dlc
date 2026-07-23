@@ -103,6 +103,17 @@ test('wrong-artifact-provenance — a compiled plan pinning the wrong BrainKit d
   assert.deepEqual(evaluate(bk, { required: true, registry: REGISTRY, institutionBindings: [{ change_id: 'CHG-OK', kind: 'institution', brainkit_digest: LIVE }], projection: readFrontmatter(readFileSync(join(EXAMPLE, 'discovery/brand/design.md'), 'utf8')) }), []);
 });
 
+test('WS9 — a mounted snapshot that does not match the pinned release digest fails', () => {
+  const bk = brainkit();
+  const drifted = [{ change_id: 'CHG-X', kind: 'institution', profile: 'meridian-trust', brainkit_digest: LIVE, release_digest: 'sha256:not-the-release' }];
+  const f = evaluate(bk, { required: true, registry: REGISTRY, institutionBindings: drifted });
+  assert.ok(f.some((x) => /does not match the release digest pinned by profile meridian-trust/.test(x)));
+  // the correct pin passes
+  const pinned = [{ change_id: 'CHG-OK', kind: 'institution', profile: 'meridian-trust', brainkit_digest: LIVE, release_digest: LIVE }];
+  const proj = readFrontmatter(readFileSync(join(EXAMPLE, 'discovery/brand/design.md'), 'utf8'));
+  assert.deepEqual(evaluate(bk, { required: true, registry: REGISTRY, institutionBindings: pinned, projection: proj }), []);
+});
+
 test('a compiled change with no BrainKit mounted fails; an unadopted repo is a clean no-op', () => {
   assert.ok(evaluate(null, { required: true }).some((x) => /the institutional BrainKit is not mounted/.test(x)));
   assert.deepEqual(evaluate(null, { required: false }), []);

@@ -27,7 +27,7 @@
       "profile": "meridian-trust",
       "kind": "institution",
       "version": "1.0.0",
-      "digest": "sha256:d60767a9f0894693cddf074bffc7d5bfeacfe1fe18fe4a0fa9ba2474c7d8bfef",
+      "digest": "sha256:99e677063e8042c4e1e6080424e07108d409a9fc759bd6ccd55b9e1ed088a379",
       "brainkit_id": "meridian-trust-brainkit",
       "brainkit_version": "1.0.0",
       "brainkit_digest": "sha256:7d72a0968c928ec70c65786998be376061e5cbd3e3baf9a068071918619bc5bc"
@@ -39,5 +39,5 @@
       "digest": "sha256:da0f15e4da2f45425c04e370e26d81b6409f0cbd4041db2778f68a6ee34d3b80"
     }
   ],
-  "plan_hash": "5d6b20dd65ad5a6ebb5df0f698ed48f55055bb6fbb420ebfbee948382aef996a"
+  "plan_hash": "fe5462aae575683b85a5878bb49e83787e5abc2d494084a94850f065aee931c5"
 }

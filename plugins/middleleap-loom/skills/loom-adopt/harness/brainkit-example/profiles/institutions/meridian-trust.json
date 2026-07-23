@@ -6,7 +6,8 @@
   "brainkit": {
     "brainkit_id": "meridian-trust-brainkit",
     "institution_id": "meridian-trust",
-    "path": "institution/brainkit/manifest.json"
+    "path": "institution/brainkit/manifest.json",
+    "release_digest": "sha256:7d72a0968c928ec70c65786998be376061e5cbd3e3baf9a068071918619bc5bc"
   },
   "requirements": {
     "low": {
