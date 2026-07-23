@@ -1,0 +1,33 @@
+{
+  "_comment": "ADOPT: the Institutional BrainKit manifest (Loom 2.0-rc.8). This template lands adopt-pending — the installer copies it but NEVER invents or approves institutional content. Generate a real draft with the brainkit-init skill against your APPROVED institutional sources, have accountable owners review and approve it, then seal the digests. Owners and approvals must resolve to humans in docs/governance/identities.json. Section and package digests are computed from the section files (node scripts/brainkit-check.mjs --seal writes them). status stays 'draft' until accountable owners approve — only an approved, effective, digest-consistent BrainKit satisfies a compiled change. Say 'institutionally conformant', never 'regulatorily compliant'.",
+  "schema_version": "1.0",
+  "brainkit_id": "ADOPT: <institution>-brainkit",
+  "institution_id": "ADOPT: <institution>",
+  "version": "0.0.0",
+  "status": "draft",
+  "effective_at": "ADOPT: YYYY-MM-DD",
+  "expires_at": null,
+  "owners": {
+    "identity": "ADOPT: <registry-id of the accountable owner for institutional identity>",
+    "terminology": "ADOPT: <registry-id>",
+    "architecture": "ADOPT: <registry-id>",
+    "technology-policy": "ADOPT: <registry-id>",
+    "governance": "ADOPT: <registry-id>",
+    "source-register": "ADOPT: <registry-id>"
+  },
+  "sections": [
+    { "section": "identity", "path": "identity/design.md", "digest": "sha256:ADOPT" },
+    { "section": "terminology", "path": "terminology.md", "digest": "sha256:ADOPT" },
+    { "section": "architecture", "path": "architecture.md", "digest": "sha256:ADOPT" },
+    { "section": "technology-policy", "path": "technology-policy.json", "digest": "sha256:ADOPT" },
+    { "section": "governance", "path": "governance.md", "digest": "sha256:ADOPT" },
+    { "section": "source-register", "path": "source-register.json", "digest": "sha256:ADOPT" }
+  ],
+  "package_digest": "sha256:ADOPT",
+  "approved_sources": [],
+  "compatibility_projection": {
+    "d7_brand": "discovery/brand/design.md",
+    "source": "identity/design.md"
+  },
+  "approvals": []
+}

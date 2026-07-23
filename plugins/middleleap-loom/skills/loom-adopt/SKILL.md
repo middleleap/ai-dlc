@@ -58,6 +58,13 @@ are repo-root-relative.
 | `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | The second-line-owned routine-change envelope (HG-0013) |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | Token-spend ledger (a report, never a merge gate) |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | The neutral adapter contract |
+| `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
+| `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | BrainKit institutional identity + design language (the D7 projection source) |
+| `brainkit/terminology.md` | `institution/brainkit/terminology.md` | BrainKit binding vocabulary |
+| `brainkit/architecture.md` | `institution/brainkit/architecture.md` | BrainKit architecture principles and constraints |
+| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | BrainKit technology policy (allowed / consult / forbidden) |
+| `brainkit/governance.md` | `institution/brainkit/governance.md` | BrainKit decision rights |
+| `brainkit/source-register.json` | `institution/brainkit/source-register.json` | BrainKit approved source register (every section grounds in it) |
 | `ci/ci.yml` | `.github/workflows/ci.yml` | The reference CI workflow that runs every gate |
 <!-- LOOM:COPY-TABLE:END -->
 

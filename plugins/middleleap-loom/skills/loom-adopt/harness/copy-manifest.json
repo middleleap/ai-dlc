@@ -26,6 +26,13 @@
     { "source": "governance/routine-envelope.template.json", "dest": "docs/governance/routine-envelope.json", "kind": "file", "adopt": "template", "seam": "The second-line-owned routine-change envelope (HG-0013)" },
     { "source": "governance/token-ledger.template.json", "dest": "docs/governance/token-ledger.json", "kind": "file", "adopt": "template", "seam": "Token-spend ledger (a report, never a merge gate)" },
     { "source": "adapters/README.md", "dest": "docs/governance/adapters/README.md", "kind": "file", "seam": "The neutral adapter contract" },
+    { "source": "brainkit/manifest.template.json", "dest": "institution/brainkit/manifest.json", "kind": "file", "adopt": "template", "seam": "BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve)" },
+    { "source": "brainkit/identity/design.md", "dest": "institution/brainkit/identity/design.md", "kind": "file", "adopt": "template", "seam": "BrainKit institutional identity + design language (the D7 projection source)" },
+    { "source": "brainkit/terminology.md", "dest": "institution/brainkit/terminology.md", "kind": "file", "adopt": "template", "seam": "BrainKit binding vocabulary" },
+    { "source": "brainkit/architecture.md", "dest": "institution/brainkit/architecture.md", "kind": "file", "adopt": "template", "seam": "BrainKit architecture principles and constraints" },
+    { "source": "brainkit/technology-policy.json", "dest": "institution/brainkit/technology-policy.json", "kind": "file", "adopt": "template", "seam": "BrainKit technology policy (allowed / consult / forbidden)" },
+    { "source": "brainkit/governance.md", "dest": "institution/brainkit/governance.md", "kind": "file", "adopt": "template", "seam": "BrainKit decision rights" },
+    { "source": "brainkit/source-register.json", "dest": "institution/brainkit/source-register.json", "kind": "file", "adopt": "template", "seam": "BrainKit approved source register (every section grounds in it)" },
     { "source": "ci/ci.yml", "dest": ".github/workflows/ci.yml", "kind": "file", "seam": "The reference CI workflow that runs every gate" }
   ]
 }
