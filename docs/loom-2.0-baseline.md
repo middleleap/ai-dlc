@@ -274,3 +274,27 @@ organisationally enforced (as shipped)** across 47 controls, 12 flagged adopter-
 invariant holds: no bundled gate claims platform- or organisational-enforcement, and the BrainKit is
 *institutionally conformant*, never *regulatorily compliant*. Real institutional BrainKits are
 private; the public repo ships schemas, machinery, validators and the fictional example only.
+
+## 2.0-rc.9 addendum — rc.8 hardening (the audit's four gaps closed)
+
+An independent audit of merged rc.8 (`origin/main@3402903`) found the definition of done
+unsatisfied on four points, each reproduced and confirmed. rc.9 closes them:
+
+1. **Artifact provenance enforced, not just rendered** — `brainkit-provenance` is now a
+   seal-verifiable plan-only evidence type (`requiredTypesFor` demands it when a plan requires it;
+   the seal validates the record names its BrainKit and artifacts), and `brainkit-check`
+   cross-checks the sealed record against the LIVE package digest and byte-scans every covered
+   artifact for the embedded digest. A correct visual with the wrong digest now fails.
+2. **Canonical section set is complete and unique** — removing `architecture` from
+   `manifest.sections` and resealing used to pass; now every canonical section must be declared
+   exactly once, and extra sections need owners too.
+3. **Approval is version-bound and versions are semver** — `not-semver` fails, and an approval
+   recorded for 1.0.0 does not cover a manifest that now says something else.
+4. **Source grounding is positive and per-section** — empty `approved_sources` fails, every
+   section maps to at least one register source (`sections[].sources`), and a repo-relative
+   source reference that does not exist (a broken D6/domain pointer) fails.
+
+Every new rule carries a negative test reproducing the audit's exact bypass (brainkit suite:
+20 cases; seal suite extended). Scorecard unchanged — this hardens the existing BRAINKIT and
+HG-0003 controls rather than adding one: still **34 mechanically validated · 6 defined · 7
+absent · 0 platform / 0 organisationally enforced** across 47 controls.

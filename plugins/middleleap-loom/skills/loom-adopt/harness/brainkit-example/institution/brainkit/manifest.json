@@ -19,32 +19,51 @@
     {
       "section": "identity",
       "path": "identity/design.md",
-      "digest": "sha256:2878a0f9d0218b549fb65268bdfb86853a7359cdd26913de6d7d41ccce058ef3"
+      "digest": "sha256:2878a0f9d0218b549fb65268bdfb86853a7359cdd26913de6d7d41ccce058ef3",
+      "sources": [
+        "mt-identity-2026",
+        "mt-brand-2026"
+      ]
     },
     {
       "section": "terminology",
       "path": "terminology.md",
-      "digest": "sha256:8a9da363504bd75a7bfc41f52de89597be9564dac97f6e6c0033c6b9e9e43b73"
+      "digest": "sha256:8a9da363504bd75a7bfc41f52de89597be9564dac97f6e6c0033c6b9e9e43b73",
+      "sources": [
+        "mt-glossary-2026"
+      ]
     },
     {
       "section": "architecture",
       "path": "architecture.md",
-      "digest": "sha256:b99640c98935f27a4607c42763430b1db5d233f82b1904ce3bc1ea6a18e603fb"
+      "digest": "sha256:b99640c98935f27a4607c42763430b1db5d233f82b1904ce3bc1ea6a18e603fb",
+      "sources": [
+        "mt-arch-2026"
+      ]
     },
     {
       "section": "technology-policy",
       "path": "technology-policy.json",
-      "digest": "sha256:0938079dfc8ea9fc21857fc443236273c7b61d423ed97b7826ec1d8902303b04"
+      "digest": "sha256:0938079dfc8ea9fc21857fc443236273c7b61d423ed97b7826ec1d8902303b04",
+      "sources": [
+        "mt-tech-2026"
+      ]
     },
     {
       "section": "governance",
       "path": "governance.md",
-      "digest": "sha256:ea234b7aae78a9f6009a6c9ebd0ce6820faa395d71e1ec2b798bdc1f277449a4"
+      "digest": "sha256:ea234b7aae78a9f6009a6c9ebd0ce6820faa395d71e1ec2b798bdc1f277449a4",
+      "sources": [
+        "mt-governance-2026"
+      ]
     },
     {
       "section": "source-register",
       "path": "source-register.json",
-      "digest": "sha256:96cdb10d3f6a4e16669e9705333f449a7561a49b1be3eaf4d14786d90e98b902"
+      "digest": "sha256:96cdb10d3f6a4e16669e9705333f449a7561a49b1be3eaf4d14786d90e98b902",
+      "sources": [
+        "mt-governance-2026"
+      ]
     }
   ],
   "package_digest": "sha256:7d72a0968c928ec70c65786998be376061e5cbd3e3baf9a068071918619bc5bc",

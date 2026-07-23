@@ -28,9 +28,12 @@ plugins/
     ├── .claude-plugin/plugin.json
     ├── agents/                     # discovery-boundary + data-governance reviewers
     └── skills/
-        ├── loom/                   # method canon + references (discovery/delivery/governance)
-        └── loom-adopt/             # adoption skill + harness/ bundle (gates, renderer,
-                                    #   templates, hooks, skills — copied into adopting repos)
+        ├── loom/                   # method canon + references (discovery/delivery/governance/brainkit)
+        ├── loom-adopt/             # adoption skill + harness/ bundle (gates, renderer, templates,
+        │                           #   hooks, profiles, brainkit/ templates + brainkit-example/ —
+        │                           #   copied into adopting repos via copy-manifest.json)
+        └── brainkit-init/          # drafts an Institutional BrainKit from approved sources
+                                    #   (never invents policy, never approves — rc.8)
 scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 ```
 

@@ -46,13 +46,17 @@ institution/brainkit/
 
 The **manifest** is the spine. It carries:
 
-- `schema_version`, `brainkit_id`, `institution_id`, semantic `version`
+- `schema_version`, `brainkit_id`, `institution_id`, semantic `version` (MAJOR.MINOR.PATCH — enforced)
 - lifecycle `status` — `draft` · `approved` · `retired` — with `effective_at` and optional `expires_at`
-- **accountable owners by section** (each resolving to a Loom identity-registry human)
-- **approved source references** (nothing in a section may be ungrounded)
+- **accountable owners by section** (each resolving to a Loom identity-registry human; the complete,
+  unique canonical section set must be declared — a package cannot silently omit one)
+- **approved source references** — the package names its sources AND every section maps to at least
+  one register source (`sections[].sources`); a repo-relative reference that does not exist is a
+  broken grounding and fails
 - a **section digest** per section and a **whole-package digest** over them
 - **compatibility-projection** metadata linking `identity/design.md` to the D7 brand seam
-- **approval identities** that resolve against the identity registry
+- **approval identities** that resolve against the identity registry, each **bound to the version it
+  approved** — a version change without a matching approval fails
 
 ## Lifecycle
 
@@ -81,9 +85,13 @@ The BrainKit composes through the rc.7 machinery, not beside it:
    stale — so `change-envelope-check` forces recompilation. A one-byte BrainKit edit cannot ride an
    old plan.
 3. **The `brainkit-check` gate** fails the build on a missing/malformed manifest, a draft/expired/
-   retired BrainKit used by a compiled change, unresolved owners, digest mismatch, missing approved
-   sources, broken regulated/domain references, a required artifact with no BrainKit provenance, an
-   artifact citing the wrong version or digest, a stale D7 projection, or an unresolvable profile.
+   retired BrainKit used by a compiled change, an omitted or duplicated canonical section,
+   unresolved owners, digest mismatch, a non-semver version or an approval not bound to it, missing
+   or per-section-ungrounded sources, broken regulated/domain references, a stale D7 projection, or
+   an unresolvable profile. Artifact provenance is **enforced, not just rendered**: when the plan
+   requires `brainkit-provenance`, the evidence-seal gate demands a sealed provenance record, and
+   `brainkit-check` cross-checks it — the record must pin the live package digest and every artifact
+   it covers must exist and embed that digest. A correct visual carrying the wrong digest fails.
 4. **The gate runner** cannot path-scope the gate away: a compiled `brainkit-conformance` family is
    unskippable in its lane.
 

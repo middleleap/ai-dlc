@@ -193,3 +193,20 @@ test('a high-tier plan seals more; plan evidence with no sealed counterpart is l
   assert.ok(req.includes('sast') && req.includes('sbom'), 'high-tier evidence is sealed');
   assert.ok(!req.includes('product-eval'), 'product-eval has no seal counterpart — enforced by its own gate');
 });
+
+/* ---- rc.8 hardening (audit gap 1): brainkit-provenance is seal-demanded and seal-verified ---- */
+
+test('a plan requiring brainkit-provenance makes the seal DEMAND it; a generic repo never seals it', () => {
+  const req = requiredTypesFor({ evidence: new Set(['tests', 'reviews', 'brainkit-provenance']) });
+  assert.ok(req.includes('brainkit-provenance'), 'plan-required brainkit-provenance must be a sealed type');
+  assert.ok(!requiredTypesFor({ evidence: new Set() }).includes('brainkit-provenance'), 'the baseline must not demand it');
+  assert.ok(!REQUIRED_TYPES.includes('brainkit-provenance'), 'it stays out of the generic-repo default');
+});
+
+test('a sealed brainkit-provenance record is verified for what it SAYS', () => {
+  const good = { brainkit_id: 'acme-brainkit', brainkit_version: '1.0.0', brainkit_digest: 'sha256:' + 'a'.repeat(64), artifacts: [{ ref: 'reports/prd.html' }] };
+  assert.deepEqual(SEMANTICS['brainkit-provenance'](good), []);
+  assert.ok(SEMANTICS['brainkit-provenance']({ ...good, brainkit_digest: 'not-a-digest' }).some((f) => /no sha256 brainkit_digest/.test(f)));
+  assert.ok(SEMANTICS['brainkit-provenance']({ ...good, brainkit_id: '' }).some((f) => /declares no brainkit_id/.test(f)));
+  assert.ok(SEMANTICS['brainkit-provenance']({ ...good, artifacts: [] }).some((f) => /lists no artifacts/.test(f)));
+});
