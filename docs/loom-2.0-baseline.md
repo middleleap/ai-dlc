@@ -195,3 +195,43 @@ review, internal-audit re-performance of a release assessment, and the
 ofbo back-port of every gate change. Until those exist, the honest
 status is **release candidate, not certified** — and adoption of the
 Loom is not, and does not substitute for, regulatory approval.
+
+## 2.0-rc.7 addendum — composition: the compiler now commands execution
+
+The six workstreams of the rc.7 plan (`docs/loom-2.0-rc7-plan.md`), each closing a verified
+review finding:
+
+- **W1 — envelope as execution root (F1+F3):** `core/compiled-requirements.mjs` aggregates
+  every governed change's compiled plan into one source of truth; the gate runner makes a
+  plan-required control **unskippable** in its lane; the evidence seal derives its required
+  types from the plans (a low-tier change seals less, a high-tier more); and product evals,
+  assurance cycles, and the decision log flip from hardcoded-optional to
+  **mandatory-when-compiled** — absent-OK for a generic repo, absent-FAILS once a plan asks.
+  The original 1.11 exit criterion (plan vs execution reconciliation) is finally true.
+- **W2 — routine lane split (F2):** `routine-change-check.mjs --assert-routine` is a distinct
+  check context that exits 0 only for a qualifying claim, so a merge queue can key auto-merge
+  on it; an ordinary PR fails it and cannot enter the routine queue.
+- **W3 — honest cycle semantics (F4):** a signed assurance cycle with a `fail` step blocks
+  unless a second-line, unexpired risk acceptance covers it; `n/a` needs rationale + approval;
+  and once anything is in production, a stale or missing cycle fails.
+- **W4 — one copy manifest (F5):** `copy-manifest.json` + the idempotent `adopt.mjs` installer
+  drive the CI dry-run AND generate the SKILL.md copy table; the doc-integrity gate fails the
+  build on drift, so the adoption guide can never lag the machinery again.
+- **W5 — validated_by resolution (F6):** at validation tiers, `validated_by` must resolve to a
+  human `model-validator` in the second line, not a builder, not free text.
+- **W6 — generated scorecard (F7):** `generate-scorecard.mjs` projects the scorecard from the
+  control catalog (one source of truth); adopter-side capabilities (IAM, WORM, DAST, the
+  pilot, a live exam) are catalog entries flagged `adopter_side`, and the two stale prose rows
+  are gone.
+
+CI dry-run: **299 tests, all gates green, 14 negative bypass tests** (adds: routine-qualified
+rejects an ordinary PR, a compiled-plan-required product-eval cannot be absent, a failing
+assurance cycle blocks). The gate runner now executes 9 controls on a clean diff (up from 5)
+because the compiled plan makes the product-governance families unskippable. Scorecard
+(generated): **33 mechanically validated · 6 defined · 7 absent · 0 platform / 0
+organisationally enforced (as shipped)** across 46 controls, 12 flagged adopter-side.
+
+Still, honestly: 2.0-stable stays gated on adopter-side evidence — a supervised production
+pilot, an independent risk review, internal-audit re-performance, and the ofbo back-port.
+The composition critique is closed; institutional operation is the pilot's job, not the
+bundle's.

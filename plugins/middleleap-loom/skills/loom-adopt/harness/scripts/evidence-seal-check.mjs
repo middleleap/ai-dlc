@@ -21,12 +21,31 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { evaluate as evaluateSarif } from './sast-check.mjs';
+import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 
 const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
 const GENESIS = 'GENESIS';
 
 // ADOPT: the evidence every release must carry. Add yours (smoke results, attestations).
 export const REQUIRED_TYPES = ['tests', 'reviews', 'lineage', 'model-provenance', 'control-plane', 'sast', 'sbom', 'dependency-audit', 'provenance'];
+// The floor every sealed release carries regardless of tier.
+export const EVIDENCE_FLOOR = ['tests', 'reviews', 'control-plane'];
+
+/**
+ * The evidence types a release must seal, DERIVED from the compiled plans (W1, closes F1)
+ * rather than a fixed list. With no governed changes it falls back to the fixed baseline
+ * (backward compatible). With changes, it is the floor plus every plan-required evidence type
+ * the seal knows how to verify — so a low-tier change seals less, a high-tier change seals more,
+ * and the requirement is compiled, never hardcoded. Plan evidence with no sealed counterpart
+ * (e.g. product-eval, external-anchor) is enforced by its own gate, not demanded here.
+ */
+export function requiredTypesFor(agg, base = REQUIRED_TYPES) {
+  if (!agg || agg.evidence.size === 0) return base;
+  const known = new Set(base);
+  const req = new Set(EVIDENCE_FLOOR);
+  for (const e of agg.evidence) if (known.has(e)) req.add(e);
+  return [...req];
+}
 
 // Semantic validation — 1.10's rule: a sealed artifact is verified for what it SAYS, not just
 // that its bytes are intact. A sealed bundle of failing tests is tamper-evident and worthless.
@@ -127,7 +146,8 @@ function run(cwd = process.cwd()) {
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
   catch (e) { return [`evidence manifest is not valid JSON: ${e.message}`]; }
-  return evaluate(manifest, { baseDir: dirname(path) });
+  const requiredTypes = requiredTypesFor(aggregateRequirements(cwd));
+  return evaluate(manifest, { baseDir: dirname(path), requiredTypes });
 }
 
 // CLI (skipped when imported by the test suite).

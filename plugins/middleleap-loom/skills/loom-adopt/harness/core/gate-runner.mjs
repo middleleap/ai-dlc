@@ -16,6 +16,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
+import { aggregateRequirements, requiredBy } from './compiled-requirements.mjs';
 
 export const LANES = ['pr', 'release', 'scheduled'];
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
@@ -25,17 +26,24 @@ const runnable = (c) => typeof c.mechanism_ref === 'string' && c.mechanism_ref.e
 /**
  * Pure selection: which controls run, which skip (each skip with its reason).
  * `changedPaths === null` means the diff is unknown → run everything in the lane.
+ * `requirements` is the aggregated compiled requirements (see compiled-requirements.mjs): a
+ * control whose `gate_family` any active change requires becomes UNSKIPPABLE in its lane —
+ * path scoping can no longer talk a plan-mandated control off the route (W1, closes F1).
  */
-export function select(catalog, { lane = 'pr', changedPaths = null } = {}) {
+export function select(catalog, { lane = 'pr', changedPaths = null, requirements = null } = {}) {
   const run = new Map(); // mechanism → {mechanism, ids[]}
   const skipped = [];
+  const reqFamilies = requirements ? requirements.families : new Set();
   for (const c of catalog?.controls || []) {
     if (!runnable(c)) continue; // documented/absent controls have nothing to execute
     if (c.execute === false) { skipped.push({ id: c.control_id, reason: c.execute_note || 'not directly executable — enforced via another gate' }); continue; }
     const cLane = c.lane || 'pr';
     if (cLane !== lane) { skipped.push({ id: c.control_id, reason: `lane:${cLane} (this is a ${lane} run)` }); continue; }
+    // A compiled plan requires this control's family → it runs, whatever the diff.
+    const mandated = c.gate_family && reqFamilies.has(c.gate_family);
     let why = null;
-    if (c.always) why = 'always';
+    if (mandated) why = `required by compiled plan [${requiredBy(requirements, c.gate_family).join(', ')}] (family ${c.gate_family})`;
+    else if (c.always) why = 'always';
     else if (changedPaths === null) why = 'diff unknown — fail open to running';
     else if (Array.isArray(c.paths) && c.paths.some((p) => changedPaths.some((f) => f === p || f.startsWith(p)))) why = 'implicated by diff';
     else if (!Array.isArray(c.paths)) why = 'no path scope declared — runs by default';
@@ -64,7 +72,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (!path) { process.stderr.write('no control catalog — the runner has no state of record to read\n'); process.exit(2); }
   const catalog = JSON.parse(readFileSync(path, 'utf8'));
   const changedPaths = base ? changedSince(base) : null;
-  const { run, skipped } = select(catalog, { lane, changedPaths });
+  const requirements = aggregateRequirements(process.cwd());
+  const { run, skipped } = select(catalog, { lane, changedPaths, requirements });
 
   const executed = [];
   let failed = 0;
@@ -79,7 +88,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   try { head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { /* no git */ }
   const record = {
     lane, base: base || null, commit: head,
-    changed_paths: changedPaths, executed, skipped,
+    changed_paths: changedPaths,
+    required_families: [...requirements.families].sort(), // what the active plans compiled
+    executed, skipped,
     result: failed === 0 ? 'pass' : 'fail',
   };
   const out = arg('--out');

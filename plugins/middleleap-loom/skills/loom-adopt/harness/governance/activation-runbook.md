@@ -62,7 +62,34 @@ node scripts/control-plane-check.mjs           # control-plane integrity (HG-000
 # + the project's Q-gates per ../loom/references/delivery-harness.md
 ```
 
-## 5. Verify activation — evidence, not vibes
+## 5. (Optional) Activate the routine-change auto-merge lane (HG-0013)
+
+Only if you want a narrow class of low-risk changes to auto-merge. The lane is safe **only**
+when the routine outcome is its own platform check — a ruleset reads a check's exit, never its
+explanatory text, so a single check that returns 0 for both "no claim" and "qualified claim"
+cannot gate a queue. `routine-change-check.mjs` therefore runs in **two contexts**:
+
+```yaml
+# Two separate required checks — the split that makes auto-merge safe:
+- name: normal-human-review          # every PR: an unqualified routine CLAIM fails here
+  run: node scripts/routine-change-check.mjs --base origin/main
+- name: routine-qualified            # passes ONLY for a genuinely qualifying routine claim
+  run: node scripts/routine-change-check.mjs --assert-routine --base origin/main
+```
+
+- Configure the merge queue / auto-merge to require the **`routine-qualified`** check
+  specifically — not the general gate suite.
+- `routine-qualified` fails for an ordinary PR (no claim), so ordinary work **cannot** enter
+  the routine queue. That is the control.
+
+Verify:
+
+- [ ] An ordinary PR (no routine claim) shows `routine-qualified` **failing** and cannot auto-merge.
+- [ ] A qualifying routine claim shows `routine-qualified` **passing** and auto-merges.
+- [ ] An out-of-envelope claim (oversized diff, control-plane path, expired/agent-owned envelope)
+      shows `routine-qualified` **failing**.
+
+## 6. Verify activation — evidence, not vibes
 
 - [ ] Agent identity **cannot** push to `main` (attempted and rejected).
 - [ ] A PR touching a control-plane file **requires** a Code Owner review.

@@ -20,35 +20,51 @@ Read the method first if you haven't: the `loom` skill (sibling in this plugin),
 
 ## 1. Copy the machinery
 
-All sources are relative to this skill's directory. All destinations are repo-root-relative.
+The one-command way: **`node harness/adopt.mjs --dest <repo-root>`** — the idempotent installer
+reads `harness/copy-manifest.json` (the single source of truth) and lays every file below into
+place, emitting an adoption report (source → destination → status). Re-running is safe. A
+`*.template` file is copied but never auto-filled — templates land `adopt-pending` and you fill
+their ADOPT markers in step 3.
 
+The table below is **generated from that same manifest** (a doc-integrity gate fails the build if
+it drifts), so it can never lag the machinery. Sources are relative to `harness/`; destinations
+are repo-root-relative.
+
+<!-- LOOM:COPY-TABLE:START -->
 | Bundle source | Destination | What it is |
 |---|---|---|
-| `../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | The canon (single source — do not fork the text) |
-| `harness/discovery/gates/` | `discovery/gates/` | Pure-Node D1–D9 validator + its tests |
-| `harness/discovery/render/` | `discovery/render/` | Zero-dep branded renderer (HTML + OOXML) + tests |
-| `harness/discovery/templates/` | `discovery/templates/` | One template per discovery artifact |
-| `harness/discovery/brand/design.md` | `discovery/brand/design.md` | Brand seam (neutral demo instance) |
-| `harness/discovery/brand/examples/` | `discovery/brand/examples/` | A second brand proving the seam swap |
-| `harness/scripts/discovery-link-check.mjs` | `scripts/discovery-link-check.mjs` | The waist gate (backlog item ↔ green hand-off) |
-| `harness/scripts/control-plane-check.mjs` | `scripts/control-plane-check.mjs` | The control-plane integrity gate (HG-0002) + its tests |
-| `harness/scripts/model-provenance-check.mjs` | `scripts/model-provenance-check.mjs` | The model-provenance gate (HG-0006) + its tests |
-| `harness/scripts/evidence-seal-check.mjs` | `scripts/evidence-seal-check.mjs` | The evidence-seal gate (HG-0003) + its tests |
-| `harness/scripts/data-lifecycle-check.mjs` | `scripts/data-lifecycle-check.mjs` | The data-lifecycle gate (retention & right-to-erasure) + its tests |
-| `harness/scripts/operations-signal-check.mjs` | `scripts/operations-signal-check.mjs` | The Run→Discovery feedback gate + its tests |
-| `harness/ci/ci.yml` | `.github/workflows/ci.yml` | Reference CI running every gate (the `control-plane-check` CONTROL_TARGET) — own it in CODEOWNERS |
-| `harness/governance/CODEOWNERS.template` | `CODEOWNERS` (fill the team) | Immutable control-plane ownership (HG-0002) |
-| `harness/governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | Platform-admin runbook to activate HG-0001/0002/0004 |
-| `harness/governance/runbooks/` | `docs/governance/runbooks/` | Org-side adoption runbooks — the gaps a bundle cannot enforce (identity, assurance, model-risk, data-protection, security/resilience, governance) |
-| `harness/governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory seam (HG-0006) — replace demo values |
-| `harness/evidence-example/` | `docs/governance/evidence/` | Sealed evidence bundle (HG-0003) — a real, tamper-evident manifest + artifacts; reseal for each release |
-| `harness/governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data-lifecycle seam (retention & erasure) — replace demo categories |
-| `harness/governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | Operations-signal seam (Run→Discovery) — replace demo entries |
-| `harness/skills/*/SKILL.md` | `.claude/skills/<name>/SKILL.md` | discovery · develop · next-story · implement-story · spec-change |
-| `harness/agents/*.md` | `.claude/agents/` | hard-stop-reviewer + contract-conformance-reviewer (templates — see step 3) |
-| `harness/hooks/*.sh` | `.claude/hooks/` | pii-guard · spec-tripwire · test-tripwire (`chmod +x`) |
-| `harness/hooks/settings.hooks.json` | merge into `.claude/settings.json` | Hook wiring (drop the `_comment` key) |
-| `harness/register-example/` | `docs/governance/data-risk-register/` | Minimal working register (replace with the real one) |
+| `../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | The discovery canon (single source — do not fork the text) |
+| `discovery/gates` | `discovery/gates` | Pure-Node D1–D9 validator + its tests |
+| `discovery/render` | `discovery/render` | Zero-dep branded renderer (HTML + OOXML) + tests |
+| `discovery/templates` | `discovery/templates` | One template per discovery artifact |
+| `discovery/brand/design.md` | `discovery/brand/design.md` | Brand seam (neutral demo instance) |
+| `discovery/brand/examples` | `discovery/brand/examples` | A second brand proving the seam swap |
+| `scripts/*.mjs` | `scripts/` | Every gate + its tests (globbed — a per-file list silently drops new gates) |
+| `core` | `core` | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
+| `profiles` | `profiles` | Profiles as data: base + jurisdiction + product-type |
+| `hooks/*.sh` | `.claude/hooks/` | Pre-write guardrail hooks (pii-guard, spec/test tripwires) |
+| `hooks/settings.hooks.json` | `.claude/settings.json` | Hook wiring for Claude Code |
+| `governance/runbooks/*.md` | `docs/governance/runbooks/` | Six adoption runbooks + the supervised-pilot playbook |
+| `governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | How to activate branch protection, IAM, the routine lane |
+| `governance/CODEOWNERS.template` | `CODEOWNERS` | The control-plane ownership map (replace @your-org/… — the gate fails until you do) |
+| `governance/control-catalog.template.json` | `docs/governance/control-catalog.json` | The machine-readable control state of record |
+| `governance/identities.template.json` | `docs/governance/identities.json` | The identity registry (approvals resolve against it) |
+| `governance/attestation-issuers.template.json` | `docs/governance/attestation-issuers.json` | Allowed-issuers registry for ed25519 attestations |
+| `governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory (pinned, tiered, evaluated, runtime-governed) |
+| `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data classification, retention, erasure, residency |
+| `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | The Run→Discovery feedback log |
+| `governance/service-readiness.template.json` | `docs/governance/services/example-service.json` | Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills) |
+| `governance/product-evals.template.json` | `docs/governance/product-evals.json` | Product-outcome evals (discovery-linked, measures scored, commit-bound) |
+| `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | The second-line-owned routine-change envelope (HG-0013) |
+| `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | Token-spend ledger (a report, never a merge gate) |
+| `adapters/README.md` | `docs/governance/adapters/README.md` | The neutral adapter contract |
+| `ci/ci.yml` | `.github/workflows/ci.yml` | The reference CI workflow that runs every gate |
+<!-- LOOM:COPY-TABLE:END -->
+
+Plus, still copied by hand (project-specific templates, see step 3): `harness/skills/*/SKILL.md`
+→ `.claude/skills/<name>/SKILL.md`, `harness/agents/*.md` → `.claude/agents/`, and the worked
+fixtures under `harness/{evidence-example,change-example,assurance-example,register-example}/`
+you adapt into `docs/governance/`.
 
 Also create if missing: `discovery/runs/`, `docs/develop/`, `docs/adrs/`, `docs/backlog.yaml`
 (empty list is fine), `docs/build-log.md`.
@@ -109,12 +125,18 @@ one artifact with the renderer to confirm D7 conformance. Only then aim the deli
 
 ## 5. Wire CI and governance
 
-- CI: the reference `.github/workflows/ci.yml` (copied in step 1) already runs the bundled test
-  suites, all six gates (`control-plane-check`, `discovery-link-check`, `model-provenance-check`,
-  `evidence-seal-check`, `data-lifecycle-check`, `operations-signal-check`), and `validate.mjs`
-  over every `discovery/runs/*` on each PR — a broken run, an untraced feature item, an unowned
-  control file, an unpinned/unevaluated model, an unsealed/tampered evidence bundle, a data
-  category with no bounded retention or erasure disposition, or an untriaged operational signal
+- CI: the reference `.github/workflows/ci.yml` (copied in step 1) runs the bundled test
+  suites and **every gate in the control catalog** on each PR — the control plane and catalog,
+  the identity registry, the change envelope with its compiled-plan reconciliation and compound
+  production authorization, PA1/PA2, architecture assurance, operational readiness, the Q-gates
+  (test-integrity, SAST, secrets, supply-chain), model provenance, evidence seal, data lifecycle,
+  the Run→Discovery feedback loop, product-outcome evals, the runtime assurance cycle and
+  decision log, adapters, the routine-change lane (in its two check contexts), and `validate.mjs`
+  over every `discovery/runs/*`. The set is not memorised here — it is the catalog, and the
+  gate runner executes exactly what the catalog and the compiled plans require. A broken run, an
+  untraced feature item, an unowned control file, an unpinned/unevaluated model, an
+  unsealed/tampered evidence bundle, a data category with no bounded retention or erasure
+  disposition, or an untriaged operational signal
   blocks merge like a failing test. Own the workflow file in CODEOWNERS (HG-0002) and add the
   project's own Q-gates per `../loom/references/delivery-harness.md`.
 - Governance: walk `../loom/references/governance.md`, then run

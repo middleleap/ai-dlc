@@ -127,3 +127,27 @@ test('an empty inventory is a finding', () => {
   assert.match(evaluate({ models: [] })[0], /model inventory is empty/);
   assert.match(evaluate({})[0], /no `models` array|inventory is empty/);
 });
+
+/* ---- W5: validated_by resolves against the identity registry (closes F6) ---- */
+
+const REG = { identities: [
+  { id: 'mrm-aisha', kind: 'human', roles: ['model-validator'], groups: ['second-line'] },
+  { id: 'eng-omar', kind: 'human', roles: ['engineering'], groups: ['builders'] },
+  { id: 'agent-x', kind: 'agent', roles: ['model-validator'], groups: ['builders'] },
+  { id: 'risk-lena', kind: 'human', roles: ['risk-second-line'], groups: ['second-line'] },
+] };
+
+test('with a registry, validated_by must resolve to a second-line human model-validator', () => {
+  assert.deepEqual(evaluate(manifest({ validated_by: 'mrm-aisha' }), { registry: REG }), []);
+});
+
+test('free text, an agent, a builder, or the wrong role all fail validation resolution', () => {
+  assert.ok(evaluate(manifest({ validated_by: 'Risk' }), { registry: REG }).some((x) => /not a registry identity/.test(x)));
+  assert.ok(evaluate(manifest({ validated_by: 'agent-x' }), { registry: REG }).some((x) => /is an AGENT/.test(x)));
+  assert.ok(evaluate(manifest({ validated_by: 'eng-omar' }), { registry: REG }).some((x) => /does not hold the model-validator role/.test(x)));
+  assert.ok(evaluate(manifest({ validated_by: 'risk-lena' }), { registry: REG }).some((x) => /does not hold the model-validator role/.test(x)));
+});
+
+test('without a registry, validated_by stays a presence check (generic repo, backward compatible)', () => {
+  assert.deepEqual(evaluate(manifest({ validated_by: 'anything non-empty' })), []);
+});

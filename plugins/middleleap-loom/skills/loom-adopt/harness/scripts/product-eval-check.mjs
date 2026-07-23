@@ -22,6 +22,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { aggregateRequirements, requiredBy } from '../core/compiled-requirements.mjs';
 
 const MANIFEST_LOCATIONS = ['docs/governance/product-evals.json', 'product-evals.json'];
 
@@ -86,9 +87,17 @@ export function evaluate(manifest, { shippingCommit = null, baseDir = null } = {
   return findings;
 }
 
-function run(cwd = process.cwd(), shippingCommit = null) {
+export function run(cwd = process.cwd(), shippingCommit = null) {
   const path = MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
-  if (!path) return { present: false, findings: [] }; // not every repo is product-bearing
+  if (!path) {
+    // Absence is OK for a generic repo — but NOT once a compiled plan requires product evals
+    // (W1, closes F3). Optionality is compiled, never hardcoded.
+    const agg = aggregateRequirements(cwd);
+    if (agg.families.has('product-eval')) {
+      return { present: false, findings: [`no product-evals.json, but a compiled plan requires product evals [${requiredBy(agg, 'product-eval').join(', ')}] — a required capability cannot be absent`] };
+    }
+    return { present: false, findings: [] };
+  }
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
   catch (e) { return { present: true, findings: [`product-evals.json is not valid JSON: ${e.message}`] }; }
@@ -100,7 +109,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const ci = process.argv.indexOf('--commit');
   const shippingCommit = ci >= 0 ? process.argv[ci + 1] : (process.env.GITHUB_SHA || null);
   const { present, findings } = run(process.cwd(), shippingCommit);
-  if (!present) {
+  if (!present && findings.length === 0) {
     process.stdout.write('Product-eval gate — no product-evals.json; not a product-bearing repo. OK\n');
     process.exit(0);
   }

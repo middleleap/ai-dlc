@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { evaluate, buildChain, sealOf, REQUIRED_TYPES, SEMANTICS } from './evidence-seal-check.mjs';
+import { evaluate, buildChain, sealOf, REQUIRED_TYPES, SEMANTICS, requiredTypesFor, EVIDENCE_FLOOR } from './evidence-seal-check.mjs';
 
 const COMMIT = 'commit-v-test';
 
@@ -173,4 +173,23 @@ test('a sealed dependency audit with a critical vulnerability fails', () => {
 
 test('every required type carries a semantic check — no sealed-but-unread evidence', () => {
   for (const t of REQUIRED_TYPES) assert.ok(SEMANTICS[t], `no semantics for ${t}`);
+});
+
+/* ---- W1: required types are DERIVED from the compiled plans, not a fixed list ---- */
+
+test('with no governed changes, required types fall back to the fixed baseline', () => {
+  assert.deepEqual(requiredTypesFor({ evidence: new Set() }), REQUIRED_TYPES);
+  assert.deepEqual(requiredTypesFor(null), REQUIRED_TYPES);
+});
+
+test('a low-tier plan seals only the floor plus its own required evidence', () => {
+  const req = requiredTypesFor({ evidence: new Set(['tests', 'reviews']) }).sort();
+  assert.deepEqual(req, [...new Set([...EVIDENCE_FLOOR, 'tests', 'reviews'])].sort());
+  assert.ok(!req.includes('sast'), 'a low-tier change must not be forced to seal SAST');
+});
+
+test('a high-tier plan seals more; plan evidence with no sealed counterpart is left to its own gate', () => {
+  const req = requiredTypesFor({ evidence: new Set(['tests', 'reviews', 'control-plane', 'sast', 'sbom', 'product-eval']) });
+  assert.ok(req.includes('sast') && req.includes('sbom'), 'high-tier evidence is sealed');
+  assert.ok(!req.includes('product-eval'), 'product-eval has no seal counterpart — enforced by its own gate');
 });

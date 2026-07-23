@@ -1,0 +1,31 @@
+{
+  "_comment": "The single source of truth for what the Loom installs into an adopting repo (Loom 2.0-rc.7 W4). THREE consumers read this file: adopt.mjs (the idempotent installer), the CI adoption dry-run, and the generated copy table in loom-adopt/SKILL.md (a doc-integrity check fails the build when the table drifts from this manifest). A hand-maintained copy list is what let the adoption guide fall behind the machinery — this file makes that impossible. Sources are relative to this harness dir; destinations are repo-root-relative. kind: file | dir | glob. adopt:'template' marks a *.template.* file whose destination drops the .template; the installer copies it but never fills the ADOPT placeholders — activation is the adopter's, recorded honestly in the adoption report.",
+  "entries": [
+    { "source": "../loom/references/discovery-harness.md", "dest": "discovery/DISCOVERY.md", "kind": "file", "seam": "The discovery canon (single source — do not fork the text)" },
+    { "source": "discovery/gates", "dest": "discovery/gates", "kind": "dir", "seam": "Pure-Node D1–D9 validator + its tests" },
+    { "source": "discovery/render", "dest": "discovery/render", "kind": "dir", "seam": "Zero-dep branded renderer (HTML + OOXML) + tests" },
+    { "source": "discovery/templates", "dest": "discovery/templates", "kind": "dir", "seam": "One template per discovery artifact" },
+    { "source": "discovery/brand/design.md", "dest": "discovery/brand/design.md", "kind": "file", "seam": "Brand seam (neutral demo instance)" },
+    { "source": "discovery/brand/examples", "dest": "discovery/brand/examples", "kind": "dir", "seam": "A second brand proving the seam swap" },
+    { "source": "scripts", "dest": "scripts", "kind": "glob", "glob": "*.mjs", "seam": "Every gate + its tests (globbed — a per-file list silently drops new gates)" },
+    { "source": "core", "dest": "core", "kind": "dir", "seam": "Policy compiler, gate runner, attestations, compiled-requirements (control plane)" },
+    { "source": "profiles", "dest": "profiles", "kind": "dir", "seam": "Profiles as data: base + jurisdiction + product-type" },
+    { "source": "hooks", "dest": ".claude/hooks", "kind": "glob", "glob": "*.sh", "seam": "Pre-write guardrail hooks (pii-guard, spec/test tripwires)" },
+    { "source": "hooks/settings.hooks.json", "dest": ".claude/settings.json", "kind": "file", "seam": "Hook wiring for Claude Code" },
+    { "source": "governance/runbooks", "dest": "docs/governance/runbooks", "kind": "glob", "glob": "*.md", "seam": "Six adoption runbooks + the supervised-pilot playbook" },
+    { "source": "governance/activation-runbook.md", "dest": "docs/governance/activation-runbook.md", "kind": "file", "seam": "How to activate branch protection, IAM, the routine lane" },
+    { "source": "governance/CODEOWNERS.template", "dest": "CODEOWNERS", "kind": "file", "adopt": "template", "seam": "The control-plane ownership map (replace @your-org/… — the gate fails until you do)" },
+    { "source": "governance/control-catalog.template.json", "dest": "docs/governance/control-catalog.json", "kind": "file", "adopt": "template", "seam": "The machine-readable control state of record" },
+    { "source": "governance/identities.template.json", "dest": "docs/governance/identities.json", "kind": "file", "adopt": "template", "seam": "The identity registry (approvals resolve against it)" },
+    { "source": "governance/attestation-issuers.template.json", "dest": "docs/governance/attestation-issuers.json", "kind": "file", "adopt": "template", "seam": "Allowed-issuers registry for ed25519 attestations" },
+    { "source": "governance/model-manifest.template.json", "dest": "docs/governance/model-manifest.json", "kind": "file", "adopt": "template", "seam": "Model inventory (pinned, tiered, evaluated, runtime-governed)" },
+    { "source": "governance/data-lifecycle.template.json", "dest": "docs/governance/data-lifecycle.json", "kind": "file", "adopt": "template", "seam": "Data classification, retention, erasure, residency" },
+    { "source": "governance/operations-signal.template.json", "dest": "docs/governance/operations-signal.json", "kind": "file", "adopt": "template", "seam": "The Run→Discovery feedback log" },
+    { "source": "governance/service-readiness.template.json", "dest": "docs/governance/services/example-service.json", "kind": "file", "adopt": "template", "seam": "Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills)" },
+    { "source": "governance/product-evals.template.json", "dest": "docs/governance/product-evals.json", "kind": "file", "adopt": "template", "seam": "Product-outcome evals (discovery-linked, measures scored, commit-bound)" },
+    { "source": "governance/routine-envelope.template.json", "dest": "docs/governance/routine-envelope.json", "kind": "file", "adopt": "template", "seam": "The second-line-owned routine-change envelope (HG-0013)" },
+    { "source": "governance/token-ledger.template.json", "dest": "docs/governance/token-ledger.json", "kind": "file", "adopt": "template", "seam": "Token-spend ledger (a report, never a merge gate)" },
+    { "source": "adapters/README.md", "dest": "docs/governance/adapters/README.md", "kind": "file", "seam": "The neutral adapter contract" },
+    { "source": "ci/ci.yml", "dest": ".github/workflows/ci.yml", "kind": "file", "seam": "The reference CI workflow that runs every gate" }
+  ]
+}

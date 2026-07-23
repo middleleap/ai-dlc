@@ -145,10 +145,38 @@ export function check(cwd = process.cwd(), base = 'origin/main') {
 }
 
 // CLI (skipped when imported by the test suite).
+//
+// Two modes — the split that makes the lane platform-legible (W2, closes F2):
+//   default          the normal-lane check: an unqualified CLAIM fails; no claim / ordinary
+//                    work passes. This is the required `normal-human-review` status.
+//   --assert-routine the routine-qualified check: exits 0 ONLY for a genuinely qualifying
+//                    claim; a missing claim or a non-fit both exit non-zero. This is the
+//                    separate `routine-qualified` status a merge queue keys auto-merge on.
+// A GitHub ruleset cannot read explanatory text — only the exit of a named check — so the two
+// outcomes MUST live in two check contexts. Auto-merge requires `routine-qualified`; that an
+// ordinary PR fails `--assert-routine` is exactly why it cannot enter the routine queue.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const baseArg = process.argv.indexOf('--base');
   const base = baseArg >= 0 ? process.argv[baseArg + 1] : 'origin/main';
+  const assertRoutine = process.argv.includes('--assert-routine');
   const { claimed, findings } = check(process.cwd(), base);
+
+  if (assertRoutine) {
+    // routine-qualified: pass ONLY for a qualifying claim.
+    if (!claimed) {
+      process.stderr.write('Routine-qualified check — no routine claim: this PR is NOT routine-qualified (it takes the normal human-merge lane). FAIL\n');
+      process.exit(1);
+    }
+    if (findings.length) {
+      process.stderr.write('\nRoutine-qualified check — a routine claim that DOES NOT QUALIFY\n\n');
+      for (const f of findings) process.stderr.write(`  - ${f}\n`);
+      process.exit(1);
+    }
+    process.stdout.write('Routine-qualified check — change fits the second-line envelope; eligible for the auto-merge queue. OK\n');
+    process.exit(0);
+  }
+
+  // normal-human-review: an unqualified CLAIM fails; no claim / ordinary work passes.
   if (!claimed) {
     process.stdout.write('Routine-change lane (HG-0013) — no claim; normal human-merge lane applies. OK\n');
     process.exit(0);
