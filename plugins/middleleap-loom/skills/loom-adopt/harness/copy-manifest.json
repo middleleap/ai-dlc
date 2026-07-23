@@ -1,7 +1,7 @@
 {
   "_comment": "The single source of truth for what the Loom installs into an adopting repo (Loom 2.0-rc.7 W4). THREE consumers read this file: adopt.mjs (the idempotent installer), the CI adoption dry-run, and the generated copy table in loom-adopt/SKILL.md (a doc-integrity check fails the build when the table drifts from this manifest). A hand-maintained copy list is what let the adoption guide fall behind the machinery — this file makes that impossible. Sources are relative to this harness dir; destinations are repo-root-relative. kind: file | dir | glob. adopt:'template' marks a *.template.* file whose destination drops the .template; the installer copies it but never fills the ADOPT placeholders — activation is the adopter's, recorded honestly in the adoption report.",
   "entries": [
-    { "source": "../loom/references/discovery-harness.md", "dest": "discovery/DISCOVERY.md", "kind": "file", "seam": "The discovery canon (single source — do not fork the text)" },
+    { "source": "../../loom/references/discovery-harness.md", "dest": "discovery/DISCOVERY.md", "kind": "file", "seam": "The discovery canon (single source — do not fork the text)" },
     { "source": "discovery/gates", "dest": "discovery/gates", "kind": "dir", "seam": "Pure-Node D1–D9 validator + its tests" },
     { "source": "discovery/render", "dest": "discovery/render", "kind": "dir", "seam": "Zero-dep branded renderer (HTML + OOXML) + tests" },
     { "source": "discovery/templates", "dest": "discovery/templates", "kind": "dir", "seam": "One template per discovery artifact" },

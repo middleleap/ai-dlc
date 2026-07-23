@@ -17,7 +17,7 @@
 // Run from the repo root: `node scripts/change-envelope-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
-import { compile, loadProfiles, planHash } from '../core/policy-compiler.mjs';
+import { compile, loadProfiles, resolveBindings, planHash } from '../core/policy-compiler.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { evaluate as evaluateReadiness, SERVICES_DIR } from './operational-readiness-check.mjs';
 import { loadIssuers, verifyAnchorAttestation } from '../core/attestations.mjs';
@@ -160,7 +160,11 @@ export function run(cwd = process.cwd()) {
     const architectureExists = existsSync(`${base}/architecture-assurance.json`);
     const { profiles, findings: pf } = loadProfiles(envelope.required_profiles, cwd);
     findings.push(...pf.map((f) => `${envelope.change_id}: ${f}`));
-    const { plan: freshPlan, findings: cf } = compile(envelope, profiles);
+    // rc.8 WS4: recompile with the SAME profile-content bindings the plan was written from, so a
+    // revised profile (or a BrainKit that an institution profile pins) makes the stored plan stale.
+    const { bindings, findings: bf } = resolveBindings(envelope.required_profiles, cwd);
+    findings.push(...bf.map((f) => `${envelope.change_id}: ${f}`));
+    const { plan: freshPlan, findings: cf } = compile(envelope, profiles, bindings);
     findings.push(...cf.map((f) => `${envelope.change_id}: ${f}`));
     // 1.12 context: R-gate results per declared service, the second-line hold, the evidence anchor.
     const readiness = { missing: [], findings: [] };

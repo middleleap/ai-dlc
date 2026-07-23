@@ -33,7 +33,7 @@ are repo-root-relative.
 <!-- LOOM:COPY-TABLE:START -->
 | Bundle source | Destination | What it is |
 |---|---|---|
-| `../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | The discovery canon (single source — do not fork the text) |
+| `../../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | The discovery canon (single source — do not fork the text) |
 | `discovery/gates` | `discovery/gates` | Pure-Node D1–D9 validator + its tests |
 | `discovery/render` | `discovery/render` | Zero-dep branded renderer (HTML + OOXML) + tests |
 | `discovery/templates` | `discovery/templates` | One template per discovery artifact |

@@ -23,51 +23,39 @@ jobs:
         working-directory: plugins/middleleap-loom/skills/loom-adopt/harness
         run: node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
 
-      - name: Loom bundle — adoption dry-run (tests must pass in the adopted layout)
+      - name: Loom bundle — adoption dry-run (manifest-driven install via adopt.mjs — rc.8 WS1)
         run: |
           A="$RUNNER_TEMP/loom-adopt-dryrun"
           P=plugins/middleleap-loom/skills
-          mkdir -p "$A/discovery/brand" "$A/docs/governance" "$A/scripts"
-          cp "$P/loom/references/discovery-harness.md" "$A/discovery/DISCOVERY.md"
-          cp -r "$P/loom-adopt/harness/discovery/gates"     "$A/discovery/gates"
-          cp -r "$P/loom-adopt/harness/discovery/render"    "$A/discovery/render"
-          cp -r "$P/loom-adopt/harness/discovery/templates" "$A/discovery/templates"
-          cp "$P/loom-adopt/harness/discovery/brand/design.md" "$A/discovery/brand/design.md"
-          cp -r "$P/loom-adopt/harness/discovery/brand/examples" "$A/discovery/brand/examples"
-          cp "$P/loom-adopt/harness/scripts/"*.mjs "$A/scripts/"   # every gate + its tests — a per-file list silently drops new gates
-          cp -r "$P/loom-adopt/harness/core" "$A/core"             # the policy compiler (control plane)
-          cp -r "$P/loom-adopt/harness/profiles" "$A/profiles"     # profiles are data: base + jurisdiction + product
-          cp "$P/loom-adopt/harness/governance/CODEOWNERS.template" "$A/CODEOWNERS"
-          cp "$P/loom-adopt/harness/governance/model-manifest.template.json" "$A/docs/governance/model-manifest.json"
-          cp "$P/loom-adopt/harness/governance/data-lifecycle.template.json" "$A/docs/governance/data-lifecycle.json"
-          cp "$P/loom-adopt/harness/governance/operations-signal.template.json" "$A/docs/governance/operations-signal.json"
-          cp "$P/loom-adopt/harness/governance/control-catalog.template.json" "$A/docs/governance/control-catalog.json"
-          cp "$P/loom-adopt/harness/governance/identities.template.json" "$A/docs/governance/identities.json"
-          cp "$P/loom-adopt/harness/governance/attestation-issuers.template.json" "$A/docs/governance/attestation-issuers.json"
-          mkdir -p "$A/docs/governance/changes" "$A/docs/governance/services"
-          cp -r "$P/loom-adopt/harness/change-example" "$A/docs/governance/changes/CHG-2026-0042"
-          # The readiness template ships with unparseable ADOPT dates (fails until exercised);
-          # the dry-run "adopts" it by recording drill dates, as a real adopter would.
-          TODAY=$(date +%F)
-          node -e 'const fs=require("fs");const t=JSON.parse(fs.readFileSync(process.argv[1]));const d=process.argv[2];t.bcp_dr.last_exercised=d;t.rollback.last_drilled=d;t.kill_switch.last_tested=d;t.capacity.last_run=d;fs.writeFileSync(process.argv[3],JSON.stringify(t,null,2))' "$P/loom-adopt/harness/governance/service-readiness.template.json" "$TODAY" "$A/docs/governance/services/credit-origination.json"
-          mkdir -p "$A/docs/governance/evidence" "$A/docs/governance/runbooks" "$A/.claude/hooks"
-          cp "$P/loom-adopt/harness/evidence-example/"*.json "$A/docs/governance/evidence/"
-          cp "$P/loom-adopt/harness/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
-          cp "$P/loom-adopt/harness/governance/runbooks/"*.md "$A/docs/governance/runbooks/"
-          cp "$P/loom-adopt/harness/governance/activation-runbook.md" "$A/docs/governance/"
-          cp "$P/loom-adopt/harness/hooks/"*.sh "$A/.claude/hooks/"
-          cp "$P/loom-adopt/harness/hooks/settings.hooks.json" "$A/.claude/settings.json"
-          cp -r "$P/loom-adopt/harness/register-example" "$A/docs/governance/data-risk-register"
-          # 2.0-rc runtime + adapter artifacts
-          mkdir -p "$A/docs/governance/assurance-cycles" "$A/docs/governance/adapters"
-          cp "$P/loom-adopt/harness/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
-          cp "$P/loom-adopt/harness/assurance-example/decision-log.json" "$A/docs/governance/decision-log.json"
-          cp "$P/loom-adopt/harness/adapters/reference/"*.json "$A/docs/governance/adapters/"
-          # rc.7: the change-example is high-tier, so its compiled plan now REQUIRES product
-          # evals (W1 mandatory-when-compiled). Lay the product-eval example + its sealed report.
-          cp -r "$P/loom-adopt/harness/product-eval-example" "$A/product-eval-example"
-          cp "$P/loom-adopt/harness/product-eval-example/product-evals.json" "$A/docs/governance/product-evals.json"
+          H="$P/loom-adopt/harness"
+          # rc.8 WS1: copy-manifest.json drives the install through adopt.mjs — no parallel CI
+          # copy list. A new manifest entry now lands in the adopted layout with zero CI edits
+          # (scripts/adopt.test.mjs proves this). The generated SKILL copy table is still gated
+          # for drift by the doc-integrity step above.
+          node "$H/adopt.mjs" --dest "$A"
+          # Worked-example fixtures the installer deliberately does NOT ship (they are the Loom's
+          # own demonstration data, not adopter machinery, so they are not in the copy manifest).
+          mkdir -p "$A/docs/governance/changes" "$A/docs/governance/services" \
+                   "$A/docs/governance/evidence" "$A/docs/governance/assurance-cycles" \
+                   "$A/docs/governance/adapters"
+          cp -r "$H/change-example" "$A/docs/governance/changes/CHG-2026-0042"
+          cp "$H/evidence-example/"*.json "$A/docs/governance/evidence/"
+          cp "$H/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
+          cp -r "$H/register-example" "$A/docs/governance/data-risk-register"
+          cp "$H/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
+          cp "$H/assurance-example/decision-log.json" "$A/docs/governance/decision-log.json"
+          cp "$H/adapters/reference/"*.json "$A/docs/governance/adapters/"
+          # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
+          # example + its sealed report and let it stand in for the installed template.
+          cp -r "$H/product-eval-example" "$A/product-eval-example"
+          cp "$H/product-eval-example/product-evals.json" "$A/docs/governance/product-evals.json"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
+          # Deliberate ADOPT completions the installer never fakes: the manifest ships
+          # services/example-service.json with unparseable ADOPT dates; the dry-run exercises a
+          # real service (credit-origination) with recorded drill dates and drops the stub.
+          rm -f "$A/docs/governance/services/example-service.json"
+          TODAY=$(date +%F)
+          node -e 'const fs=require("fs");const t=JSON.parse(fs.readFileSync(process.argv[1]));const d=process.argv[2];t.bcp_dr.last_exercised=d;t.rollback.last_drilled=d;t.kill_switch.last_tested=d;t.capacity.last_run=d;fs.writeFileSync(process.argv[3],JSON.stringify(t,null,2))' "$H/governance/service-readiness.template.json" "$TODAY" "$A/docs/governance/services/credit-origination.json"
           cd "$A"
           # Negative test: the unadopted template (placeholder @your-org team) must FAIL the
           # control-plane gate — a copied-but-never-adopted control plane is not a control.

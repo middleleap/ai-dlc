@@ -31,31 +31,79 @@ const FIELD_MAP = {
 };
 const PLAN_FIELDS = Object.keys(FIELD_MAP);
 
-const PROFILE_DIRS = ['profiles', 'profiles/jurisdictions', 'profiles/products'];
+// rc.8 WS3: institution profiles compose alongside base + jurisdiction + product. The dir a
+// profile is found in gives its default kind (a profile may still declare its own `kind`).
+const PROFILE_DIRS = ['profiles', 'profiles/jurisdictions', 'profiles/products', 'profiles/institutions'];
+const KIND_BY_DIR = {
+  profiles: 'base',
+  'profiles/jurisdictions': 'jurisdiction',
+  'profiles/products': 'product',
+  'profiles/institutions': 'institution',
+};
+
+/** Resolve a profile name to { path, dir } under the profile dirs, or null. */
+function findProfile(name, baseDir) {
+  for (const d of PROFILE_DIRS) {
+    const path = `${baseDir}/${d}/${name}.json`;
+    if (existsSync(path)) return { path, dir: d };
+  }
+  return null;
+}
 
 /** Resolve profile names to loaded data. Missing profiles are findings, not defaults. */
 export function loadProfiles(names, baseDir = process.cwd()) {
   const loaded = [];
   const findings = [];
   for (const name of names || []) {
-    const path = PROFILE_DIRS.map((d) => `${baseDir}/${d}/${name}.json`).find(existsSync);
-    if (!path) {
+    const hit = findProfile(name, baseDir);
+    if (!hit) {
       findings.push(`profile ${name} not found under ${PROFILE_DIRS.join(', ')} — an unresolvable profile blocks the change`);
       continue;
     }
-    try { loaded.push(JSON.parse(readFileSync(path, 'utf8'))); }
+    try { loaded.push(JSON.parse(readFileSync(hit.path, 'utf8'))); }
     catch (e) { findings.push(`profile ${name} is not valid JSON: ${e.message}`); }
   }
   return { profiles: loaded, findings };
+}
+
+/**
+ * rc.8 WS4 — bind the plan to the EXACT content of every profile it compiled from, not just
+ * their names. Each binding is { profile, kind, version, digest }; the digest is over the
+ * profile's canonical content, so any change to a profile makes a stored plan stale (the
+ * change-envelope gate recompiles and compares). This is what lets a BrainKit or institution
+ * profile revision force recompilation instead of silently riding an old plan.
+ */
+export function resolveBindings(names, baseDir = process.cwd()) {
+  const bindings = [];
+  const findings = [];
+  for (const name of names || []) {
+    const hit = findProfile(name, baseDir);
+    if (!hit) { findings.push(`profile ${name} not found under ${PROFILE_DIRS.join(', ')} — cannot bind an unresolvable profile`); continue; }
+    let data;
+    try { data = JSON.parse(readFileSync(hit.path, 'utf8')); }
+    catch (e) { findings.push(`profile ${name} is not valid JSON: ${e.message}`); continue; }
+    const kind = typeof data.kind === 'string' ? data.kind : (KIND_BY_DIR[hit.dir] || 'base');
+    const binding = {
+      profile: name,
+      kind,
+      version: typeof data.version === 'string' ? data.version : null,
+      digest: 'sha256:' + createHash('sha256').update(canonical(data)).digest('hex'),
+    };
+    bindings.push(binding);
+  }
+  bindings.sort((a, b) => a.profile.localeCompare(b.profile));
+  return { bindings, findings };
 }
 
 const union = (into, from) => { for (const x of from || []) into.add(x); };
 
 /**
  * Compile the control plan for an envelope against its profiles.
- * Returns { plan, findings } — a non-empty findings list means the change is BLOCKED.
+ * `bindings` (rc.8 WS4) pins the exact profile content the plan compiled from; pass the output
+ * of resolveBindings(envelope.required_profiles). Tests may omit it (an empty binding set is a
+ * valid, if unpinned, plan). Returns { plan, findings } — a non-empty findings list means BLOCKED.
  */
-export function compile(envelope, profiles) {
+export function compile(envelope, profiles, bindings = []) {
   const findings = [];
   for (const field of ['change_id', 'product_id', 'change_type', 'risk_tier']) {
     if (!(typeof envelope?.[field] === 'string' && envelope[field].trim())) {
@@ -96,15 +144,29 @@ export function compile(envelope, profiles) {
     profiles: [...envelope.required_profiles].sort(),
   };
   for (const f of PLAN_FIELDS) plan[f] = [...acc[f]].sort();
+  // rc.8 WS4: pin the exact profile content the plan compiled from.
+  plan.profile_bindings = [...bindings].sort((a, b) => a.profile.localeCompare(b.profile));
   plan.plan_hash = planHash(plan);
   return { plan, findings: [] };
 }
 
-/** Canonical hash of a plan (excluding plan_hash itself). Deterministic across runs. */
+/**
+ * Canonical JSON serialization — recursive, object keys sorted at EVERY depth. rc.8 WS4 replaces
+ * the old top-level `JSON.stringify(rest, keys)` replacer, which was a whitelist that silently
+ * DROPPED any nested key (e.g. a profile_binding's digest) from the serialization — so a change
+ * to nested content did not change the hash. This function hashes the whole tree, so it does.
+ */
+export function canonical(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
+  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+  const keys = Object.keys(value).filter((k) => value[k] !== undefined).sort();
+  return '{' + keys.map((k) => JSON.stringify(k) + ':' + canonical(value[k])).join(',') + '}';
+}
+
+/** Canonical hash of a plan (excluding plan_hash itself). Deterministic across runs and depths. */
 export function planHash(plan) {
   const { plan_hash, ...rest } = plan;
-  const canonical = JSON.stringify(rest, Object.keys(rest).sort());
-  return createHash('sha256').update(canonical).digest('hex');
+  return createHash('sha256').update(canonical(rest)).digest('hex');
 }
 
 // CLI: compile an envelope's plan. `--write` stores it at the envelope's control_plan path.
@@ -113,8 +175,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (!envPath) { process.stderr.write('usage: node core/policy-compiler.mjs <change-envelope.json> [--write]\n'); process.exit(2); }
   const envelope = JSON.parse(readFileSync(envPath, 'utf8'));
   const { profiles, findings: pf } = loadProfiles(envelope.required_profiles);
-  const { plan, findings } = compile(envelope, profiles);
-  const all = [...pf, ...findings];
+  const { bindings, findings: bf } = resolveBindings(envelope.required_profiles);
+  const { plan, findings } = compile(envelope, profiles, bindings);
+  const all = [...pf, ...bf, ...findings];
   if (all.length) {
     process.stderr.write('\nPolicy compiler — BLOCKED\n\n');
     for (const f of all) process.stderr.write(`  - ${f}\n`);
