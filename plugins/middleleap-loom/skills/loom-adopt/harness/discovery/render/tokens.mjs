@@ -11,7 +11,18 @@ export function parseTokens(designMdPath = 'discovery/brand/design.md') {
   }
   const version = (text.match(/profile_version:\s*(\d+)/) || [])[1] || '1';
   const banner = (text.match(/^banner:\s*"?([^"\n]+)"?/m) || [])[1] || 'DEMO — synthetic data, non-production';
-  return { tokens, version, banner, present: text.length > 0 };
+  // rc.8 WS8: when the D7 seam is a BrainKit compatibility projection, its frontmatter pins the
+  // BrainKit id/version/digest. Surface it so every rendered artifact carries the provenance.
+  const fm = (k) => (text.match(new RegExp(`^${k}:\\s*"?([^"\\n]+)"?`, 'm')) || [])[1];
+  const bkId = fm('brainkit_id');
+  const brainkit = bkId ? { id: bkId, version: fm('brainkit_version') || null, digest: fm('brainkit_digest') || null } : null;
+  return { tokens, version, banner, brainkit, present: text.length > 0 };
+}
+
+/** The one-line BrainKit provenance string embedded in rendered artifacts, or '' if none. */
+export function brainkitProvenance(brainkit) {
+  if (!brainkit || !brainkit.id) return '';
+  return `brainkit:${brainkit.id}@${brainkit.version || '?'} ${brainkit.digest || ''}`.trim();
 }
 
 /** Resolve a token by name, with a fallback so a missing token never injects an empty colour. */
