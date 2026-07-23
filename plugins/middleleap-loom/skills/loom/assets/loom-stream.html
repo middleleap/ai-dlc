@@ -157,9 +157,38 @@
   .reveal{opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
   .reveal.in{opacity:1;transform:none}
   @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  /* reading progress + dot nav (added: navigation) */
+  .progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--ember);z-index:60;transition:width .1s linear}
+  .dotnav{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:55;display:flex;flex-direction:column;gap:13px}
+  .dotnav button{all:unset;cursor:pointer;width:22px;height:22px;display:flex;align-items:center;justify-content:center;position:relative}
+  .dotnav .d{width:8px;height:8px;transform:rotate(45deg);background:var(--line-strong);transition:background .2s,transform .2s}
+  .dotnav button:hover .d{background:var(--muted)}
+  .dotnav button.active .d{background:var(--ember);transform:rotate(45deg) scale(1.35)}
+  .dotnav button::after{content:attr(data-label);position:absolute;right:28px;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--head);background:var(--surface);border:1px solid var(--line);padding:5px 9px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .16s}
+  .dotnav button:hover::after,.dotnav button:focus-visible::after{opacity:1}
+  @media(max-width:1040px){.dotnav{display:none}}
+  /* heading anchors + deep-link flash */
+  .h-anchor{opacity:0;margin-left:9px;font-family:var(--mono);color:var(--ember);text-decoration:none;transition:opacity .15s}
+  h2:hover .h-anchor,.h-anchor:focus-visible{opacity:.75}.h-anchor:hover{opacity:1}
+  :target{scroll-margin-top:20px}
+  @keyframes flashcard{0%,100%{box-shadow:var(--shadow)}30%{box-shadow:0 0 0 2px var(--ember)}}
+  .flash{animation:flashcard 1.4s ease}
+  /* gate grid: filter + per-card anchor */
+  .gatetools{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+  .gatetools input{font-family:var(--sans);font-size:.9rem;padding:9px 12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);min-width:240px;border-radius:2px}
+  .gatetools input:focus{outline:2px solid var(--ember);outline-offset:1px}
+  .gatetools .count{font-family:var(--mono);font-size:.72rem;color:var(--muted);letter-spacing:.08em}
+  .grid .card{position:relative}
+  .grid .card .canchor{position:absolute;top:12px;right:12px;opacity:0;font-family:var(--mono);font-size:.9rem;color:var(--ember);text-decoration:none;transition:opacity .15s}
+  .grid .card:hover .canchor,.grid .card .canchor:focus-visible{opacity:.7}.grid .card .canchor:hover{opacity:1}
+  .grid .card.hide{display:none}
+  .de--link{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ember);text-decoration:none;border:1px solid var(--line-strong);padding:6px 11px;border-radius:2px;transition:border-color .2s}
+  .de--link:hover{border-color:var(--ember)}
 </style>
 </head>
 <body>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<nav class="dotnav" id="dotnav" aria-label="Section navigation"></nav>
 <div class="wrap">
   <header>
     <div class="brandbar">
@@ -174,10 +203,11 @@
     <p class="lede">The Loom turns an idea into gated, audit-ready software and then lets <b>running reopen discovery</b>.
       Below is the mental model — then <b>send a change through it yourself</b>: pick a scenario, watch each gate, hook,
       and reviewer evaluate, approve the human four-eyes step, and see a Run signal loop back to Discovery.</p>
+    <p style="margin-top:16px"><a class="de--link" href="https://github.com/middleleap/ai-dlc/blob/main/docs/the-loom.html">The method deck ↗</a></p>
   </header>
 
   <!-- the mental model -->
-  <section class="reveal">
+  <section class="reveal" id="model">
     <div class="sec-h"><span class="eyebrow">The mental model</span><h2>A closed loop, not a line</h2></div>
     <p class="sec-sub">Two diamonds — find the right problem, build it right — meet at a hand-off, ship, run, and feed
       Run's signals back into Discovery. The <em>warp</em> (four-eyes, INSERT-only audit, lineage, residency) runs under all three arcs.</p>
@@ -185,7 +215,7 @@
   </section>
 
   <!-- the simulator -->
-  <section class="reveal">
+  <section class="reveal" id="simulator">
     <div class="sec-h"><span class="eyebrow">Run it</span><h2>Send a change through the Loom</h2></div>
     <p class="sec-sub">Every step below is a real gate, hook, or reviewer in the bundle. Pick a scenario that trips one,
       press <b>Play</b>, and watch it <b>block the merge</b> — or approve four-eyes yourself and watch the loop close.</p>
@@ -222,17 +252,21 @@
   </section>
 
   <!-- gate reference -->
-  <section class="reveal">
-    <div class="sec-h"><span class="eyebrow">The controls</span><h2>Nineteen gates — run by a risk-scoped runner</h2></div>
+  <section class="reveal" id="gates">
+    <div class="sec-h"><span class="eyebrow">The controls</span><h2><span id="gatecount">The</span> gates — run by a risk-scoped runner</h2></div>
     <p class="sec-sub">Each is pure-Node, tested, and blocks merge on failure — with a CI negative test showing an attempted
       bypass being rejected. The gate runner reads the control catalog's lanes (pr · release · scheduled) and path scopes,
       so a documentation fix does not take a lending model's route — and every skipped gate is recorded with its reason,
       never silent.</p>
+    <div class="gatetools">
+      <input id="gatefilter" type="search" placeholder="Filter gates — e.g. model, evidence, HG-0013…" aria-label="Filter gates">
+      <span class="count" id="gatefiltercount"></span>
+    </div>
     <div class="grid" id="gategrid"></div>
   </section>
 
   <!-- maturity -->
-  <section class="reveal">
+  <section class="reveal" id="grade">
     <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
     <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
       real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
@@ -240,7 +274,7 @@
       <span class="enf" style="width:51%"></span><span class="nam" style="width:29%"></span><span class="abs" style="width:20%"></span>
     </div>
     <div class="scoretags">
-      <span><span class="sw enf"></span>~30 mechanically validated</span>
+      <span><span class="sw enf"></span>~32 mechanically validated</span>
       <span><span class="sw nam"></span>~17 defined</span>
       <span><span class="sw abs"></span>~12 absent</span>
     </div>
@@ -257,7 +291,7 @@
   </section>
 
   <!-- loom 2.0 roadmap -->
-  <section class="reveal">
+  <section class="reveal" id="roadmap">
     <div class="sec-h"><span class="eyebrow">Where it goes</span><h2>Loom 2.0 — mandate to customer outcome</h2></div>
     <p class="sec-sub">The plan (<span class="mono" style="font-size:.85em">docs/loom-2.0-plan.md</span>) extends the stream into one
       traceable control chain: a policy compiler reads a change's risk classification and <b>compiles</b> the gates, approvers, and
@@ -289,7 +323,7 @@
 
   <footer>
     <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check. Roadmap chips map to docs/loom-2.0-plan.md.</p>
-    <p style="margin-top:8px">MiddleLeap · The Loom 2.0.0-rc.1 — a way for a regulated entity to build with AI.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom 2.0.0-rc.6 — a way for a regulated entity to build with AI.</p>
   </footer>
 </div>
 
@@ -324,7 +358,7 @@ const STAGES = [
   {id:'spec',     ph:'Delivery',  lab:'Spec-first', gate:'spec-tripwire', desc:'Write the API contract + acceptance tests and show them RED before implementing. The contract changes only via its own PR.'},
   {id:'implement',ph:'Delivery',  lab:'Implement', gate:'pii-guard', desc:'Implement to green against interfaces — synthetic data only; audit + lineage emitted in the same change.'},
   {id:'review',   ph:'Delivery',  lab:'Review', gate:'reviewer agents', desc:'Local reviewer agents must pass on the diff: hard-stop (PASS) and contract-conformance (CONFORMANT).'},
-  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'18 gates', desc:'The risk-scoped runner executes what the diff implicates and records every skip. The full set: control-plane, control-catalog, identity-registry, change-envelope (incl. compound production authorization + the second-line hold), routine-change (HG-0013 graduated autonomy), product-approval (PA1/PA2), product-eval (discovery-linked outcome evals), architecture-assurance (A1–A5), operational-readiness (R1–R6), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
+  {id:'gates',    ph:'Delivery',  lab:'CI gates', gate:'the gate set', desc:'The risk-scoped runner executes what the diff implicates and records every skip. The full set: control-plane, control-catalog, identity-registry, change-envelope (incl. compound production authorization + the second-line hold), routine-change (HG-0013 graduated autonomy), product-approval (PA1/PA2), product-eval (discovery-linked outcome evals), architecture-assurance (A1–A5), operational-readiness (R1–R6), test-integrity (Q1b), SAST output (Q2), secrets tree+history (Q4), supply-chain (Q4), model-provenance, evidence-seal, data-lifecycle, the waist gate, and operations-signal.'},
   {id:'merge',    ph:'Delivery',  lab:'Merge', gate:'HG-0001 · human', desc:'The agent opens the PR and STOPS. A human holds four-eyes — the agent identity is not in the approver group and never merges its own work.'},
   {id:'deploy',   ph:'Run',       lab:'Deploy', gate:'smoke', desc:'Auto-deploy on merge; a smoke suite runs against the live URL and fails the deploy if broken.'},
   {id:'evidence', ph:'Run',       lab:'Evidence', gate:'HG-0003 · evidence-seal', desc:'Seal the release evidence bundle — a hash chain the gate re-reads and verifies, so altering any artifact breaks a seal.'},
@@ -447,6 +481,8 @@ const GATES=[
  {id:'HG-0003',n:'evidence-seal-check',d:'Re-reads each release artifact and verifies its hash against an append-only chain — altering any artifact breaks a seal.'},
  {id:'data-gov',n:'data-lifecycle-check',d:'Fails a release unless every data category declares a bounded retention and a right-to-erasure disposition.'},
  {id:'HG-0007',n:'discovery-link-check',d:'The waist gate: a pending feature must trace to a gate-green discovery hand-off, or carry an explicit exemption.'},
+ {id:'HG-0013',n:'routine-change-check',d:'Graduated autonomy: a claimed routine change must fit a second-line-owned, expiring envelope — class, path scope, diff cap, gates green — and an absolute in-code floor keeps the control plane, contract, auth and migrations out of the lane. Anything else re-evaluates to human merge. New in 2.0-rc.'},
+ {id:'product-eval',n:'product-eval-check',d:'Evals-as-product-management: a released product links its discovery hand-off and scores every D1 success measure against the shipping commit, with a sealed report — a regression or a stale eval blocks the release. New in 2.0-rc.'},
  {id:'loop',n:'operations-signal-check',d:'The Run→Discovery gate: an operational signal must be triaged (routed) and traceable, so nothing falls on the floor.'},
  {id:'Q1b',n:'test-integrity-check',d:'Diffs the test surface against the merge base: deleted tests, net assertion loss, added skips, commented-out assertions — the anti-reward-hacking gate. New in 1.10.'},
  {id:'Q2',n:'sast-check',d:'Validates the SAST scanner’s OUTPUT: real SARIF from a named tool, error-level findings ≤ policy. A missing report is a gap, not a pass. New in 1.10.'},
@@ -466,10 +502,30 @@ const GATES=[
  {id:'§10',n:'decision-log-check',d:'The agent’s decisions as an append-only hash chain: editing, reordering or dropping a decision breaks the chain. Replayable, contiguous, reconstructable. New in 2.0-rc.'},
  {id:'§16',n:'adapter-check',d:'Enterprise adapters map an external system to a real catalog control via a typed envelope, keeping the core vendor-neutral — a mapping to nothing fails. New in 2.0-rc.'},
 ];
-$('gategrid').innerHTML = GATES.map(g=>`<div class="card"><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`).join('');
+const gateSlug = s => 'gate-'+s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+$('gategrid').innerHTML = GATES.map(g=>{const gid=gateSlug(g.n);return `<div class="card" id="${gid}"><a class="canchor" href="#${gid}" title="Copy link to this gate">#</a><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`;}).join('');
+{ const gc=$('gatecount'); if(gc) gc.textContent = String(GATES.length); }
 
 /* ---------- scroll reveal ---------- */
 (function(){const els=document.querySelectorAll('.reveal');if(!('IntersectionObserver'in window)){els.forEach(e=>e.classList.add('in'));return;}const io=new IntersectionObserver(en=>en.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.06});els.forEach(e=>io.observe(e));})();
+
+/* ---------- navigation, gate filter, deep-links (added) ---------- */
+(function(){
+  var SECTIONS=[['model','Model'],['simulator','Simulator'],['gates','Gates'],['grade','Grade'],['roadmap','Roadmap']];
+  var nav=document.getElementById('dotnav'),prog=document.getElementById('progress'),secEls=[];
+  SECTIONS.forEach(function(s){var el=document.getElementById(s[0]);if(!el){return;}secEls.push(el);var b=document.createElement('button');b.dataset.target=s[0];b.setAttribute('data-label',s[1]);b.setAttribute('aria-label','Go to '+s[1]);b.innerHTML='<span class="d"></span>';b.addEventListener('click',function(){el.scrollIntoView({behavior:'smooth',block:'start'});});nav.appendChild(b);});
+  var dots=nav.querySelectorAll('button');
+  function onScroll(){var h=document.documentElement,sc=h.scrollTop,max=h.scrollHeight-h.clientHeight;prog.style.width=(max>0?sc/max*100:0)+'%';}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  if('IntersectionObserver'in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){dots.forEach(function(d){d.classList.toggle('active',d.dataset.target===e.target.id);});}});},{rootMargin:'-45% 0px -50% 0px'});secEls.forEach(function(el){io.observe(el);});}
+  secEls.forEach(function(el){var h=el.querySelector('h2');if(!h){return;}var a=document.createElement('a');a.className='h-anchor';a.href='#'+el.id;a.textContent='#';a.title='Copy link to this section';a.addEventListener('click',function(ev){history.replaceState(null,'','#'+el.id);if(navigator.clipboard){ev.preventDefault();navigator.clipboard.writeText(location.href).catch(function(){});el.scrollIntoView({behavior:'smooth'});}});h.appendChild(a);});
+  var fi=document.getElementById('gatefilter'),fc=document.getElementById('gatefiltercount'),cards=Array.prototype.slice.call(document.querySelectorAll('#gategrid .card'));
+  function applyFilter(){var q=(fi.value||'').trim().toLowerCase(),shown=0;cards.forEach(function(c){var hit=!q||c.textContent.toLowerCase().indexOf(q)>=0;c.classList.toggle('hide',!hit);if(hit){shown++;}});fc.textContent=q?shown+' / '+cards.length+' shown':cards.length+' controls';}
+  if(fi){fi.addEventListener('input',applyFilter);applyFilter();}
+  document.querySelectorAll('#gategrid .canchor').forEach(function(a){a.addEventListener('click',function(ev){var id=a.getAttribute('href');history.replaceState(null,'',id);if(navigator.clipboard){ev.preventDefault();navigator.clipboard.writeText(location.href).catch(function(){});var el=document.querySelector(id);if(el){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');el.scrollIntoView({behavior:'smooth',block:'center'});}}});});
+  function onHash(){var id=decodeURIComponent(location.hash.slice(1));if(!id){return;}var el=document.getElementById(id);if(!el){return;}if(fi&&el.classList.contains('card')){fi.value='';applyFilter();}el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');el.scrollIntoView({behavior:'smooth',block:'center'});}
+  window.addEventListener('hashchange',onHash);onHash();
+})();
 </script>
 </body>
 </html>
