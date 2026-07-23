@@ -42,11 +42,16 @@ const resolvesToHuman = (registry, id) => {
   return who && who.kind === 'human';
 };
 
+// rc.8 hardening: an approved BrainKit's version is semantic, and its approval is bound to it.
+export const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/;
+
 /**
  * Findings for the BrainKit. `brainkit` is loadBrainkit()'s result (or null). Empty ⇒ conformant.
  * `enforce` is computed by run(): required (a compiled change pins it) OR the package claims approved.
+ * `repoRoot` lets source references and provenance-covered artifacts be checked on disk;
+ * `provenanceEvidence` is the sealed brainkit-provenance record(s) from the evidence manifest.
  */
-export function evaluate(brainkit, { required = false, registry = null, institutionBindings = [], projection = null, now = Date.now() } = {}) {
+export function evaluate(brainkit, { required = false, registry = null, institutionBindings = [], projection = null, repoRoot = null, provenanceEvidence = null, now = Date.now() } = {}) {
   const findings = [];
   if (!brainkit) {
     if (required) findings.push('a compiled change requires brainkit-conformance, but institution/brainkit/manifest.json is missing — the institutional BrainKit is not mounted');
@@ -64,6 +69,23 @@ export function evaluate(brainkit, { required = false, registry = null, institut
     if (!(typeof m[f] === 'string' && m[f].trim()) || isPlaceholder(m[f])) findings.push(`manifest.${f} is missing or an unfilled placeholder`);
   }
   if (!LIFECYCLE.has(m.status)) findings.push(`manifest.status must be one of ${[...LIFECYCLE].join('|')} (got ${JSON.stringify(m.status)})`);
+  // rc.8 hardening (audit gap 3): distribution and rollback reason about versions, so the
+  // version must be semantic — "not-semver" is not a release identity.
+  if (typeof m.version === 'string' && !isPlaceholder(m.version) && !SEMVER.test(m.version)) {
+    findings.push(`manifest.version ${JSON.stringify(m.version)} is not semantic (MAJOR.MINOR.PATCH) — releases and rollbacks are versioned`);
+  }
+
+  // rc.8 hardening (audit gap 2): the canonical section set is COMPLETE and UNIQUE. Checking only
+  // the declared sections let an approved package silently omit one — remove `architecture` from
+  // manifest.sections, reseal, and the old gate was blind. Every canonical section must be
+  // declared exactly once; extra institution-specific sections are allowed (and digest-checked).
+  const declared = (m.sections || []).map((s) => s.section);
+  for (const key of SECTION_KEYS) {
+    if (!declared.includes(key)) findings.push(`canonical section ${key} is not declared in manifest.sections — a BrainKit cannot silently omit a canonical section`);
+  }
+  for (const dupe of new Set(declared.filter((s, i) => declared.indexOf(s) !== i))) {
+    findings.push(`section ${dupe} is declared more than once — the section set must be unique`);
+  }
 
   // B — lifecycle. A change that COMPILED brainkit-conformance may only use an approved, effective,
   // unexpired BrainKit. (An approved-but-dormant package is integrity-checked below but not gated on use.)
@@ -77,9 +99,10 @@ export function evaluate(brainkit, { required = false, registry = null, institut
     }
   }
 
-  // C — accountable owners resolve to registry humans, one per section.
+  // C — accountable owners resolve to registry humans, one per section (canonical AND declared —
+  // an institution-specific extra section is owned too, or it is ungoverned content).
   const owners = m.owners || {};
-  for (const section of SECTION_KEYS) {
+  for (const section of new Set([...SECTION_KEYS, ...declared])) {
     const owner = owners[section];
     if (!(typeof owner === 'string' && owner.trim()) || isPlaceholder(owner)) findings.push(`section ${section} has no accountable owner`);
     else if (!resolvesToHuman(registry, owner)) findings.push(`section ${section} owner ${JSON.stringify(owner)} does not resolve to a human in the identity registry`);
@@ -103,13 +126,34 @@ export function evaluate(brainkit, { required = false, registry = null, institut
   if (required && sources.length === 0) findings.push('source-register.json lists no approved sources — a BrainKit section must ground in approved institutional sources, not inference');
   for (const s of sources) {
     if (!resolvesToHuman(registry, s.approved_by)) findings.push(`source ${JSON.stringify(s.id)} approved_by ${JSON.stringify(s.approved_by)} does not resolve to a human — an unapproved source is not authoritative`);
+    // rc.8 hardening (audit gap 4): a repo-relative reference (a regulated-context or solution-
+    // domain pointer, e.g. the D6 register) must EXIST — a broken pointer is broken grounding.
+    // Scheme-qualified references (https://, internal://, doc ids with a scheme) are external
+    // and out of mechanical reach.
+    if (repoRoot && typeof s.reference === 'string' && s.reference.trim() && !/^[a-z][a-z0-9+.-]*:/i.test(s.reference) && !isPlaceholder(s.reference)) {
+      if (!existsSync(join(repoRoot, s.reference))) findings.push(`source ${s.id} references ${s.reference}, which does not exist in the repository — a broken regulated-context or domain reference blocks`);
+    }
   }
   const sourceIds = new Set(sources.map((s) => s.id));
-  for (const ref of m.approved_sources || []) {
-    if (!isPlaceholder(ref) && !sourceIds.has(ref)) findings.push(`manifest.approved_sources references ${JSON.stringify(ref)}, which is not in source-register.json`);
+  const manifestSources = (m.approved_sources || []).filter((r) => !isPlaceholder(r));
+  // rc.8 hardening (audit gap 4): an EMPTY approved_sources list passed while the register held
+  // unrelated sources. Grounding is now positive: the manifest names its sources, and every
+  // section maps to at least one register source.
+  if (manifestSources.length === 0) findings.push('manifest.approved_sources is empty — a BrainKit must name the approved sources it grounds in');
+  for (const ref of manifestSources) {
+    if (!sourceIds.has(ref)) findings.push(`manifest.approved_sources references ${JSON.stringify(ref)}, which is not in source-register.json`);
+  }
+  for (const s of m.sections || []) {
+    const secSources = (s.sources || []).filter((x) => !isPlaceholder(x));
+    if (secSources.length === 0) findings.push(`section ${s.section} declares no approved sources — every section grounds, per section, in the source register`);
+    for (const id of secSources) {
+      if (!sourceIds.has(id)) findings.push(`section ${s.section} cites source ${JSON.stringify(id)}, which is not in source-register.json`);
+    }
   }
 
-  // F — approvals on an approved package: at least one, resolving to a human context owner.
+  // F — approvals on an approved package: at least one, resolving to a human context owner, and
+  // BOUND to the version it approved (audit gap 3: version drifted to a value nobody approved and
+  // the gate still passed — approval of 1.0.0 is not approval of whatever the manifest says now).
   if (m.status === 'approved') {
     const approvals = m.approvals || [];
     if (approvals.length === 0) findings.push('an approved BrainKit carries no approvals — approval must be recorded and resolvable');
@@ -117,6 +161,9 @@ export function evaluate(brainkit, { required = false, registry = null, institut
       const who = registry && identityOf(registry, a.by);
       if (registry && (!who || who.kind !== 'human')) findings.push(`approval by ${JSON.stringify(a.by)} does not resolve to a human identity — an agent cannot approve institutional context`);
       else if (registry && who && !(who.roles || []).includes('institutional-context-owner')) findings.push(`approval by ${a.by} does not hold the institutional-context-owner role`);
+    }
+    if (approvals.length > 0 && !approvals.some((a) => a.version === m.version)) {
+      findings.push(`no approval covers version ${JSON.stringify(m.version)} — approval is bound to the version it approved; a version change needs a new approval`);
     }
   }
 
@@ -145,6 +192,31 @@ export function evaluate(brainkit, { required = false, registry = null, institut
       findings.push(`the mounted BrainKit snapshot (${live.slice(0, 20)}…) does not match the release digest pinned by profile ${b.profile} (${String(b.release_digest).slice(0, 20)}…) — mount the approved release, or adopt a new version through a reviewed PR`);
     }
   }
+
+  // I — rc.8 hardening (audit gap 1): artifact provenance is ENFORCED, not just rendered. The
+  // evidence-seal gate demands a sealed brainkit-provenance record whenever a compiled plan
+  // requires the evidence type; here its CONTENT is cross-checked against the live BrainKit —
+  // the record must pin the live package digest, and every artifact it covers must exist and
+  // EMBED that digest (renderers stamp it into HTML meta and OOXML core properties, both stored
+  // uncompressed, so a byte scan is exact). A correct visual carrying the wrong digest fails.
+  for (const pe of provenanceEvidence || []) {
+    const label = `brainkit-provenance ${pe.ref || '(inline)'}`;
+    const a = pe.artifact;
+    if (!a) { findings.push(`${label}: the sealed provenance record is missing or unparseable`); continue; }
+    if (a.brainkit_digest !== live) {
+      findings.push(`${label}: pins BrainKit digest ${String(a.brainkit_digest).slice(0, 20)}… but the live BrainKit is ${live.slice(0, 20)}… — provenance of a different BrainKit is not provenance of this one`);
+      continue; // per-artifact scans against a wrong pin would double-report
+    }
+    if (a.brainkit_version !== m.version) findings.push(`${label}: cites BrainKit version ${JSON.stringify(a.brainkit_version)} but the BrainKit is ${m.version}`);
+    for (const art of a.artifacts || []) {
+      const ref = typeof art === 'string' ? art : art?.ref;
+      if (!ref) { findings.push(`${label}: an artifact entry has no ref`); continue; }
+      if (!repoRoot) continue; // no disk context (pure-unit call) — run() always provides it
+      const p = join(repoRoot, ref);
+      if (!existsSync(p)) findings.push(`${label}: covered artifact ${ref} does not exist — provenance of an absent artifact is a claim`);
+      else if (!readFileSync(p).includes(live)) findings.push(`${label}: artifact ${ref} does not embed the live BrainKit digest — it was rendered against a different BrainKit (regenerate it)`);
+    }
+  }
   return findings;
 }
 
@@ -171,6 +243,19 @@ function institutionBindingsOf(cwd) {
   return out;
 }
 
+/** The sealed brainkit-provenance records from the evidence manifest ({ref, artifact}[]).
+ *  Presence when a plan requires the type is the evidence-seal gate's demand; this collects
+ *  whatever exists so evaluate() can cross-check its content against the live BrainKit. */
+function provenanceEvidenceOf(cwd) {
+  const manifest = readJson(join(cwd, 'docs/governance/evidence/manifest.json'));
+  const out = [];
+  for (const e of manifest?.entries || []) {
+    if (e.type !== 'brainkit-provenance') continue;
+    out.push({ ref: e.ref, artifact: typeof e.ref === 'string' ? readJson(join(cwd, 'docs/governance/evidence', e.ref)) : null });
+  }
+  return out;
+}
+
 export function run(cwd = process.cwd()) {
   const brainkit = loadBrainkit(cwd);
   const agg = aggregateRequirements(cwd);
@@ -179,7 +264,11 @@ export function run(cwd = process.cwd()) {
   const registry = loadRegistry(cwd);
   const projPath = join(cwd, 'discovery/brand/design.md');
   const projection = existsSync(projPath) ? readFrontmatter(readFileSync(projPath, 'utf8')) : null;
-  return evaluate(brainkit, { required, registry, institutionBindings: institutionBindingsOf(cwd), projection });
+  return evaluate(brainkit, {
+    required, registry, projection, repoRoot: cwd,
+    institutionBindings: institutionBindingsOf(cwd),
+    provenanceEvidence: provenanceEvidenceOf(cwd),
+  });
 }
 
 /** Seal a BrainKit: compute section + package digests from the files and write them into the

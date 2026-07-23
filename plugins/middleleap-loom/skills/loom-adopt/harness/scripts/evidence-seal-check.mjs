@@ -30,6 +30,12 @@ const GENESIS = 'GENESIS';
 export const REQUIRED_TYPES = ['tests', 'reviews', 'lineage', 'model-provenance', 'control-plane', 'sast', 'sbom', 'dependency-audit', 'provenance'];
 // The floor every sealed release carries regardless of tier.
 export const EVIDENCE_FLOOR = ['tests', 'reviews', 'control-plane'];
+// rc.8 hardening: evidence types that exist ONLY when a compiled plan demands them. Not in the
+// default baseline (a generic repo never seals them), but the seal knows how to verify them — so
+// a plan that requires brainkit-provenance makes it a sealed, semantically-checked artifact, not
+// a rendering courtesy. The audit's gap: "brainkit-provenance is ignored by the evidence-seal
+// gate"; this is what closes it. brainkit-check cross-checks the digest against the live BrainKit.
+export const PLAN_ONLY_TYPES = ['brainkit-provenance'];
 
 /**
  * The evidence types a release must seal, DERIVED from the compiled plans (W1, closes F1)
@@ -41,7 +47,7 @@ export const EVIDENCE_FLOOR = ['tests', 'reviews', 'control-plane'];
  */
 export function requiredTypesFor(agg, base = REQUIRED_TYPES) {
   if (!agg || agg.evidence.size === 0) return base;
-  const known = new Set(base);
+  const known = new Set([...base, ...PLAN_ONLY_TYPES]);
   const req = new Set(EVIDENCE_FLOOR);
   for (const e of agg.evidence) if (known.has(e)) req.add(e);
   return [...req];
@@ -67,6 +73,19 @@ export const SEMANTICS = {
   'dependency-audit': (a) => (a.critical === 0 && a.high === 0) ? [] : ['sealed dependency audit shows critical/high vulnerabilities'],
   provenance: (a) => (Array.isArray(a.subject) && a.subject.length > 0 && a.subject.every((s) => s?.digest?.sha256)
     && (a.predicate?.builder?.id || a.builder?.id)) ? [] : ['sealed provenance lacks subject digests or a builder'],
+  // rc.8 hardening: a sealed brainkit-provenance record must NAME the BrainKit it claims (id,
+  // version, sha256 package digest) and LIST the artifacts it covers. Whether that digest is the
+  // LIVE BrainKit's — and whether each listed artifact actually embeds it — is brainkit-check's
+  // cross-check; the seal verifies the record is complete and well-formed, not merely present.
+  'brainkit-provenance': (a) => {
+    const f = [];
+    for (const field of ['brainkit_id', 'brainkit_version']) {
+      if (!(typeof a[field] === 'string' && a[field].trim())) f.push(`sealed brainkit-provenance declares no ${field}`);
+    }
+    if (!/^sha256:[0-9a-f]{64}$/.test(a.brainkit_digest || '')) f.push('sealed brainkit-provenance has no sha256 brainkit_digest — an unidentified BrainKit is a claim, not provenance');
+    if (!Array.isArray(a.artifacts) || a.artifacts.length === 0) f.push('sealed brainkit-provenance lists no artifacts — provenance must say WHICH artifacts it covers');
+    return f;
+  },
 };
 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
