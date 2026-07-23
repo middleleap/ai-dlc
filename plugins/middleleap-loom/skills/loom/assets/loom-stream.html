@@ -270,11 +270,11 @@
     <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
     <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
       real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
-    <div class="scorebar" role="img" aria-label="33 mechanically validated, 6 defined, 7 absent; zero platform-enforced or organisationally-enforced as shipped">
+    <div class="scorebar" role="img" aria-label="34 mechanically validated, 6 defined, 7 absent; zero platform-enforced or organisationally-enforced as shipped">
       <span class="enf" style="width:72%"></span><span class="nam" style="width:13%"></span><span class="abs" style="width:15%"></span>
     </div>
     <div class="scoretags">
-      <span><span class="sw enf"></span>33 mechanically validated</span>
+      <span><span class="sw enf"></span>34 mechanically validated</span>
       <span><span class="sw nam"></span>6 defined</span>
       <span><span class="sw abs"></span>7 absent (adopter-side)</span>
     </div>
@@ -317,13 +317,14 @@
       <div class="rel done"><b>1.11 · bank profile</b>policy compiler · change envelope · PA1/PA2 · A-gates</div>
       <div class="rel done"><b>1.12 · production controls</b>R-gates · 2nd-line hold · ed25519 anchor · gate runner</div>
       <div class="rel done"><b>2.0-rc · bundle complete</b>assurance-cycle · decision-log · adapters · runtime governance · pilot playbook</div>
+      <div class="rel done"><b>2.0-rc.8 · institutional BrainKit</b>institution profile · brainkit-check · digest-pinned bindings · D7 projection provenance · manifest-driven CI</div>
       <div class="rel"><b>2.0 · pilot-proven</b>supervised pilot · independent review · audit re-performance — adopter-side evidence</div>
     </div>
   </section>
 
   <footer>
     <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check. Roadmap chips map to docs/loom-2.0-plan.md.</p>
-    <p style="margin-top:8px">MiddleLeap · The Loom 2.0.0-rc.7 — a way for a regulated entity to build with AI.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom 2.0.0-rc.8 — a way for a regulated entity to build with AI.</p>
   </footer>
 </div>
 
@@ -502,6 +503,7 @@ const GATES=[
  {id:'§10',n:'decision-log-check',d:'The agent’s decisions as an append-only hash chain: editing, reordering or dropping a decision breaks the chain. Mandatory once a model-involved change’s plan requires it (rc.7). Replayable, contiguous, reconstructable.'},
  {id:'§16',n:'adapter-check',d:'Enterprise adapters map an external system to a real catalog control via a typed envelope, keeping the core vendor-neutral — a mapping to nothing fails. New in 2.0-rc.'},
  {id:'W4/W6',n:'doc-integrity-check',d:'The adoption copy table and the bank-grade scorecard are GENERATED from the copy manifest and the control catalog — drift fails the build, so the docs can never lag the machinery. New in 2.0-rc.7.'},
+ {id:'BrainKit',n:'brainkit-check',d:'Institutional conformance: a change in a BrainKit-enabled repo binds to an approved, sealed, owner-accountable, source-grounded Institutional BrainKit — a draft/expired/tampered BrainKit, an unresolved owner, a stale D7 projection, or a plan pinning the wrong digest blocks it. Mandatory-when-compiled; institutionally conformant, never regulatorily compliant. New in 2.0-rc.8.'},
 ];
 const gateSlug = s => 'gate-'+s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 $('gategrid').innerHTML = GATES.map(g=>{const gid=gateSlug(g.n);return `<div class="card" id="${gid}"><a class="canchor" href="#${gid}" title="Copy link to this gate">#</a><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`;}).join('');
