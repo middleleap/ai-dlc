@@ -32,7 +32,13 @@ jobs:
           node scripts/control-plane-check.mjs        # HG-0002 — control-plane owned in CODEOWNERS
           node scripts/control-catalog-check.mjs       # control state of record cannot overstate itself
           node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
-          node scripts/routine-change-check.mjs        # HG-0013 — a routine claim fits the second-line envelope (else normal lane)
+          node scripts/routine-change-check.mjs        # HG-0013 · normal-human-review — an unqualified routine CLAIM fails; ordinary work passes
+
+      # Routine auto-merge lane (HG-0013) — a SEPARATE required check so a merge queue can key
+      # auto-merge on it specifically. Exits 0 only for a qualifying routine claim; an ordinary
+      # PR fails it and therefore cannot enter the routine queue. See activation-runbook.md §5.
+      - name: routine-qualified
+        run: node scripts/routine-change-check.mjs --assert-routine --base origin/main
 
       - name: Product-governance gates (envelope · PA1/PA2 · A1–A5 · identities)
         run: |

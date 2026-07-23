@@ -72,3 +72,30 @@ test('an unregistered signer does not count however valid the signature', () => 
   const { privateKey: rogue } = generateKeyPairSync('ed25519');
   assert.ok(evaluate(signed(record(), { key: rogue }), opts).some((x) => /does NOT verify|not in the allowed-issuers/.test(x)));
 });
+
+/* ---- W3: a step's status is judged, not merely recorded (closes F4) ---- */
+
+const failStep = (extra = {}) => record({ steps: { ...Object.fromEntries(STEPS.map((s) => [s, { status: 'pass' }])), check: { status: 'fail', ...extra } } });
+
+test('a signed cycle with a FAIL step and no risk acceptance BLOCKS', () => {
+  const f = evaluate(signed(failStep()), opts);
+  assert.ok(f.some((x) => /step check is FAIL with no risk acceptance/.test(x)));
+});
+
+test('a FAIL step is covered only by an unexpired, second-line risk acceptance', () => {
+  const good = failStep({ risk_acceptance: { accepted_by: 'risk-lena', rationale: 'compensating control X in place', expires: '2026-09-01' } });
+  assert.deepEqual(evaluate(signed(good), opts).filter((x) => /step check/.test(x)), []);
+  const expired = failStep({ risk_acceptance: { accepted_by: 'risk-lena', rationale: 'r', expires: '2026-07-01' } });
+  assert.ok(evaluate(signed(expired), opts).some((x) => /risk acceptance EXPIRED/.test(x)));
+  const byAgent = failStep({ risk_acceptance: { accepted_by: 'agent-x', rationale: 'r', expires: '2026-09-01' } });
+  assert.ok(evaluate(signed(byAgent), opts).some((x) => /not a second-line human/.test(x)));
+});
+
+test('an n/a step needs a rationale and second-line approval', () => {
+  const bare = record({ steps: { ...Object.fromEntries(STEPS.map((s) => [s, { status: 'pass' }])), test: { status: 'n/a' } } });
+  const f = evaluate(signed(bare), opts);
+  assert.ok(f.some((x) => /n\/a with no rationale/.test(x)));
+  assert.ok(f.some((x) => /n\/a is not second-line approved/.test(x)));
+  const ok = record({ steps: { ...Object.fromEntries(STEPS.map((s) => [s, { status: 'pass' }])), test: { status: 'n/a', rationale: 'no code paths touched', approved_by: 'risk-lena' } } });
+  assert.deepEqual(evaluate(signed(ok), opts).filter((x) => /step test/.test(x)), []);
+});

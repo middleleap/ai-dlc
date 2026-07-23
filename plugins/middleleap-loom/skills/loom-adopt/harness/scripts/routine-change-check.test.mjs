@@ -111,3 +111,27 @@ test('the floor covers every control-plane root', () => {
 test('the known routine classes are the closed set', () => {
   assert.deepEqual(ROUTINE_CLASSES, ['dependency-patch', 'lint-fix', 'doc-fix', 'formatting', 'comment-fix']);
 });
+
+/* ---- W2: the two check contexts diverge on the same PR (closes F2) ---- */
+
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'routine-change-check.mjs');
+const runCli = (args, cwd) => spawnSync(process.execPath, [SCRIPT, ...args], { cwd, encoding: 'utf8' });
+
+test('an ordinary PR (no routine claim): normal lane PASSES, routine-qualified FAILS', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rc-')); // no routine-change-claim.json here
+  try {
+    const normal = runCli(['--base', 'HEAD'], dir);
+    assert.equal(normal.status, 0, 'normal-human-review passes an ordinary PR');
+    assert.match(normal.stdout, /normal human-merge lane applies/);
+
+    const routine = runCli(['--assert-routine', '--base', 'HEAD'], dir);
+    assert.equal(routine.status, 1, 'routine-qualified FAILS an ordinary PR — it cannot enter the queue');
+    assert.match(routine.stderr, /NOT routine-qualified/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

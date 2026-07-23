@@ -11,7 +11,10 @@
     "D",
     "PA1",
     "PA2",
-    "Q"
+    "Q",
+    "assurance-cadence",
+    "decision-log",
+    "product-eval"
   ],
   "required_approver_roles": [
     "accountable-executive",
@@ -32,6 +35,7 @@
     "dependency-audit",
     "lineage",
     "model-provenance",
+    "product-eval",
     "provenance",
     "reviews",
     "sast",
@@ -70,5 +74,5 @@
     "security-privacy-residency",
     "vulnerable-customer-treatment"
   ],
-  "plan_hash": "63a90c1ec64d9a886a7cccbc13e669257a0ff6aa9757d57704c8aec3df91fd32"
+  "plan_hash": "e51a3b122c7bfaa5c217280f61a13410f5e8f31113e83d4082eea1ada33854eb"
 }

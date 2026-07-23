@@ -16,6 +16,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 
 const MANIFEST_LOCATIONS = ['docs/governance/model-manifest.json', 'model-manifest.json'];
 
@@ -36,7 +37,7 @@ const isPinned = (v) => typeof v === 'string' && !FLOATING.has(v.trim().toLowerC
 /** Findings (one per violation). Empty ⇒ every model role is pinned, tiered, and eval-fresh.
  *  With `baseDir`, each eval's report artifact is read and its sha256 verified — the CLI
  *  always passes it, so a manifest cannot cite a report that is absent or altered. */
-export function evaluate(manifest, { baseDir = null } = {}) {
+export function evaluate(manifest, { baseDir = null, registry = null } = {}) {
   const findings = [];
   const models = manifest && manifest.models;
   if (!Array.isArray(models) || models.length === 0) {
@@ -82,8 +83,22 @@ export function evaluate(manifest, { baseDir = null } = {}) {
         }
       }
     }
-    if (VALIDATION_REQUIRED_TIERS.has(m.risk_tier) && !(typeof m.validated_by === 'string' && m.validated_by.trim())) {
-      findings.push(`${role}: ${m.risk_tier}-tier model has no independent validation (validated_by) — HG-0006`);
+    if (VALIDATION_REQUIRED_TIERS.has(m.risk_tier)) {
+      if (!(typeof m.validated_by === 'string' && m.validated_by.trim())) {
+        findings.push(`${role}: ${m.risk_tier}-tier model has no independent validation (validated_by) — HG-0006`);
+      } else if (registry) {
+        // W5 (closes F6): `validated_by: "Risk"` is not validation. With a registry mounted the
+        // validator must RESOLVE to a human model-validator in the second line, not a builder —
+        // the same treatment every other approval already gets (CBUAE MMS independent validation).
+        const who = identityOf(registry, m.validated_by);
+        if (!who) findings.push(`${role}: validated_by ${JSON.stringify(m.validated_by)} is not a registry identity — free text is not independent validation`);
+        else {
+          if (who.kind === 'agent') findings.push(`${role}: validated_by ${m.validated_by} is an AGENT — validation is independent, not self-issued`);
+          if (!(who.roles || []).includes('model-validator')) findings.push(`${role}: validated_by ${m.validated_by} does not hold the model-validator role`);
+          if (!(who.groups || []).includes('second-line')) findings.push(`${role}: validated_by ${m.validated_by} is not in the second line — validation must be organisationally independent`);
+          if ((who.groups || []).includes('builders')) findings.push(`${role}: validated_by ${m.validated_by} is a BUILDER — a builder cannot validate their own model`);
+        }
+      }
     }
     // 2.0-rc — a model is not just built and validated once; it RUNS. At high tier the
     // manifest must declare the runtime governance: what is monitored, when it is suspended,
@@ -109,7 +124,7 @@ function run(cwd = process.cwd()) {
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
   catch (e) { return [`model manifest is not valid JSON: ${e.message}`]; }
-  return evaluate(manifest, { baseDir: cwd });
+  return evaluate(manifest, { baseDir: cwd, registry: loadRegistry(cwd) });
 }
 
 // CLI (skipped when imported by the test suite).

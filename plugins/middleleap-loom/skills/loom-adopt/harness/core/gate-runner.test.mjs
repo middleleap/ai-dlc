@@ -66,6 +66,30 @@ test('an execute:false control is skipped with its stated reason, never spawned'
   assert.match(s.reason, /enforced via scripts\/b\.mjs/);
 });
 
+/* ---- W1: a compiled plan makes a control's family unskippable in its lane ---- */
+
+const FAMCAT = { controls: [
+  { control_id: 'FAM-A', mechanism_ref: 'scripts/a.mjs', lane: 'pr', paths: ['nothing/'], gate_family: 'A' },
+  { control_id: 'FAM-R', mechanism_ref: 'scripts/r.mjs', lane: 'release', paths: ['nothing/'], gate_family: 'R' },
+] };
+
+test('a path-scoped control whose family a plan requires becomes UNSKIPPABLE, naming the change', () => {
+  const reqs = { families: new Set(['A']), changes: [{ change_id: 'CHG-7', families: ['A'] }] };
+  const r = select(FAMCAT, { lane: 'pr', changedPaths: ['README.md'], requirements: reqs });
+  assert.ok(r.run.some((g) => g.ids.includes('FAM-A')), 'FAM-A must run though the diff implicates nothing');
+});
+
+test('without the requirement, the same control skips on an unrelated diff', () => {
+  const r = select(FAMCAT, { lane: 'pr', changedPaths: ['README.md'], requirements: { families: new Set(), changes: [] } });
+  assert.ok(r.skipped.some((s) => s.id === 'FAM-A'));
+});
+
+test('lane separation still holds — a required release-family control does not run in a pr run', () => {
+  const reqs = { families: new Set(['R']), changes: [{ change_id: 'CHG-7', families: ['R'] }] };
+  const r = select(FAMCAT, { lane: 'pr', changedPaths: ['README.md'], requirements: reqs });
+  assert.ok(r.skipped.some((s) => s.id === 'FAM-R' && /lane:release/.test(s.reason)));
+});
+
 test('the lanes are exactly pr, release, scheduled', () => {
   assert.deepEqual(LANES, ['pr', 'release', 'scheduled']);
 });

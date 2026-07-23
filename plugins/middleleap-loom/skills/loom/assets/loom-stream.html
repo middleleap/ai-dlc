@@ -270,13 +270,13 @@
     <div class="sec-h"><span class="eyebrow">Honest self-grade</span><h2>How bank-grade it is</h2></div>
     <p class="sec-sub">The Loom grades itself: a bundle ships seams, declaration-gates, agents, and runbooks — it can't ship
       real IAM, an independent function, external WORM, real-PII crypto, SRE, or a regulator's opinion.</p>
-    <div class="scorebar" role="img" aria-label="about 30 mechanically validated, 17 defined, 12 absent; zero platform-enforced or organisationally-enforced as shipped">
-      <span class="enf" style="width:51%"></span><span class="nam" style="width:29%"></span><span class="abs" style="width:20%"></span>
+    <div class="scorebar" role="img" aria-label="33 mechanically validated, 6 defined, 7 absent; zero platform-enforced or organisationally-enforced as shipped">
+      <span class="enf" style="width:72%"></span><span class="nam" style="width:13%"></span><span class="abs" style="width:15%"></span>
     </div>
     <div class="scoretags">
-      <span><span class="sw enf"></span>~32 mechanically validated</span>
-      <span><span class="sw nam"></span>~17 defined</span>
-      <span><span class="sw abs"></span>~12 absent</span>
+      <span><span class="sw enf"></span>33 mechanically validated</span>
+      <span><span class="sw nam"></span>6 defined</span>
+      <span><span class="sw abs"></span>7 absent (adopter-side)</span>
     </div>
     <div class="note">
       <p><b>The rule that keeps it honest:</b> a gate that validates a <em>declaration</em> is <b>mechanically
@@ -323,7 +323,7 @@
 
   <footer>
     <p class="mono">Every stage in the simulator maps to a shipped file: discovery gates (D1–D9), control-plane-check (HG-0002), model-provenance-check (HG-0006), evidence-seal-check (HG-0003), data-lifecycle-check, discovery-link-check (HG-0007), operations-signal-check. Roadmap chips map to docs/loom-2.0-plan.md.</p>
-    <p style="margin-top:8px">MiddleLeap · The Loom 2.0.0-rc.6 — a way for a regulated entity to build with AI.</p>
+    <p style="margin-top:8px">MiddleLeap · The Loom 2.0.0-rc.7 — a way for a regulated entity to build with AI.</p>
   </footer>
 </div>
 
@@ -477,11 +477,11 @@ reset();
 /* ---------- gate reference cards ---------- */
 const GATES=[
  {id:'HG-0002',n:'control-plane-check',d:'Fails if any control-plane file (hooks, gates, workflows, CODEOWNERS) loses its owner — or is owned only by the placeholder @your-org team — so the agent can’t edit its own guardrails and an unadopted template can’t read green.'},
- {id:'HG-0006',n:'model-provenance-check',d:'Fails unless every model role is pinned, tiered, evaluated against its shipping pin, and independently validated (medium + high).'},
+ {id:'HG-0006',n:'model-provenance-check',d:'Fails unless every model role is pinned, tiered, evaluated against its shipping pin, and independently validated — validated_by must RESOLVE to a second-line human model-validator, not free text (rc.7).'},
  {id:'HG-0003',n:'evidence-seal-check',d:'Re-reads each release artifact and verifies its hash against an append-only chain — altering any artifact breaks a seal.'},
  {id:'data-gov',n:'data-lifecycle-check',d:'Fails a release unless every data category declares a bounded retention and a right-to-erasure disposition.'},
  {id:'HG-0007',n:'discovery-link-check',d:'The waist gate: a pending feature must trace to a gate-green discovery hand-off, or carry an explicit exemption.'},
- {id:'HG-0013',n:'routine-change-check',d:'Graduated autonomy: a claimed routine change must fit a second-line-owned, expiring envelope — class, path scope, diff cap, gates green — and an absolute in-code floor keeps the control plane, contract, auth and migrations out of the lane. Anything else re-evaluates to human merge. New in 2.0-rc.'},
+ {id:'HG-0013',n:'routine-change-check',d:'Graduated autonomy in two check contexts (rc.7): normal-human-review passes ordinary work; a separate routine-qualified check passes ONLY a claim that fits the second-line-owned, expiring envelope — so a merge queue can key auto-merge on it and an ordinary PR cannot enter the routine lane. An absolute in-code floor keeps the control plane, contract, auth and migrations out.'},
  {id:'product-eval',n:'product-eval-check',d:'Evals-as-product-management: a released product links its discovery hand-off and scores every D1 success measure against the shipping commit, with a sealed report — a regression or a stale eval blocks the release. New in 2.0-rc.'},
  {id:'loop',n:'operations-signal-check',d:'The Run→Discovery gate: an operational signal must be triaged (routed) and traceable, so nothing falls on the floor.'},
  {id:'Q1b',n:'test-integrity-check',d:'Diffs the test surface against the merge base: deleted tests, net assertion loss, added skips, commented-out assertions — the anti-reward-hacking gate. New in 1.10.'},
@@ -497,10 +497,11 @@ const GATES=[
  {id:'R1–R6',n:'operational-readiness-check',d:'Freshness-windowed readiness: an expired DR exercise (365d), undrilled rollback (180d) or untested kill-switch (90d) blocks production. New in 1.12.'},
  {id:'§7.4',n:'production authorization',d:'Compound, not “a human approved”: PA2 + R-gate-green readiness + the second-line hold RELEASED (missing = held, fail closed) + ed25519-verified anchored evidence at high tiers. New in 1.12.'},
  {id:'§6',n:'attestation verification',d:'An anchor counts only when signed by a registry issuer and cryptographically verified — a flipped byte fails. Platform mechanisms report UNVERIFIED-HERE until wired. New in 1.12.'},
- {id:'runner',n:'gate-runner',d:'Lanes + diff scoping from the catalog: the always-on tamper core never skips; everything else runs only when implicated — and every skip is recorded with a reason. New in 1.12.'},
- {id:'§10',n:'assurance-cycle-check',d:'Each continuous-assurance cycle leaves a SIGNED record (ed25519, second-line confirmed) with an unresolved-findings register — an overdue open finding blocks. New in 2.0-rc.'},
- {id:'§10',n:'decision-log-check',d:'The agent’s decisions as an append-only hash chain: editing, reordering or dropping a decision breaks the chain. Replayable, contiguous, reconstructable. New in 2.0-rc.'},
+ {id:'runner',n:'gate-runner',d:'Lanes + diff scoping AND the compiled plans (rc.7): the always-on tamper core never skips, a control any active change’s plan requires becomes unskippable in its lane, and every skip is recorded with a reason. The classification compiles the route — a change cannot talk its way onto the light path.'},
+ {id:'§10',n:'assurance-cycle-check',d:'Each continuous-assurance cycle leaves a SIGNED record (ed25519, second-line confirmed) with an unresolved-findings register. A FAIL step blocks unless second-line risk-accepts it (unexpired); once in production, a stale or missing cycle fails (rc.7).'},
+ {id:'§10',n:'decision-log-check',d:'The agent’s decisions as an append-only hash chain: editing, reordering or dropping a decision breaks the chain. Mandatory once a model-involved change’s plan requires it (rc.7). Replayable, contiguous, reconstructable.'},
  {id:'§16',n:'adapter-check',d:'Enterprise adapters map an external system to a real catalog control via a typed envelope, keeping the core vendor-neutral — a mapping to nothing fails. New in 2.0-rc.'},
+ {id:'W4/W6',n:'doc-integrity-check',d:'The adoption copy table and the bank-grade scorecard are GENERATED from the copy manifest and the control catalog — drift fails the build, so the docs can never lag the machinery. New in 2.0-rc.7.'},
 ];
 const gateSlug = s => 'gate-'+s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 $('gategrid').innerHTML = GATES.map(g=>{const gid=gateSlug(g.n);return `<div class="card" id="${gid}"><a class="canchor" href="#${gid}" title="Copy link to this gate">#</a><h4><span class="gid">${g.id}</span> <span class="mono" style="font-size:.82rem">${g.n}</span></h4><p>${g.d}</p></div>`;}).join('');

@@ -17,6 +17,9 @@ import process from 'node:process';
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
 
 export const STATES = ['absent', 'defined', 'mechanically-validated', 'platform-enforced', 'organisationally-enforced'];
+// The compiler's plan families (core/policy-compiler.mjs required_gates vocabulary) — the
+// values a catalog control's gate_family may take so the gate runner can bind them (W1).
+export const GATE_FAMILIES = new Set(['D', 'PA1', 'PA2', 'A', 'Q', 'R', 'second-line-hold', 'product-eval', 'assurance-cadence', 'decision-log']);
 
 /** Findings (one per violation). `exists` is injectable for tests. */
 export function evaluate(catalog, exists = existsSync) {
@@ -57,6 +60,11 @@ export function evaluate(catalog, exists = existsSync) {
     }
     if (c.paths !== undefined && !(Array.isArray(c.paths) && c.paths.every((p) => typeof p === 'string' && p.trim()))) {
       findings.push(`${id}: paths must be an array of non-empty path prefixes`);
+    }
+    // gate_family (W1) binds a control to the compiler family it implements, so the runner can
+    // make a plan-required control unskippable. The vocabulary is the compiler's plan families.
+    if (c.gate_family !== undefined && !GATE_FAMILIES.has(c.gate_family)) {
+      findings.push(`${id}: gate_family must be one of ${[...GATE_FAMILIES].join('|')} (got ${JSON.stringify(c.gate_family)})`);
     }
 
     // Any referenced file must actually exist — a catalog may not cite ghosts.

@@ -16,6 +16,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
+import { aggregateRequirements, requiredBy } from '../core/compiled-requirements.mjs';
 
 export const LOG_LOCATIONS = ['docs/governance/decision-log.json', 'decision-log.json'];
 const GENESIS = 'GENESIS';
@@ -71,7 +72,14 @@ const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } ca
 
 export function run(cwd = process.cwd()) {
   const path = LOG_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
-  if (!path) return []; // no decision log yet — capture is the adopter's harness wiring
+  if (!path) {
+    // Absence is OK — unless a compiled plan requires a decision log (W1, closes F3).
+    const agg = aggregateRequirements(cwd);
+    if (agg.families.has('decision-log')) {
+      return [`no decision log, but a compiled plan requires one [${requiredBy(agg, 'decision-log').join(', ')}] — a model-involved change must record its reasoning`];
+    }
+    return []; // capture is the adopter's harness wiring
+  }
   const log = readJson(path);
   if (!log) return [`decision log is not parseable JSON`];
   return evaluate(log, { registry: loadRegistry(cwd) });

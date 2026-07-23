@@ -45,11 +45,19 @@ decisions; bank-grade is the work of making them non-bypassable and proving it.
 
 ## Scorecard
 
-Across ~62 assessed capabilities, the bundled harness today grades roughly:
+The scorecard below is **generated from the control catalog** (rc.7, W6) — one source of
+truth, no hand-kept counts to drift. `adopter_side` controls are capabilities a bundle
+cannot ship (real IAM, external WORM, DAST/pentest, the supervised pilot, a live exam): they
+sit in the catalog as `absent`/`defined` so the whole picture, including what is out of a
+bundle's reach, is in one place.
 
-| Mechanically validated | Defined | Absent |
-|---|---|---|
-| ~32 | ~17 | ~12 |
+<!-- LOOM:SCORECARD:START -->
+| Mechanically validated | Defined | Absent | Platform enforced | Organisationally enforced |
+|---|---|---|---|---|
+| 33 | 6 | 7 | 0 | 0 |
+
+_Generated from the control catalog (46 controls; 12 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
+<!-- LOOM:SCORECARD:END -->
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
 activate branch protection or stand up an independent function — those states are the
@@ -177,17 +185,17 @@ adopter's (see `governance/data-protection-runbook.md`).
 |---|---|---|
 | Q2 SAST · Q4 SCA/SBOM/provenance output validation | **Mechanically validated** | — (`sast-check.mjs` + `supply-chain-check.mjs` validate the scanners' OUTPUT semantically, 1.10; the scanners themselves are the adopter's fill — Snyk, Chainguard, CodeQL) |
 | Secrets scanning — current tree AND git history | **Mechanically validated** | — (`secrets-scan.mjs`, 1.10: a deleted secret is still leaked) |
-| DAST · penetration testing | Absent | Add as gates / scheduled assurance |
-| Threat modelling (STRIDE) gate | Absent | A threat-model gate — arrives with A2 in the Loom 2.0 architecture-assurance plane (1.11) |
+| DAST · penetration testing | Absent (adopter-side) | Add as gates / scheduled assurance; catalogued as `DAST-PENTEST` |
+| Threat modelling (STRIDE) | **Mechanically validated** | — (A2 in the architecture-assurance plane requires threat→control→test traceability, `architecture-assurance-check.mjs`, 1.11) |
 | Operational readiness R1–R6 (BCP/DR · RTO/RPO · rollback drills · kill-switch, freshness-windowed) | **Mechanically validated** | — (`operational-readiness-check.mjs`, 1.12; running the drills and telling the truth about them is the adopter's) |
 | Pre-egress DLP (HG-0011) | Defined | Wired DLP on model egress |
 | FAPI 2.0 / mTLS conformance | Defined | Conformance suite as a gate (domain-specific) |
 
 The Q2/Q4 gates now validate scanner *output* semantically — a missing report, an
 error-level SARIF finding, an empty SBOM, or a critical vulnerability fails the build
-(1.10) — but the scanners themselves remain the adopter's fill. Operational resilience is
-absent because the Loom governs the build, not the running system — a whole domain a bank
-needs, arriving as the R-gates in Loom 2.0 release 1.12.
+(1.10) — but the scanners themselves remain the adopter's fill. Operational readiness is
+mechanically validated as of 1.12 (the R-gates); what stays adopter-side is *running* the
+drills and DAST/pentest (catalogued as `DAST-PENTEST`).
 
 ### F · Operating model & production proof (SMR/SMCR · examination)
 

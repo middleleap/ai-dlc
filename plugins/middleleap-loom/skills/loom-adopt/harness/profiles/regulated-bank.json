@@ -18,9 +18,9 @@
       "pa2_sections": ["pricing-conduct", "disclosures", "financial-crime", "finance-prudential", "complaints-remediation", "post-launch-monitoring"]
     },
     "high": {
-      "gates": ["A"],
+      "gates": ["A", "product-eval", "assurance-cadence"],
       "approver_roles": ["information-security", "accountable-executive"],
-      "evidence": ["sast", "sbom", "dependency-audit", "provenance"],
+      "evidence": ["sast", "sbom", "dependency-audit", "provenance", "product-eval"],
       "pa1_sections": ["data-and-models", "third-parties"],
       "pa2_sections": ["security-privacy-residency", "model-validation", "operational-readiness"]
     },
@@ -33,7 +33,7 @@
     }
   },
   "conditional": [
-    { "when": "model_involved", "adds": { "approver_roles": ["model-validator"], "evidence": ["model-provenance"], "pa2_sections": ["model-validation"] } },
+    { "when": "model_involved", "adds": { "gates": ["decision-log"], "approver_roles": ["model-validator"], "evidence": ["model-provenance"], "pa2_sections": ["model-validation"] } },
     { "when": "personal_data", "adds": { "approver_roles": ["data-protection"], "pa2_sections": ["security-privacy-residency"] } },
     { "when": "third_party", "adds": { "pa1_sections": ["third-parties"], "pa2_sections": ["third-party-continuity"] } }
   ]

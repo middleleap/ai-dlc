@@ -19,6 +19,10 @@ jobs:
       - name: Brand contrast gate (WCAG AA)
         run: node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs
 
+      - name: Loom doc-integrity — generated docs match their source of truth (rc.7 W4/W6)
+        working-directory: plugins/middleleap-loom/skills/loom-adopt/harness
+        run: node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
+
       - name: Loom bundle — adoption dry-run (tests must pass in the adopted layout)
         run: |
           A="$RUNNER_TEMP/loom-adopt-dryrun"
@@ -59,6 +63,10 @@ jobs:
           cp "$P/loom-adopt/harness/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
           cp "$P/loom-adopt/harness/assurance-example/decision-log.json" "$A/docs/governance/decision-log.json"
           cp "$P/loom-adopt/harness/adapters/reference/"*.json "$A/docs/governance/adapters/"
+          # rc.7: the change-example is high-tier, so its compiled plan now REQUIRES product
+          # evals (W1 mandatory-when-compiled). Lay the product-eval example + its sealed report.
+          cp -r "$P/loom-adopt/harness/product-eval-example" "$A/product-eval-example"
+          cp "$P/loom-adopt/harness/product-eval-example/product-evals.json" "$A/docs/governance/product-evals.json"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           cd "$A"
           # Negative test: the unadopted template (placeholder @your-org team) must FAIL the
@@ -92,6 +100,16 @@ jobs:
           node scripts/assurance-cycle-check.mjs
           node scripts/decision-log-check.mjs
           node scripts/adapter-check.mjs
+          # rc.7: product evals (commit-bound); the example's evaluated_commit is stamped to HEAD
+          # as a real adopter's CI would, then verified against the shipping commit.
+          HEAD_SHA=$(git rev-parse HEAD)
+          node -e 'const fs=require("fs");const p="docs/governance/product-evals.json";const s=JSON.parse(fs.readFileSync(p));for(const pr of s.products)pr.eval.evaluated_commit=process.argv[1];fs.writeFileSync(p,JSON.stringify(s,null,2))' "$HEAD_SHA"
+          node scripts/product-eval-check.mjs --commit "$HEAD_SHA"
+          # rc.7: the two routine check contexts — an ordinary PR passes normal-lane, fails --assert-routine.
+          node scripts/routine-change-check.mjs --base main         # normal-human-review: ordinary PR passes
+          if node scripts/routine-change-check.mjs --assert-routine --base main; then
+            echo "::error::routine-qualified passed an ordinary PR — the queue split is broken"; exit 1
+          fi
           # The gate runner: a README-only diff must run the always-on core and RECORD the
           # rest as skipped — risk-proportionate execution with no silent skips.
           node core/gate-runner.mjs --lane pr --base main --out /tmp/gate-run.json
@@ -181,6 +199,19 @@ jobs:
             echo "::error::adapter gate passed a mapping to a control the catalog does not have"; exit 1
           fi
           git checkout -- docs/governance/adapters/github-branch-protection.json
+          # 13 · rc.7 W1 — a compiled plan requires product evals; removing the manifest must FAIL
+          #      (the capability is mandatory-when-compiled, not optional).
+          mv docs/governance/product-evals.json /tmp/pe.json
+          if node scripts/product-eval-check.mjs; then
+            echo "::error::product-eval gate passed with no manifest while a high-tier plan requires it"; exit 1
+          fi
+          mv /tmp/pe.json docs/governance/product-evals.json
+          # 14 · rc.7 W3 — a signed assurance cycle with a FAIL step and no risk acceptance must block.
+          node -e 'const fs=require("fs");const p="docs/governance/assurance-cycles/AC-2026-W29.json";const s=JSON.parse(fs.readFileSync(p));s.steps.check.status="fail";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/assurance-cycle-check.mjs; then
+            echo "::error::assurance-cycle gate passed a FAIL step with no risk acceptance"; exit 1
+          fi
+          git checkout -- docs/governance/assurance-cycles/AC-2026-W29.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green
