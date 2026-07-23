@@ -104,6 +104,34 @@ test('a missing profile blocks the change', () => {
   assert.ok(findings.some((f) => /no-such-profile not found/.test(f)));
 });
 
+// ---- rc.8 WS3: the institution profile composes with base + jurisdiction + product ----
+
+test('WS3 — an institution profile ADDS brainkit-conformance + provenance + owner, composing on top', () => {
+  const inst = profile('institutions/meridian-trust');
+  const env = envelope({ required_profiles: ['regulated-bank', 'uae-bank', 'lending', 'meridian-trust'] });
+  const plan = compile(env, [...ALL.slice(0, 3), inst]).plan;
+  assert.ok(plan.required_gates.includes('brainkit-conformance'), 'institution profile adds its gate family');
+  assert.ok(plan.required_evidence.includes('brainkit-provenance'), 'institution profile adds its evidence type');
+  assert.ok(plan.required_approver_roles.includes('institutional-context-owner'), 'institution profile adds its approver role');
+  // Institution profiles only ADD — base + product requirements survive intact.
+  for (const g of ['D', 'Q', 'PA1', 'A', 'PA2']) assert.ok(plan.required_gates.includes(g), `institution profile must not drop base gate ${g}`);
+  assert.ok(plan.pa2_sections.includes('affordability-assessment'), 'lending requirements still present');
+});
+
+test('WS3 — a generic repo with no institution profile is unaffected (backward compatible)', () => {
+  const generic = compile(envelope(), ALL.slice(0, 3)).plan;
+  assert.ok(!generic.required_gates.includes('brainkit-conformance'));
+  assert.ok(!generic.required_evidence.includes('brainkit-provenance'));
+  assert.ok(!generic.required_approver_roles.includes('institutional-context-owner'));
+});
+
+test('WS3 — brainkit-conformance is mandatory even at the low tier once the profile is named', () => {
+  const inst = profile('institutions/meridian-trust');
+  const env = envelope({ change_type: 'documentation', risk_tier: 'low', required_profiles: ['regulated-bank', 'meridian-trust'] });
+  const plan = compile(env, [ALL[0], inst]).plan;
+  assert.ok(plan.required_gates.includes('brainkit-conformance'), 'even a low-tier documentation change conforms to institutional context');
+});
+
 // ---- rc.8 WS4: bind the plan to exact profile content, hashed recursively ----
 
 test('WS4 — canonical serialization is order-independent and recursive', () => {
