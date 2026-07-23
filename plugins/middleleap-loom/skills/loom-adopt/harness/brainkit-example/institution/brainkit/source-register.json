@@ -1,0 +1,11 @@
+{
+  "_comment": "NEUTRAL FICTIONAL EXAMPLE — Meridian Trust approved source register. Every BrainKit section grounds in one of these approved sources; each is approved by a human in the identity registry.",
+  "sources": [
+    { "id": "mt-identity-2026", "title": "Meridian Trust Identity & Voice (approved)", "kind": "brand", "reference": "internal://approved/identity-2026", "approved_by": "ctx-mariam" },
+    { "id": "mt-brand-2026", "title": "Meridian Trust Brand Tokens (approved)", "kind": "brand", "reference": "internal://approved/brand-2026", "approved_by": "ctx-mariam" },
+    { "id": "mt-glossary-2026", "title": "Meridian Trust Glossary (approved)", "kind": "standard", "reference": "internal://approved/glossary-2026", "approved_by": "ctx-mariam" },
+    { "id": "mt-arch-2026", "title": "Meridian Trust Architecture Principles (approved)", "kind": "standard", "reference": "internal://approved/architecture-2026", "approved_by": "ctx-mariam" },
+    { "id": "mt-tech-2026", "title": "Meridian Trust Technology Policy (approved)", "kind": "policy", "reference": "internal://approved/technology-2026", "approved_by": "ctx-mariam" },
+    { "id": "mt-governance-2026", "title": "Meridian Trust Decision Rights (approved)", "kind": "decision", "reference": "internal://approved/governance-2026", "approved_by": "ctx-mariam" }
+  ]
+}

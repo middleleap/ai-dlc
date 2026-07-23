@@ -1,7 +1,7 @@
 {
   "_comment": "The single source of truth for what the Loom installs into an adopting repo (Loom 2.0-rc.7 W4). THREE consumers read this file: adopt.mjs (the idempotent installer), the CI adoption dry-run, and the generated copy table in loom-adopt/SKILL.md (a doc-integrity check fails the build when the table drifts from this manifest). A hand-maintained copy list is what let the adoption guide fall behind the machinery — this file makes that impossible. Sources are relative to this harness dir; destinations are repo-root-relative. kind: file | dir | glob. adopt:'template' marks a *.template.* file whose destination drops the .template; the installer copies it but never fills the ADOPT placeholders — activation is the adopter's, recorded honestly in the adoption report.",
   "entries": [
-    { "source": "../loom/references/discovery-harness.md", "dest": "discovery/DISCOVERY.md", "kind": "file", "seam": "The discovery canon (single source — do not fork the text)" },
+    { "source": "../../loom/references/discovery-harness.md", "dest": "discovery/DISCOVERY.md", "kind": "file", "seam": "The discovery canon (single source — do not fork the text)" },
     { "source": "discovery/gates", "dest": "discovery/gates", "kind": "dir", "seam": "Pure-Node D1–D9 validator + its tests" },
     { "source": "discovery/render", "dest": "discovery/render", "kind": "dir", "seam": "Zero-dep branded renderer (HTML + OOXML) + tests" },
     { "source": "discovery/templates", "dest": "discovery/templates", "kind": "dir", "seam": "One template per discovery artifact" },
@@ -26,6 +26,14 @@
     { "source": "governance/routine-envelope.template.json", "dest": "docs/governance/routine-envelope.json", "kind": "file", "adopt": "template", "seam": "The second-line-owned routine-change envelope (HG-0013)" },
     { "source": "governance/token-ledger.template.json", "dest": "docs/governance/token-ledger.json", "kind": "file", "adopt": "template", "seam": "Token-spend ledger (a report, never a merge gate)" },
     { "source": "adapters/README.md", "dest": "docs/governance/adapters/README.md", "kind": "file", "seam": "The neutral adapter contract" },
+    { "source": "brainkit/manifest.template.json", "dest": "institution/brainkit/manifest.json", "kind": "file", "adopt": "template", "seam": "BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve)" },
+    { "source": "brainkit/identity/design.md", "dest": "institution/brainkit/identity/design.md", "kind": "file", "adopt": "template", "seam": "BrainKit institutional identity + design language (the D7 projection source)" },
+    { "source": "brainkit/terminology.md", "dest": "institution/brainkit/terminology.md", "kind": "file", "adopt": "template", "seam": "BrainKit binding vocabulary" },
+    { "source": "brainkit/architecture.md", "dest": "institution/brainkit/architecture.md", "kind": "file", "adopt": "template", "seam": "BrainKit architecture principles and constraints" },
+    { "source": "brainkit/technology-policy.json", "dest": "institution/brainkit/technology-policy.json", "kind": "file", "adopt": "template", "seam": "BrainKit technology policy (allowed / consult / forbidden)" },
+    { "source": "brainkit/governance.md", "dest": "institution/brainkit/governance.md", "kind": "file", "adopt": "template", "seam": "BrainKit decision rights" },
+    { "source": "brainkit/source-register.json", "dest": "institution/brainkit/source-register.json", "kind": "file", "adopt": "template", "seam": "BrainKit approved source register (every section grounds in it)" },
+    { "source": "brainkit/repository-instructions.md", "dest": "institution/brainkit/repository-instructions.md", "kind": "file", "seam": "Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them" },
     { "source": "ci/ci.yml", "dest": ".github/workflows/ci.yml", "kind": "file", "seam": "The reference CI workflow that runs every gate" }
   ]
 }

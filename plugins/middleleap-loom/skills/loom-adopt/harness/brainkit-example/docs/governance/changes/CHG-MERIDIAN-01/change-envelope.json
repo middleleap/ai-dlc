@@ -1,0 +1,12 @@
+{
+  "_comment": "NEUTRAL FICTIONAL EXAMPLE — a governed documentation change in a BrainKit-enabled repo. It names the meridian-trust institution profile, so its compiled plan carries the brainkit-conformance family and binds the live BrainKit digest. control-plan.json is COMPILED, never hand-written.",
+  "change_id": "CHG-MERIDIAN-01",
+  "product_id": "PRD-MT-1",
+  "change_type": "documentation",
+  "risk_tier": "low",
+  "required_profiles": ["regulated-bank", "meridian-trust"],
+  "flags": {},
+  "classification": { "classified_by": "po-fatima", "classified_at": "2026-07-02", "rationale": "Documentation change in a BrainKit-enabled repository; must conform to institutional context." },
+  "current_state": "in-delivery",
+  "control_plan": "control-plan.json"
+}

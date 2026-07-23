@@ -14,13 +14,18 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 
 /** Shared branded shell. All colours/fonts come from tokens, so D7 (tokens-only) holds by
  *  construction. Layout px are literal (D7 checks colour + font, not spacing). */
-function shell({ title, body, t, version, banner, extraCss = '' }) {
+function shell({ title, body, t, version, banner, brainkit = null, extraCss = '' }) {
+  // rc.8 WS8: when the brand seam is a BrainKit compatibility projection, stamp its id/version/
+  // digest into the page metadata so the visual carries verifiable BrainKit provenance.
+  const bkMeta = brainkit && brainkit.id
+    ? `\n<meta name="brainkit-id" content="${esc(brainkit.id)}" />\n<meta name="brainkit-version" content="${esc(brainkit.version || '')}" />\n<meta name="brainkit-digest" content="${esc(brainkit.digest || '')}" />`
+    : '';
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<!-- ${MARKER}@v${version} -->
+<!-- ${MARKER}@v${version} -->${bkMeta}
 <title>${esc(title)}</title>
 <style>
   :root {
@@ -83,7 +88,7 @@ export function renderDocument(spec, brand) {
     th { background:var(--brand); color:var(--on-brand); text-align:left; padding:6px 8px; }
     td { padding:6px 8px; border-bottom:1px solid var(--border); }
     @media print { .demo-banner { position:fixed; top:0; left:0; right:0; } .wrap { padding-top:48px; } }`;
-  return shell({ title: spec.title, body, t, version: brand.version, banner: brand.banner, extraCss });
+  return shell({ title: spec.title, body, t, version: brand.version, banner: brand.banner, brainkit: brand.brainkit, extraCss });
 }
 
 export function renderDeck(spec, brand) {
@@ -112,7 +117,7 @@ export function renderDeck(spec, brand) {
     document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key===' ')go(i+1);if(e.key==='ArrowLeft')go(i-1);});
     document.addEventListener('click',function(){go(i+1);});
   </script>`;
-  return shell({ title: spec.title, body: html + nav, t, version: brand.version, banner: brand.banner, extraCss });
+  return shell({ title: spec.title, body: html + nav, t, version: brand.version, banner: brand.banner, brainkit: brand.brainkit, extraCss });
 }
 
 export function renderPrototype(spec, brand) {
@@ -150,7 +155,7 @@ export function renderPrototype(spec, brand) {
     th { text-align:left; background:var(--brand); color:var(--on-brand); padding:6px 8px; }
     td { padding:6px 8px; border-bottom:1px solid var(--border); }
     .ghost { color:var(--muted); border:1px dashed var(--border); border-radius:4px; padding:10px; font-size:13px; }`;
-  return shell({ title: spec.title, body, t, version: brand.version, banner: brand.banner, extraCss });
+  return shell({ title: spec.title, body, t, version: brand.version, banner: brand.banner, brainkit: brand.brainkit, extraCss });
 }
 
 const RENDERERS = { document: renderDocument, deck: renderDeck, prototype: renderPrototype };

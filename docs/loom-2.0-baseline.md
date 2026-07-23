@@ -235,3 +235,42 @@ Still, honestly: 2.0-stable stays gated on adopter-side evidence — a supervise
 pilot, an independent risk review, internal-audit re-performance, and the ofbo back-port.
 The composition critique is closed; institutional operation is the pilot's job, not the
 bundle's.
+
+## 2.0-rc.8 addendum — the Institutional BrainKit
+
+Verified against `origin/main@267b606` (rc.7). The rc.8 workstreams add the **institution-owned
+seed of the context brain** and compose it through the rc.7 machinery rather than beside it:
+
+- **WS1** — the marketplace adoption dry-run now installs THROUGH `adopt.mjs` from
+  `copy-manifest.json` (no parallel CI copy list); a latent manifest path bug (DISCOVERY.md
+  resolved one directory too high) is fixed, and a test proves a new manifest entry lands with no
+  CI edit.
+- **WS4** — `planHash`'s flat top-level replacer (a whitelist that silently dropped every nested
+  key) is replaced with a recursive canonical serializer; compiled plans now carry
+  `profile_bindings` (profile + kind + version + digest), so a revised profile makes a stored plan
+  stale.
+- **WS3** — an **institution profile** (`profiles/institutions/`) composes on top of base +
+  jurisdiction + product, contributing the `brainkit-conformance` gate, `brainkit-provenance`
+  evidence, and the `institutional-context-owner` role — mandatory-when-compiled; a generic repo is
+  unaffected.
+- **WS2/WS5/WS6** — the canonical BrainKit (`references/brainkit.md`, six adopt-pending templates),
+  the `brainkit-init` skill (drafts from approved sources, never invents or approves), and the
+  read-the-BrainKit repository-instructions fragment (never overwrites `AGENTS.md`/`CLAUDE.md`).
+- **WS7** — `brainkit-check` makes BrainKit integrity a merge condition (approved · sealed · owned ·
+  grounded · digest-consistent · D7 projection fresh · plan pins the live digest), wired into the
+  catalog, compiler binding, gate runner, CODEOWNERS, control-plane-check, the routine-change floor,
+  and CI. A sealed, approved, neutral **Meridian Trust** example gives the green path; a 13-case
+  suite covers every negative.
+- **WS8** — the D7 seam (`discovery/brand/design.md`) is preserved as a compatibility projection
+  that carries the BrainKit id/version/digest into HTML `<meta>` and DOCX/PPTX/XLSX properties;
+  existing D7 output is byte-unchanged for a plain brand.
+- **WS9** — multi-repo distribution as a digest-pinned local-snapshot model (a runbook + a
+  `release_digest` pin verified by `brainkit-check`); no public registry, no live service.
+
+CI: the manifest-driven dry-run runs **314 tests (311 pass, 3 bundle-only skips, 0 fail)** plus the
+14 negative-bypass cases and a dedicated BrainKit step (positive path + 13-case negative suite).
+Scorecard (generated): **34 mechanically validated · 6 defined · 7 absent · 0 platform / 0
+organisationally enforced (as shipped)** across 47 controls, 12 flagged adopter-side. The honesty
+invariant holds: no bundled gate claims platform- or organisational-enforcement, and the BrainKit is
+*institutionally conformant*, never *regulatorily compliant*. Real institutional BrainKits are
+private; the public repo ships schemas, machinery, validators and the fictional example only.

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluate, STATES } from './change-envelope-check.mjs';
-import { compile } from '../core/policy-compiler.mjs';
+import { compile, resolveBindings } from '../core/policy-compiler.mjs';
 
 import { existsSync } from 'node:fs';
 
@@ -23,7 +23,10 @@ const PLAN = EX('control-plan.json');
 const PASSPORT = EX('product-passport.json');
 const REGISTRY = J('governance/identities.template.json', 'docs/governance/identities.json');
 const PROFILES = [J('profiles/regulated-bank.json'), J('profiles/jurisdictions/uae-bank.json'), J('profiles/products/lending.json')];
-const fresh = () => compile(ENVELOPE, PROFILES).plan;
+// rc.8 WS4: the stored plan is bound to exact profile content, so a fresh compile must resolve
+// the same bindings to reconcile. HARNESS is the harness root in both layouts, so profiles/… resolves.
+const BINDINGS = resolveBindings(ENVELOPE.required_profiles, HARNESS).bindings;
+const fresh = (env = ENVELOPE) => compile(env, PROFILES, BINDINGS).plan;
 
 const ok = (over = {}, ctx = {}) => evaluate({ ...ENVELOPE, ...over }, {
   plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY, freshPlan: fresh(), ...ctx,
@@ -43,7 +46,7 @@ test('RECONCILIATION — a hand-edited plan fails even when it keeps its old has
 test('RECONCILIATION — a stale stored plan (hash differs from fresh compile) fails', () => {
   const f = evaluate({ ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: true } }, {
     plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY,
-    freshPlan: compile({ ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: true } }, PROFILES).plan,
+    freshPlan: compile({ ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: true } }, PROFILES, BINDINGS).plan,
   });
   assert.ok(f.some((x) => /does not reconcile with a fresh compile/.test(x)));
 });

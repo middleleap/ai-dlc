@@ -46,6 +46,7 @@ export const ROUTINE_CLASSES = ['dependency-patch', 'lint-fix', 'doc-fix', 'form
 export const FLOOR_DENY = [
   '.github/', 'scripts/', 'core/', 'profiles/', 'discovery/gates/',
   'docs/governance/', 'CODEOWNERS', '.claude/hooks/', '.claude/settings.json',
+  'institution/', // rc.8: the Institutional BrainKit is never a routine change
   'specs/', 'spec/', // the API contract
   'migrations/', 'auth/', // ADOPT: your auth + schema-migration roots
 ];

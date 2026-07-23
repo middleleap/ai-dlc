@@ -88,8 +88,13 @@ dimensions:
    the personas and scopes, the synthetic dataset. Swap this dimension and the same Loom builds
    a different solution.
 3. **Institutional DNA** — how the entity itself works: approval routes, architectural patterns,
-   approved technologies, design tokens, terminology, tone of voice. Mounted as the **brand
-   profile** seam (gate D7 reads it) plus `CLAUDE.md` and the ADRs.
+   approved technologies, design tokens, terminology, tone of voice. Its institution-owned **seed**
+   is the **Institutional BrainKit** (`institution/brainkit/`, 2.0-rc.8) — a versioned, approved,
+   digest-pinned package of identity, terminology, architecture principles, technology policy and
+   decision rights that every repository inherits before it writes code, PRDs, ADRs, interfaces or
+   reports. The BrainKit projects to the **brand profile** seam (gate D7) and composes through the
+   policy compiler as the `brainkit-conformance` gate; `brainkit-check` enforces its integrity, and
+   `brainkit-init` drafts one from an institution's approved sources. See `references/brainkit.md`.
 
 The moat test: if a competitor copied the entire codebase tomorrow, what would they still lack?
 The accumulated, governed context. It cannot be copied — only built, cycle after cycle. And the

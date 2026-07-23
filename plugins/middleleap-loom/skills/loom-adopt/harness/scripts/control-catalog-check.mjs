@@ -19,7 +19,7 @@ const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-cata
 export const STATES = ['absent', 'defined', 'mechanically-validated', 'platform-enforced', 'organisationally-enforced'];
 // The compiler's plan families (core/policy-compiler.mjs required_gates vocabulary) — the
 // values a catalog control's gate_family may take so the gate runner can bind them (W1).
-export const GATE_FAMILIES = new Set(['D', 'PA1', 'PA2', 'A', 'Q', 'R', 'second-line-hold', 'product-eval', 'assurance-cadence', 'decision-log']);
+export const GATE_FAMILIES = new Set(['D', 'PA1', 'PA2', 'A', 'Q', 'R', 'second-line-hold', 'product-eval', 'assurance-cadence', 'decision-log', 'brainkit-conformance']);
 
 /** Findings (one per violation). `exists` is injectable for tests. */
 export function evaluate(catalog, exists = existsSync) {

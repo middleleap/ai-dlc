@@ -60,9 +60,10 @@ function matchGlob(glob, name) {
   return glob === name;
 }
 
-/** Install the whole manifest into destRoot; returns the adoption report. */
-export function install(destRoot, { dryRun = false } = {}) {
-  return loadManifest().entries.map((e) => copyEntry(e, destRoot, dryRun));
+/** Install the whole manifest into destRoot; returns the adoption report. A caller may inject
+ *  a manifest (the test suite proves a new entry lands with no parallel CI copy line — WS1). */
+export function install(destRoot, { dryRun = false, manifest = loadManifest() } = {}) {
+  return manifest.entries.map((e) => copyEntry(e, destRoot, dryRun));
 }
 
 // CLI.

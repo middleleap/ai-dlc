@@ -74,6 +74,7 @@ jobs:
           node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence sealed, commit-bound, semantically verified
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
+          node scripts/brainkit-check.mjs               # rc.8 — institutional BrainKit conformance (mandatory-when-compiled)
 
       - name: Cost telemetry (report, never a gate)
         run: node scripts/token-report.mjs --check   # validate the token ledger is well-formed; spend never blocks a merge

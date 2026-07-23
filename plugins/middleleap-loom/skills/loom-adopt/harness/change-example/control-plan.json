@@ -74,5 +74,25 @@
     "security-privacy-residency",
     "vulnerable-customer-treatment"
   ],
-  "plan_hash": "e51a3b122c7bfaa5c217280f61a13410f5e8f31113e83d4082eea1ada33854eb"
+  "profile_bindings": [
+    {
+      "profile": "lending",
+      "kind": "product",
+      "version": null,
+      "digest": "sha256:9de297256658c3a7ccc4c7431b5dde97f872eaa5fac923714130c1e9d0c27803"
+    },
+    {
+      "profile": "regulated-bank",
+      "kind": "base",
+      "version": null,
+      "digest": "sha256:da0f15e4da2f45425c04e370e26d81b6409f0cbd4041db2778f68a6ee34d3b80"
+    },
+    {
+      "profile": "uae-bank",
+      "kind": "jurisdiction",
+      "version": null,
+      "digest": "sha256:5f3cf839b9af6d4f7cfbbf20d7f8f3a053a9c2c316550c845f86e4dc4a631cbe"
+    }
+  ],
+  "plan_hash": "66a390360547a8968f06ec63f724d9d647df15ff336337913b650433f6011a0d"
 }

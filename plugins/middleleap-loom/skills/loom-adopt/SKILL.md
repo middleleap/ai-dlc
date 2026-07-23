@@ -33,7 +33,7 @@ are repo-root-relative.
 <!-- LOOM:COPY-TABLE:START -->
 | Bundle source | Destination | What it is |
 |---|---|---|
-| `../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | The discovery canon (single source — do not fork the text) |
+| `../../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | The discovery canon (single source — do not fork the text) |
 | `discovery/gates` | `discovery/gates` | Pure-Node D1–D9 validator + its tests |
 | `discovery/render` | `discovery/render` | Zero-dep branded renderer (HTML + OOXML) + tests |
 | `discovery/templates` | `discovery/templates` | One template per discovery artifact |
@@ -58,6 +58,14 @@ are repo-root-relative.
 | `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | The second-line-owned routine-change envelope (HG-0013) |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | Token-spend ledger (a report, never a merge gate) |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | The neutral adapter contract |
+| `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
+| `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | BrainKit institutional identity + design language (the D7 projection source) |
+| `brainkit/terminology.md` | `institution/brainkit/terminology.md` | BrainKit binding vocabulary |
+| `brainkit/architecture.md` | `institution/brainkit/architecture.md` | BrainKit architecture principles and constraints |
+| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | BrainKit technology policy (allowed / consult / forbidden) |
+| `brainkit/governance.md` | `institution/brainkit/governance.md` | BrainKit decision rights |
+| `brainkit/source-register.json` | `institution/brainkit/source-register.json` | BrainKit approved source register (every section grounds in it) |
+| `brainkit/repository-instructions.md` | `institution/brainkit/repository-instructions.md` | Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them |
 | `ci/ci.yml` | `.github/workflows/ci.yml` | The reference CI workflow that runs every gate |
 <!-- LOOM:COPY-TABLE:END -->
 
@@ -145,6 +153,26 @@ one artifact with the renderer to confirm D7 conformance. Only then aim the deli
   group the agent's identity is not in, the control files owned in CODEOWNERS (verified by
   `control-plane-check.mjs`), and a least-privilege agent identity. The loop's merge policy
   depends on this being real, not configured-but-inert.
+
+## 6. Institutional BrainKit (when the institution owns one)
+
+The bundle installs the BrainKit templates into `institution/brainkit/` as **adopt-pending** — the
+installer copies them but never invents or approves institutional content. Detect and route:
+
+- **No BrainKit, or only the adopt-pending template** (`institution/brainkit/manifest.json` absent or
+  still carrying `ADOPT:`/`status: draft`): run the **`brainkit-init`** skill to generate a *draft*
+  BrainKit and institution profile from the institution's **approved** sources, seal the digests,
+  and produce a gap register. It never invents policy, authority, or brand rules, and never approves.
+- **An approved BrainKit** (`status: approved`, sealed, owners resolving to the registry): a governed
+  change in this repo names the institution profile (`profiles/institutions/<id>.json`) in
+  `required_profiles`. The compiler then makes `brainkit-conformance` + `brainkit-provenance`
+  mandatory-when-compiled, and `brainkit-check` enforces integrity on every PR.
+
+Wire the read-the-BrainKit fragment (`institution/brainkit/repository-instructions.md`) into the
+repo's `AGENTS.md`/`CLAUDE.md`/`.cursorrules` as a **reference** — propose a concise pointer and patch
+an existing instruction file only after the user confirms; never overwrite it. A change to
+`institution/` is never routine and always requires the context owner's review. See
+`../loom/references/brainkit.md`.
 
 ## What adoption deliberately does NOT do
 

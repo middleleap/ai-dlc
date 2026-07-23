@@ -99,3 +99,15 @@ Verify:
 
 Only when every box is checked is the control plane *activated*, not merely *present*. Record
 the result as an ADR per `../loom/references/governance.md` and keep the status honest.
+
+## Institutional BrainKit (if the institution owns one)
+
+- [ ] `institution/` and `profiles/institutions/` are owned in CODEOWNERS by the **institutional
+      context owners** (a change to institutional context requires their review).
+- [ ] The BrainKit is `status: approved`, sealed, and every owner/approver resolves to a registry
+      human — `brainkit-check.mjs` green.
+- [ ] Governed changes name the institution profile in `required_profiles`, so the compiler makes
+      `brainkit-conformance` + `brainkit-provenance` mandatory-when-compiled.
+- [ ] The mounted snapshot matches the profile's pinned `release_digest`; version bumps go through a
+      reviewed PR (see `runbooks/brainkit-distribution-runbook.md`). No bundled gate makes a BrainKit
+      *platform-* or *organisationally-enforced* — that is the institution's control to operate.

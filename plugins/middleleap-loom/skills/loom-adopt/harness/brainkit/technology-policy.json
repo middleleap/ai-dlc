@@ -1,0 +1,15 @@
+{
+  "_comment": "ADOPT: the institution's binding technology policy (Loom 2.0-rc.8 BrainKit). Ground each entry in an approved source (source-register.json). 'allowed' may be used freely; 'consult' needs the named authority's sign-off; 'forbidden' must not be introduced. Reference the D6 register and supply-chain policy — do not duplicate them.",
+  "allowed": [
+    { "technology": "ADOPT: e.g. the institution's standard language/runtime", "source": "ADOPT: source id" }
+  ],
+  "consult": [
+    { "technology": "ADOPT: technology needing sign-off", "authority": "ADOPT: registry-id or function", "source": "ADOPT: source id" }
+  ],
+  "forbidden": [
+    { "technology": "ADOPT: technology that must not be introduced", "reason": "ADOPT: approved rationale", "source": "ADOPT: source id" }
+  ],
+  "standards": [
+    { "standard": "ADOPT: binding internal or external standard the institution adopts", "source": "ADOPT: source id" }
+  ]
+}
