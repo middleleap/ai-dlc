@@ -33,6 +33,7 @@
     { "source": "brainkit/technology-policy.json", "dest": "institution/brainkit/technology-policy.json", "kind": "file", "adopt": "template", "seam": "BrainKit technology policy (allowed / consult / forbidden)" },
     { "source": "brainkit/governance.md", "dest": "institution/brainkit/governance.md", "kind": "file", "adopt": "template", "seam": "BrainKit decision rights" },
     { "source": "brainkit/source-register.json", "dest": "institution/brainkit/source-register.json", "kind": "file", "adopt": "template", "seam": "BrainKit approved source register (every section grounds in it)" },
+    { "source": "brainkit/repository-instructions.md", "dest": "institution/brainkit/repository-instructions.md", "kind": "file", "seam": "Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them" },
     { "source": "ci/ci.yml", "dest": ".github/workflows/ci.yml", "kind": "file", "seam": "The reference CI workflow that runs every gate" }
   ]
 }

@@ -65,6 +65,7 @@ are repo-root-relative.
 | `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | BrainKit technology policy (allowed / consult / forbidden) |
 | `brainkit/governance.md` | `institution/brainkit/governance.md` | BrainKit decision rights |
 | `brainkit/source-register.json` | `institution/brainkit/source-register.json` | BrainKit approved source register (every section grounds in it) |
+| `brainkit/repository-instructions.md` | `institution/brainkit/repository-instructions.md` | Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them |
 | `ci/ci.yml` | `.github/workflows/ci.yml` | The reference CI workflow that runs every gate |
 <!-- LOOM:COPY-TABLE:END -->
 
