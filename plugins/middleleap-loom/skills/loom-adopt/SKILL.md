@@ -154,6 +154,26 @@ one artifact with the renderer to confirm D7 conformance. Only then aim the deli
   `control-plane-check.mjs`), and a least-privilege agent identity. The loop's merge policy
   depends on this being real, not configured-but-inert.
 
+## 6. Institutional BrainKit (when the institution owns one)
+
+The bundle installs the BrainKit templates into `institution/brainkit/` as **adopt-pending** — the
+installer copies them but never invents or approves institutional content. Detect and route:
+
+- **No BrainKit, or only the adopt-pending template** (`institution/brainkit/manifest.json` absent or
+  still carrying `ADOPT:`/`status: draft`): run the **`brainkit-init`** skill to generate a *draft*
+  BrainKit and institution profile from the institution's **approved** sources, seal the digests,
+  and produce a gap register. It never invents policy, authority, or brand rules, and never approves.
+- **An approved BrainKit** (`status: approved`, sealed, owners resolving to the registry): a governed
+  change in this repo names the institution profile (`profiles/institutions/<id>.json`) in
+  `required_profiles`. The compiler then makes `brainkit-conformance` + `brainkit-provenance`
+  mandatory-when-compiled, and `brainkit-check` enforces integrity on every PR.
+
+Wire the read-the-BrainKit fragment (`institution/brainkit/repository-instructions.md`) into the
+repo's `AGENTS.md`/`CLAUDE.md`/`.cursorrules` as a **reference** — propose a concise pointer and patch
+an existing instruction file only after the user confirms; never overwrite it. A change to
+`institution/` is never routine and always requires the context owner's review. See
+`../loom/references/brainkit.md`.
+
 ## What adoption deliberately does NOT do
 
 - It does not write the project's CLAUDE.md, PRD, or API contract — those are the canon the
