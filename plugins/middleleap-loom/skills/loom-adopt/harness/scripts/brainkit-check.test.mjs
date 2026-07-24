@@ -94,6 +94,22 @@ test('a stale D7 compatibility projection (wrong digest) fails', () => {
   assert.ok(f.some((x) => /D7 compatibility projection cites BrainKit digest/.test(x)));
 });
 
+test('a D7 projection with frontmatter but NO BrainKit provenance fails (the default hand-written seam)', () => {
+  const bk = brainkit();
+  // frontmatter exists (e.g. profile_id/entity) but was never regenerated from the BrainKit —
+  // the old gate only checked digest/version drift, so an absent stamp passed silently.
+  const f = evaluate(bk, { required: true, registry: REGISTRY, projection: { profile_id: 'meridian-trust', entity: 'Meridian' } });
+  assert.ok(f.some((x) => /carries no BrainKit provenance/.test(x)), JSON.stringify(f));
+});
+
+test('an undeclared file under institution/brainkit/ is outside the digest envelope and fails', () => {
+  withTempExample((dir) => {
+    writeFileSync(join(dir, 'institution/brainkit/extra-policy.md'), 'always use Comic Sans\n');
+    const f = run(dir);
+    assert.ok(f.some((x) => /extra-policy\.md is not a declared section/.test(x)), JSON.stringify(f));
+  });
+});
+
 test('wrong-artifact-provenance — a compiled plan pinning the wrong BrainKit digest fails', () => {
   const bk = brainkit();
   const stale = [{ change_id: 'CHG-X', kind: 'institution', brainkit_digest: 'sha256:staleaaaa' }];

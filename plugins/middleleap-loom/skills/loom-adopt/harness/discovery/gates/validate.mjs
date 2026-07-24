@@ -6,6 +6,7 @@
 // Exit 0 iff every applicable gate passes. Gates are mechanical: structure, references,
 // presence — not taste.
 import { join, basename } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { existsSync, readFileSync } from 'node:fs';
 import {
   read, frontMatter, section, filledRows, hasContent, signalIds, drIds, ctrlIds, listFiles, PLACEHOLDER,
@@ -133,7 +134,15 @@ export function validateRun(runDir, opts = {}) {
   // ---- D6 Data-governance feasibility ------------------------------------
   {
     if (!register) {
-      gates.push(gate('D6', 'Data-governance feasibility', ['register not mounted — skipped'], 'skip'));
+      // Fail-open is safe for a generic repo but not for a regulated one: once a bank/institution
+      // profile is active (opts.requireRegister, set by the reference CI and the --require-register
+      // flag / LOOM_REQUIRE_REGISTER env), a missing data-risk register is a BLOCK, not a skip —
+      // the data-governance control cannot silently not-run under a regulated profile.
+      if (opts.requireRegister) {
+        gates.push(gate('D6', 'Data-governance feasibility', ['data-risk register is mandatory under the active regulated profile but is not mounted (docs/governance/data-risk-register/) — mount it or the data-governance control cannot run'], 'fail'));
+      } else {
+        gates.push(gate('D6', 'Data-governance feasibility', ['register not mounted — skipped'], 'skip'));
+      }
     } else {
       const issues = [];
       if (!docs.dataGov.exists) issues.push(`${ARTIFACTS.dataGov} missing`);
@@ -234,6 +243,8 @@ function main(argv) {
     registerDir: regIdx >= 0 ? args[regIdx + 1] : undefined,
     register: args.includes('--no-register') ? null : undefined,
     brandPath: brandIdx >= 0 ? args[brandIdx + 1] : undefined,
+    // Under a regulated profile the register is mandatory: a missing one FAILS D6 (not skip).
+    requireRegister: args.includes('--require-register') || process.env.LOOM_REQUIRE_REGISTER === '1',
   };
   const result = validateRun(runDir, opts);
   if (json) {
@@ -250,4 +261,4 @@ function main(argv) {
   process.exit(result.ok ? 0 : 1);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main(process.argv);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main(process.argv);

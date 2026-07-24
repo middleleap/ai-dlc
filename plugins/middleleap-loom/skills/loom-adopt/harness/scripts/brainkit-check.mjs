@@ -15,14 +15,30 @@
 // Say "institutionally conformant", never "regulatorily compliant". Run from the repo root:
 // `node scripts/brainkit-check.mjs` (exit 1 on any finding).
 import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import process from 'node:process';
 import { loadBrainkit, computeDigests, livePackageDigest, LIFECYCLE, SECTION_KEYS } from '../core/brainkit.mjs';
 import { aggregateRequirements, CHANGES_DIR } from '../core/compiled-requirements.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
+import { pathToFileURL } from 'node:url';
 
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 const isPlaceholder = (v) => typeof v === 'string' && /ADOPT:/.test(v);
+
+// Files that legitimately live under institution/brainkit/ without being a declared section:
+// the manifest itself, and the canonical read-the-BrainKit fragment (copy-manifest ships both).
+const KNOWN_NONSECTION = new Set(['manifest.json', 'repository-instructions.md']);
+
+/** Every file under `dir`, as repo-forward-slash relative paths (recursing into subdirs). */
+function listFilesRel(dir, base = dir) {
+  const out = [];
+  for (const ent of readdirSync(dir, { withFileTypes: true })) {
+    const abs = join(dir, ent.name);
+    if (ent.isDirectory()) out.push(...listFilesRel(abs, base));
+    else out.push(relative(base, abs).split(/[\\/]/).join('/'));
+  }
+  return out;
+}
 
 /** Read a markdown file's --- frontmatter --- into { key: value } (no YAML dependency). */
 export function readFrontmatter(text) {
@@ -120,6 +136,19 @@ export function evaluate(brainkit, { required = false, registry = null, institut
     findings.push('package_digest does not match the section digests — the BrainKit was changed without resealing (run brainkit-check --seal)');
   }
 
+  // D2 — no UNDECLARED files under institution/brainkit/. computeDigests hashes only declared
+  // section paths, so a file dropped in beside them (e.g. an extra policy the agent is told to
+  // obey via repository-instructions.md's "conform to the whole directory") sits OUTSIDE the
+  // digest envelope: binding institutional context with no owner, no grounding, no reseal. The
+  // package digest never moves when it is added, so no plan goes stale. Fail on it.
+  if (repoRoot) {
+    const declaredPaths = new Set((m.sections || []).map((s) => s.path));
+    for (const rel of listFilesRel(brainkit.dir)) {
+      if (KNOWN_NONSECTION.has(rel) || declaredPaths.has(rel)) continue;
+      findings.push(`institution/brainkit/${rel} is not a declared section (nor the manifest / repository-instructions) — undeclared BrainKit content is outside the digest envelope; declare it as a section and reseal, or remove it`);
+    }
+  }
+
   // E — approved sources: every section grounds in the source register; approvers resolve.
   const register = readJson(join(brainkit.dir, 'source-register.json'));
   const sources = register?.sources?.filter((s) => !isPlaceholder(s.id)) || [];
@@ -167,10 +196,20 @@ export function evaluate(brainkit, { required = false, registry = null, institut
     }
   }
 
-  // G — the D7 compatibility projection must not be stale.
+  // G — the D7 compatibility projection must not be stale. A BrainKit-bound repo (required)
+  // projects identity to D7 WITH provenance stamped. Three failure modes, not one:
+  //   · missing file / no frontmatter                       (projection === null)
+  //   · frontmatter present but NO brainkit provenance at all — the ungoverned, hand-written
+  //     seam the installer ships by default: a repo can mount an approved BrainKit, never
+  //     regenerate the seam, and every visual then renders from ungoverned context. The old
+  //     gate only checked digest/version drift, so an absent stamp fired nothing and passed.
+  //   · a stamped-but-stale digest or version               (the drift checks below)
   if (projection === null) {
     if (required) findings.push('the D7 compatibility projection discovery/brand/design.md is missing or has no frontmatter — a BrainKit-bound repo projects identity to D7');
   } else {
+    if (required && !projection.brainkit_digest && !projection.brainkit_version) {
+      findings.push('the D7 compatibility projection discovery/brand/design.md carries no BrainKit provenance (brainkit_digest/brainkit_version) — regenerate it from the approved BrainKit so D7 identity is governed, not a hand-written seam');
+    }
     if (projection.brainkit_digest && projection.brainkit_digest !== computed.package_digest) {
       findings.push(`the D7 compatibility projection cites BrainKit digest ${String(projection.brainkit_digest).slice(0, 20)}… but the live BrainKit is ${computed.package_digest.slice(0, 20)}… — regenerate the projection`);
     }
@@ -286,7 +325,7 @@ export function seal(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (process.argv.includes('--seal')) {
     const p = seal();
     process.stdout.write(`BrainKit sealed → ${p} (digests recomputed; owners must still approve)\n`);

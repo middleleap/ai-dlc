@@ -12,6 +12,7 @@
 // Run from the repo root: `node scripts/architecture-assurance-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 export const SECTIONS = ['A1-data-privacy', 'A2-security-threat-model', 'A3-operational-resilience', 'A4-model-risk', 'A5-financial-integrity'];
@@ -74,7 +75,7 @@ export function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { findings, count } = run();
   if (findings.length) {
     process.stderr.write('\nArchitecture-assurance gate (A1–A5) — FAIL\n\n');

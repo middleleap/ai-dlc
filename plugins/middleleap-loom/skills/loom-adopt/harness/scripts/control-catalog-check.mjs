@@ -13,6 +13,7 @@
 // drift above the truth. Run from the repo root: `node scripts/control-catalog-check.mjs`.
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
 
@@ -79,7 +80,7 @@ export function evaluate(catalog, exists = existsSync) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const path = CATALOG_LOCATIONS.map((p) => `${process.cwd()}/${p}`).find(existsSync);
   let findings;
   if (!path) findings = [`no control catalog found (looked in ${CATALOG_LOCATIONS.join(', ')}) — there is no control state of record`];

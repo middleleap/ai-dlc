@@ -21,7 +21,7 @@
         }
       ],
       "prev": "GENESIS",
-      "seal": "4258f2befeb114177c7534fc444f272afd4804772741a5debb543bd18f7eebac"
+      "seal": "4ed3b9f96cd09c6bc0f1d890b2af532a18c241c430799725dddb17079d3cc12d"
     },
     {
       "seq": 1,
@@ -41,8 +41,8 @@
           "target": "npm test"
         }
       ],
-      "prev": "4258f2befeb114177c7534fc444f272afd4804772741a5debb543bd18f7eebac",
-      "seal": "c85960712783475dceb1b02326e58de315ed659bebac6eee4e41deac4c7fada8"
+      "prev": "4ed3b9f96cd09c6bc0f1d890b2af532a18c241c430799725dddb17079d3cc12d",
+      "seal": "3d90abb24033131dd02012c0ad820ed78771ef092ec047d2d15263b2c4aaa5af"
     },
     {
       "seq": 2,
@@ -58,8 +58,8 @@
           "target": "feature/PRD-017-affordability"
         }
       ],
-      "prev": "c85960712783475dceb1b02326e58de315ed659bebac6eee4e41deac4c7fada8",
-      "seal": "7d341e6e4740c51d3c6b240b95e957408f4ef74d7652ecd221b6449a34f0aff2"
+      "prev": "3d90abb24033131dd02012c0ad820ed78771ef092ec047d2d15263b2c4aaa5af",
+      "seal": "d0e4a0bc41d2855db5f9877016c5497927761553777056625ac7f527de202239"
     }
   ]
 }

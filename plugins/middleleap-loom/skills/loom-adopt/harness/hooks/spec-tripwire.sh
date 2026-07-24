@@ -9,8 +9,15 @@ set -euo pipefail
 
 SPEC_PATH="specs/openapi.yaml"
 
+# Fail CLOSED if jq is absent: without it the hook cannot tell whether this edit touches the API
+# contract, so it must deny rather than silently exit non-zero (a non-blocking error = silent disarm).
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Spec tripwire cannot run: jq is not installed, so it cannot verify whether this edit touches the API contract. Failing closed — install jq."}}'
+  exit 0
+fi
+
 input=$(cat)
-file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // ""')
+file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.notebook_path // ""')
 [ -n "$file_path" ] || exit 0
 
 # Canonicalize so ../, symlinks, or odd prefixes cannot dodge the match.

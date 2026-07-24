@@ -9,14 +9,24 @@
 #   - UAE IBANs: blocked unless bank code is 000 (AEkk000…) — the synthetic marker (separator-insensitive).
 set -euo pipefail
 
+# Fail CLOSED if jq is absent: a compliance guard that cannot parse its input must deny, not
+# silently exit non-zero (which Claude Code treats as a NON-blocking error — a silent disarm).
+# The deny JSON is emitted without jq precisely because jq is what is missing.
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"PII guard cannot run: jq is not installed, so this write cannot be scanned for PII-shaped literals. Failing closed — install jq to enable the guard."}}'
+  exit 0
+fi
+
 input=$(cat)
 content=$(printf '%s' "$input" | jq -r '
   (.tool_input.content // "") + "\n" +
   (.tool_input.new_string // "") + "\n" +
   (.tool_input.new_source // "") + "\n" +
   ([.tool_input.edits[]?.new_string // empty] | join("\n"))')
-# Separator-insensitive copy: spacing/hyphen grouping must not evade the patterns.
-normalized=$(printf '%s' "$content" | tr -d ' \t-')
+# Separator-insensitive copy: spacing/hyphen/DOT grouping must not evade the patterns (a
+# dot-separated Emirates ID like 784.1990.1234567.1 slipped a space/hyphen-only strip). IBANs are
+# upcased so a lowercase ae07… cannot dodge the uppercase pattern.
+normalized=$(printf '%s' "$content" | tr -d ' \t.-' | tr '[:lower:]' '[:upper:]')
 
 deny() {
   jq -n --arg reason "$1" \

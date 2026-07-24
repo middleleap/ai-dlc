@@ -13,6 +13,7 @@
 // `node scripts/adapter-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const ADAPTERS_DIR = 'docs/governance/adapters';
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
@@ -67,7 +68,7 @@ export function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { findings, notices, count } = run();
   for (const n of notices) process.stdout.write(`  · ${n}\n`);
   if (findings.length) {

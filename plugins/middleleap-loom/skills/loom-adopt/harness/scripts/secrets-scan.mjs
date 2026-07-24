@@ -13,6 +13,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const ALLOW_MARKER = 'loom-allow-secret';
 export const HISTORY_DEPTH = 400; // ADOPT: commits of history to scan (--depth overrides)
@@ -79,7 +80,7 @@ export function scanHistory(depth = HISTORY_DEPTH) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const argv = process.argv;
   const noHistory = argv.includes('--no-history');
   const di = argv.indexOf('--depth');

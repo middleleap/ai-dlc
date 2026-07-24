@@ -19,6 +19,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { loadBrainkit, livePackageDigest } from './brainkit.mjs';
+import { pathToFileURL } from 'node:url';
 
 export const TIERS = ['low', 'medium', 'high', 'critical'];
 export const CHANGE_TYPES = ['documentation', 'software-change', 'new-product', 'material-product-change'];
@@ -187,7 +188,7 @@ export function planHash(plan) {
 }
 
 // CLI: compile an envelope's plan. `--write` stores it at the envelope's control_plan path.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [envPath] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
   if (!envPath) { process.stderr.write('usage: node core/policy-compiler.mjs <change-envelope.json> [--write]\n'); process.exit(2); }
   const envelope = JSON.parse(readFileSync(envPath, 'utf8'));

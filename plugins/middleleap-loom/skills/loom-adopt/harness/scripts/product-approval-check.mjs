@@ -14,6 +14,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf, resolveApprover } from './identity-registry-check.mjs';
+import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 // Roles whose approvals demand organisational independence from the builders.
@@ -105,7 +106,7 @@ export function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { findings, count } = run();
   if (findings.length) {
     process.stderr.write('\nProduct-approval gate (PA1/PA2) — FAIL\n\n');

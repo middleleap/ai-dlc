@@ -18,6 +18,13 @@ const J = (...candidates) => {
   return JSON.parse(readFileSync(p, 'utf8'));
 };
 const EX = (f) => J(`change-example/${f}`, `docs/governance/changes/CHG-2026-0042/${f}`);
+// In a BARE adoption the worked-example change is in neither layout; skip cleanly rather than
+// throw at module load. The pure evaluate() logic still runs wherever the example is mounted.
+const EXAMPLE_PRESENT = ['change-example/control-plan.json', 'docs/governance/changes/CHG-2026-0042/control-plan.json']
+  .some((c) => existsSync(`${HARNESS}/${c}`));
+if (!EXAMPLE_PRESENT) {
+  test('change-envelope gate (worked-example change is bundle-only — skipped in an adopted layout)', { skip: true }, () => {});
+} else {
 const ENVELOPE = EX('change-envelope.json');
 const PLAN = EX('control-plan.json');
 const PASSPORT = EX('product-passport.json');
@@ -129,3 +136,4 @@ test('an unknown state is rejected; the state enum matches the plan', () => {
   assert.equal(STATES[0], 'classified');
   assert.equal(STATES[STATES.length - 1], 'in-production');
 });
+}

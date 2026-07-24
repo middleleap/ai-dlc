@@ -51,7 +51,7 @@ Full canon for each half:
   repo mounts as `discovery/DISCOVERY.md`.
 - `references/delivery-harness.md` — the autonomous build loop, spec-first order, the quality-gate
   pattern, the guardrail hooks, and the merge policy: **the agent proposes; a human disposes.**
-- `references/governance.md` — the harness-governance catalog (HG-0001…HG-0012): the decisions
+- `references/governance.md` — the harness-governance catalog (HG-0001…HG-0013): the decisions
   that make an autonomous loop acceptable to a regulated institution.
 - `references/continuous-assurance.md` — what happens after the build: the harness pulls
   assurance agents through the six-step regulatory lifecycle (watch, assess, check, test,
@@ -89,7 +89,7 @@ dimensions:
    a different solution.
 3. **Institutional DNA** — how the entity itself works: approval routes, architectural patterns,
    approved technologies, design tokens, terminology, tone of voice. Its institution-owned **seed**
-   is the **Institutional BrainKit** (`institution/brainkit/`, 2.0-rc.8) — a versioned, approved,
+   is the **Institutional BrainKit** (`institution/brainkit/`, 2.0-rc.10) — a versioned, approved,
    digest-pinned package of identity, terminology, architecture principles, technology policy and
    decision rights that every repository inherits before it writes code, PRDs, ADRs, interfaces or
    reports. The BrainKit projects to the **brand profile** seam (gate D7) and composes through the
@@ -109,6 +109,13 @@ A method worth adopting names its own risks:
   and is permanently non-production. It shows the method produces a real, gated,
   audit-evidenced system; it has not yet cleared a live regulator examination or production
   scale.
+- **What ships is a build-time frame, not the run-the-bank control environment.** "Live,
+  audit-ready software" names what the frame is *for*; the frame itself delivers strong,
+  auditable build-time controls (gates, sealed evidence, compiled requirements). The live
+  IAM, platform enforcement, production monitoring, operational-resilience organisation and
+  independent control functions that make software genuinely *live and audit-ready in
+  production* are the adopting institution's — the Loom creates the repository-level structure
+  and evidence those systems enforce, not the systems themselves (`bank-grade-gap.md`).
 - **"Any domain" is early evidence, not a measured result.** One bounded greenfield domain
   proved the loop; a second problem ran through the discovery machinery. Legacy integration,
   real data, and organisational change are the true costs elsewhere, and are not yet in the

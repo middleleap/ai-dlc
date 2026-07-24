@@ -1,15 +1,26 @@
 // Tests for the discovery gate validator. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateRun } from './validate.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const REGISTER_DIR = join(ROOT, 'docs/governance/data-risk-register');
+// The D6 register resolves in either layout: a mounted register (adopted repo) or the bundled
+// worked example (in-repo). In a BARE adoption neither exists, so skip cleanly rather than
+// crashing at module load — the same "inert where the fixture is absent" pattern adopt.mjs and
+// the brainkit tests use, so `adopt.mjs && node --test` is green with no hand-copied fixtures.
+const REGISTER_DIR = [
+  join(ROOT, 'docs/governance/data-risk-register'),
+  join(ROOT, 'register-example'),
+].find((d) => existsSync(join(d, 'controls.json')));
 const BRAND_PATH = join(ROOT, 'discovery/brand/design.md');
+
+if (!REGISTER_DIR) {
+  test('discovery gate validator (data-risk register fixture absent — skipped in a bare adoption)', { skip: true }, () => {});
+} else {
 
 // Pick real, resolvable ids from the mounted register so D6 referential integrity passes.
 const controls = JSON.parse(readFileSync(join(REGISTER_DIR, 'controls.json'), 'utf8'));
@@ -87,10 +98,19 @@ test('D6 fails when a control id does not resolve', () => {
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('D6 skips when the register is not mounted', () => {
+test('D6 skips when the register is not mounted (generic repo)', () => {
   const dir = makeRun();
   try { assert.equal(gateOf(validateRun(dir, { ...OPTS, register: null }), 'D6').status, 'skip'); }
   finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D6 FAILS (not skips) when the register is absent under a regulated profile', () => {
+  const dir = makeRun();
+  try {
+    const g = gateOf(validateRun(dir, { ...OPTS, register: null, requireRegister: true }), 'D6');
+    assert.equal(g.status, 'fail');
+    assert.ok(g.issues.some((i) => /mandatory under the active regulated profile/.test(i)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('D7 fails on a raw (non-token) colour in the wireframe', () => {
@@ -149,3 +169,4 @@ test('D9 skips when there is no prototype to react to', () => {
   try { assert.equal(gateOf(validateRun(dir, OPTS), 'D9').status, 'skip'); }
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
+}

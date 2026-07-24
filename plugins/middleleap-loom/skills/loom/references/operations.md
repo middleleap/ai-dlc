@@ -78,8 +78,10 @@ for a feature, this gate makes **triage + traceability the exit condition for a 
 - Every signal declares a **route**, and the route must **resolve**: `spec-fix` links a PR /
   spec-change; `register` cites a `DR-*` in `link`; `discovery` links a run slug **or** carries
   `status:"triaging"`; `accepted` states a `justification`.
-- An **empty `signals` array is valid** — operations may not have begun. A signal **with no
-  route** is the one failure the gate exists to catch.
+- An **empty `signals` array is valid before anything runs** — but once a governed change is in
+  production the gate flips it to a **failure**: silence after launch means the sensing is
+  unwired, not that nothing happened. A signal **with no route** is the other failure the gate
+  exists to catch.
 
 What the gate enforces is narrow and honest: **that signals are triaged and traceable.** It
 does **not** detect incidents, watch SLOs, or read production — it cannot; it reads a JSON log.
@@ -103,9 +105,11 @@ it cannot fall on the floor untriaged.
 **Adopter-side — the Run operation itself.** Everything that *produces* the signals:
 
 - **SRE, observability, SLOs, incident management, on-call** — the running system's controls.
-- **Operational resilience** — BCP/DR, RTO/RPO, chaos, SEV, kill-switch — **bank-grade-gap
-  cluster E**, *Absent* from the bundle by design: a build-time frame was never scoped to run
-  the bank.
+- **Operational resilience** — the R1–R6 readiness *declarations* (BCP/DR, RTO/RPO, rollback
+  drills, kill-switch) are **mechanically validated** with freshness windows by
+  `operational-readiness-check.mjs` (bank-grade-gap cluster E) — a stale drill blocks. What
+  stays *Absent* is the live operation: actually running the drills and the chaos/SEV/DAST/pentest
+  exercises. A build-time frame validates the readiness record; it does not run the bank.
 - The full "you build all of this" list is the **security-testing-and-resilience runbook**
   (`../../loom-adopt/harness/governance/runbooks/security-testing-and-resilience-runbook.md`).
 
@@ -121,7 +125,8 @@ nothing more. Claiming otherwise would be the exact dishonesty cluster E exists 
   waist-gate pattern this seam mirrors.
 - `delivery-harness.md` — the **⑦ DEPLOY / ⑧ EVIDENCE** seam Run begins at, and `spec-change`
   (the spec-fix route).
-- `bank-grade-gap.md` — **cluster E** (operational resilience, *Absent*); the "build-time frame
+- `bank-grade-gap.md` — **cluster E** (operational resilience: the R1–R6 readiness declarations
+  *mechanically validated*, the live drills/DAST/pentest *absent*); the "build-time frame
   strong, run-the-bank sparse" grade.
 - `governance.md` — HG-0005 (promotion + rehearsed rollback) and HG-0010 (cease-use switch) —
   the seams Run hangs off.

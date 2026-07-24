@@ -1,6 +1,6 @@
 # BrainKit distribution runbook (multi-repository)
 
-> Loom 2.0-rc.8 WS9. How one institution's BrainKit is versioned once and mounted across many
+> Loom 2.0-rc.10 (WS9). How one institution's BrainKit is versioned once and mounted across many
 > product repositories — **with no live network service**. Every step maps to a mechanism the
 > bundled gates already enforce, so distribution is validated locally in CI.
 

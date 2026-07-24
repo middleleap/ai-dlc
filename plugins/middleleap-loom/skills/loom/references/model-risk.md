@@ -13,16 +13,22 @@ the enforcement starts.
 
 ## What the Loom governs — and how
 
+States use the five-state maturity model of `bank-grade-gap.md` (absent → defined → mechanically
+validated → platform enforced → organisationally enforced). A gate that validates a *declaration*
+grades **mechanically validated**, never "enforced" — platform/organisational enforcement is the
+adopter's.
+
 | Model-risk control | How the Loom does it | State |
 |---|---|---|
-| **Model inventory** | `docs/governance/model-manifest.json` — one entry per model *role*, with provider, model id, prompt/harness version, and risk tier | **Shipped** (seam + template) |
-| **Pinning** | `model-provenance-check.mjs` fails the build if any `model_id` / `prompt_version` is floating (`latest`, `main`, a moving range) | **Enforced** (gate) |
-| **Tiering** | `risk_tier: high\|medium\|low` on each role; the tier drives which controls are mandatory | **Enforced** (gate) |
-| **Eval before release** | For eval-required tiers the manifest must carry a passing eval **run against the shipping pin** — the anti-stale-eval check. The eval *rig* is domain-specific and yours to build; the gate enforces that a release cannot claim green without a fresh, tier-appropriate eval | **Framework shipped** (gate); eval content is the adopter's |
-| **Independent validation** | High-tier roles must record `validated_by` (a party independent of the builders); the `model-risk-reviewer` agent is the ② Assess challenge on any model/prompt change | **Named-only** (field + challenge agent ship; the independent *function* is the org's) |
-| **Drift monitoring** | `change-watch` (continuous assurance ① Watch) surfaces model/eval drift as a horizon item on a schedule/event | **Partial** (build/event-time; runtime production monitoring still the adopter's) |
-| **Provenance in the evidence bundle** | The manifest + eval verdict seal into the release bundle (delivery step ⑧), so a reviewer can reconstruct which model reasoned about what | **Shipped** |
-| **Replayable decision log** | Not yet — reconstructing *why* the agent decided, step by step | **Absent** |
+| **Model inventory** | `docs/governance/model-manifest.json` — one entry per model *role*, with provider, model id, prompt/harness version, and risk tier | **Mechanically validated** (template + gate) |
+| **Pinning** | `model-provenance-check.mjs` fails the build if any `model_id` / `prompt_version` is floating (`latest`, `main`, a moving range) | **Mechanically validated** (gate) |
+| **Tiering** | `risk_tier: high\|medium\|low` on each role; the tier drives which controls are mandatory | **Mechanically validated** (gate) |
+| **Eval before release** | For eval-required tiers the manifest must carry a passing eval **run against the shipping pin** — the anti-stale-eval check. The eval *rig* is domain-specific and yours to build; the gate enforces that a release cannot claim green without a fresh, tier-appropriate eval | **Mechanically validated** (gate); eval content is the adopter's |
+| **Independent validation** | High-tier roles must record `validated_by`, and the gate **resolves it against the identity registry** — free text, an agent, a builder, or a party that is not second-line / `model-validator` all fail; the `model-risk-reviewer` agent is the ② Assess challenge on any model/prompt change | **Mechanically validated** (the field is registry-resolved; the independent *function* is the org's) |
+| **Runtime governance** | High-tier roles must declare runtime monitoring, a suspension authority, and a fallback in the manifest; `model-provenance-check.mjs` fails a high-tier role that omits them | **Mechanically validated** (declaration; the live monitoring itself is the adopter's) |
+| **Drift monitoring** | `change-watch` (continuous assurance ① Watch) surfaces model/eval drift as a horizon item on a schedule/event | **Mechanically validated** at build/event-time; continuous production monitoring is the adopter's |
+| **Provenance in the evidence bundle** | The manifest + eval verdict seal into the release bundle (delivery step ⑧), so a reviewer can reconstruct which model reasoned about what | **Mechanically validated** (sealed) |
+| **Replayable decision log** | `decision-log-check.mjs` validates an append-only sha256 hash chain of the agent's decisions — contiguous, tamper-evident, each entry reconstructable (2.0-rc); *capture* (writing the entries) is the adopter's harness wiring | **Mechanically validated** (gate); capture is the adopter's |
 | **Fairness / explainability / AI incident response** | Not yet — applicable where the use case demands it | **Absent** |
 
 ## The manifest, and the gate
@@ -52,4 +58,4 @@ the gate treats it as a failure rather than a pass.
 
 See `governance.md` (HG-0006), `delivery-harness.md` (the Q-gate pattern and step ⑧ evidence
 bundle), `continuous-assurance.md` (the Watch/Assess lifecycle), and `bank-grade-gap.md`
-(cluster B, where these controls sit on the enforced/named-only/absent scorecard).
+(cluster B, where these controls sit on the five-state maturity scorecard).

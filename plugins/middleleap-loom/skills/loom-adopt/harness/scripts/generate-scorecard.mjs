@@ -10,6 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const STATE_ORDER = ['mechanically-validated', 'defined', 'absent', 'platform-enforced', 'organisationally-enforced'];
 const LABEL = {
@@ -35,6 +36,6 @@ export function generateScorecard(harnessDir = process.cwd()) {
 }
 
 // CLI: print the scorecard block.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   process.stdout.write(generateScorecard(resolve(process.argv[2] || '.')) + '\n');
 }

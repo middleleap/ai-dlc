@@ -7,6 +7,13 @@ the harness pulls specialised agents into that same lifecycle **continuously** �
 change, on a schedule, and on events — so every audit and regulatory commitment is
 continuously evidenced and pre-checked by agents, and **confirmed by accountable humans**.
 
+Read honestly, what ships today is an **assurance protocol and its validation framework**: the
+`assurance-cycle-check` gate proves a signed, fresh six-step cycle record exists, and steps
+① Watch and ② Assess ship as agents. The scheduler, regulatory-intelligence feed, SIEM/telemetry
+integration, incident detection and the independent confirmation function that *produce* those
+records are the adopting institution's to wire — the frame checks the record; it does not yet run
+the whole cycle. See `bank-grade-gap.md` for the per-step state of record.
+
 ## The triggers
 
 The harness pulls assurance agents in:

@@ -33,7 +33,7 @@ plugins/
         │                           #   hooks, profiles, brainkit/ templates + brainkit-example/ —
         │                           #   copied into adopting repos via copy-manifest.json)
         └── brainkit-init/          # drafts an Institutional BrainKit from approved sources
-                                    #   (never invents policy, never approves — rc.8)
+                                    #   (never invents policy, never approves — rc.10)
 scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 ```
 
