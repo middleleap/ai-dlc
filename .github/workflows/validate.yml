@@ -115,6 +115,11 @@ jobs:
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
           node scripts/platform-activation-check.mjs   # rc.12 WS2 — observation is signed, independent, bypass-tested, fresh; no overstated platform-enforced claim (record generated + committed above)
           node scripts/config-reconciliation-check.mjs  # rc.12 WS2.4 — observed config matches the approved baseline; no identity drift
+          # rc.13 WS3 (closes F5): the data-risk register is MANDATORY-WHEN-COMPILED. The high-tier
+          # change-example compiles the data_risk_register capability, so D6 requires the register
+          # with NO --require-register flag — a CI-config change can no longer weaken a regulated
+          # build. Prove the derivation is live in the adopted layout.
+          node -e 'import("./discovery/gates/validate.mjs").then(m=>{if(!m.registerMandatory(".",{flag:false})){console.error("::error::F5 regression — the compiled plan requires the data-risk register but registerMandatory returned false");process.exit(1)}console.log("F5: data-risk register is mandatory-when-compiled (no flag needed)")})'
           # rc.7: product evals (commit-bound); the example's evaluated_commit is stamped to HEAD
           # as a real adopter's CI would, then verified against the shipping commit.
           HEAD_SHA=$(git rev-parse HEAD)
@@ -269,6 +274,12 @@ jobs:
             echo "::error::routine lane auto-merged while SUSPENDED"; exit 1
           fi
           git checkout -- docs/governance/routine-envelope.json
+          # 21 · rc.13 WS3 (F5) — the register requirement is DERIVED, not hardcoded: with the
+          #      compiling change removed, registerMandatory flips to false (so dropping the CLI
+          #      flag genuinely tracks compiled policy rather than silently always-requiring).
+          mv docs/governance/changes/CHG-2026-0042 /tmp/chg-f5
+          node -e 'import("./discovery/gates/validate.mjs").then(m=>{if(m.registerMandatory(".",{flag:false})){console.error("::error::register still mandatory with no compiling change — it is hardcoded, not derived from policy");process.exit(1)}console.log("F5: register correctly not mandatory once no compiled plan requires it")})'
+          mv /tmp/chg-f5 docs/governance/changes/CHG-2026-0042
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

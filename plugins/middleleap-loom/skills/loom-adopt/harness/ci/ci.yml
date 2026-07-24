@@ -80,10 +80,13 @@ jobs:
         run: node scripts/token-report.mjs --check   # validate the token ledger is well-formed; spend never blocks a merge
 
       - name: Discovery runs are gate-green (D1–D9)
-        # --require-register makes a missing data-risk register FAIL D6 rather than skip: under a
-        # regulated profile the data-governance control must not silently not-run. A non-regulated
-        # adopter with no register can drop the flag (or unset LOOM_REQUIRE_REGISTER) to restore the
-        # skip. There are no discovery/runs/ until you author one — by then, mount your register.
+        # rc.13 WS3: the data-risk register is MANDATORY-WHEN-COMPILED — if any governed change's
+        # compiled plan requires the data_risk_register capability (a regulated/institution profile
+        # is in its envelope), a missing register FAILS D6 with NO flag. --require-register /
+        # LOOM_REQUIRE_REGISTER survive only as a manual TIGHTENING (they can force it on, never turn
+        # a compiled requirement off) — a CI-config change can no longer weaken a regulated build. A
+        # non-regulated adopter with no compiling change and no flag still skips. There are no
+        # discovery/runs/ until you author one — by then, mount your register.
         run: |
           shopt -s nullglob
           for run in discovery/runs/*/; do

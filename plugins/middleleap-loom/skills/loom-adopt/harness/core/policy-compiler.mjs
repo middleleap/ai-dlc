@@ -115,6 +115,38 @@ export function resolveBindings(names, baseDir = process.cwd()) {
 
 const union = (into, from) => { for (const x of from || []) into.add(x); };
 
+// rc.13 WS3: a profile declares required CAPABILITIES (data_risk_register, model_risk,
+// consumer_product_approval, …) as a map, not a flat set — each carrying attributes (a minimum
+// version, a minimum tier, institution-ownership). The compiler MERGES them "strongest wins", so
+// like gates they only ever strengthen up the tiers and across profiles (monotonic by construction).
+// This is what lets D6 be MANDATORY-WHEN-COMPILED: the register requirement is derived from the
+// institution/product profile, not switched on by a CLI flag (closes F5).
+const maxVersion = (a, b) => {
+  if (!a) return b; if (!b) return a;
+  const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0) ? a : b;
+  }
+  return a;
+};
+const maxTier = (a, b) => {
+  if (!a) return b; if (!b) return a;
+  return TIERS.indexOf(a) >= TIERS.indexOf(b) ? a : b;
+};
+export function mergeCapabilities(target, source) {
+  for (const [name, spec] of Object.entries(source || {})) {
+    const cur = target[name] || {};
+    const merged = { required: Boolean(cur.required || spec.required) };
+    const mv = maxVersion(cur.minimum_version, spec.minimum_version);
+    if (mv) merged.minimum_version = mv;
+    const mt = maxTier(cur.minimum_tier, spec.minimum_tier);
+    if (mt) merged.minimum_tier = mt;
+    if (cur.institution_owned || spec.institution_owned) merged.institution_owned = true;
+    target[name] = merged;
+  }
+  return target;
+}
+
 /**
  * Compile the control plan for an envelope against its profiles.
  * `bindings` (rc.8 WS4) pins the exact profile content the plan compiled from; pass the output
@@ -146,14 +178,15 @@ export function compile(envelope, profiles, bindings = []) {
   if (findings.length) return { plan: null, findings };
 
   const acc = Object.fromEntries(PLAN_FIELDS.map((f) => [f, new Set()]));
+  const caps = {};
   for (const p of profiles) {
     // Cumulative union up to the envelope's tier — higher tiers ADD, never remove.
     for (let i = 0; i <= tierIdx; i++) {
       const req = p.requirements?.[TIERS[i]];
-      if (req) for (const f of PLAN_FIELDS) union(acc[f], req[FIELD_MAP[f]]);
+      if (req) { for (const f of PLAN_FIELDS) union(acc[f], req[FIELD_MAP[f]]); mergeCapabilities(caps, req.capabilities); }
     }
     for (const cond of p.conditional || []) {
-      if (envelope.flags?.[cond.when]) for (const f of PLAN_FIELDS) union(acc[f], cond.adds?.[FIELD_MAP[f]]);
+      if (envelope.flags?.[cond.when]) { for (const f of PLAN_FIELDS) union(acc[f], cond.adds?.[FIELD_MAP[f]]); mergeCapabilities(caps, cond.adds?.capabilities); }
     }
   }
   const plan = {
@@ -162,6 +195,7 @@ export function compile(envelope, profiles, bindings = []) {
     profiles: [...envelope.required_profiles].sort(),
   };
   for (const f of PLAN_FIELDS) plan[f] = [...acc[f]].sort();
+  plan.required_capabilities = caps; // rc.13 WS3 — merged capability map (canonical() sorts keys)
   // rc.8 WS4: pin the exact profile content the plan compiled from.
   plan.profile_bindings = [...bindings].sort((a, b) => a.profile.localeCompare(b.profile));
   plan.plan_hash = planHash(plan);

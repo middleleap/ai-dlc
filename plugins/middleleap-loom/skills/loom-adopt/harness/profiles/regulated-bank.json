@@ -15,14 +15,20 @@
       "approver_roles": ["risk-second-line", "compliance", "legal", "operations"],
       "evidence": ["control-plane", "model-provenance", "lineage"],
       "pa1_sections": ["classification", "target-market", "inherent-risks", "regulatory-obligations", "ownership"],
-      "pa2_sections": ["pricing-conduct", "disclosures", "financial-crime", "finance-prudential", "complaints-remediation", "post-launch-monitoring"]
+      "pa2_sections": ["pricing-conduct", "disclosures", "financial-crime", "finance-prudential", "complaints-remediation", "post-launch-monitoring"],
+      "capabilities": {
+        "data_risk_register": { "required": true, "minimum_version": "3.1", "institution_owned": true }
+      }
     },
     "high": {
       "gates": ["A", "product-eval", "assurance-cadence"],
       "approver_roles": ["information-security", "accountable-executive"],
       "evidence": ["sast", "sbom", "dependency-audit", "provenance", "product-eval"],
       "pa1_sections": ["data-and-models", "third-parties"],
-      "pa2_sections": ["security-privacy-residency", "model-validation", "operational-readiness"]
+      "pa2_sections": ["security-privacy-residency", "model-validation", "operational-readiness"],
+      "capabilities": {
+        "model_risk": { "required": true, "minimum_tier": "medium" }
+      }
     },
     "critical": {
       "gates": ["R", "second-line-hold"],

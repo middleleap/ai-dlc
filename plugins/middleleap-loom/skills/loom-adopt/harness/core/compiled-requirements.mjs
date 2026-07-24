@@ -27,10 +27,11 @@ const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } ca
 export function aggregateRequirements(cwd = process.cwd()) {
   const families = new Set();
   const evidence = new Set();
+  const capabilities = {}; // rc.13 WS3 — merged required-capability map (name → {required, minimum_version, …})
   const changes = [];
   let anyInProduction = false;
   const dir = `${cwd}/${CHANGES_DIR}`;
-  if (!existsSync(dir)) return { families, evidence, changes, anyInProduction };
+  if (!existsSync(dir)) return { families, evidence, capabilities, changes, anyInProduction };
   for (const name of readdirSync(dir)) {
     const base = `${dir}/${name}`;
     const envelope = readJson(`${base}/change-envelope.json`);
@@ -42,9 +43,28 @@ export function aggregateRequirements(cwd = process.cwd()) {
     const ev = new Set(plan.required_evidence || []);
     for (const f of fam) families.add(f);
     for (const e of ev) evidence.add(e);
-    changes.push({ change_id: envelope.change_id || name, state: envelope.current_state, families: [...fam], evidence: [...ev] });
+    mergeCaps(capabilities, plan.required_capabilities);
+    changes.push({ change_id: envelope.change_id || name, state: envelope.current_state, families: [...fam], evidence: [...ev], capabilities: plan.required_capabilities || {} });
   }
-  return { families, evidence, changes, anyInProduction };
+  return { families, evidence, capabilities, changes, anyInProduction };
+}
+
+/** Merge a plan's capability map into the aggregate — "required" wins, strongest attributes kept. */
+function mergeCaps(target, source) {
+  for (const [name, spec] of Object.entries(source || {})) {
+    const cur = target[name] || {};
+    target[name] = {
+      required: Boolean(cur.required || spec.required),
+      ...(cur.minimum_version || spec.minimum_version ? { minimum_version: cur.minimum_version || spec.minimum_version } : {}),
+      ...(cur.minimum_tier || spec.minimum_tier ? { minimum_tier: cur.minimum_tier || spec.minimum_tier } : {}),
+      ...(cur.institution_owned || spec.institution_owned ? { institution_owned: true } : {}),
+    };
+  }
+}
+
+/** Does any compiled plan require the named capability? (rc.13 WS3 — for mandatory-when-compiled.) */
+export function capabilityRequired(agg, name) {
+  return Boolean(agg?.capabilities?.[name]?.required);
 }
 
 /** Which change_ids require a given gate family — for a gate to name WHO makes it mandatory. */
