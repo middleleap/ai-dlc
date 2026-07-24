@@ -23,6 +23,7 @@
 /.github/workflows/                     @your-org/platform-admins
 /core/                                  @your-org/platform-admins
 /profiles/                              @your-org/platform-admins
+/guardrails/                            @your-org/platform-admins
 /docs/governance/                       @your-org/platform-admins
 
 # Classification, approvals and the identity registry are owned by the SECOND LINE, not the

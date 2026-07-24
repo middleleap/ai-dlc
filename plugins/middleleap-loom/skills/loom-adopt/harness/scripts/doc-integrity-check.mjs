@@ -24,6 +24,7 @@ const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = [
   { file: resolve(HARNESS, '../SKILL.md'), block: 'COPY-TABLE', gen: async () => (await import('../adopt.mjs')).copyTable() },
   { file: resolve(HARNESS, '../../loom/references/bank-grade-gap.md'), block: 'SCORECARD', gen: async () => (await import('./generate-scorecard.mjs')).generateScorecard(HARNESS) },
+  { file: resolve(HARNESS, 'guardrails/README.md'), block: 'GUARDRAIL-MATRIX', gen: async () => (await import('./guardrail-policy-check.mjs')).generateGuardrailMatrix(HARNESS) },
 ];
 
 const marker = (block, which) => `<!-- LOOM:${block}:${which} -->`;

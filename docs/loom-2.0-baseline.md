@@ -371,3 +371,117 @@ mechanically validated · 7 defined · 7 absent · 0 platform / 0 organisational
 controls, 13 flagged adopter-side. Platform-*enforced* stays 0 by design: the bundle ships the
 observation machinery; the live observation, the separated controller identity and the pilot are the
 adopter's — recorded honestly, not gestured at.
+
+## 2.0-rc.13 addendum — compiler-bound regulated requirements (WS3) + runtime-neutral guardrails (WS4)
+
+WS3 and WS4 of the control-plane plan.
+
+**WS3 — bind regulated requirements into the compiler (closes F5).** D6 used to fail-when-absent only
+under a CLI flag (`--require-register`), so a CI-config change could weaken a regulated build. Now the
+requirement is compiled:
+- The policy compiler emits `required_capabilities` — profiles declare capabilities
+  (`data_risk_register`, `model_risk`, `shariah_governance`, `consent_management`, `human_oversight`,
+  …) as a map with attributes (`minimum_version`, `minimum_tier`, `institution_owned`), merged
+  strongest-wins and monotonic by construction (property-tested).
+- `compiled-requirements` aggregates capabilities across governed changes; `validate.registerMandatory`
+  = `flag OR compiled`. If any change compiles `data_risk_register`, a missing register FAILS D6 with
+  **no flag**; the flag survives only as a manual tightening. CI proves it in the adopted layout
+  (positive + negative 21: the requirement is genuinely derived, not hardcoded).
+- Four product-type profiles (`consumer-lending`, `islamic-product`, `open-finance`,
+  `ai-decision-system`), each compiling a distinct capability set; composition proven.
+
+**WS4 — make guardrails runtime-neutral (F6, corrected).** The premise "distributed through a Codex
+marketplace" was wrong (this is a Claude Code marketplace), but the substance held: the local hooks are
+Claude-Code-specific and the Loom nowhere stated what evaporates elsewhere. Now:
+- `guardrails/guardrail-policy.json` states, per guardrail × runtime, exactly what is `enforced`,
+  `ci-backstop`, or `uncovered`. `guardrail-policy-check.mjs` verifies the policy is honest — every
+  claimed mechanism EXISTS, every uncovered runtime names none, and a blocking guardrail enforced
+  nowhere (network-egress) must be flagged `known_gap`. No implied coverage.
+- The **capability matrix** (`guardrails/README.md`) is generated from the policy and doc-integrity-
+  gated. Hostile scenarios (a PII literal, a test-weakening edit) are driven through the REAL
+  Claude Code hooks in the test, proving the `enforced` claims. The CI gates are the enforcement of
+  record where a runtime lacks a hook.
+- `guardrail-policy.json` is a new control-plane target (owned, not agent-writable).
+
+CI: two new gates, two new negative bypass cases (21 F5-derivation, 22 implied-coverage). Full suite
+**411 green** (+20 tests). Version bumped to rc.13. Scorecard (generated): **39 mechanically validated ·
+7 defined · 7 absent · 0 platform / 0 organisationally enforced** across 53 controls, 13 flagged
+adopter-side. Honesty invariant holds: compiled capabilities beyond `data_risk_register` are emitted but
+only D6 consumes one so far (no gate claims to enforce the others), and no guardrail implies coverage a
+runtime lacks.
+
+## 2.0-rc.14 addendum — adoption state machine (WS5) + continuous-assurance cases (WS6)
+
+WS5 and WS6 of the control-plane plan.
+
+**WS5 — adoption as a controlled state machine (closes F7).** Installation was automated;
+configuration, validation, activation and approval were not.
+- `adoption-status.mjs` projects a five-stage matrix (installed → configured → validated → platform →
+  organisation) from the control catalog (single state of record — no second ledger), plus an
+  explicit unresolved-marker inventory.
+- `adoption-attest.mjs`: a signed adoption report CANNOT be produced while any mandatory item is
+  adopt-pending, the attester must resolve to a non-agent human, and the signature must verify.
+- `loom.mjs`: the adoption CLI — `adopt | configure | verify | activate | attest-adoption | status`.
+- New control ADOPTION-STATE (execute:false — an on-demand adopter tool, not a per-PR gate).
+
+**WS6 — operationalize continuous assurance (closes F8).** The assurance-cycle gate verified the
+periodic ritual; this operationalises the signal-triggered half.
+- `assurance-case-check.mjs`: a signal from a declared source (SIEM, model-monitoring, regulatory-
+  intelligence, …) opens a governed case that must run the lifecycle (assess → map controls → run
+  tests → assemble evidence → second-line decision → remediation) within its SLA
+  (`assurance-sla.json`). A runtime breach (high/critical) must record a CONTAINMENT action (suspend
+  autonomy, block release, rollback, model fallback); an open breach past its remediation deadline
+  blocks unless the second line risk-accepts it. The Loom validates and reconciles; the accountable
+  decision stays human.
+- New control ASSURANCE-CASE.
+
+CI: two new gates, one new negative bypass case (23 — a breach with no containment), plus the
+`loom status` / `attest-adoption` adoption assertions from WS5. Full suite **431 green** (+20 tests);
+adopted `node --test` 0 fail. Version bumped to rc.14. Scorecard (generated): **41 mechanically
+validated · 7 defined · 7 absent · 0 platform / 0 organisationally enforced** across 55 controls, 13
+flagged adopter-side. Honesty invariant holds: signal INGESTION from the eight adapter sources is the
+adopter's orchestrator wiring (the bundle validates the case records), and the adoption SIGNATURE is
+adopter-side.
+
+## 2.0-rc.15 addendum — BrainKit estate service (WS7) + comprehension debt (WS8): the plan's bundle side is complete
+
+The final two workstreams of the control-plane plan.
+
+**WS7 — BrainKit as an institutional service.** rc.8 shipped digest-pinned single-repo distribution;
+this adds the estate view + revocation as DATA + a verifier (no live service — the public repo ships
+schemas and the fictional Meridian example only).
+- `brainkit-registry-check.mjs` verifies a `brainkit-registry.json`: semver versions, sha256 digests,
+  acknowledged adoptions, superseded releases naming their successor — and the invariant that matters:
+  **no repository may pin a REVOKED release**. An unsafe institutional context can be withdrawn across
+  the whole estate. The registry answers the five questions (which repos use a release, which controls
+  changed, which products need re-evaluation, what supersedes what, can it be revoked).
+- New control BRAINKIT-REGISTRY; `brainkit-registry.json` is a new control-plane target (an agent must
+  not un-revoke a release).
+
+**WS8 — comprehension debt.** Review is not understanding.
+- `comprehension-check.mjs`: a high/critical change must carry a human-authored comprehension record —
+  summary, critical-path walkthrough, a named human owner who can explain it (registry-resolved,
+  non-agent), reviewer challenge questions, architecture/failure-mode explanation, a replay of the
+  agent decision log (the rc.6 replayable log's second consumer), and reported metrics. Mandatory-when-
+  compiled (high/critical only). Metrics are REPORTED, never gated on their values — the objective is
+  understanding, not throttling AI output.
+- New control COMPREHENSION.
+
+CI: two new gates, two new negative bypass cases (24 — a repo on a revoked release; 25 — a high-tier
+change with no comprehension record). Full suite **449 green** (+18 tests); adopted `node --test` 0
+fail. Version bumped to rc.15. Scorecard (generated): **43 mechanically validated · 7 defined · 7
+absent · 0 platform / 0 organisationally enforced** across 57 controls, 13 flagged adopter-side.
+
+### Plan status: bundle side complete
+
+All eight workstreams of `docs/loom-control-plane-plan.md` are delivered (rc.11–rc.15): artifact-bound
+release evidence (WS1), platform observation + graduation + routine controller + reconciliation (WS2),
+compiler-bound regulated capabilities (WS3), runtime-neutral guardrails (WS4), the adoption state
+machine (WS5), continuous-assurance cases (WS6), the BrainKit estate service (WS7), and comprehension
+debt (WS8). Every finding F1–F8 the review verified is closed.
+
+What remains is **adopter-side by construction** and recorded honestly as `absent`/`adopter_side` in the
+catalog — it cannot be closed inside a plugin bundle: a supervised production pilot, an independent
+second-line validation, internal-audit re-performance of the evidence chain, live platform activation
+(so a control can actually grade `platform-enforced`), and the ofbo back-port. Platform-enforced stays
+**0** in the shipped bundle by design; the machinery to earn it is now all present and negative-tested.

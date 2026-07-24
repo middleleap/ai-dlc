@@ -58,8 +58,10 @@ are repo-root-relative.
 | `governance/product-evals.template.json` | `docs/governance/product-evals.json` | Product-outcome evals (discovery-linked, measures scored, commit-bound) |
 | `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | The second-line-owned routine-change envelope (HG-0013) |
 | `governance/config-baseline.template.json` | `docs/governance/config-baseline.json` | The approved control-plane configuration reconciled against live observations (rc.12 WS2.4) |
+| `governance/assurance-sla.template.json` | `docs/governance/assurance-sla.json` | Service-level expectations for continuous-assurance cases (rc.14 WS6) |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | Token-spend ledger (a report, never a merge gate) |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | The neutral adapter contract |
+| `guardrails` | `guardrails` | Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks) |
 | `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
 | `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | BrainKit institutional identity + design language (the D7 projection source) |
 | `brainkit/terminology.md` | `institution/brainkit/terminology.md` | BrainKit binding vocabulary |

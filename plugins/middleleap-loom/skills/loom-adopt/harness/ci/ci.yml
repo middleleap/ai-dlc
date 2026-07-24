@@ -47,6 +47,7 @@ jobs:
       - name: Runtime assurance gates (scheduled lane — also safe to run per PR)
         run: |
           node scripts/assurance-cycle-check.mjs        # signed six-step cycle records, second-line confirmed
+          node scripts/assurance-case-check.mjs         # rc.14 WS6 — signal-triggered cases within SLA, mapped, contained, second-line decided
           node scripts/decision-log-check.mjs           # replayable, append-only agent decision log
           node scripts/platform-activation-check.mjs    # rc.12 WS2 — platform-enforced graduation: live observation, bypass-tested, independently signed, fresh
           node scripts/config-reconciliation-check.mjs  # rc.12 WS2.4 — live config reconciled against the approved baseline; drift suspends routine auto-merge
@@ -75,6 +76,9 @@ jobs:
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
           node scripts/brainkit-check.mjs               # rc.8 — institutional BrainKit conformance (mandatory-when-compiled)
+          node scripts/brainkit-registry-check.mjs      # rc.15 WS7 — BrainKit estate registry: no repo runs a revoked release
+          node scripts/comprehension-check.mjs          # rc.15 WS8 — high-tier changes carry a human understanding record
+          node scripts/guardrail-policy-check.mjs       # rc.13 WS4 — runtime-neutral guardrail coverage is explicit + honest (no implied protection)
 
       - name: Cost telemetry (report, never a gate)
         run: node scripts/token-report.mjs --check   # validate the token ledger is well-formed; spend never blocks a merge
