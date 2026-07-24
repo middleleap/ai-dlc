@@ -113,6 +113,7 @@ jobs:
           node scripts/decision-log-check.mjs
           node scripts/adapter-check.mjs
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
+          node scripts/guardrail-policy-check.mjs      # rc.13 WS4 — guardrail coverage is explicit + honest; every claimed mechanism exists; no implied protection
           node scripts/platform-activation-check.mjs   # rc.12 WS2 — observation is signed, independent, bypass-tested, fresh; no overstated platform-enforced claim (record generated + committed above)
           node scripts/config-reconciliation-check.mjs  # rc.12 WS2.4 — observed config matches the approved baseline; no identity drift
           # rc.13 WS3 (closes F5): the data-risk register is MANDATORY-WHEN-COMPILED. The high-tier
@@ -280,6 +281,13 @@ jobs:
           mv docs/governance/changes/CHG-2026-0042 /tmp/chg-f5
           node -e 'import("./discovery/gates/validate.mjs").then(m=>{if(m.registerMandatory(".",{flag:false})){console.error("::error::register still mandatory with no compiling change — it is hardcoded, not derived from policy");process.exit(1)}console.log("F5: register correctly not mandatory once no compiled plan requires it")})'
           mv /tmp/chg-f5 docs/governance/changes/CHG-2026-0042
+          # 22 · rc.13 WS4 — a guardrail policy that CLAIMS enforcement via a mechanism that does
+          #      not exist (implied coverage) must fail; the Loom must not imply a protection it lacks.
+          node -e 'const fs=require("fs");const p="guardrails/guardrail-policy.json";const s=JSON.parse(fs.readFileSync(p));s.guardrails[0].coverage["local-git"]={state:"enforced",mechanism:"hooks/does-not-exist.sh"};fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/guardrail-policy-check.mjs; then
+            echo "::error::guardrail-policy gate accepted a claimed protection whose mechanism does not exist"; exit 1
+          fi
+          git checkout -- guardrails/guardrail-policy.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

@@ -67,6 +67,7 @@ export const CONTROL_TARGETS = [
   'docs/governance/routine-envelope.json', // HG-0013 — the standing routine authorization is second-line-owned, not agent-writable
   'docs/governance/config-baseline.json',  // rc.12 WS2.4 — the approved control-plane config; weakening it would hide drift, so it is owned, not agent-writable
   'docs/governance/platform-activation/any.json', // rc.12 WS2 — ownership probe: the observed-config evidence is owned
+  'guardrails/guardrail-policy.json',      // rc.13 WS4 — the guardrail coverage policy; an agent must not weaken its own coverage claims
   'docs/governance/product-evals.json',    // product-outcome evals are product-owner-owned, not agent-writable
   'docs/governance/changes/any/change-envelope.json', // ownership probe: the whole changes/ tree must be owned (by the second line, not builders)
   'docs/governance/changes/any/release-hold.json',    // ownership probe: only the second line can touch the hold

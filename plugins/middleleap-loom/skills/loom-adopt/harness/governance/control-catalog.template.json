@@ -544,6 +544,20 @@
       "gate_family": "brainkit-conformance"
     },
     {
+      "control_id": "GUARDRAIL-POLICY",
+      "objective": "Guardrail coverage is explicit and runtime-neutral: the policy names only protections that exist, marks every uncovered runtime honestly, and acknowledges any blocking guardrail enforced nowhere — the Loom never implies equivalent enforcement where a runtime lacks the hook",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/guardrail-policy-check.mjs",
+      "test_ref": "scripts/guardrail-policy-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "guardrails/"
+      ],
+      "note": "The gate proves the policy is honest and the capability matrix (guardrails/README.md, doc-integrity-gated) tracks it. The local hooks are Claude Code-specific; the CI gates are the enforcement of record where a runtime lacks a hook. Hostile scenarios (PII literal, test weakening) are driven through the real adapters in the test"
+    },
+    {
       "control_id": "DOC-INTEGRITY",
       "objective": "Generated docs (copy table, scorecard) cannot drift from their source of truth \u2014 drift fails the build",
       "owner_role": "platform-admin",

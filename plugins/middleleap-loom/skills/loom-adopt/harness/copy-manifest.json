@@ -28,6 +28,7 @@
     { "source": "governance/config-baseline.template.json", "dest": "docs/governance/config-baseline.json", "kind": "file", "adopt": "template", "seam": "The approved control-plane configuration reconciled against live observations (rc.12 WS2.4)" },
     { "source": "governance/token-ledger.template.json", "dest": "docs/governance/token-ledger.json", "kind": "file", "adopt": "template", "seam": "Token-spend ledger (a report, never a merge gate)" },
     { "source": "adapters/README.md", "dest": "docs/governance/adapters/README.md", "kind": "file", "seam": "The neutral adapter contract" },
+    { "source": "guardrails", "dest": "guardrails", "kind": "dir", "seam": "Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks)" },
     { "source": "brainkit/manifest.template.json", "dest": "institution/brainkit/manifest.json", "kind": "file", "adopt": "template", "seam": "BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve)" },
     { "source": "brainkit/identity/design.md", "dest": "institution/brainkit/identity/design.md", "kind": "file", "adopt": "template", "seam": "BrainKit institutional identity + design language (the D7 projection source)" },
     { "source": "brainkit/terminology.md", "dest": "institution/brainkit/terminology.md", "kind": "file", "adopt": "template", "seam": "BrainKit binding vocabulary" },
