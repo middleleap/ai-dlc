@@ -50,6 +50,6 @@
   "attestation": {
     "issuer": "demo-anchor-signer",
     "confirmed_by": "risk-lena",
-    "signature": "sAogd/mKUWeBi5Fw7YtIGKF/qEucR6Qwq9y8rV8ho227eQPTyHZolwFu7PFXgPqnLE47bUzVIk7iP19RX4N2AA=="
+    "signature": "6JA50B+DkXWHRCAntvsWlZbZxEnJnL1bS9ju7HH+ZCRnUN2HCe4wLUY61UtLVN2OXK7lf0ftPmyoKMMs8qExAg=="
   }
 }
