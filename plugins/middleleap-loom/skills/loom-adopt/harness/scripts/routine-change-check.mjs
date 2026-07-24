@@ -72,6 +72,11 @@ export function evaluate(envelope, claim, registry, asOf) {
   if (!envelope) return ['no routine-envelope.json — there is no standing authorization; take the normal lane'];
   const eid = envelope.envelope_id || '(no id)';
 
+  // rc.12 WS2.4: a suspended envelope authorizes nothing. Config-reconciliation (or a human) sets
+  // `suspended: true` when the control plane has drifted; the routine lane fails closed until it is
+  // restored, so auto-merge cannot ride a weakened platform.
+  if (envelope.suspended === true) return [`${eid}: routine lane is SUSPENDED (control-plane drift or manual hold) — every change takes the normal human-review lane until suspension is lifted`];
+
   // The owner is a human in the second line — never an agent, never a builder.
   const owner = envelope.owner;
   if (!owner) findings.push(`${eid}: envelope has no owner — a routine envelope must be owned by a named second-line human`);

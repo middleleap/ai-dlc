@@ -333,3 +333,41 @@ eval not bound to the built artifact fails. Scorecard (generated): **36 mechanic
 defined · 7 absent · 0 platform / 0 organisationally enforced** across 49 controls, 12 flagged
 adopter-side. Still gated on adopter-side evidence for 2.0-stable (WS2 platform observation, the
 supervised pilot, independent validation, the ofbo back-port).
+
+## 2.0-rc.12 addendum — platform enforcement made real (WS2)
+
+WS2 of the control-plane plan, closing the review's F3 ("platform controls are declared, not
+observed") and the residual of F4 (the routine lane had no trusted controller). The Loom used to
+validate *declarations about* branch protection; nothing proved the platform prevents bypass, which
+is why no control ever graded above mechanically-validated.
+
+- **Platform observation (WS2.1)** — `platform-activation-check.mjs` verifies a read-only observation
+  record: the live mechanism is active AND refused a **negative bypass test**, the observer is an
+  identity **outside the agent's write authority** (not a builder/agent, resolved against the
+  registry), the record is fresh and ed25519-signed by a registered observer issuer.
+- **Graduation (WS2.2)** — a catalog control may claim `platform-enforced` only with a verified
+  observation naming it; `platform-activation-check` fails the build on an overstated claim. The
+  bundle still ships **zero** platform-enforced controls (live observation needs adopter
+  credentials), so graduation passes trivially here and the negative test proves the overstatement
+  fails — the honesty invariant is intact.
+- **Routine controller (WS2.3)** — `routine-controller.yml`: a reference auto-merge bot that runs
+  under a **separated** identity (disjoint from the coding agent), enables auto-merge only for a
+  qualifying routine PR with config-reconciliation green, and records every decision. rc.10 gave the
+  platform a clean `routine-qualified` signal; this gives it the controller that acts on it. Shipped
+  as a tested reference (`ROUTINE-CONTROLLER`, defined/adopter-side) — running it with a real
+  separated bot and merge-queue ruleset is the adopter's.
+- **Continuous reconciliation (WS2.4)** — `config-reconciliation-check.mjs` reconciles the approved
+  `config-baseline.json` against the live observation and the identity registry, failing on any
+  **weakening** drift (removed required check, disabled admin enforcement, re-enabled force-push,
+  weakened CODEOWNERS, widened workflow token, swapped OIDC issuer, or an AI identity in an approval
+  group). On drift the routine lane fails closed via `routine-envelope.suspended`, so auto-merge
+  cannot ride a drifted control plane. `config-baseline.json` and the platform-activation evidence
+  are new control-plane targets (owned, not agent-writable).
+
+CI: two new gates on live-signed observations (generated per-run, non-aging), and three new negative
+bypass cases (**18–20**): a platform-enforced claim without a receipt, a control-plane weakening, and
+a suspended routine lane. Full suite **390 green**; 26 new unit tests. Scorecard (generated): **38
+mechanically validated · 7 defined · 7 absent · 0 platform / 0 organisationally enforced** across 52
+controls, 13 flagged adopter-side. Platform-*enforced* stays 0 by design: the bundle ships the
+observation machinery; the live observation, the separated controller identity and the pilot are the
+adopter's — recorded honestly, not gestured at.

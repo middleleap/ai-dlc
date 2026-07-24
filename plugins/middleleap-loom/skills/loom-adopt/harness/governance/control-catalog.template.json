@@ -457,6 +457,32 @@
       "note": "The gate VERIFIES observations (mechanically-validated): the observation is signed, independent, bypass-tested and fresh. Producing the observation — `loom activate --platform github` querying the live platform with read-only credentials — is the adopter's; the bundle ships ZERO platform-enforced controls, so graduation passes trivially here and the negative test proves an overstated claim fails"
     },
     {
+      "control_id": "CONFIG-RECONCILIATION",
+      "objective": "The live control-plane configuration is continuously reconciled against the approved baseline; a removed required check, weakened CODEOWNERS, re-enabled force-push, widened workflow token, swapped OIDC issuer, or an AI identity added to an approval group is drift that fails the gate and suspends routine auto-merge",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/config-reconciliation-check.mjs",
+      "test_ref": "scripts/config-reconciliation-check.test.mjs",
+      "lane": "scheduled",
+      "paths": [
+        "docs/governance/config-baseline.json",
+        "docs/governance/platform-activation/",
+        "docs/governance/identities.json"
+      ],
+      "note": "The gate reconciles records (mechanically-validated): baseline vs observed vs registry. The CURRENT observation is produced adopter-side by `loom activate` (live platform read). On drift, the routine-change gate fails closed via routine-envelope.suspended, and the WS2.3 controller — gating auto-merge on this gate — does not merge"
+    },
+    {
+      "control_id": "ROUTINE-CONTROLLER",
+      "objective": "Auto-merge is enabled by a trusted bot identity DISJOINT from the coding agent, only for a qualifying routine PR with config-reconciliation green, and every decision is written to the evidence record",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "defined",
+      "doc_ref": "docs/governance/routine-controller.yml",
+      "adopter_side": true,
+      "note": "The reference controller workflow ships (routine-controller.yml): it runs routine-qualified + config-reconciliation under a separated bot token and enables auto-merge only on both green. Running it with a real, separated bot identity and a merge-queue ruleset is the adopter's — platform-enforced is theirs to claim once the separated identity and ruleset are active and a bypass is recorded"
+    },
+    {
       "control_id": "ADAPTERS",
       "objective": "Enterprise adapters map external systems to catalog controls via signed evidence envelopes, keeping the core vendor-neutral",
       "owner_role": "platform-admin",

@@ -102,7 +102,7 @@ jobs:
             const {generateKeyPairSync,sign,createHash}=require("crypto"),fs=require("fs");
             const canonical=(v)=>Array.isArray(v)?`[${v.map(canonical).join(",")}]`:(v&&typeof v==="object")?`{${Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canonical(v[k])).join(",")}}`:JSON.stringify(v);
             const {publicKey,privateKey}=generateKeyPairSync("ed25519"),today=new Date().toISOString();
-            const rec={platform:"github",repository:"dryrun-bank/service",satisfies_control:"HG-0001",mechanism:"branch_protection",observation:{required_status_checks:["gates"],enforce_admins:true,allow_force_pushes:false},bypass_test:{attempted:"direct push to main by a builder",result:"rejected",tested_at:today},observer_identity:"padmin-zoe",observed_at:today};
+            const rec={platform:"github",repository:"dryrun-bank/service",satisfies_control:"HG-0001",mechanism:"branch_protection",observation:{required_status_checks:["gates"],enforce_admins:true,allow_force_pushes:false,required_pull_request_reviews:{required_approving_review_count:1,require_code_owner_reviews:true}},bypass_test:{attempted:"direct push to main by a builder",result:"rejected",tested_at:today},observer_identity:"padmin-zoe",observed_at:today};
             const {attestation,...rest}=rec,h=createHash("sha256").update(canonical(rest)).digest("hex");
             rec.attestation={issuer:"demo-platform-observer",signature:sign(null,Buffer.from(h,"utf8"),privateKey).toString("base64")};
             fs.mkdirSync("docs/governance/platform-activation",{recursive:true});
@@ -112,6 +112,7 @@ jobs:
             fs.writeFileSync("docs/governance/attestation-issuers.json",JSON.stringify(reg,null,2));
           '
           node scripts/platform-activation-check.mjs   # rc.12 WS2 — observation is signed, independent, bypass-tested, fresh; no overstated platform-enforced claim
+          node scripts/config-reconciliation-check.mjs  # rc.12 WS2.4 — observed config matches the approved baseline; no identity drift
           # rc.7: product evals (commit-bound); the example's evaluated_commit is stamped to HEAD
           # as a real adopter's CI would, then verified against the shipping commit.
           HEAD_SHA=$(git rev-parse HEAD)
@@ -252,6 +253,20 @@ jobs:
             echo "::error::platform-activation gate let a control claim platform-enforced with no verified observation"; exit 1
           fi
           git checkout -- docs/governance/control-catalog.json
+          # 19 · rc.12 WS2.4 — weakening the live config (force-push re-enabled) must be caught as
+          #      drift, and while drifted the routine lane must be suspended.
+          node -e 'const fs=require("fs");const p="docs/governance/platform-activation/github-branch-protection.json";const s=JSON.parse(fs.readFileSync(p));s.observation.allow_force_pushes=true;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/config-reconciliation-check.mjs; then
+            echo "::error::config-reconciliation gate missed a control-plane weakening (force-push re-enabled)"; exit 1
+          fi
+          git checkout -- docs/governance/platform-activation/github-branch-protection.json
+          # 20 · rc.12 WS2.4 — a suspended routine envelope must fail the routine lane (auto-merge
+          #      cannot ride a drifted control plane).
+          node -e 'const fs=require("fs");const p="docs/governance/routine-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.suspended=true;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/routine-change-check.mjs --assert-routine --base main; then
+            echo "::error::routine lane auto-merged while SUSPENDED"; exit 1
+          fi
+          git checkout -- docs/governance/routine-envelope.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green
