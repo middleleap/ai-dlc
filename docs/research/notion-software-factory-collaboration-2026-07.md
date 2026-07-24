@@ -277,6 +277,11 @@ roadmap warns against (`docs/loom-control-plane-plan.md`):
 4. **Identities resolve; agents approve nothing.** Every Notion approver maps to a registry identity
    holding the role (`identities.json`); `agent-loom-delivery` and any Notion agent hold **no approval
    authority** (HG-0001, the four-eyes line).
+5. **The round-trip lands as a PR, not a write.** An approval envelope enters `docs/governance/`
+   through a pull request merged under CODEOWNERS — those paths are second-line-owned — so neither
+   the coding agent nor the sync worker can place an approval into the governance tree unilaterally.
+   The sync identity registers in `identities.json` as a builder-class identity holding no approval
+   role; the control plane stays immutable to it (HG-0002).
 
 > **Pattern to adopt.** Model Notion exactly like the existing **GRC / branch-protection adapters**
 > (`harness/adapters/reference/*.json`): `system: "notion"`, `satisfies_control: "HG-0001"` (or a PA
@@ -300,7 +305,8 @@ the harness lacks:
   give the async review thread that today only exists, detached, in PR comments.
 - **Co-authoring discovery.** Problem-statement, synthesis, handoff, and **stakeholder-reaction**
   become co-editable Notion pages — the D9 reaction step becomes a real multi-person moment, then
-  exports back to the gated markdown the renderer expects.
+  exports back **by PR** to the gated markdown the renderer expects; the D-gates re-run on the
+  export, so evidence traceability (D2) binds to the committed artifact, not the Notion draft.
 - **A standing MI view.** Rollups over the sealed evidence bundle become the "MI pack" the
   governance-and-accountability runbook calls for — assembled continuously, not by hand.
 
@@ -308,9 +314,12 @@ the harness lacks:
 **The "factory" half.** Notion becomes the shared task queue Notion itself uses internally
 (`agents write tasks to a database other agents listen to`):
 
-- **A Notion database as the shared work queue** for a fleet of coding agents, driving (or mirroring)
-  the Loom's `next-story` / `develop` loop — with **Claude Code a *named* Notion 3.5 partner agent**,
-  this is a first-class supported pattern, not a hack.
+- **A Notion database as the shared work view** for a fleet of coding agents — mirroring, and
+  *proposing into*, the Loom's `next-story` / `develop` loop. The authoritative queue stays
+  `docs/backlog.yaml` behind the **waist gate** (`discovery-link-check`, HG-0007): a Notion card
+  becomes a backlog item only through a PR, and it is never a hand-off — feature entry still
+  requires the gate-green `handoff.md`. With **Claude Code a *named* Notion 3.5 partner agent**,
+  the mirror is a first-class supported pattern, not a hack.
 - **Webhooks + Workers as assembly-line events** — "page added to the delivery DB" triggers a build
   agent; "PR ready" flips a status a human watches.
 - **Humans strictly at the gates.** The graduated-autonomy boundary (HG-0013 — "the PR is the light
@@ -360,9 +369,10 @@ the control-plane foundations the roadmap is fixing are in place.
   envelope** for a PA gate / HG-0001, **observed and bypass-tested** like the platform-activation
   precedent. Approvers act in Notion; the gate still reads the git envelope. Ship it "**declared, not
   active**" until the first real signed fetch.
-- **Phase 2 — Agent-orchestration queue.** A Notion delivery database (via webhooks/Workers) drives or
-  mirrors `next-story`; Claude Code participates as a **named partner agent**. Humans remain at the
-  merge/launch gates.
+- **Phase 2 — Agent-orchestration mirror.** A Notion delivery database (via webhooks/Workers) mirrors
+  `next-story` and lets teammates propose work; proposals enter `docs/backlog.yaml` by PR, and feature
+  entry still requires a gate-green hand-off — **the waist gate is never bypassed**. Claude Code
+  participates as a **named partner agent**. Humans remain at the merge/launch gates.
 - **Phase 3 — Continuous-assurance MI + signal intake.** Operations-signal triage and the MI rollup
   close the loop back to Discovery — the Notion board becomes the standing management view over the
   sealed evidence.
@@ -376,6 +386,12 @@ Each phase names its control tie-in and states honestly whether it is *declared*
 - **The appearance-of-control trap (highest).** A pretty Notion board can *look* like governance while
   the real controls sit elsewhere. Mitigation: §4.1 — git is truth, decisions round-trip as signed
   evidence, nothing is green on Notion's say-so.
+- **Comprehension-debt acceleration.** The method's own Limits name four-eyes decaying into ceremony
+  as its standing risk — "whether the human at the gate is still reading … not yet measure[d]"
+  (`skills/loom/SKILL.md`). A one-click Notion approval makes rubber-stamping *easier*, not harder.
+  Mitigation: the approval page must carry the evidence into the approver's view — the change summary,
+  gate results, and the relevant decision-log excerpt — so routing increases *reading*, not just
+  throughput.
 - **Data residency & PII (HG-0011 + `hooks/pii-guard.sh`).** Pushing regulated governance state
   (customer categories, risk ratings, named approvers) into a SaaS workspace is a **real control
   question** for a CBUAE-regulated adopter — onshore-gateway/DLP expectations apply. A projection
@@ -409,6 +425,15 @@ projection (board + activity feed + MI view) plus a written `notion-approvals` a
 follows the observed-not-declared precedent. It delivers the teammate board and factory-floor view
 immediately, proves the round-trip design on paper, and adds **no new gate** before the control-plane
 foundations land — exactly the discipline the current roadmap demands.
+
+Two boundary rules keep this the Loom's shape. **The collaboration surface is itself a seam
+(HG-0008):** the crosswalk in §5 is vendor-neutral — Notion is its *reference instantiation* the way
+GitHub is the reference instantiation of branch protection; the same mapping should be realizable on
+Jira, Linear, or Confluence without the core ever learning a vendor's API. And **the sync machinery
+is adopter-side wiring**, like every adapter's fetch-and-sign step — the bundle ships at most the
+reference mapping and the documented envelope kind, never a Notion client, preserving the harness's
+zero-dependency core and the enterprise-rings boundary (the macro-ring "enterprise hub" remains the
+adopter's, not the Loom's).
 
 > **One-line positioning.** *Git is the loom; Notion is the factory floor — teammates and agents
 > coordinate there, and every decision they make comes home to the Loom as signed evidence.*
