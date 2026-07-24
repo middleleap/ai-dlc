@@ -14,6 +14,8 @@
 >
 > **Date of research:** 2026-07-24. **Companion:** `docs/research/ai-dlc-harness-landscape-2026-07.md`
 > (the competitive harness scan this doc extends into the collaboration dimension).
+> **Visualization:** [`docs/loom-factory-floor.html`](../loom-factory-floor.html) — the interactive,
+> brand-styled companion page (open it in a browser).
 
 ---
 
