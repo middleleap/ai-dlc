@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The factory floor · MiddleLeap</title>
+<meta name="description" content="How Notion becomes the Loom's factory floor — teammates and agents coordinate there, and every decision comes home to git as signed evidence. Interactive companion to the 2026-07 research. MiddleLeap brand, Ink and Paper modes.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='9' width='14' height='14' rx='2.2' fill='%23E65C2D' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+/* pre-paint theme: ?theme=paper|ink beats the saved preference; default is ink */
+(function(){try{
+  var q=/[?&]theme=(paper|ink)/.exec(location.search);
+  var m=q?q[1]:localStorage.getItem('floor-theme');
+  if(m==='paper')document.documentElement.setAttribute('data-theme','paper');
+}catch(e){}})();
+</script>
+<style>
+:root{
+  --ink-0:#080808;--ink-1:#101010;--ink-2:#181817;--ink-3:#232321;--ink-4:#33322F;--ink-border:#1E1E1C;
+  --bone-0:#ECE9E1;--bone-1:#DEDBD4;--bone-2:#A8A59E;--bone-3:#87847D;
+  --ember-300:#F58F55;--ember-400:#F0722E;--ember-500:#E65C2D;--ember-600:#CE451B;
+  --ember-grad:linear-gradient(135deg,#F0722E,#CE451B);--ember-dim:rgba(230,92,45,.14);
+  --positive:#5FA671;--positive-dim:rgba(95,166,113,.14);
+  --caution:#D9A03C;--caution-dim:rgba(217,160,60,.14);
+  --critical:#D64545;--critical-dim:rgba(214,69,69,.14);--critical-text:#E06060;
+  --info:#5D8FA6;--info-dim:rgba(93,143,166,.14);
+  --serif:"Instrument Serif",Georgia,serif;--sans:"DM Sans",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;
+  --ease-out:cubic-bezier(.2,0,0,1);--ease-leap:cubic-bezier(.34,1.3,.4,1);
+  --eyebrow-c:var(--ember-400);--ember-text:var(--ember-300);
+  --link-c:var(--ember-400);--link-h:var(--ember-300);
+  --shadow-2:0 4px 16px rgba(0,0,0,.45);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink-0);color:var(--bone-1);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--ember-500);color:#110D0A}
+a{color:var(--link-c);text-decoration:none}
+a:hover{color:var(--link-h)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--bone-0);letter-spacing:0;line-height:1.2}
+em{font-style:italic;color:var(--ember-500)}
+:focus-visible{outline:2px solid var(--ember-400);outline-offset:2px}
+
+/* chrome */
+.progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--ember-500);z-index:60}
+.dotnav{position:fixed;right:22px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:50}
+.dotnav a{width:8px;height:8px;background:var(--ink-4);transform:rotate(45deg);border-radius:2px;transition:background .2s var(--ease-out)}
+.dotnav a.active,.dotnav a:hover{background:var(--ember-500)}
+
+/* header */
+header{border-bottom:1px solid var(--ink-border)}
+.headrow{display:flex;align-items:center;justify-content:space-between;padding:20px 0;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{display:inline-flex;align-items:center}
+.mark .sq{width:16px;height:16px;background:var(--bone-1);border-radius:16%}
+.mark .dm{width:16px;height:16px;background:var(--ember-grad);border-radius:16%;transform:rotate(45deg);margin-left:8px;animation:pivotIn .4s var(--ease-leap)}
+@keyframes pivotIn{from{transform:translateX(-14px) rotate(0)}to{transform:translateX(0) rotate(45deg)}}
+.wordmark{font-weight:600;letter-spacing:-.02em;color:var(--bone-1);font-size:17px}
+.wordmark b{font-weight:600;color:var(--ember-500)}
+.headtag{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-3)}
+
+/* hero */
+.hero{padding:72px 0 56px}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--eyebrow-c)}
+.eyebrow::before{content:"// "}
+.hero h1{font-size:clamp(44px,6vw,72px);line-height:1.08;margin:18px 0 22px;max-width:900px}
+.lede{font-size:18px;color:var(--bone-2);max-width:760px}
+.btnrow{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+.btn{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:14px 22px;border-radius:0;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:all .2s var(--ease-out)}
+.btn .pv{width:9px;height:9px;background:currentColor;border-radius:2px;transition:transform .4s var(--ease-leap)}
+.btn:hover .pv{transform:rotate(45deg)}
+.btn-primary{background:var(--ember-500);color:#110D0A}
+.btn-primary:hover{background:var(--ember-400);box-shadow:0 4px 24px rgba(230,92,45,.28);transform:translateY(-1px)}
+.btn-secondary{background:transparent;border:1px solid var(--ink-4);color:var(--bone-1)}
+.btn-secondary:hover{border-color:var(--bone-3);background:var(--ink-2)}
+.btn:disabled{opacity:.38;cursor:default;transform:none;box-shadow:none}
+.factrow{display:flex;gap:0;margin-top:52px;border:1px solid var(--ink-border);flex-wrap:wrap}
+.fact{flex:1 1 180px;padding:20px 24px;border-right:1px solid var(--ink-border)}
+.fact:last-child{border-right:0}
+.fact .n{font-family:var(--serif);font-size:34px;color:var(--bone-0)}
+.fact .l{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-3);margin-top:4px}
+
+/* sections */
+section{border-top:1px solid var(--ink-border);padding:72px 0}
+section h2{font-size:30px;margin:14px 0 14px;position:relative}
+section .lede{font-size:16.5px;margin-bottom:34px}
+.anchor{font-family:var(--mono);font-size:14px;color:var(--ink-4);margin-left:10px;opacity:0;transition:opacity .2s}
+h2:hover .anchor,.anchor:focus-visible{opacity:1}
+@keyframes flash{0%{background:var(--ember-dim)}100%{background:transparent}}
+.flash{animation:flash 1.4s var(--ease-out)}
+
+.grid{display:grid;gap:20px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.card{background:var(--ink-2);border:1px solid var(--ink-border);padding:24px;transition:border-color .2s var(--ease-out),transform .2s var(--ease-out),box-shadow .2s var(--ease-out)}
+.card:hover{border-color:var(--ink-4);transform:translateY(-2px);box-shadow:var(--shadow-2)}
+.card h3{font-size:20px;margin-bottom:10px}
+.card p{font-size:14px;color:var(--bone-2)}
+.card .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-3);display:block;margin-bottom:12px}
+.dia{display:inline-block;width:8px;height:8px;background:var(--ember-500);border-radius:2px;transform:rotate(45deg);margin-right:10px;flex:none}
+.callout{background:var(--ember-dim);border-left:2px solid var(--ember-500);padding:20px 24px;margin-top:26px;font-size:15px}
+.callout b{color:var(--bone-0);font-weight:600}
+code,.mono{font-family:var(--mono);font-size:.92em;color:var(--bone-1)}
+
+/* badges */
+.badge{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:2px;display:inline-flex;align-items:center;gap:7px}
+.badge::before{content:"";width:7px;height:7px;border-radius:2px;transform:rotate(45deg)}
+.badge-neutral{background:var(--ink-3);color:var(--bone-2)}.badge-neutral::before{background:var(--bone-3)}
+.badge-ember{background:var(--ember-dim);color:var(--ember-text)}.badge-ember::before{background:var(--ember-400)}
+.badge-positive{background:var(--positive-dim);color:var(--positive)}.badge-positive::before{background:var(--positive)}
+.badge-caution{background:var(--caution-dim);color:var(--caution)}.badge-caution::before{background:var(--caution)}
+.badge-critical{background:var(--critical-dim);color:var(--critical-text)}.badge-critical::before{background:var(--critical)}
+.badge-info{background:var(--info-dim);color:var(--info)}.badge-info::before{background:var(--info)}
+
+/* diagram */
+.figwrap{border:1px solid var(--ink-border);background:var(--ink-1);padding:18px}
+.figwrap svg{display:block;width:100%;height:auto}
+.part{cursor:pointer;transition:opacity .2s var(--ease-out)}
+.figwrap.dimmed .part{opacity:.24}
+.figwrap.dimmed .part.active{opacity:1}
+.legend{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.legend button{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;background:transparent;border:1px solid var(--ink-4);color:var(--bone-2);padding:9px 14px;border-radius:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s var(--ease-out)}
+.legend button::before{content:"";width:7px;height:7px;background:var(--bone-3);border-radius:2px;transform:rotate(45deg);transition:background .2s}
+.legend button:hover{border-color:var(--bone-3);color:var(--bone-1)}
+.legend button.active{border-color:var(--ember-500);color:var(--ember-text)}
+.legend button.active::before{background:var(--ember-400)}
+.descbox{margin-top:16px;border:1px solid var(--ink-border);background:var(--ink-2);padding:18px 22px;min-height:86px}
+.descbox .t{font-family:var(--serif);font-size:19px;color:var(--bone-0);margin-bottom:6px}
+.descbox p{font-size:14px;color:var(--bone-2)}
+
+/* rules chips + popover */
+.chips{display:flex;gap:10px;flex-wrap:wrap;position:relative}
+.chip{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:var(--ink-2);border:1px solid var(--ink-4);color:var(--bone-1);padding:11px 16px;border-radius:0;cursor:pointer;display:inline-flex;align-items:center;gap:9px;transition:all .2s var(--ease-out)}
+.chip::before{content:"";width:7px;height:7px;background:var(--ember-500);border-radius:2px;transform:rotate(45deg)}
+.chip:hover{border-color:var(--ember-500);background:var(--ink-3)}
+.chip.open{border-color:var(--ember-500);background:var(--ember-dim);color:var(--ember-text)}
+.pop{position:absolute;z-index:40;background:var(--ink-2);border:1px solid var(--ink-4);box-shadow:var(--shadow-2);padding:20px 22px;max-width:430px;display:none}
+.pop.on{display:block}
+.pop .t{font-family:var(--serif);font-size:19px;color:var(--bone-0);margin-bottom:8px}
+.pop p{font-size:13.5px;color:var(--bone-2);margin-bottom:8px}
+.pop .m{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--bone-3)}
+.pop .m b{color:var(--ember-text);font-weight:500}
+
+/* simulator */
+.sim{border:1px solid var(--ink-border);background:var(--ink-1);padding:26px}
+.simhead{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+.simhead select{font-family:var(--mono);font-size:12.5px;background:var(--ink-0);color:var(--bone-0);border:1px solid var(--ink-4);padding:11px 14px;border-radius:0;flex:1 1 260px}
+.simhead select:focus{border-color:var(--ember-500);box-shadow:0 0 0 3px var(--ember-dim);outline:none}
+.btn-sm{padding:10px 16px;font-size:11.5px}
+.track{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin-bottom:20px}
+.node{font-family:var(--mono);border:1px solid var(--ink-4);background:var(--ink-2);color:var(--bone-2);border-radius:0;cursor:pointer;padding:10px 12px;text-align:left;min-width:118px;flex:1 1 118px;transition:all .2s var(--ease-out)}
+.node .ph{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-3);margin-bottom:4px}
+.node .lab{display:block;font-size:12px;color:var(--bone-1)}
+.node:hover{border-color:var(--bone-3)}
+.node.cur{border-color:var(--ember-500);background:var(--ember-dim)}
+.node.cur .lab{color:var(--ember-text)}
+.node.pass{border-color:rgba(95,166,113,.5);background:var(--positive-dim)}
+.node.pass .lab{color:var(--positive)}
+.node.wait{border-color:rgba(217,160,60,.5);background:var(--caution-dim)}
+.node.wait .lab{color:var(--caution)}
+.node.block{border-color:rgba(214,69,69,.5);background:var(--critical-dim)}
+.node.block .lab{color:var(--critical-text)}
+.simgrid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+.simlog{font-family:var(--mono);font-size:12px;background:var(--ink-0);border:1px solid var(--ink-border);padding:16px;min-height:190px;max-height:260px;overflow-y:auto;color:var(--bone-2)}
+.simlog .ok{color:var(--positive)}
+.simlog .bad{color:var(--critical-text)}
+.simlog .wt{color:var(--caution)}
+.simdetail{border:1px solid var(--ink-border);background:var(--ink-2);padding:18px}
+.simdetail .t{font-family:var(--serif);font-size:18px;color:var(--bone-0);margin-bottom:6px}
+.simdetail p{font-size:13.5px;color:var(--bone-2)}
+.verdict{font-family:var(--mono);font-size:13px;letter-spacing:.06em;margin-top:18px;padding:14px 16px;border:1px solid var(--ink-border);background:var(--ink-0);color:var(--bone-2)}
+.verdict.good{color:var(--positive);border-color:rgba(95,166,113,.4)}
+.verdict.bad{color:var(--critical-text);border-color:rgba(214,69,69,.4)}
+.verdict.wt{color:var(--caution);border-color:rgba(217,160,60,.4)}
+
+/* crosswalk */
+.filter{font-family:var(--mono);font-size:13px;background:var(--ink-0);color:var(--bone-0);border:1px solid var(--ink-4);padding:12px 14px;border-radius:0;width:100%;max-width:420px;margin-bottom:22px}
+.filter:focus{border-color:var(--ember-500);box-shadow:0 0 0 3px var(--ember-dim);outline:none}
+.filter::placeholder{color:var(--bone-3)}
+.xgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.xcard{background:var(--ink-2);border:1px solid var(--ink-border);padding:20px;display:flex;flex-direction:column;gap:10px}
+.xcard.hide{display:none}
+.xcard .a{font-family:var(--mono);font-size:12px;color:var(--bone-3)}
+.xcard .n{font-family:var(--serif);font-size:18px;color:var(--bone-0)}
+.xcard p{font-size:13px;color:var(--bone-2);flex:1}
+
+/* flow stepper */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:ph -1}
+.step{background:var(--ink-2);border:1px solid var(--ink-border);padding:22px}
+.step::before{counter-increment:ph;content:"PHASE " counter(ph);font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ember-400)}
+.step h3{font-size:18px;margin:10px 0 8px}
+.step p{font-size:13px;color:var(--bone-2);margin-bottom:12px}
+.step .m{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--bone-3);display:block;margin-bottom:12px}
+
+/* dimensions */
+.dim-card h3{display:flex;align-items:center}
+.hardline{border-top:1px solid var(--ink-border);margin-top:16px;padding-top:14px;font-size:13px;color:var(--bone-2)}
+.hardline b{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--caution);font-weight:500;display:block;margin-bottom:4px}
+.dim-card ul{list-style:none;margin-top:6px}
+.dim-card li{font-size:14px;color:var(--bone-2);padding:7px 0;display:flex;align-items:baseline}
+
+/* alerts */
+.alerts{display:grid;gap:14px}
+.alert{display:flex;gap:14px;padding:18px 22px;border-radius:0;font-size:14px;color:var(--bone-1)}
+.alert::before{content:"";width:10px;height:10px;border-radius:3px;transform:rotate(45deg);margin-top:6px;flex:none}
+.alert .t{font-weight:600;color:var(--bone-0);display:block;margin-bottom:3px}
+.alert p{color:var(--bone-2)}
+.alert-caution{background:var(--caution-dim);border:1px solid rgba(217,160,60,.3)}.alert-caution::before{background:var(--caution)}
+.alert-critical{background:var(--critical-dim);border:1px solid rgba(214,69,69,.3)}.alert-critical::before{background:var(--critical)}
+.alert-critical .t{color:var(--critical-text)}
+.alert-info{background:var(--info-dim);border:1px solid rgba(93,143,166,.3)}.alert-info::before{background:var(--info)}
+
+footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
+.footrow{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.footmeta{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--bone-3);text-transform:uppercase}
+
+/* svg theme classes */
+.svg-box{fill:var(--ink-1);stroke:var(--ink-4)}
+.svg-cell{fill:var(--ink-2);stroke:var(--ink-border)}
+.svg-bar{fill:var(--ink-2);stroke:var(--ink-4)}
+.svg-title{fill:var(--bone-0)}
+.svg-sub{fill:var(--bone-3)}
+.svg-text{fill:var(--bone-1)}
+.svg-ember{fill:var(--ember-text)}
+.svg-sq{fill:var(--bone-1)}
+.svg-line{stroke:var(--bone-3)}
+.svg-arr{fill:var(--bone-3)}
+.svg-line-e{stroke:var(--ember-500)}
+.svg-arr-e{fill:var(--ember-500)}
+
+/* theme toggle (the pivot) */
+.theme{display:flex;align-items:center;gap:12px}
+.tlab{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;color:var(--bone-3);min-width:46px}
+.tgl{position:relative;width:48px;height:26px;flex:none;cursor:pointer;display:inline-block}
+.tgl input{position:absolute;opacity:0;width:1px;height:1px}
+.tgl .track{position:absolute;inset:0;background:var(--ink-3);border:1px solid var(--ink-4);border-radius:999px;transition:background .2s var(--ease-out),border-color .2s var(--ease-out)}
+.tgl .thumb{position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:5px;background:var(--bone-2);transition:left .4s var(--ease-leap),transform .4s var(--ease-leap),background .2s var(--ease-out)}
+.tgl input:checked ~ .track{background:var(--ember-600);border-color:var(--ember-500)}
+.tgl input:checked ~ .thumb{left:26px;background:#ECE9E1;transform:rotate(45deg)}
+.tgl input:focus-visible ~ .track{outline:2px solid var(--ember-400);outline-offset:2px}
+
+/* paper mode — the loom-stream light palette */
+[data-theme="paper"]{
+  --ink-0:#FAF9F5;--ink-1:#FFFFFF;--ink-2:#FFFFFF;--ink-3:#F4F2EC;--ink-4:#D6D2C8;--ink-border:#E7E4DC;
+  --bone-0:#14130F;--bone-1:#2A2925;--bone-2:#6E6A60;--bone-3:#6E6A60;
+  --ember-dim:rgba(206,69,27,.10);
+  --positive:#2F7048;--positive-dim:rgba(47,112,72,.12);
+  --caution:#8F6614;--caution-dim:rgba(143,102,20,.12);
+  --critical:#B23434;--critical-dim:rgba(178,52,52,.12);--critical-text:#B23434;
+  --info:#3A6E86;--info-dim:rgba(58,110,134,.12);
+  --eyebrow-c:#6E6A60;--ember-text:#A83614;--link-c:#A83614;--link-h:#CE451B;
+  --shadow-2:0 1px 2px rgba(20,19,15,.05),0 8px 24px rgba(20,19,15,.09);
+}
+[data-theme="paper"] em{color:var(--ember-600)}
+[data-theme="paper"] .alert-caution{border-color:rgba(143,102,20,.35)}
+[data-theme="paper"] .alert-critical{border-color:rgba(178,52,52,.35)}
+[data-theme="paper"] .alert-info{border-color:rgba(58,110,134,.35)}
+[data-theme="paper"] .btn-primary:hover{box-shadow:0 4px 24px rgba(230,92,45,.35)}
+
+@media(max-width:1040px){.dotnav{display:none}}
+@media(max-width:900px){.g3,.xgrid,.flow{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.g3,.g2,.xgrid,.flow,.simgrid{grid-template-columns:1fr}.hero{padding:52px 0 40px}.fact{border-right:0;border-bottom:1px solid var(--ink-border)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<nav class="dotnav" id="dotnav" aria-label="Sections"></nav>
+
+<header>
+  <div class="wrap headrow">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><span class="sq"></span><span class="dm"></span></span>
+      <span class="wordmark">Middle<b>Leap</b></span>
+    </div>
+    <div class="theme">
+      <span class="headtag">Research · Notion × The Loom</span>
+      <label class="tgl" title="Switch between ink and paper mode">
+        <input type="checkbox" id="themetgl" aria-label="Switch to paper mode">
+        <span class="track" aria-hidden="true"></span>
+        <span class="thumb" aria-hidden="true"></span>
+      </label>
+      <span class="tlab" id="themelab" aria-hidden="true">INK</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap hero">
+  <div class="eyebrow">Research · 2026-07-24 · The collaboration seam</div>
+  <h1>Git is the loom. Notion is the <em>factory floor.</em></h1>
+  <p class="lede">The Loom already produces every artifact a team needs to collaborate around — passports, envelopes, hand-offs, a backlog. What it never shipped is the floor: the shared surface where humans and agents see the work, discuss it, and decide. Notion has just built exactly that seam. This page shows how the two connect — without a single control moving out of git.</p>
+  <div class="btnrow">
+    <a class="btn btn-primary" href="research/notion-software-factory-collaboration-2026-07.md"><span class="pv"></span>Read the research</a>
+    <a class="btn btn-secondary" href="the-loom.html"><span class="pv"></span>The method deck ↗</a>
+  </div>
+  <div class="factrow">
+    <div class="fact"><div class="n">10</div><div class="l">Views mapped</div></div>
+    <div class="fact"><div class="n">12</div><div class="l">Approver roles routed</div></div>
+    <div class="fact"><div class="n">5</div><div class="l">Governing rules</div></div>
+    <div class="fact"><div class="n">4</div><div class="l">Adoption phases</div></div>
+  </div>
+</div>
+
+<section id="idea">
+  <div class="wrap">
+    <div class="eyebrow">The idea</div>
+    <h2>The software factory — the coordination system, <em>not the coder.</em></h2>
+    <p class="lede">The term has two lives. Both end at the same conclusion: the factory is the system around the workers, and someone has to build its floor.</p>
+    <div class="grid g3">
+      <div class="card"><span class="k">1968 →</span><h3>The classic factory</h3><p>Industrial principles applied to software: standardised process, reusable components, quality checkpoints. NATO 1968 named it; NEC, Hitachi and Fujitsu built it. Assemble from parts — hand-code only what is new.</p></div>
+      <div class="card"><span class="k">2025–26</span><h3>The AI-native reframing</h3><p>The coding agent is the unit; the factory is the interconnected system that triages, plans, builds, reviews and ships through coordinated agents — with humans designing and overseeing the system itself.</p></div>
+      <div class="card"><span class="k">Notion · Token Town</span><h3>The floor as a database</h3><p>Notion builds Notion this way: 100+ tools, 30+ internal agents, and one coordination substrate — agents write tasks to a database other agents listen to. Humans design the system; the workspace is the floor.</p></div>
+    </div>
+    <div class="callout"><b>The resonance is exact.</b> The Loom's governing principle — <em>AI proposes; humans and a protected control plane dispose</em> — is the same sentence in a regulator's register. The Loom is the machinery and the controls. It never named the floor. Notion did.</div>
+  </div>
+</section>
+
+<section id="worlds">
+  <div class="wrap">
+    <div class="eyebrow">The map</div>
+    <h2>Two worlds, one seam — projection out, <em>evidence home.</em></h2>
+    <p class="lede">Click any part of the map. Git keeps every fact the gates trust. Notion renders it and hosts the conversation. The seam between them is an adapter — never an API the core has to learn.</p>
+    <div class="figwrap" id="figwrap">
+      <svg viewBox="0 0 960 470" role="img" aria-label="Map of the integration: git as system of record, Notion as factory floor, connected by an adapter seam">
+        <!-- git panel -->
+        <g class="part" data-part="git" tabindex="0" role="button" aria-label="Git — the system of record">
+          <rect x="20" y="36" width="380" height="330" class="svg-box"/>
+          <text x="40" y="68" font-family="JetBrains Mono,monospace" font-size="13" letter-spacing="2" class="svg-title">GIT — THE LOOM</text>
+          <text x="40" y="88" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" class="svg-sub">SYSTEM OF RECORD</text>
+          <rect x="40" y="106" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="134" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">D1–D9 · Q1–Q5 · PA gates</text>
+          <rect x="40" y="162" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="190" font-family="JetBrains Mono,monospace" font-size="11" class="svg-text">docs/governance — passports · envelopes · holds</text>
+          <rect x="40" y="218" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="246" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">CODEOWNERS + branch protection</text>
+          <rect x="40" y="274" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="302" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Sealed evidence · decision log</text>
+        </g>
+        <!-- notion panel -->
+        <g class="part" data-part="notion" tabindex="0" role="button" aria-label="Notion — the factory floor">
+          <rect x="560" y="36" width="380" height="330" class="svg-box"/>
+          <text x="580" y="68" font-family="JetBrains Mono,monospace" font-size="13" letter-spacing="2" class="svg-title">NOTION — THE FACTORY FLOOR</text>
+          <text x="580" y="88" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" class="svg-sub">PROJECTION + CONVERSATION</text>
+          <rect x="580" y="106" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="134" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Board over the backlog</text>
+          <rect x="580" y="162" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="190" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Approval pages + role inboxes</text>
+          <rect x="580" y="218" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="246" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Threads bound to artifacts</text>
+          <rect x="580" y="274" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="302" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Agent queue mirror</text>
+        </g>
+        <!-- seam -->
+        <g class="part" data-part="seam" tabindex="0" role="button" aria-label="The adapter seam">
+          <text x="480" y="68" font-family="JetBrains Mono,monospace" font-size="11" letter-spacing="2" text-anchor="middle" class="svg-ember">THE SEAM</text>
+          <line x1="410" y1="150" x2="546" y2="150" stroke-width="1.5" class="svg-line"/>
+          <path d="M546 150 l-9 -5 v10 z" class="svg-arr"/>
+          <text x="480" y="138" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">PROJECTION · READ-ONLY</text>
+          <rect x="468" y="188" width="24" height="24" fill="#E65C2D" transform="rotate(45 480 200)" rx="4"/>
+          <line x1="550" y1="260" x2="414" y2="260" stroke-width="1.5" class="svg-line-e"/>
+          <path d="M414 260 l9 -5 v10 z" class="svg-arr-e"/>
+          <text x="480" y="248" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-ember">SIGNED ENVELOPE · BY PR</text>
+          <line x1="550" y1="322" x2="414" y2="322" stroke-width="1.5" class="svg-line"/>
+          <path d="M414 322 l9 -5 v10 z" class="svg-arr"/>
+          <text x="480" y="310" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">FROZEN DRAFT · BY PR</text>
+          <text x="480" y="352" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">adapter contract · HG-0008</text>
+        </g>
+        <!-- humans -->
+        <g class="part" data-part="humans" tabindex="0" role="button" aria-label="Humans — they dispose">
+          <rect x="20" y="396" width="380" height="52" class="svg-bar"/>
+          <rect x="42" y="416" width="11" height="11" rx="2" class="svg-sq"/>
+          <text x="68" y="427" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">HUMANS — approve at the gates · dispose</text>
+        </g>
+        <!-- agents -->
+        <g class="part" data-part="agents" tabindex="0" role="button" aria-label="Agents — they propose">
+          <rect x="560" y="396" width="380" height="52" class="svg-bar"/>
+          <rect x="582" y="415" width="11" height="11" fill="#E65C2D" transform="rotate(45 587.5 420.5)" rx="2"/>
+          <text x="610" y="427" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">AGENTS — work the queue · propose, never dispose</text>
+        </g>
+      </svg>
+    </div>
+    <div class="legend" id="legend" role="group" aria-label="Map legend"></div>
+    <div class="descbox" id="descbox" aria-live="polite">
+      <div class="t">The map</div>
+      <p>Select a part — the panels, the seam, or the two kinds of teammates — to see what it owns and what it can never do.</p>
+    </div>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="eyebrow">The contract</div>
+    <h2>Five rules that keep the floor <em>honest.</em></h2>
+    <p class="lede">A pretty board can look like governance while the real controls sit elsewhere. These five rules are what stop the appearance of control outrunning actual control. Click each one.</p>
+    <div class="chips" id="rulechips"></div>
+  </div>
+</section>
+
+<section id="roundtrip">
+  <div class="wrap">
+    <div class="eyebrow">Run it</div>
+    <h2>One approval, end to end — <em>run it yourself.</em></h2>
+    <p class="lede">Follow a PA1 approval from a pending passport in git, out to the floor, through a human decision, and home again as signed evidence. Then pick a scenario: four the contract refuses — and one that drifts, the floor edited after a freeze while git holds the sha.</p>
+    <div class="sim">
+      <div class="simhead">
+        <select id="scenario" aria-label="Choose a scenario"></select>
+        <button class="btn btn-primary btn-sm" id="play"><span class="pv"></span>Run the round-trip</button>
+        <button class="btn btn-secondary btn-sm" id="step">Step</button>
+        <button class="btn btn-secondary btn-sm" id="reset">Reset</button>
+        <button class="btn btn-secondary btn-sm" id="approve" disabled>Approve as second line</button>
+      </div>
+      <div class="track" id="track" role="group" aria-label="Round-trip stages"></div>
+      <div class="simgrid">
+        <div class="simlog" id="simlog" aria-live="polite"></div>
+        <div class="simdetail" id="simdetail"><div class="t">The journey</div><p>Press <span class="mono">Run the round-trip</span>, or step through stage by stage. Click any stage to read what happens there.</p></div>
+      </div>
+      <div class="verdict" id="verdict" aria-live="polite">READY — a clean approval lands; four scenarios refuse; one drifts.</div>
+    </div>
+  </div>
+</section>
+
+<section id="crosswalk">
+  <div class="wrap">
+    <div class="eyebrow">The crosswalk</div>
+    <h2>Every view mapped — git owns the truth, <em>Notion hosts the conversation.</em></h2>
+    <p class="lede">Every artifact gets a view on the floor — and a class: read-only projection · PR round-trip · born on the floor, frozen by PR · lives on the floor · never writable. Filter by name, view, or rule.</p>
+    <input class="filter" id="xfilter" type="search" placeholder="Filter — e.g. passport, board, never" aria-label="Filter the crosswalk">
+    <div class="xgrid" id="xgrid"></div>
+  </div>
+</section>
+
+<section id="dimensions">
+  <div class="wrap">
+    <div class="eyebrow">The teammates</div>
+    <h2>Two kinds of teammates — humans on the floor, <em>agents in the queue.</em></h2>
+    <p class="lede">The same surface serves both. Each dimension carries one hard line that never moves.</p>
+    <div class="grid g2">
+      <div class="card dim-card">
+        <h3><span class="dia" aria-hidden="true"></span>Human collaboration</h3>
+        <ul>
+          <li><span class="dia" aria-hidden="true"></span>A board over the backlog — swimlanes by role, "what's waiting on me"</li>
+          <li><span class="dia" aria-hidden="true"></span>PA1/PA2 routed to all 12 roles; who is blocking is visible</li>
+          <li><span class="dia" aria-hidden="true"></span>Threads bound to the passport, the change, the hand-off</li>
+          <li><span class="dia" aria-hidden="true"></span>Discovery co-authored; D9 reactions in place, exported by PR</li>
+          <li><span class="dia" aria-hidden="true"></span>A standing MI view over the sealed evidence</li>
+        </ul>
+        <div class="hardline"><b>The hard line</b>The approval page carries the evidence in — change summary, gate results, decision-log excerpt. Routing must increase reading, not just throughput.</div>
+      </div>
+      <div class="card dim-card">
+        <h3><span class="dia" aria-hidden="true"></span>Agent orchestration</h3>
+        <ul>
+          <li><span class="dia" aria-hidden="true"></span>The delivery queue mirrored to a database agents listen to</li>
+          <li><span class="dia" aria-hidden="true"></span>Webhooks and Workers as assembly-line events</li>
+          <li><span class="dia" aria-hidden="true"></span>Claude Code works the floor as a named partner agent</li>
+          <li><span class="dia" aria-hidden="true"></span>Teammates propose work from the floor — by PR, into the backlog</li>
+          <li><span class="dia" aria-hidden="true"></span>Humans stay at the merge and launch gates, always</li>
+        </ul>
+        <div class="hardline"><b>The hard line</b>The waist gate is never bypassed. A card is not a hand-off; the authoritative queue stays <span class="mono">docs/backlog.yaml</span>, and feature entry still requires a gate-green <span class="mono">handoff.md</span>.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="phases">
+  <div class="wrap">
+    <div class="eyebrow">Adoption</div>
+    <h2>Four phases — value first, <em>gates never faked.</em></h2>
+    <p class="lede">Staged so the board lands before any governance risk, and nothing becomes a gate before the control-plane foundations are in place. Each phase states plainly whether it is declared or active.</p>
+    <div class="flow">
+      <div class="step"><h3>Read-only projection</h3><span class="m">One-way · git → floor</span><p>A Worker mirrors the backlog, the change envelopes and the decision log into boards and feeds. The harness is untouched.</p><span class="badge badge-positive">Zero governance risk</span></div>
+      <div class="step"><h3>Approval round-trip</h3><span class="m">notion-approvals adapter · PA gates · HG-0001</span><p>Approval pages route the 12 roles; decisions come home as signed envelopes, by PR, observed and bypass-tested.</p><span class="badge badge-neutral">Declared, not active — until the first signed fetch</span></div>
+      <div class="step"><h3>Orchestration mirror</h3><span class="m">Webhooks · partner agents · waist gate intact</span><p>The delivery queue mirrors to the floor; teammates propose by PR; agents pick up work. Humans keep merge and launch.</p><span class="badge badge-ember">PR round-trip</span></div>
+      <div class="step"><h3>Assurance MI</h3><span class="m">Operations signals · sealed evidence rollup</span><p>Triage boards for incidents, drift and CVEs; a standing MI view for board and second line — the loop back to Discovery.</p><span class="badge badge-neutral">Read-only over sealed truth</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="risks">
+  <div class="wrap">
+    <div class="eyebrow">Honesty</div>
+    <h2>Named risks — a board is not <em>a control.</em></h2>
+    <p class="lede">In the method's own tradition: name the risks plainly, or silence gets mistaken for coverage.</p>
+    <div class="alerts">
+      <div class="alert alert-caution"><div><span class="t">The appearance-of-control trap</span><p>A board can look like governance while the controls sit elsewhere. Git is truth; decisions round-trip as signed evidence; nothing is green on the floor's say-so.</p></div></div>
+      <div class="alert alert-caution"><div><span class="t">Comprehension-debt acceleration</span><p>Four-eyes can decay into ceremony while every gate stays green — and a one-click approval makes rubber-stamping easier. The approval page must carry the evidence in, so routing increases reading.</p></div></div>
+      <div class="alert alert-caution"><div><span class="t">The system-of-record temptation</span><p>The moment a team edits truth on the floor first, the evidence chain breaks. The projection stays a projection, with an explicit PR round-trip.</p></div></div>
+      <div class="alert alert-critical"><div><span class="t">Data residency &amp; PII — HG-0011</span><p>Regulated governance state leaving git for a SaaS workspace is a real control question. Project references and status, never personal data; the residency review gates adoption, it does not follow it.</p></div></div>
+      <div class="alert alert-info"><div><span class="t">A moving platform</span><p>The 2025-09-03 API split databases into data sources — a breaking change. The hosted MCP is not headless; the self-hosted one may sunset. Pin to the REST API and re-verify before building.</p></div></div>
+      <div class="alert alert-info"><div><span class="t">Cost and tier</span><p>Custom Agents and connectors are Business/Enterprise only, priced in credits — a per-adopter cost, not free machinery.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footrow">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><span class="sq"></span><span class="dm"></span></span>
+      <span class="wordmark">Middle<b>Leap</b></span>
+    </div>
+    <div class="footmeta">Research 2026-07-24 · docs/research/notion-software-factory-collaboration-2026-07.md · PR #16</div>
+  </div>
+</footer>
+
+<script>
+/* ---------- theme toggle ---------- */
+(function(){
+  var inp=document.getElementById('themetgl'),lab=document.getElementById('themelab');
+  function apply(m,persist){
+    document.documentElement.setAttribute('data-theme',m==='paper'?'paper':'ink');
+    if(m!=='paper')document.documentElement.removeAttribute('data-theme');
+    inp.checked=(m==='paper');
+    lab.textContent=m==='paper'?'PAPER':'INK';
+    inp.setAttribute('aria-label','Switch to '+(m==='paper'?'ink':'paper')+' mode');
+    if(persist){try{localStorage.setItem('floor-theme',m)}catch(e){}}
+  }
+  apply(document.documentElement.getAttribute('data-theme')==='paper'?'paper':'ink',false);
+  inp.addEventListener('change',function(){apply(inp.checked?'paper':'ink',true);});
+})();
+
+/* ---------- map ---------- */
+(function(){
+  var DESC={
+    git:{t:'Git — the system of record',p:'Every fact the gates trust lives here: the D and Q gates, the governance passports and envelopes, CODEOWNERS and branch protection, the sealed evidence chain. Nothing on the floor changes this — it is projected out, and it receives evidence home.'},
+    seam:{t:'The seam — an adapter, not an API',p:'One direction projects governed files into views. Two flows come home, both by pull request: a human decision as a signed approval-attestation envelope, and a frozen draft — the PRD co-authored on the floor, exported at gate time so the D-gates run on the file. The core never learns the vendor’s API — it reads files and envelopes (HG-0008). Swap Notion for Jira or Linear and the gates do not change.'},
+    notion:{t:'Notion — the factory floor',p:'The board over the backlog, approval pages with the evidence carried in, threads bound to artifacts, the agents’ queue mirror. A place to see, discuss and decide — never the place truth lives.'},
+    humans:{t:'Humans — they dispose',p:'Twelve approver roles route to named people in the identity registry. Four-eyes merges, PA1/PA2 sign-offs and the release hold stay human, in git, under CODEOWNERS. The floor makes the queue visible; it grants no authority.'},
+    agents:{t:'Agents — they propose',p:'Claude Code and its peers work the queue as named partner agents: pick, build, open PRs. They hold no approval role anywhere — floor or loom (HG-0001). The PR is the light switch.'}
+  };
+  var fig=document.getElementById('figwrap'),desc=document.getElementById('descbox'),legend=document.getElementById('legend');
+  var parts=[].slice.call(fig.querySelectorAll('.part')),btns=[],current=null;
+  function activate(key){
+    if(current===key){return clear();}
+    current=key;fig.classList.add('dimmed');
+    parts.forEach(function(p){p.classList.toggle('active',p.dataset.part===key);});
+    btns.forEach(function(b){b.classList.toggle('active',b.dataset.part===key);});
+    var d=DESC[key];desc.innerHTML='<div class="t">'+d.t+'</div><p>'+d.p+'</p>';
+  }
+  function clear(){
+    current=null;fig.classList.remove('dimmed');
+    parts.forEach(function(p){p.classList.remove('active');});
+    btns.forEach(function(b){b.classList.remove('active');});
+    desc.innerHTML='<div class="t">The map</div><p>Select a part — the panels, the seam, or the two kinds of teammates — to see what it owns and what it can never do.</p>';
+  }
+  var ORDER=['git','seam','notion','humans','agents'],LAB={git:'Git',seam:'The seam',notion:'Notion',humans:'Humans',agents:'Agents'};
+  ORDER.forEach(function(k){
+    var b=document.createElement('button');b.dataset.part=k;b.textContent=LAB[k];
+    b.addEventListener('click',function(){activate(k);});legend.appendChild(b);btns.push(b);
+  });
+  parts.forEach(function(p){
+    var k=p.dataset.part;
+    p.addEventListener('click',function(){activate(k);});
+    p.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();activate(k);}});
+  });
+})();
+
+/* ---------- rules ---------- */
+(function(){
+  var RULES=[
+    {t:'Git stays the system of record',m:'Notion is a projection and a conversation surface. Every fact the gates trust lives in the repo.',x:'Prevents',p:'the board quietly becoming the truth',e:'gates read repo state only'},
+    {t:'Decisions round-trip as signed evidence',m:'An approval on the floor counts only once it is a signed evidence envelope tied to a named control in the catalog.',x:'Prevents',p:'screenshots-as-approvals',e:'the adapter contract + attestation issuers'},
+    {t:'Observed, not declared',m:'A floor status is never a green control by itself. A live read, a bypass test, an independent signature, a fresh timestamp — or it is declared, not active.',x:'Prevents',p:'appearance of control outrunning control',e:'platform-activation-style freshness'},
+    {t:'Identities resolve; agents approve nothing',m:'Every approver maps to a registry identity holding the role. Workspace agents hold none.',x:'Prevents',p:'AI four-eyes theatre',e:'identity-registry-check + HG-0001'},
+    {t:'The round-trip lands as a PR',m:'Envelopes enter docs/governance/ by pull request under CODEOWNERS. The sync identity is a builder, never an approver.',x:'Prevents',p:'a sync bot with god-mode',e:'CODEOWNERS + branch protection (HG-0002)'}
+  ];
+  var wrap=document.getElementById('rulechips'),open=null,pop=document.createElement('div');
+  pop.className='pop';wrap.appendChild(pop);
+  RULES.forEach(function(r,i){
+    var c=document.createElement('button');c.className='chip';c.textContent=(i+1)+' · '+r.t;
+    c.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(open===c){return close();}
+      open&&open.classList.remove('open');open=c;c.classList.add('open');
+      pop.innerHTML='<div class="t">'+r.t+'</div><p>'+r.m+'</p><div class="m">'+r.x+': <b>'+r.p+'</b></div><div class="m">Enforced by: <b>'+r.e+'</b></div>';
+      pop.style.top=(c.offsetTop+c.offsetHeight+10)+'px';
+      pop.style.left=Math.min(c.offsetLeft,Math.max(0,wrap.offsetWidth-450))+'px';
+      pop.classList.add('on');
+    });
+    wrap.appendChild(c);
+  });
+  function close(){pop.classList.remove('on');open&&open.classList.remove('open');open=null;}
+  document.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  pop.addEventListener('click',function(e){e.stopPropagation();});
+})();
+
+/* ---------- simulator ---------- */
+(function(){
+  var STAGES=[
+    {id:'pending', ph:'Loom · git',    lab:'PA1 pending',  d:'product-passport.json compiles the required roles for PA1. risk-second-line has not signed; the change cannot advance.'},
+    {id:'project', ph:'Seam',          lab:'Projected',    d:'The sync Worker mirrors the passport into the approvals database. One-way: read-only.'},
+    {id:'inbox',   ph:'Notion · floor',lab:'Routed',       d:'The people-property pings the role holder: “PA1 waiting on you.” No more hand-edited JSON hoping someone notices.'},
+    {id:'decide',  ph:'Notion · floor',lab:'Decision',     d:'The approval page carries the evidence in — change summary, gate results, decision-log excerpt. A named human reads, then approves.'},
+    {id:'webhook', ph:'Seam',          lab:'Webhook',      d:'The Worker emits the decision to the sync identity — builder-class, registered in identities.json, holding no approval role.'},
+    {id:'envelope',ph:'Seam',          lab:'Envelope',     d:'An approval-attestation envelope is drafted: change id, role, registry identity, timestamp, page provenance.'},
+    {id:'sign',    ph:'Seam',          lab:'Signed',       d:'A registered issuer signs it (ed25519). observed_at is fresh — observed, not declared.'},
+    {id:'pr',      ph:'Loom · git',    lab:'PR opened',    d:'The envelope lands in docs/governance/ by pull request — a path the second line owns in CODEOWNERS.'},
+    {id:'merge',   ph:'Loom · git',    lab:'Four-eyes',    d:'A second-line human merges. The sync worker cannot. The agent cannot. This stage waits for you.'},
+    {id:'gate',    ph:'Loom · git',    lab:'Gate reads',   d:'product-approval-check resolves the identity and role against identities.json; adapter-check validates the mapping to the named control.'},
+    {id:'green',   ph:'Loom · git',    lab:'PA1 green',    d:'The passport carries every compiled approval. The floor updates from git — the loop closes.'}
+  ];
+  var SCENARIOS={
+    clean:{name:'A clean approval — lands',block:null,why:''},
+    agent:{name:'A workspace agent clicks approve',block:'decide',why:'The “approve” came from an agent identity. Agents hold no approval authority (HG-0001) — the decision is void; a named human must act.'},
+    role:{name:'The approver lacks the role',block:'envelope',why:'The sync worker refuses to draft: this identity does not hold risk-second-line in identities.json. Routing is not authority.'},
+    hold:{name:'The floor tries to write the release hold',block:'pr',why:'release-hold.json is second-line territory in CODEOWNERS. The sync worker’s PR cannot touch it, and branch protection refuses a direct write.'},
+    stale:{name:'Stale activation evidence',block:'gate',why:'The adapter’s activation evidence is 41 days old — declared, not active. The envelope is not trusted; PA1 stays pending.'},
+    drift:{name:'A frozen PRD is edited on the floor',block:null,drift:true,why:''}
+  };
+  var sel=document.getElementById('scenario'),track=document.getElementById('track'),log=document.getElementById('simlog'),
+      det=document.getElementById('simdetail'),ver=document.getElementById('verdict'),
+      bPlay=document.getElementById('play'),bStep=document.getElementById('step'),bReset=document.getElementById('reset'),bApp=document.getElementById('approve');
+  Object.keys(SCENARIOS).forEach(function(k){
+    var o=document.createElement('option');o.value=k;o.textContent=SCENARIOS[k].name;sel.appendChild(o);
+  });
+  var nodes={};
+  STAGES.forEach(function(s){
+    var n=document.createElement('button');n.className='node';n.dataset.id=s.id;
+    n.innerHTML='<span class="ph">'+s.ph+'</span><span class="lab">'+s.lab+'</span>';
+    n.addEventListener('click',function(){showDetail(s);});
+    track.appendChild(n);nodes[s.id]=n;
+  });
+  function showDetail(s){det.innerHTML='<div class="t">'+s.lab+' — '+s.ph+'</div><p>'+s.d+'</p>';}
+  var idx=0,running=false,timer=null,approved=false,done=false;
+  function mark(id,cls){var n=nodes[id];n.classList.remove('cur','pass','wait','block');cls&&n.classList.add(cls);}
+  function line(txt,cls){var d=document.createElement('div');cls&&(d.className=cls);d.textContent=txt;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+  function setVerdict(txt,cls){ver.textContent=txt;ver.className='verdict'+(cls?' '+cls:'');}
+  function reset(){
+    clearTimeout(timer);idx=0;running=false;approved=false;done=false;
+    STAGES.forEach(function(s){mark(s.id,null);});
+    log.innerHTML='';bApp.disabled=true;bPlay.disabled=false;bStep.disabled=false;
+    setVerdict('READY — a clean approval lands; four scenarios refuse; one drifts.','');
+    det.innerHTML='<div class="t">The journey</div><p>Press <span class="mono">Run the round-trip</span>, or step through stage by stage. Click any stage to read what happens there.</p>';
+  }
+  function advance(){
+    if(done||idx>=STAGES.length){return 'end';}
+    var s=STAGES[idx],sc=SCENARIOS[sel.value];
+    showDetail(s);
+    if(sc.block===s.id){
+      mark(s.id,'block');line('✕ '+s.lab.toUpperCase()+' — refused',' bad'.trim());line('  '+sc.why,'bad');
+      setVerdict('✕ BLOCKED at '+s.lab+' — '+sc.why,'bad');
+      running=false;done=true;bPlay.disabled=true;bStep.disabled=true;return 'block';
+    }
+    if(s.id==='merge'&&!approved){
+      mark(s.id,'wait');line('◇ FOUR-EYES — waiting for a second-line human','wt');
+      setVerdict('◇ WAITING — only a second-line human can merge. Approve to continue.','wt');
+      bApp.disabled=false;running=false;return 'wait';
+    }
+    mark(s.id,'pass');line('✓ '+s.lab+' — '+s.ph,'ok');
+    if(s.id==='gate'&&sc.drift){line('◇ DRIFT — the handoff page moved after the freeze; badge raised. The gate reads the frozen sha, not the live page.','wt');}
+    if(s.id==='green'){
+      if(sc.drift){setVerdict('✓ PA1 APPROVED — with a drift badge on the floor: the PRD draft is ahead of the frozen record. Git held the sha; freeze again to update the record.','wt');}
+      else{setVerdict('✓ PA1 APPROVED — the decision came home as signed evidence. Git never left charge.','good');}
+      done=true;bPlay.disabled=true;bStep.disabled=true;return 'endok';
+    }
+    idx++;
+    if(idx<STAGES.length){mark(STAGES[idx].id,'cur');}
+    return 'ok';
+  }
+  function tick(){
+    if(!running)return;
+    var r=advance();
+    if(r==='ok'){
+      var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+      timer=setTimeout(tick,reduce?40:800);
+    }
+  }
+  bPlay.addEventListener('click',function(){if(done)reset();running=true;tick();});
+  bStep.addEventListener('click',function(){running=false;clearTimeout(timer);advance();});
+  bReset.addEventListener('click',reset);
+  bApp.addEventListener('click',function(){
+    if(approved||done)return;
+    approved=true;bApp.disabled=true;
+    mark('merge','pass');line('✓ Four-eyes — merged by risk-second-line','ok');
+    idx++;mark(STAGES[idx].id,'cur');
+    running=true;tick();
+  });
+  sel.addEventListener('change',reset);
+  reset();
+  /* deep-link: #run-<scenario> autoplays */
+  var m=/^#run-(\w+)$/.exec(location.hash);
+  if(m&&SCENARIOS[m[1]]){
+    sel.value=m[1];reset();
+    document.getElementById('roundtrip').scrollIntoView();
+    running=true;tick();
+  }
+})();
+
+/* ---------- crosswalk ---------- */
+(function(){
+  var X=[
+    {a:'docs/backlog.yaml',n:'Board over the backlog',u:'Swimlanes by role; “what’s waiting on me.” The queue teammates actually watch.',r:'read-only projection',c:'neutral'},
+    {a:'product-passport.json',n:'Approvals DB + approval pages',u:'PA1/PA2 routed across all 12 roles, evidence carried in; who is blocking is visible.',r:'PR round-trip',c:'ember'},
+    {a:'change-envelope.json',n:'Change record page',u:'One place to watch a change move through its states, tier and receipts.',r:'read-only projection',c:'neutral'},
+    {a:'release-hold.json',n:'Release gate view',u:'The second line’s go/no-go, visible to everyone. Missing hold = HELD, always.',r:'never writable from the floor',c:'critical'},
+    {a:'handoff.md + discovery run',n:'Co-authored discovery pages',u:'Born on the floor: facilitator and stakeholders co-edit, D9 reactions land in place. Frozen into discovery/runs/ at gate time; a drift badge marks any draft ahead of record.',r:'born on the floor · frozen by PR',c:'ember'},
+    {a:'operations-signal.json',n:'Triage board',u:'Incidents, drift and CVEs triaged together; every signal typed, rated, routed.',r:'PR round-trip',c:'ember'},
+    {a:'identities.json',n:'Workspace roster',u:'Human-readable “who approves what” — the registry stays canonical in git.',r:'read-only projection',c:'neutral'},
+    {a:'decision-log.json',n:'Agent activity feed',u:'Teammates see what the agent decided and why — the hash chain stays in git.',r:'read-only projection',c:'neutral'},
+    {a:'Sealed evidence bundle',n:'MI dashboard',u:'Standing management information for board and second line, assembled continuously.',r:'read-only projection',c:'neutral'},
+    {a:'Meeting notes · roadmap · briefs',n:'Pre-discovery, on the floor',u:'Workshops, interviews, portfolio — upstream of the frame. Canonical in Notion; cited into the research log as evidence.',r:'lives on the floor',c:'info'}
+  ];
+  var grid=document.getElementById('xgrid'),fi=document.getElementById('xfilter');
+  grid.innerHTML=X.map(function(x){
+    return '<div class="xcard"><span class="a">'+x.a+'</span><span class="n">'+x.n+'</span><p>'+x.u+'</p><span class="badge badge-'+x.c+'">'+x.r+'</span></div>';
+  }).join('');
+  var cards=[].slice.call(grid.children);
+  fi.addEventListener('input',function(){
+    var q=fi.value.trim().toLowerCase();
+    cards.forEach(function(c){c.classList.toggle('hide',q&&c.textContent.toLowerCase().indexOf(q)<0);});
+  });
+})();
+
+/* ---------- chrome: progress, dotnav, anchors ---------- */
+(function(){
+  var SECTIONS=[['idea','The idea'],['worlds','The map'],['rules','The rules'],['roundtrip','Run it'],['crosswalk','Crosswalk'],['dimensions','Teammates'],['phases','Phases'],['risks','Risks']];
+  var bar=document.getElementById('progress');
+  addEventListener('scroll',function(){
+    var h=document.documentElement,max=h.scrollHeight-innerHeight;
+    bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+  },{passive:true});
+  var nav=document.getElementById('dotnav'),links={};
+  SECTIONS.forEach(function(s){
+    var a=document.createElement('a');a.href='#'+s[0];a.title=s[1];a.setAttribute('aria-label',s[1]);
+    nav.appendChild(a);links[s[0]]=a;
+  });
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        Object.keys(links).forEach(function(k){links[k].classList.toggle('active',k===e.target.id);});
+      }
+    });
+  },{rootMargin:'-45% 0px -50% 0px'});
+  SECTIONS.forEach(function(s){var el=document.getElementById(s[0]);el&&io.observe(el);});
+  document.querySelectorAll('section h2').forEach(function(h){
+    var sec=h.closest('section');if(!sec)return;
+    var a=document.createElement('a');a.className='anchor';a.href='#'+sec.id;a.textContent='#';a.setAttribute('aria-label','Link to this section');
+    h.appendChild(a);
+  });
+  if(location.hash&&!/^#run-/.test(location.hash)){
+    var t=document.querySelector(location.hash);
+    if(t){t.classList.add('flash');setTimeout(function(){t.classList.remove('flash');},1500);}
+  }
+})();
+</script>
+</body>
+</html>
