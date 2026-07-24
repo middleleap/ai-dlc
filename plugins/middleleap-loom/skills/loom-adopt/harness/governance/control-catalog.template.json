@@ -586,6 +586,34 @@
       "note": "loom status projects the stage matrix + the unresolved-marker inventory; attest-adoption refuses to sign while adopt-pending (closes F7). The signature is adopter-side"
     },
     {
+      "control_id": "BRAINKIT-REGISTRY",
+      "objective": "The BrainKit estate registry is consistent (semver versions, sha256 digests, acknowledged adoptions) and — the point — no repository may run a REVOKED release: an unsafe institutional context can be withdrawn across the whole estate",
+      "owner_role": "institutional-context-owner",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/brainkit-registry-check.mjs",
+      "test_ref": "scripts/brainkit-registry-check.test.mjs",
+      "lane": "scheduled",
+      "paths": [
+        "docs/governance/brainkit-registry.json"
+      ],
+      "note": "rc.8 shipped digest-pinned single-repo distribution; this adds the estate view + revocation as DATA + a verifier (no live service — the public repo ships schemas and the fictional Meridian example). The registry answers which repos use a release, which controls changed, which products need re-evaluation, and whether an unsafe release can be revoked"
+    },
+    {
+      "control_id": "COMPREHENSION",
+      "objective": "Review is not understanding: a high/critical change carries a human-authored comprehension record — summary, critical-path walkthrough, a named human owner who can explain it, reviewer challenge questions, architecture/failure-mode explanation, a replay of the agent decision log, and reported metrics — so delivery throughput cannot outrun institutional understanding",
+      "owner_role": "engineering",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/comprehension-check.mjs",
+      "test_ref": "scripts/comprehension-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/changes/"
+      ],
+      "note": "Mandatory-when-compiled: a low/medium change needs none; a high/critical change that lacks the record fails. Metrics are REPORTED, never gated on their values — the objective is understanding, not throttling AI output. The decision-log replay is the rc.6 replayable log's second consumer"
+    },
+    {
       "control_id": "DOC-INTEGRITY",
       "objective": "Generated docs (copy table, scorecard) cannot drift from their source of truth \u2014 drift fails the build",
       "owner_role": "platform-admin",

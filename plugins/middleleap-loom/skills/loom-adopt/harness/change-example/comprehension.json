@@ -1,0 +1,23 @@
+{
+  "_comment": "EXAMPLE (rc.15 · WS8) — the human-understanding record for the high-tier change CHG-2026-0042. Authored by the named owner, not the agent. Metrics are reported, not gated on their values. Mounts at docs/governance/changes/<id>/comprehension.json.",
+  "change_id": "CHG-2026-0042",
+  "summary": "Adds a credit-limit-review decision service that recomputes a customer's revolving limit from affordability signals. The change introduces the scoring call, the affordability feature join, and the decision-record write; it does not change the customer-facing consent flow.",
+  "critical_path": "Request → affordability feature join (batch-fed) → model scoring call → policy overlay (hard caps) → decision record write → limit update event. The policy overlay is the safety net: any score above the segment cap is clamped before the write.",
+  "named_owner": "eng-omar",
+  "challenge_questions": [
+    { "q": "What happens if the affordability feature join is stale?", "a": "The service fails closed to the existing limit and raises an ops signal; it never raises a limit on stale data." },
+    { "q": "Where is the model output bounded?", "a": "In the policy overlay, before the decision write — the model cannot directly set a limit above the segment cap." }
+  ],
+  "architecture_explanation": "A stateless decision service behind the existing origination API; the model is a pinned champion with a challenger shadowed. State lives in the decision-record store (insert-only, lineage-emitting).",
+  "failure_modes": "Feature staleness (fails closed), model outage (falls back to the champion, then to the prior limit), and overlay misconfiguration (caught by the architecture-assurance threat→control→test trace).",
+  "decision_log_replay_ref": "docs/governance/decision-log.json",
+  "metrics": {
+    "review_minutes": 95,
+    "change_complexity": "high",
+    "pct_agent_generated": 78,
+    "reviewer_familiarity": "medium",
+    "post_merge_defects": 0,
+    "emergency_reversals": 0,
+    "team_can_modify_without_agent": true
+  }
+}

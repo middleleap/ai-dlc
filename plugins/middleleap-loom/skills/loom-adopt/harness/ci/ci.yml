@@ -76,6 +76,8 @@ jobs:
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
           node scripts/brainkit-check.mjs               # rc.8 — institutional BrainKit conformance (mandatory-when-compiled)
+          node scripts/brainkit-registry-check.mjs      # rc.15 WS7 — BrainKit estate registry: no repo runs a revoked release
+          node scripts/comprehension-check.mjs          # rc.15 WS8 — high-tier changes carry a human understanding record
           node scripts/guardrail-policy-check.mjs       # rc.13 WS4 — runtime-neutral guardrail coverage is explicit + honest (no implied protection)
 
       - name: Cost telemetry (report, never a gate)

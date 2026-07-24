@@ -442,3 +442,46 @@ validated · 7 defined · 7 absent · 0 platform / 0 organisationally enforced**
 flagged adopter-side. Honesty invariant holds: signal INGESTION from the eight adapter sources is the
 adopter's orchestrator wiring (the bundle validates the case records), and the adoption SIGNATURE is
 adopter-side.
+
+## 2.0-rc.15 addendum — BrainKit estate service (WS7) + comprehension debt (WS8): the plan's bundle side is complete
+
+The final two workstreams of the control-plane plan.
+
+**WS7 — BrainKit as an institutional service.** rc.8 shipped digest-pinned single-repo distribution;
+this adds the estate view + revocation as DATA + a verifier (no live service — the public repo ships
+schemas and the fictional Meridian example only).
+- `brainkit-registry-check.mjs` verifies a `brainkit-registry.json`: semver versions, sha256 digests,
+  acknowledged adoptions, superseded releases naming their successor — and the invariant that matters:
+  **no repository may pin a REVOKED release**. An unsafe institutional context can be withdrawn across
+  the whole estate. The registry answers the five questions (which repos use a release, which controls
+  changed, which products need re-evaluation, what supersedes what, can it be revoked).
+- New control BRAINKIT-REGISTRY; `brainkit-registry.json` is a new control-plane target (an agent must
+  not un-revoke a release).
+
+**WS8 — comprehension debt.** Review is not understanding.
+- `comprehension-check.mjs`: a high/critical change must carry a human-authored comprehension record —
+  summary, critical-path walkthrough, a named human owner who can explain it (registry-resolved,
+  non-agent), reviewer challenge questions, architecture/failure-mode explanation, a replay of the
+  agent decision log (the rc.6 replayable log's second consumer), and reported metrics. Mandatory-when-
+  compiled (high/critical only). Metrics are REPORTED, never gated on their values — the objective is
+  understanding, not throttling AI output.
+- New control COMPREHENSION.
+
+CI: two new gates, two new negative bypass cases (24 — a repo on a revoked release; 25 — a high-tier
+change with no comprehension record). Full suite **449 green** (+18 tests); adopted `node --test` 0
+fail. Version bumped to rc.15. Scorecard (generated): **43 mechanically validated · 7 defined · 7
+absent · 0 platform / 0 organisationally enforced** across 57 controls, 13 flagged adopter-side.
+
+### Plan status: bundle side complete
+
+All eight workstreams of `docs/loom-control-plane-plan.md` are delivered (rc.11–rc.15): artifact-bound
+release evidence (WS1), platform observation + graduation + routine controller + reconciliation (WS2),
+compiler-bound regulated capabilities (WS3), runtime-neutral guardrails (WS4), the adoption state
+machine (WS5), continuous-assurance cases (WS6), the BrainKit estate service (WS7), and comprehension
+debt (WS8). Every finding F1–F8 the review verified is closed.
+
+What remains is **adopter-side by construction** and recorded honestly as `absent`/`adopter_side` in the
+catalog — it cannot be closed inside a plugin bundle: a supervised production pilot, an independent
+second-line validation, internal-audit re-performance of the evidence chain, live platform activation
+(so a control can actually grade `platform-enforced`), and the ofbo back-port. Platform-enforced stays
+**0** in the shipped bundle by design; the machinery to earn it is now all present and negative-tested.

@@ -54,9 +54,9 @@ bundle's reach, is in one place.
 <!-- LOOM:SCORECARD:START -->
 | Mechanically validated | Defined | Absent | Platform enforced | Organisationally enforced |
 |---|---|---|---|---|
-| 41 | 7 | 7 | 0 | 0 |
+| 43 | 7 | 7 | 0 | 0 |
 
-_Generated from the control catalog (55 controls; 13 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
+_Generated from the control catalog (57 controls; 13 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
 <!-- LOOM:SCORECARD:END -->
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
