@@ -67,7 +67,9 @@ jobs:
           node scripts/model-provenance-check.mjs      # HG-0006 — models pinned/tiered/evaluated, reports sealed
           # Bind the eval to the PR HEAD sha, never GITHUB_SHA (the ephemeral merge commit on a PR).
           node scripts/product-eval-check.mjs --commit "${{ github.event.pull_request.head.sha || github.sha }}"  # discovery-linked, measures green, fresh vs the head commit
-          node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence sealed, commit-bound, semantically verified
+          node scripts/release-subject-check.mjs        # rc.11 WS1 — the immutable artifact subject is coherent (real commit, digest-pinned artifact, trusted builder)
+          node scripts/release-attestation-check.mjs    # rc.11 WS1 — source→artifact→evals→anchor all bind to ONE digest (closes the F1 self-reference)
+          node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence sealed, commit-bound (40-hex, no symbolic subject), semantically verified
           node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
           node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
           node scripts/brainkit-check.mjs               # rc.8 — institutional BrainKit conformance (mandatory-when-compiled)

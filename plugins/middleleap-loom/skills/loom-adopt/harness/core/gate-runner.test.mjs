@@ -90,6 +90,6 @@ test('lane separation still holds — a required release-family control does not
   assert.ok(r.skipped.some((s) => s.id === 'FAM-R' && /lane:release/.test(s.reason)));
 });
 
-test('the lanes are exactly pr, release, scheduled', () => {
-  assert.deepEqual(LANES, ['pr', 'release', 'scheduled']);
+test('the lanes cover the artifact life: pr, build, release, deploy, scheduled (rc.11 WS1.4)', () => {
+  assert.deepEqual(LANES, ['pr', 'build', 'release', 'deploy', 'scheduled']);
 });

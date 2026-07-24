@@ -123,6 +123,11 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
   const releaseCommit = manifest.release_commit;
   if (!releaseCommit) {
     findings.push('manifest has no `release_commit` — the evidence is not bound to a released commit (semantic binding, 1.10)');
+  } else if (!/^[0-9a-f]{40}$/.test(releaseCommit)) {
+    // rc.11 (closes F2): a symbolic subject — `release-v-demo`, a tag, a branch name — is not a
+    // commit. Evidence bound to a placeholder proves nothing about what shipped. The subject must
+    // be a real 40-hex commit sha (the artifact-digest binding is release-attestation-check's).
+    findings.push(`manifest release_commit ${JSON.stringify(releaseCommit)} is not a 40-hex commit sha — a symbolic release identifier is not a binding subject (rc.11)`);
   }
   let prev = GENESIS;
   entries.forEach((e, i) => {

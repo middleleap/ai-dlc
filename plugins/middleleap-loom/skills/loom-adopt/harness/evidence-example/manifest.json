@@ -1,75 +1,75 @@
 {
   "_comment": "ADOPTER EXAMPLE — a real, self-contained, tamper-evident release evidence bundle (HG-0003). The delivery loop writes this at step 8. Each sha256 is the real hash of the sibling artifact; the seals form an append-only chain; anchor is the final seal (publish it to an external WORM + RFC-3161 store). release_commit binds the bundle to the released commit, and evidence-seal-check.mjs verifies each sealed artifact SEMANTICALLY (tests pass, verdicts PASS/CONFORMANT, scans clean) as well as byte-for-byte. See README.md.",
   "release": "v-demo",
-  "release_commit": "release-v-demo",
-  "anchor": "3446fb6da9451a77f35096404e27de9a5fd8350dab27d8ea7eb63758e2fb6760",
+  "release_commit": "7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f",
+  "anchor": "8924131b334d1f15a7aaba6cd560f98475ff324dc76e35d8950638682a44b890",
   "entries": [
     {
       "type": "tests",
       "ref": "tests.json",
-      "sha256": "2d0c3fd69a0de6fe287ff926285048ec4fce5c16333f499dc05c371036df0e35",
+      "sha256": "9713fbc26386a52ff891353d5dd91f67667397850310747e73eaa2a128b3279b",
       "prev": "GENESIS",
-      "seal": "071e80e310f112b7c23f8d2292f73097b10334b9cf2c73618503a4fa9e3b0ff1"
+      "seal": "8177c407f40aca43ef50b028d361e9cabb00f43365e1825e567601a264b9e42c"
     },
     {
       "type": "reviews",
       "ref": "reviews.json",
       "sha256": "4e08be1989e547b6ae507ad5bb4812f9c027170d24c2e2bb47de776e07369666",
-      "prev": "071e80e310f112b7c23f8d2292f73097b10334b9cf2c73618503a4fa9e3b0ff1",
-      "seal": "caf9e0ca0de937dc58193c836c45c6b5c90a62346c393b3070bd3f52b57b50c1"
+      "prev": "8177c407f40aca43ef50b028d361e9cabb00f43365e1825e567601a264b9e42c",
+      "seal": "a672ecca2ca4bead9b4640526df73d7a1969bbbc542e4f21752ce9fef294445a"
     },
     {
       "type": "lineage",
       "ref": "lineage.json",
       "sha256": "7d2a2645b052da99764cec040fc82a366ff21dd4336a416b54d8a6b4586606a3",
-      "prev": "caf9e0ca0de937dc58193c836c45c6b5c90a62346c393b3070bd3f52b57b50c1",
-      "seal": "71335e3760923c9f4fd4e81f25c4cf626fe8527d487c857575e21e8a99723a23"
+      "prev": "a672ecca2ca4bead9b4640526df73d7a1969bbbc542e4f21752ce9fef294445a",
+      "seal": "43452eaec1bbedf0e53ac696b916deb2f657bd977c7588c1dcbebd9def402233"
     },
     {
       "type": "model-provenance",
       "ref": "model-provenance.json",
       "sha256": "67a9ee532b1234c04701e7078b92ec84d55186bf98fc1fbcd55394b506b6b6c4",
-      "prev": "71335e3760923c9f4fd4e81f25c4cf626fe8527d487c857575e21e8a99723a23",
-      "seal": "1c7f52fb68f88c36fc9fd3ef12553d5a21cb8ac3a22524bbdd3e190399be6203"
+      "prev": "43452eaec1bbedf0e53ac696b916deb2f657bd977c7588c1dcbebd9def402233",
+      "seal": "59a6e9df47d47e30cbe41a42a279ca734db0c207650dacb51bc2156b6f1cd7da"
     },
     {
       "type": "control-plane",
       "ref": "control-plane.json",
       "sha256": "217abc3e42dfeb825af0e842005c8f10d6201c8e2cae6d8439f4a2cddbfdd283",
-      "prev": "1c7f52fb68f88c36fc9fd3ef12553d5a21cb8ac3a22524bbdd3e190399be6203",
-      "seal": "a49e41bc26215f299945edcc0634e34256d3b380ffa26dee5b5dea50c59704c8"
+      "prev": "59a6e9df47d47e30cbe41a42a279ca734db0c207650dacb51bc2156b6f1cd7da",
+      "seal": "8284ebf14e27134f60aa4c24a7c243c324cbd1a2db5ddecf4fa3d1998c70a5a7"
     },
     {
       "type": "sast",
       "ref": "sast.sarif",
       "sha256": "b8f276124eb68d972682f73d2fe3fbd6f1770b9e3fe920cdfcc3c34db4a90b63",
-      "prev": "a49e41bc26215f299945edcc0634e34256d3b380ffa26dee5b5dea50c59704c8",
-      "seal": "bd7a1cb56f7f3a223adee0d63613d238aeb11d3c00f4b91f2e38da063e087b62"
+      "prev": "8284ebf14e27134f60aa4c24a7c243c324cbd1a2db5ddecf4fa3d1998c70a5a7",
+      "seal": "da3af5b71df08c0a0029c40f0b4535651f7ac1a8911883859324961fea90f071"
     },
     {
       "type": "sbom",
       "ref": "sbom.cdx.json",
       "sha256": "359573fdf38f79103f737bd2d2351e6c19a6b19ca364e4ceff5eebc20d90e823",
-      "prev": "bd7a1cb56f7f3a223adee0d63613d238aeb11d3c00f4b91f2e38da063e087b62",
-      "seal": "baa722e69b8ad50b9a325b9e66dc8fd6cd47426b03866ebd9f3a3ee8847e6982"
+      "prev": "da3af5b71df08c0a0029c40f0b4535651f7ac1a8911883859324961fea90f071",
+      "seal": "0f5096630284082c95a8edf4eacc7540782857a95737d3d73cf0a2891201d7ae"
     },
     {
       "type": "dependency-audit",
       "ref": "dependency-audit.json",
       "sha256": "d2ab65582f8b3eef17afbe69a020992c56d489b673b63260e7cb258a51f8ea8d",
-      "prev": "baa722e69b8ad50b9a325b9e66dc8fd6cd47426b03866ebd9f3a3ee8847e6982",
-      "seal": "247bc49fc3bbdff52c6b3cd185be767d1a0c9cb85a763759262c5cee4d5df239"
+      "prev": "0f5096630284082c95a8edf4eacc7540782857a95737d3d73cf0a2891201d7ae",
+      "seal": "0f516a55f47ecb25865106a93a617878a62cb469823b1c4491b729f3d4fad5a6"
     },
     {
       "type": "provenance",
       "ref": "provenance.json",
       "sha256": "6d73284f2a0590c7b17159c42ebaf38514101a8bbcf8eb690474cb9613a07ca2",
-      "prev": "247bc49fc3bbdff52c6b3cd185be767d1a0c9cb85a763759262c5cee4d5df239",
-      "seal": "3446fb6da9451a77f35096404e27de9a5fd8350dab27d8ea7eb63758e2fb6760"
+      "prev": "0f516a55f47ecb25865106a93a617878a62cb469823b1c4491b729f3d4fad5a6",
+      "seal": "8924131b334d1f15a7aaba6cd560f98475ff324dc76e35d8950638682a44b890"
     }
   ],
   "attestation": {
     "issuer": "demo-anchor-signer",
-    "signature": "44ndYLWoZG4y+G7uj+e9tkvQRucqOzelti70pajDyODW1ef9s0i0vZ5r2vUqIH8NOFxvCIvWUzCQ2q+UEjA7Cw=="
+    "signature": "pCSzNCO1dixJ9lgf2A/+Jpje/kRKK/0SMBKu57lxQCHtXZUSrrAVYTtIhSoPFXLg4oxasmBV1E0UTYf5WBLJAQ=="
   }
 }

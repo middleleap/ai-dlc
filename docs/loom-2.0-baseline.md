@@ -298,3 +298,38 @@ Every new rule carries a negative test reproducing the audit's exact bypass (bra
 20 cases; seal suite extended). Scorecard unchanged — this hardens the existing BRAINKIT and
 HG-0003 controls rather than adding one: still **34 mechanically validated · 6 defined · 7
 absent · 0 platform / 0 organisationally enforced** across 47 controls.
+
+## 2.0-rc.11 addendum — the release-evidence plane rebuilt on the artifact digest
+
+Verified against `origin/main@2cf680e` (rc.10). rc.11 is WS1 of the control-plane plan
+(`docs/loom-control-plane-plan.md`) — the P0 foundation that moves the assurance subject off the
+source commit and onto the **immutable artifact digest**, closing the two verified evidence-plane
+defects:
+
+- **F1 (commit self-reference) — closed.** A product eval that names the commit *containing* it
+  provably ran before that commit existed. The new `release-subject.json` (verified by
+  `release-subject-check.mjs`) is the immutable binding root — a real 40-hex source commit, a
+  **digest-pinned** artifact uri (a tag-pinned `:latest` fails), and the trusted builder. The new
+  `release-attestation-check.mjs` cross-binds source → artifact → product evals → the sealed anchor
+  to **one** artifact digest: each product eval must now carry `evaluated_artifact` matching the
+  built digest, a value that exists only *after* the commit — dissolving the self-reference.
+- **F2 (symbolic release identifier) — closed.** `evidence-seal-check.mjs` now requires
+  `release_commit` to be a 40-hex sha; the shipped `evidence-example` — which passed with
+  `release-v-demo` — is **re-cut** against a real commit, the demo ed25519 key rotated and the
+  bundle re-sealed (the private key is discarded, as the registry always said it should be).
+- **WS1.4 — the lane model extends** from `pr | release | scheduled` to
+  `pr | build | release | deploy | scheduled`; the two new controls run in the `release` lane, so
+  release-evidence checks stop masquerading as PR-source checks.
+
+Honesty invariant holds: both gates prove the **records** are coherent and agree on the digest and
+that the anchor is authentically signed; that the artifact was actually built by that builder from
+that commit — and that the *deployed* digest is the authorized one — is the platform's signed
+provenance and live observation, which is WS2 (rc.12), recorded honestly as not-yet-observed here.
+
+CI: the adopted dry-run runs the two new gates on the release-subject the build job produces, and
+three new negative bypass cases (**15–17**) join the suite: a symbolic `release_commit` fails the
+seal, evidence reused for a different artifact digest fails the cross-binding, and a commit-only
+eval not bound to the built artifact fails. Scorecard (generated): **36 mechanically validated · 6
+defined · 7 absent · 0 platform / 0 organisationally enforced** across 49 controls, 12 flagged
+adopter-side. Still gated on adopter-side evidence for 2.0-stable (WS2 platform observation, the
+supervised pilot, independent validation, the ofbo back-port).

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { evaluate, buildChain, sealOf, REQUIRED_TYPES, SEMANTICS, requiredTypesFor, EVIDENCE_FLOOR } from './evidence-seal-check.mjs';
 
-const COMMIT = 'commit-v-test';
+const COMMIT = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678'; // a real 40-hex sha (rc.11: symbolic subjects fail)
 
 // Semantically-valid artifact bodies, one per required type (1.10: meaning is verified too).
 const VALID = {
@@ -46,6 +46,12 @@ test('a manifest without a release_commit is unbound evidence', () => {
   const m = sealed();
   delete m.release_commit;
   assert.ok(evaluate(m).some((x) => /release_commit/.test(x)));
+});
+
+test('a symbolic release_commit fails — release-v-demo is not a binding subject (rc.11, F2)', () => {
+  const m = sealed();
+  m.release_commit = 'release-v-demo';
+  assert.ok(evaluate(m).some((x) => /not a 40-hex commit sha/.test(x)));
 });
 
 test('an altered artifact hash (without re-sealing) is caught', () => {

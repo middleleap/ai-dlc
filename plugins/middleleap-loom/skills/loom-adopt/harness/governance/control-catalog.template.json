@@ -214,13 +214,43 @@
     },
     {
       "control_id": "HG-0003",
-      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain",
+      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain (a symbolic release_commit is rejected)",
       "owner_role": "platform-admin",
       "line": 1,
       "state": "mechanically-validated",
       "mechanism_ref": "scripts/evidence-seal-check.mjs",
       "test_ref": "scripts/evidence-seal-check.test.mjs",
       "lane": "release"
+    },
+    {
+      "control_id": "RELEASE-SUBJECT",
+      "objective": "The release binds to an immutable artifact digest: a real source commit, a digest-pinned artifact and the trusted builder that produced it; symbolic subjects and mutable (tag-pinned) uris are rejected",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/release-subject-check.mjs",
+      "test_ref": "scripts/release-subject-check.test.mjs",
+      "lane": "release",
+      "paths": [
+        "docs/governance/release-subject.json"
+      ],
+      "note": "The gate proves the subject is coherent and internally consistent (mechanically-validated); that the artifact was actually built by that builder from that commit is the platform's signed provenance, cross-checked by release-attestation-check and observed live in WS2. Mandatory-when-compiled: a null artifact fails once a governed change is in production"
+    },
+    {
+      "control_id": "RELEASE-ATTESTATION",
+      "objective": "Source, artifact, product evaluations and the sealed anchor all name ONE immutable artifact digest — dissolving the commit self-reference (F1): evidence cannot be reused for another build, and a commit-only eval that predates the artifact cannot pass",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/release-attestation-check.mjs",
+      "test_ref": "scripts/release-attestation-check.test.mjs",
+      "lane": "release",
+      "paths": [
+        "docs/governance/release-subject.json",
+        "docs/governance/evidence/",
+        "docs/governance/product-evals.json"
+      ],
+      "note": "Cross-binding verifier (mechanically-validated): it proves the RECORDS agree on the digest and the anchor is authentically signed. Live observation of the registry and the running deployment is the platform's (WS2). Mandatory-when-compiled: a production release with no artifact-bound subject fails"
     },
     {
       "control_id": "Q4-SUPPLY",

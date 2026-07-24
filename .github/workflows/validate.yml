@@ -49,6 +49,9 @@ jobs:
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
           cp "$H/product-eval-example/product-evals.json" "$A/docs/governance/product-evals.json"
+          # rc.11 WS1: the immutable release subject binds source→artifact→evals→evidence by one
+          # digest. Mounts at the top governance level (peer of product-evals.json).
+          cp "$H/evidence-example/release-subject.json" "$A/docs/governance/release-subject.json"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           # Deliberate ADOPT completions the installer never fakes: the manifest ships
           # services/example-service.json with unparseable ADOPT dates; the dry-run exercises a
@@ -82,6 +85,8 @@ jobs:
           node scripts/secrets-scan.mjs
           node scripts/supply-chain-check.mjs
           node scripts/model-provenance-check.mjs
+          node scripts/release-subject-check.mjs       # rc.11 WS1 — coherent immutable artifact subject
+          node scripts/release-attestation-check.mjs    # rc.11 WS1 — source→artifact→evals→anchor bound to one digest
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
@@ -201,6 +206,26 @@ jobs:
             echo "::error::assurance-cycle gate passed a FAIL step with no risk acceptance"; exit 1
           fi
           git checkout -- docs/governance/assurance-cycles/AC-2026-W29.json
+          # 15 · rc.11 WS1 — a symbolic release_commit must fail the seal (no binding subject, F2).
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));s.release_commit="release-v-demo";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/evidence-seal-check.mjs; then
+            echo "::error::evidence-seal gate accepted a symbolic release_commit"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/manifest.json
+          # 16 · rc.11 WS1 — reusing the evidence for a DIFFERENT artifact digest must fail the
+          #      cross-binding (source→artifact no longer agree).
+          node -e 'const fs=require("fs");const p="docs/governance/release-subject.json";const s=JSON.parse(fs.readFileSync(p));const d="sha256:"+"a".repeat(64);s.artifact.digest=d;s.artifact.uri="registry.example.invalid/credit-service@"+d;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/release-attestation-check.mjs; then
+            echo "::error::release-attestation gate accepted evidence for a different artifact digest"; exit 1
+          fi
+          git checkout -- docs/governance/release-subject.json
+          # 17 · rc.11 WS1 — a product eval bound to a commit but NOT the built artifact must fail
+          #      (closes the F1 self-reference: the eval must name the immutable digest).
+          node -e 'const fs=require("fs");const p="docs/governance/product-evals.json";const s=JSON.parse(fs.readFileSync(p));for(const pr of s.products)delete pr.eval.evaluated_artifact;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/release-attestation-check.mjs; then
+            echo "::error::release-attestation gate accepted a commit-only eval not bound to the built artifact"; exit 1
+          fi
+          git checkout -- docs/governance/product-evals.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

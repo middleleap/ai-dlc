@@ -25,7 +25,7 @@
       "mechanism": "ed25519",
       "description": "DEMO reference issuer — a real ed25519 key pair; the private key is NOT shipped (regenerate your own; this one signs only the bundled example anchor)",
       "verify": {
-        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkT0RIOncJhLFTBYpV+T9wCeAiFABpWAb5RJlPxo1cEs=\n-----END PUBLIC KEY-----\n"
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATrPFJhXaZ6tlPSwr99vxiFk9RI1TUMapAAuoxE25cmI=\n-----END PUBLIC KEY-----\n"
       }
     }
   ]

@@ -10,6 +10,7 @@
       ],
       "eval": {
         "evaluated_commit": "0123456789abcdef0123456789abcdef01234567",
+        "evaluated_artifact": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "dataset_version": "credit-scenarios-2026.3",
         "runner_version": "eval-harness-2.1",
         "ran_at": "2026-07-20T09:14:00Z",
