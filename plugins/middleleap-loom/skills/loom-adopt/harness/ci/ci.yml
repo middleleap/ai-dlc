@@ -48,6 +48,7 @@ jobs:
         run: |
           node scripts/assurance-cycle-check.mjs        # signed six-step cycle records, second-line confirmed
           node scripts/decision-log-check.mjs           # replayable, append-only agent decision log
+          node scripts/platform-activation-check.mjs    # rc.12 WS2 — platform-enforced graduation: live observation, bypass-tested, independently signed, fresh
 
       # Risk-proportionate alternative to the explicit lists above: the runner reads the
       # catalog's lanes + path scopes and executes only what this diff implicates —

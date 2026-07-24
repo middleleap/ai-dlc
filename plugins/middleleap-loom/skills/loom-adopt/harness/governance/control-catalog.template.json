@@ -442,6 +442,21 @@
       "gate_family": "assurance-cadence"
     },
     {
+      "control_id": "PLATFORM-ACTIVATION",
+      "objective": "A control graduates to platform-enforced only on a fresh, independently-signed observation that the live platform mechanism is active AND refused a negative bypass test; the observer is outside the agent's write authority; a platform-enforced catalog claim without such a receipt fails",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/platform-activation-check.mjs",
+      "test_ref": "scripts/platform-activation-check.test.mjs",
+      "lane": "scheduled",
+      "paths": [
+        "docs/governance/platform-activation/",
+        "docs/governance/control-catalog.json"
+      ],
+      "note": "The gate VERIFIES observations (mechanically-validated): the observation is signed, independent, bypass-tested and fresh. Producing the observation — `loom activate --platform github` querying the live platform with read-only credentials — is the adopter's; the bundle ships ZERO platform-enforced controls, so graduation passes trivially here and the negative test proves an overstated claim fails"
+    },
+    {
       "control_id": "ADAPTERS",
       "objective": "Enterprise adapters map external systems to catalog controls via signed evidence envelopes, keeping the core vendor-neutral",
       "owner_role": "platform-admin",
