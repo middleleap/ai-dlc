@@ -4,11 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The factory floor · MiddleLeap</title>
-<meta name="description" content="How Notion becomes the Loom's factory floor — teammates and agents coordinate there, and every decision comes home to git as signed evidence. Interactive companion to the 2026-07 research. MiddleLeap brand, Ink mode.">
+<meta name="description" content="How Notion becomes the Loom's factory floor — teammates and agents coordinate there, and every decision comes home to git as signed evidence. Interactive companion to the 2026-07 research. MiddleLeap brand, Ink and Paper modes.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='9' width='14' height='14' rx='2.2' fill='%23E65C2D' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+/* pre-paint theme: ?theme=paper|ink beats the saved preference; default is ink */
+(function(){try{
+  var q=/[?&]theme=(paper|ink)/.exec(location.search);
+  var m=q?q[1]:localStorage.getItem('floor-theme');
+  if(m==='paper')document.documentElement.setAttribute('data-theme','paper');
+}catch(e){}})();
+</script>
 <style>
 :root{
   --ink-0:#080808;--ink-1:#101010;--ink-2:#181817;--ink-3:#232321;--ink-4:#33322F;--ink-border:#1E1E1C;
@@ -21,13 +29,16 @@
   --info:#5D8FA6;--info-dim:rgba(93,143,166,.14);
   --serif:"Instrument Serif",Georgia,serif;--sans:"DM Sans",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;
   --ease-out:cubic-bezier(.2,0,0,1);--ease-leap:cubic-bezier(.34,1.3,.4,1);
+  --eyebrow-c:var(--ember-400);--ember-text:var(--ember-300);
+  --link-c:var(--ember-400);--link-h:var(--ember-300);
+  --shadow-2:0 4px 16px rgba(0,0,0,.45);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{background:var(--ink-0);color:var(--bone-1);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-::selection{background:var(--ember-500);color:var(--ink-0)}
-a{color:var(--ember-400);text-decoration:none}
-a:hover{color:var(--ember-300)}
+::selection{background:var(--ember-500);color:#110D0A}
+a{color:var(--link-c);text-decoration:none}
+a:hover{color:var(--link-h)}
 .wrap{max-width:1080px;margin:0 auto;padding:0 32px}
 h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--bone-0);letter-spacing:0;line-height:1.2}
 em{font-style:italic;color:var(--ember-500)}
@@ -41,7 +52,7 @@ em{font-style:italic;color:var(--ember-500)}
 
 /* header */
 header{border-bottom:1px solid var(--ink-border)}
-.headrow{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
+.headrow{display:flex;align-items:center;justify-content:space-between;padding:20px 0;flex-wrap:wrap;gap:12px}
 .brand{display:flex;align-items:center;gap:12px}
 .mark{display:inline-flex;align-items:center}
 .mark .sq{width:16px;height:16px;background:var(--bone-1);border-radius:16%}
@@ -53,7 +64,7 @@ header{border-bottom:1px solid var(--ink-border)}
 
 /* hero */
 .hero{padding:72px 0 56px}
-.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ember-400)}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--eyebrow-c)}
 .eyebrow::before{content:"// "}
 .hero h1{font-size:clamp(44px,6vw,72px);line-height:1.08;margin:18px 0 22px;max-width:900px}
 .lede{font-size:18px;color:var(--bone-2);max-width:760px}
@@ -85,7 +96,7 @@ h2:hover .anchor,.anchor:focus-visible{opacity:1}
 .g3{grid-template-columns:repeat(3,1fr)}
 .g2{grid-template-columns:repeat(2,1fr)}
 .card{background:var(--ink-2);border:1px solid var(--ink-border);padding:24px;transition:border-color .2s var(--ease-out),transform .2s var(--ease-out),box-shadow .2s var(--ease-out)}
-.card:hover{border-color:var(--ink-4);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.45)}
+.card:hover{border-color:var(--ink-4);transform:translateY(-2px);box-shadow:var(--shadow-2)}
 .card h3{font-size:20px;margin-bottom:10px}
 .card p{font-size:14px;color:var(--bone-2)}
 .card .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-3);display:block;margin-bottom:12px}
@@ -98,7 +109,7 @@ code,.mono{font-family:var(--mono);font-size:.92em;color:var(--bone-1)}
 .badge{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:2px;display:inline-flex;align-items:center;gap:7px}
 .badge::before{content:"";width:7px;height:7px;border-radius:2px;transform:rotate(45deg)}
 .badge-neutral{background:var(--ink-3);color:var(--bone-2)}.badge-neutral::before{background:var(--bone-3)}
-.badge-ember{background:var(--ember-dim);color:var(--ember-300)}.badge-ember::before{background:var(--ember-400)}
+.badge-ember{background:var(--ember-dim);color:var(--ember-text)}.badge-ember::before{background:var(--ember-400)}
 .badge-positive{background:var(--positive-dim);color:var(--positive)}.badge-positive::before{background:var(--positive)}
 .badge-caution{background:var(--caution-dim);color:var(--caution)}.badge-caution::before{background:var(--caution)}
 .badge-critical{background:var(--critical-dim);color:var(--critical-text)}.badge-critical::before{background:var(--critical)}
@@ -113,7 +124,7 @@ code,.mono{font-family:var(--mono);font-size:.92em;color:var(--bone-1)}
 .legend button{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;background:transparent;border:1px solid var(--ink-4);color:var(--bone-2);padding:9px 14px;border-radius:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s var(--ease-out)}
 .legend button::before{content:"";width:7px;height:7px;background:var(--bone-3);border-radius:2px;transform:rotate(45deg);transition:background .2s}
 .legend button:hover{border-color:var(--bone-3);color:var(--bone-1)}
-.legend button.active{border-color:var(--ember-500);color:var(--ember-300)}
+.legend button.active{border-color:var(--ember-500);color:var(--ember-text)}
 .legend button.active::before{background:var(--ember-400)}
 .descbox{margin-top:16px;border:1px solid var(--ink-border);background:var(--ink-2);padding:18px 22px;min-height:86px}
 .descbox .t{font-family:var(--serif);font-size:19px;color:var(--bone-0);margin-bottom:6px}
@@ -124,13 +135,13 @@ code,.mono{font-family:var(--mono);font-size:.92em;color:var(--bone-1)}
 .chip{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:var(--ink-2);border:1px solid var(--ink-4);color:var(--bone-1);padding:11px 16px;border-radius:0;cursor:pointer;display:inline-flex;align-items:center;gap:9px;transition:all .2s var(--ease-out)}
 .chip::before{content:"";width:7px;height:7px;background:var(--ember-500);border-radius:2px;transform:rotate(45deg)}
 .chip:hover{border-color:var(--ember-500);background:var(--ink-3)}
-.chip.open{border-color:var(--ember-500);background:var(--ember-dim);color:var(--ember-300)}
-.pop{position:absolute;z-index:40;background:var(--ink-2);border:1px solid var(--ink-4);box-shadow:0 4px 16px rgba(0,0,0,.45);padding:20px 22px;max-width:430px;display:none}
+.chip.open{border-color:var(--ember-500);background:var(--ember-dim);color:var(--ember-text)}
+.pop{position:absolute;z-index:40;background:var(--ink-2);border:1px solid var(--ink-4);box-shadow:var(--shadow-2);padding:20px 22px;max-width:430px;display:none}
 .pop.on{display:block}
 .pop .t{font-family:var(--serif);font-size:19px;color:var(--bone-0);margin-bottom:8px}
 .pop p{font-size:13.5px;color:var(--bone-2);margin-bottom:8px}
 .pop .m{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--bone-3)}
-.pop .m b{color:var(--ember-300);font-weight:500}
+.pop .m b{color:var(--ember-text);font-weight:500}
 
 /* simulator */
 .sim{border:1px solid var(--ink-border);background:var(--ink-1);padding:26px}
@@ -144,7 +155,7 @@ code,.mono{font-family:var(--mono);font-size:.92em;color:var(--bone-1)}
 .node .lab{display:block;font-size:12px;color:var(--bone-1)}
 .node:hover{border-color:var(--bone-3)}
 .node.cur{border-color:var(--ember-500);background:var(--ember-dim)}
-.node.cur .lab{color:var(--ember-300)}
+.node.cur .lab{color:var(--ember-text)}
 .node.pass{border-color:rgba(95,166,113,.5);background:var(--positive-dim)}
 .node.pass .lab{color:var(--positive)}
 .node.wait{border-color:rgba(217,160,60,.5);background:var(--caution-dim)}
@@ -205,6 +216,49 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
 .footrow{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
 .footmeta{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--bone-3);text-transform:uppercase}
 
+/* svg theme classes */
+.svg-box{fill:var(--ink-1);stroke:var(--ink-4)}
+.svg-cell{fill:var(--ink-2);stroke:var(--ink-border)}
+.svg-bar{fill:var(--ink-2);stroke:var(--ink-4)}
+.svg-title{fill:var(--bone-0)}
+.svg-sub{fill:var(--bone-3)}
+.svg-text{fill:var(--bone-1)}
+.svg-ember{fill:var(--ember-text)}
+.svg-sq{fill:var(--bone-1)}
+.svg-line{stroke:var(--bone-3)}
+.svg-arr{fill:var(--bone-3)}
+.svg-line-e{stroke:var(--ember-500)}
+.svg-arr-e{fill:var(--ember-500)}
+
+/* theme toggle (the pivot) */
+.theme{display:flex;align-items:center;gap:12px}
+.tlab{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;color:var(--bone-3);min-width:46px}
+.tgl{position:relative;width:48px;height:26px;flex:none;cursor:pointer;display:inline-block}
+.tgl input{position:absolute;opacity:0;width:1px;height:1px}
+.tgl .track{position:absolute;inset:0;background:var(--ink-3);border:1px solid var(--ink-4);border-radius:999px;transition:background .2s var(--ease-out),border-color .2s var(--ease-out)}
+.tgl .thumb{position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:5px;background:var(--bone-2);transition:left .4s var(--ease-leap),transform .4s var(--ease-leap),background .2s var(--ease-out)}
+.tgl input:checked ~ .track{background:var(--ember-600);border-color:var(--ember-500)}
+.tgl input:checked ~ .thumb{left:26px;background:#ECE9E1;transform:rotate(45deg)}
+.tgl input:focus-visible ~ .track{outline:2px solid var(--ember-400);outline-offset:2px}
+
+/* paper mode — the loom-stream light palette */
+[data-theme="paper"]{
+  --ink-0:#FAF9F5;--ink-1:#FFFFFF;--ink-2:#FFFFFF;--ink-3:#F4F2EC;--ink-4:#D6D2C8;--ink-border:#E7E4DC;
+  --bone-0:#14130F;--bone-1:#2A2925;--bone-2:#6E6A60;--bone-3:#6E6A60;
+  --ember-dim:rgba(206,69,27,.10);
+  --positive:#2F7048;--positive-dim:rgba(47,112,72,.12);
+  --caution:#8F6614;--caution-dim:rgba(143,102,20,.12);
+  --critical:#B23434;--critical-dim:rgba(178,52,52,.12);--critical-text:#B23434;
+  --info:#3A6E86;--info-dim:rgba(58,110,134,.12);
+  --eyebrow-c:#6E6A60;--ember-text:#A83614;--link-c:#A83614;--link-h:#CE451B;
+  --shadow-2:0 1px 2px rgba(20,19,15,.05),0 8px 24px rgba(20,19,15,.09);
+}
+[data-theme="paper"] em{color:var(--ember-600)}
+[data-theme="paper"] .alert-caution{border-color:rgba(143,102,20,.35)}
+[data-theme="paper"] .alert-critical{border-color:rgba(178,52,52,.35)}
+[data-theme="paper"] .alert-info{border-color:rgba(58,110,134,.35)}
+[data-theme="paper"] .btn-primary:hover{box-shadow:0 4px 24px rgba(230,92,45,.35)}
+
 @media(max-width:1040px){.dotnav{display:none}}
 @media(max-width:900px){.g3,.xgrid,.flow{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:720px){.g3,.g2,.xgrid,.flow,.simgrid{grid-template-columns:1fr}.hero{padding:52px 0 40px}.fact{border-right:0;border-bottom:1px solid var(--ink-border)}}
@@ -221,7 +275,15 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
       <span class="mark" aria-hidden="true"><span class="sq"></span><span class="dm"></span></span>
       <span class="wordmark">Middle<b>Leap</b></span>
     </div>
-    <span class="headtag">Research · Notion × The Loom</span>
+    <div class="theme">
+      <span class="headtag">Research · Notion × The Loom</span>
+      <label class="tgl" title="Switch between ink and paper mode">
+        <input type="checkbox" id="themetgl" aria-label="Switch to paper mode">
+        <span class="track" aria-hidden="true"></span>
+        <span class="thumb" aria-hidden="true"></span>
+      </label>
+      <span class="tlab" id="themelab" aria-hidden="true">INK</span>
+    </div>
   </div>
 </header>
 
@@ -264,56 +326,56 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
       <svg viewBox="0 0 960 470" role="img" aria-label="Map of the integration: git as system of record, Notion as factory floor, connected by an adapter seam">
         <!-- git panel -->
         <g class="part" data-part="git" tabindex="0" role="button" aria-label="Git — the system of record">
-          <rect x="20" y="36" width="380" height="330" fill="#101010" stroke="#33322F"/>
-          <text x="40" y="68" font-family="JetBrains Mono,monospace" font-size="13" letter-spacing="2" fill="#ECE9E1">GIT — THE LOOM</text>
-          <text x="40" y="88" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" fill="#87847D">SYSTEM OF RECORD</text>
-          <rect x="40" y="106" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="56" y="134" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">D1–D9 · Q1–Q5 · PA gates</text>
-          <rect x="40" y="162" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="56" y="190" font-family="JetBrains Mono,monospace" font-size="11" fill="#DEDBD4">docs/governance — passports · envelopes · holds</text>
-          <rect x="40" y="218" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="56" y="246" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">CODEOWNERS + branch protection</text>
-          <rect x="40" y="274" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="56" y="302" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">Sealed evidence · decision log</text>
+          <rect x="20" y="36" width="380" height="330" class="svg-box"/>
+          <text x="40" y="68" font-family="JetBrains Mono,monospace" font-size="13" letter-spacing="2" class="svg-title">GIT — THE LOOM</text>
+          <text x="40" y="88" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" class="svg-sub">SYSTEM OF RECORD</text>
+          <rect x="40" y="106" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="134" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">D1–D9 · Q1–Q5 · PA gates</text>
+          <rect x="40" y="162" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="190" font-family="JetBrains Mono,monospace" font-size="11" class="svg-text">docs/governance — passports · envelopes · holds</text>
+          <rect x="40" y="218" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="246" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">CODEOWNERS + branch protection</text>
+          <rect x="40" y="274" width="340" height="46" class="svg-cell"/>
+          <text x="56" y="302" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Sealed evidence · decision log</text>
         </g>
         <!-- notion panel -->
         <g class="part" data-part="notion" tabindex="0" role="button" aria-label="Notion — the factory floor">
-          <rect x="560" y="36" width="380" height="330" fill="#101010" stroke="#33322F"/>
-          <text x="580" y="68" font-family="JetBrains Mono,monospace" font-size="13" letter-spacing="2" fill="#ECE9E1">NOTION — THE FACTORY FLOOR</text>
-          <text x="580" y="88" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" fill="#87847D">PROJECTION + CONVERSATION</text>
-          <rect x="580" y="106" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="596" y="134" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">Board over the backlog</text>
-          <rect x="580" y="162" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="596" y="190" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">Approval pages + role inboxes</text>
-          <rect x="580" y="218" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="596" y="246" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">Threads bound to artifacts</text>
-          <rect x="580" y="274" width="340" height="46" fill="#181817" stroke="#1E1E1C"/>
-          <text x="596" y="302" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">Agent queue mirror</text>
+          <rect x="560" y="36" width="380" height="330" class="svg-box"/>
+          <text x="580" y="68" font-family="JetBrains Mono,monospace" font-size="13" letter-spacing="2" class="svg-title">NOTION — THE FACTORY FLOOR</text>
+          <text x="580" y="88" font-family="JetBrains Mono,monospace" font-size="10.5" letter-spacing="1.5" class="svg-sub">PROJECTION + CONVERSATION</text>
+          <rect x="580" y="106" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="134" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Board over the backlog</text>
+          <rect x="580" y="162" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="190" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Approval pages + role inboxes</text>
+          <rect x="580" y="218" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="246" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Threads bound to artifacts</text>
+          <rect x="580" y="274" width="340" height="46" class="svg-cell"/>
+          <text x="596" y="302" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">Agent queue mirror</text>
         </g>
         <!-- seam -->
         <g class="part" data-part="seam" tabindex="0" role="button" aria-label="The adapter seam">
-          <text x="480" y="68" font-family="JetBrains Mono,monospace" font-size="11" letter-spacing="2" fill="#F0722E" text-anchor="middle">THE SEAM</text>
-          <line x1="410" y1="150" x2="546" y2="150" stroke="#87847D" stroke-width="1.5"/>
-          <path d="M546 150 l-9 -5 v10 z" fill="#87847D"/>
-          <text x="480" y="138" font-family="JetBrains Mono,monospace" font-size="10" fill="#A8A59E" text-anchor="middle">PROJECTION · READ-ONLY</text>
+          <text x="480" y="68" font-family="JetBrains Mono,monospace" font-size="11" letter-spacing="2" text-anchor="middle" class="svg-ember">THE SEAM</text>
+          <line x1="410" y1="150" x2="546" y2="150" stroke-width="1.5" class="svg-line"/>
+          <path d="M546 150 l-9 -5 v10 z" class="svg-arr"/>
+          <text x="480" y="138" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">PROJECTION · READ-ONLY</text>
           <rect x="468" y="188" width="24" height="24" fill="#E65C2D" transform="rotate(45 480 200)" rx="4"/>
-          <line x1="550" y1="260" x2="414" y2="260" stroke="#F0722E" stroke-width="1.5"/>
-          <path d="M414 260 l9 -5 v10 z" fill="#F0722E"/>
-          <text x="480" y="248" font-family="JetBrains Mono,monospace" font-size="10" fill="#F58F55" text-anchor="middle">SIGNED ENVELOPE · BY PR</text>
-          <text x="480" y="292" font-family="JetBrains Mono,monospace" font-size="10" fill="#87847D" text-anchor="middle">adapter contract</text>
-          <text x="480" y="308" font-family="JetBrains Mono,monospace" font-size="10" fill="#87847D" text-anchor="middle">HG-0008</text>
+          <line x1="550" y1="260" x2="414" y2="260" stroke-width="1.5" class="svg-line-e"/>
+          <path d="M414 260 l9 -5 v10 z" class="svg-arr-e"/>
+          <text x="480" y="248" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-ember">SIGNED ENVELOPE · BY PR</text>
+          <text x="480" y="292" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">adapter contract</text>
+          <text x="480" y="308" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">HG-0008</text>
         </g>
         <!-- humans -->
         <g class="part" data-part="humans" tabindex="0" role="button" aria-label="Humans — they dispose">
-          <rect x="20" y="396" width="380" height="52" fill="#181817" stroke="#33322F"/>
-          <rect x="42" y="416" width="11" height="11" fill="#DEDBD4" rx="2"/>
-          <text x="68" y="427" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">HUMANS — approve at the gates · dispose</text>
+          <rect x="20" y="396" width="380" height="52" class="svg-bar"/>
+          <rect x="42" y="416" width="11" height="11" rx="2" class="svg-sq"/>
+          <text x="68" y="427" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">HUMANS — approve at the gates · dispose</text>
         </g>
         <!-- agents -->
         <g class="part" data-part="agents" tabindex="0" role="button" aria-label="Agents — they propose">
-          <rect x="560" y="396" width="380" height="52" fill="#181817" stroke="#33322F"/>
+          <rect x="560" y="396" width="380" height="52" class="svg-bar"/>
           <rect x="582" y="415" width="11" height="11" fill="#E65C2D" transform="rotate(45 587.5 420.5)" rx="2"/>
-          <text x="610" y="427" font-family="JetBrains Mono,monospace" font-size="12" fill="#DEDBD4">AGENTS — work the queue · propose, never dispose</text>
+          <text x="610" y="427" font-family="JetBrains Mono,monospace" font-size="12" class="svg-text">AGENTS — work the queue · propose, never dispose</text>
         </g>
       </svg>
     </div>
@@ -440,6 +502,21 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
 </footer>
 
 <script>
+/* ---------- theme toggle ---------- */
+(function(){
+  var inp=document.getElementById('themetgl'),lab=document.getElementById('themelab');
+  function apply(m,persist){
+    document.documentElement.setAttribute('data-theme',m==='paper'?'paper':'ink');
+    if(m!=='paper')document.documentElement.removeAttribute('data-theme');
+    inp.checked=(m==='paper');
+    lab.textContent=m==='paper'?'PAPER':'INK';
+    inp.setAttribute('aria-label','Switch to '+(m==='paper'?'ink':'paper')+' mode');
+    if(persist){try{localStorage.setItem('floor-theme',m)}catch(e){}}
+  }
+  apply(document.documentElement.getAttribute('data-theme')==='paper'?'paper':'ink',false);
+  inp.addEventListener('change',function(){apply(inp.checked?'paper':'ink',true);});
+})();
+
 /* ---------- map ---------- */
 (function(){
   var DESC={
