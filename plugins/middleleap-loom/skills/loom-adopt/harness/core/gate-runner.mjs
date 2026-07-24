@@ -19,7 +19,10 @@ import process from 'node:process';
 import { aggregateRequirements, requiredBy } from './compiled-requirements.mjs';
 import { pathToFileURL } from 'node:url';
 
-export const LANES = ['pr', 'release', 'scheduled'];
+// rc.11 (WS1.4): the lane model extends from pr|release|scheduled to cover the artifact's life —
+// `build` produces the immutable artifact + provenance, `deploy` verifies the deployed digest is
+// the authorized one. Release-evidence checks stop masquerading as PR-source checks.
+export const LANES = ['pr', 'build', 'release', 'deploy', 'scheduled'];
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
 
 const runnable = (c) => typeof c.mechanism_ref === 'string' && c.mechanism_ref.endsWith('.mjs');

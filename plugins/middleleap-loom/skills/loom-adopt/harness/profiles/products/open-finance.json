@@ -1,0 +1,17 @@
+{
+  "profile": "open-finance",
+  "kind": "product",
+  "_comment": "Open Finance product (data sharing / payment initiation via a regulated API hub). Compiles consent-lifecycle, TPP due-diligence and FAPI-grade security controls specific to third-party access.",
+  "requirements": {
+    "medium": {
+      "approver_roles": ["information-security", "data-protection"],
+      "pa1_sections": ["open-finance-scope-and-consent"],
+      "pa2_sections": ["consent-lifecycle", "tpp-liability-model", "strong-customer-authentication"],
+      "capabilities": {
+        "consent_management": { "required": true },
+        "tpp_due_diligence": { "required": true },
+        "data_risk_register": { "required": true, "minimum_version": "3.1", "institution_owned": true }
+      }
+    }
+  }
+}

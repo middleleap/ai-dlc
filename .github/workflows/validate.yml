@@ -49,6 +49,9 @@ jobs:
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
           cp "$H/product-eval-example/product-evals.json" "$A/docs/governance/product-evals.json"
+          # rc.11 WS1: the immutable release subject binds source→artifact→evals→evidence by one
+          # digest. Mounts at the top governance level (peer of product-evals.json).
+          cp "$H/evidence-example/release-subject.json" "$A/docs/governance/release-subject.json"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
           # Deliberate ADOPT completions the installer never fakes: the manifest ships
           # services/example-service.json with unparseable ADOPT dates; the dry-run exercises a
@@ -66,6 +69,25 @@ jobs:
           # The ADOPT step: replace the placeholder with a real team, as an adopter would.
           sed -i 's|@your-org/|@dryrun-bank/|g' CODEOWNERS
           node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+          # rc.12 WS2: model `loom activate` — generate a today-dated, independently-signed
+          # observation that the live platform refused a bypass, and register the observer key. Done
+          # BEFORE the base commit so the record + registry entry are TRACKED — the negative-bypass
+          # section restores them with `git checkout --` and survives its `git reset --hard`.
+          # (A committed static record would age out; generating per-run keeps it perpetually fresh
+          # and faithful to how a real observation is produced.)
+          node -e '
+            const {generateKeyPairSync,sign,createHash}=require("crypto"),fs=require("fs");
+            const canonical=(v)=>Array.isArray(v)?`[${v.map(canonical).join(",")}]`:(v&&typeof v==="object")?`{${Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canonical(v[k])).join(",")}}`:JSON.stringify(v);
+            const {publicKey,privateKey}=generateKeyPairSync("ed25519"),today=new Date().toISOString();
+            const rec={platform:"github",repository:"dryrun-bank/service",satisfies_control:"HG-0001",mechanism:"branch_protection",observation:{required_status_checks:["gates"],enforce_admins:true,allow_force_pushes:false,required_pull_request_reviews:{required_approving_review_count:1,require_code_owner_reviews:true}},bypass_test:{attempted:"direct push to main by a builder",result:"rejected",tested_at:today},observer_identity:"padmin-zoe",observed_at:today};
+            const {attestation,...rest}=rec,h=createHash("sha256").update(canonical(rest)).digest("hex");
+            rec.attestation={issuer:"demo-platform-observer",signature:sign(null,Buffer.from(h,"utf8"),privateKey).toString("base64")};
+            fs.mkdirSync("docs/governance/platform-activation",{recursive:true});
+            fs.writeFileSync("docs/governance/platform-activation/github-branch-protection.json",JSON.stringify(rec,null,2));
+            const reg=JSON.parse(fs.readFileSync("docs/governance/attestation-issuers.json"));
+            reg.issuers.push({id:"demo-platform-observer",mechanism:"ed25519",verify:{public_key:publicKey.export({type:"spki",format:"pem"}).toString()}});
+            fs.writeFileSync("docs/governance/attestation-issuers.json",JSON.stringify(reg,null,2));
+          '
           # Q1b + the secrets history scan diff against git — give the adopted layout a history.
           git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
           git add -A && git commit -qm base
@@ -82,6 +104,8 @@ jobs:
           node scripts/secrets-scan.mjs
           node scripts/supply-chain-check.mjs
           node scripts/model-provenance-check.mjs
+          node scripts/release-subject-check.mjs       # rc.11 WS1 — coherent immutable artifact subject
+          node scripts/release-attestation-check.mjs    # rc.11 WS1 — source→artifact→evals→anchor bound to one digest
           node scripts/evidence-seal-check.mjs
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
@@ -89,6 +113,13 @@ jobs:
           node scripts/decision-log-check.mjs
           node scripts/adapter-check.mjs
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
+          node scripts/platform-activation-check.mjs   # rc.12 WS2 — observation is signed, independent, bypass-tested, fresh; no overstated platform-enforced claim (record generated + committed above)
+          node scripts/config-reconciliation-check.mjs  # rc.12 WS2.4 — observed config matches the approved baseline; no identity drift
+          # rc.13 WS3 (closes F5): the data-risk register is MANDATORY-WHEN-COMPILED. The high-tier
+          # change-example compiles the data_risk_register capability, so D6 requires the register
+          # with NO --require-register flag — a CI-config change can no longer weaken a regulated
+          # build. Prove the derivation is live in the adopted layout.
+          node -e 'import("./discovery/gates/validate.mjs").then(m=>{if(!m.registerMandatory(".",{flag:false})){console.error("::error::F5 regression — the compiled plan requires the data-risk register but registerMandatory returned false");process.exit(1)}console.log("F5: data-risk register is mandatory-when-compiled (no flag needed)")})'
           # rc.7: product evals (commit-bound); the example's evaluated_commit is stamped to HEAD
           # as a real adopter's CI would, then verified against the shipping commit.
           HEAD_SHA=$(git rev-parse HEAD)
@@ -201,6 +232,54 @@ jobs:
             echo "::error::assurance-cycle gate passed a FAIL step with no risk acceptance"; exit 1
           fi
           git checkout -- docs/governance/assurance-cycles/AC-2026-W29.json
+          # 15 · rc.11 WS1 — a symbolic release_commit must fail the seal (no binding subject, F2).
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));s.release_commit="release-v-demo";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/evidence-seal-check.mjs; then
+            echo "::error::evidence-seal gate accepted a symbolic release_commit"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/manifest.json
+          # 16 · rc.11 WS1 — reusing the evidence for a DIFFERENT artifact digest must fail the
+          #      cross-binding (source→artifact no longer agree).
+          node -e 'const fs=require("fs");const p="docs/governance/release-subject.json";const s=JSON.parse(fs.readFileSync(p));const d="sha256:"+"a".repeat(64);s.artifact.digest=d;s.artifact.uri="registry.example.invalid/credit-service@"+d;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/release-attestation-check.mjs; then
+            echo "::error::release-attestation gate accepted evidence for a different artifact digest"; exit 1
+          fi
+          git checkout -- docs/governance/release-subject.json
+          # 17 · rc.11 WS1 — a product eval bound to a commit but NOT the built artifact must fail
+          #      (closes the F1 self-reference: the eval must name the immutable digest).
+          node -e 'const fs=require("fs");const p="docs/governance/product-evals.json";const s=JSON.parse(fs.readFileSync(p));for(const pr of s.products)delete pr.eval.evaluated_artifact;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/release-attestation-check.mjs; then
+            echo "::error::release-attestation gate accepted a commit-only eval not bound to the built artifact"; exit 1
+          fi
+          git checkout -- docs/governance/product-evals.json
+          # 18 · rc.12 WS2 — a catalog control claiming platform-enforced with no verified
+          #      observation must fail graduation (the state of record cannot overstate to the
+          #      platform tier without a receipt).
+          node -e 'const fs=require("fs");const p="docs/governance/control-catalog.json";const s=JSON.parse(fs.readFileSync(p));s.controls.find(c=>c.control_id==="HG-0002").state="platform-enforced";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/platform-activation-check.mjs; then
+            echo "::error::platform-activation gate let a control claim platform-enforced with no verified observation"; exit 1
+          fi
+          git checkout -- docs/governance/control-catalog.json
+          # 19 · rc.12 WS2.4 — weakening the live config (force-push re-enabled) must be caught as
+          #      drift, and while drifted the routine lane must be suspended.
+          node -e 'const fs=require("fs");const p="docs/governance/platform-activation/github-branch-protection.json";const s=JSON.parse(fs.readFileSync(p));s.observation.allow_force_pushes=true;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/config-reconciliation-check.mjs; then
+            echo "::error::config-reconciliation gate missed a control-plane weakening (force-push re-enabled)"; exit 1
+          fi
+          git checkout -- docs/governance/platform-activation/github-branch-protection.json
+          # 20 · rc.12 WS2.4 — a suspended routine envelope must fail the routine lane (auto-merge
+          #      cannot ride a drifted control plane).
+          node -e 'const fs=require("fs");const p="docs/governance/routine-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.suspended=true;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/routine-change-check.mjs --assert-routine --base main; then
+            echo "::error::routine lane auto-merged while SUSPENDED"; exit 1
+          fi
+          git checkout -- docs/governance/routine-envelope.json
+          # 21 · rc.13 WS3 (F5) — the register requirement is DERIVED, not hardcoded: with the
+          #      compiling change removed, registerMandatory flips to false (so dropping the CLI
+          #      flag genuinely tracks compiled policy rather than silently always-requiring).
+          mv docs/governance/changes/CHG-2026-0042 /tmp/chg-f5
+          node -e 'import("./discovery/gates/validate.mjs").then(m=>{if(m.registerMandatory(".",{flag:false})){console.error("::error::register still mandatory with no compiling change — it is hardcoded, not derived from policy");process.exit(1)}console.log("F5: register correctly not mandatory once no compiled plan requires it")})'
+          mv /tmp/chg-f5 docs/governance/changes/CHG-2026-0042
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

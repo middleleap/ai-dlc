@@ -1,0 +1,15 @@
+{
+  "profile": "islamic-product",
+  "kind": "product",
+  "_comment": "Islamic (Shari'ah-compliant) financial product. Automatically compiles Shari'ah governance — an ISSC-approved structure, HSA alignment — that a conventional product never requires. Composes with any base product profile (a Murabaha consumer-lending product carries BOTH consumer-lending and islamic-product requirements).",
+  "requirements": {
+    "medium": {
+      "approver_roles": ["shariah-board", "shariah-compliance"],
+      "pa1_sections": ["shariah-structure"],
+      "pa2_sections": ["shariah-audit", "profit-rate-structure", "purification-of-non-compliant-income"],
+      "capabilities": {
+        "shariah_governance": { "required": true, "institution_owned": true }
+      }
+    }
+  }
+}

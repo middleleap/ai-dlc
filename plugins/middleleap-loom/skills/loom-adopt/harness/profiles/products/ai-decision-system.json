@@ -1,0 +1,16 @@
+{
+  "profile": "ai-decision-system",
+  "kind": "product",
+  "_comment": "A material AI-assisted decision system (a model whose output materially affects a customer outcome). Compiles model-risk at a raised floor, human-oversight, and monitoring controls regardless of the surrounding product type.",
+  "requirements": {
+    "medium": {
+      "approver_roles": ["model-validator"],
+      "pa2_sections": ["human-oversight", "explainability-and-contestability"],
+      "capabilities": {
+        "model_risk": { "required": true, "minimum_tier": "high" },
+        "human_oversight": { "required": true },
+        "data_risk_register": { "required": true, "minimum_version": "3.1", "institution_owned": true }
+      }
+    }
+  }
+}

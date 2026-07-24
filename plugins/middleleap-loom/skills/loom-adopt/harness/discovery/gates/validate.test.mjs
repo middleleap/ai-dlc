@@ -5,7 +5,40 @@ import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from 'no
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateRun } from './validate.mjs';
+import { mkdirSync } from 'node:fs';
+import { validateRun, registerMandatory } from './validate.mjs';
+
+// rc.13 WS3 (F5) — the register requirement is DERIVED from compiled policy, not a CLI flag.
+function repoWithChange(caps) {
+  const dir = mkdtempSync(join(tmpdir(), 'rm-'));
+  const base = join(dir, 'docs/governance/changes/CHG-1');
+  mkdirSync(base, { recursive: true });
+  writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: 'CHG-1', current_state: 'in-delivery', control_plan: 'control-plan.json' }));
+  writeFileSync(join(base, 'control-plan.json'), JSON.stringify({ required_capabilities: caps }));
+  return dir;
+}
+
+test('registerMandatory — a compiled data_risk_register requirement makes it mandatory with NO flag (F5)', () => {
+  const dir = repoWithChange({ data_risk_register: { required: true } });
+  try { assert.equal(registerMandatory(dir, { flag: false }), true); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('registerMandatory — dropping the flag does NOT weaken a compiled requirement', () => {
+  const dir = repoWithChange({ data_risk_register: { required: true } });
+  try {
+    assert.equal(registerMandatory(dir, { flag: false }), true); // flag absent, still mandatory
+    assert.equal(registerMandatory(dir, { flag: true }), true);  // flag present, still mandatory
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('registerMandatory — a generic repo (no compiled requirement) is not mandatory unless the flag tightens it', () => {
+  const dir = repoWithChange({}); // no capability required
+  try {
+    assert.equal(registerMandatory(dir, { flag: false }), false); // generic — skip is allowed
+    assert.equal(registerMandatory(dir, { flag: true }), true);   // manual tightening still works
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 // The D6 register resolves in either layout: a mounted register (adopted repo) or the bundled

@@ -13,6 +13,7 @@ import {
 } from './lib.mjs';
 import { loadRegister } from './registers.mjs';
 import { parseBrand, checkVisualHtml, checkVisualMarkdown, checkVisualOoxml, MARKER } from './brand.mjs';
+import { aggregateRequirements, capabilityRequired } from '../../core/compiled-requirements.mjs';
 
 const OOXML_EXTS = ['.xlsx', '.docx', '.pptx'];
 
@@ -228,6 +229,18 @@ export function validateRun(runDir, opts = {}) {
   return { runDir, ok, gates };
 }
 
+/**
+ * rc.13 WS3 (closes F5): is the data-risk register MANDATORY? Derived from compiled policy — if any
+ * governed change's compiled plan requires the `data_risk_register` capability (an institution or
+ * regulated profile is in its envelope), the register is mandatory and a missing one FAILS D6 with
+ * NO flag present. The --require-register flag / LOOM_REQUIRE_REGISTER env survive only as a manual
+ * TIGHTENING: `flag OR compiled` can force the requirement on, but can never turn a compiled one
+ * off. A CI-config change can no longer weaken a regulated build.
+ */
+export function registerMandatory(cwd, { flag = false } = {}) {
+  return flag || capabilityRequired(aggregateRequirements(cwd), 'data_risk_register');
+}
+
 // ---- CLI -------------------------------------------------------------------
 function main(argv) {
   const args = argv.slice(2);
@@ -243,8 +256,7 @@ function main(argv) {
     registerDir: regIdx >= 0 ? args[regIdx + 1] : undefined,
     register: args.includes('--no-register') ? null : undefined,
     brandPath: brandIdx >= 0 ? args[brandIdx + 1] : undefined,
-    // Under a regulated profile the register is mandatory: a missing one FAILS D6 (not skip).
-    requireRegister: args.includes('--require-register') || process.env.LOOM_REQUIRE_REGISTER === '1',
+    requireRegister: registerMandatory(process.cwd(), { flag: args.includes('--require-register') || process.env.LOOM_REQUIRE_REGISTER === '1' }),
   };
   const result = validateRun(runDir, opts);
   if (json) {

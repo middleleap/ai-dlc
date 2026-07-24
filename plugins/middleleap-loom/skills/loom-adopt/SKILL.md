@@ -46,6 +46,7 @@ are repo-root-relative.
 | `hooks/settings.hooks.json` | `.claude/settings.json` | Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand) |
 | `governance/runbooks/*.md` | `docs/governance/runbooks/` | Seven adoption runbooks + the supervised-pilot playbook |
 | `governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | How to activate branch protection, IAM, the routine lane |
+| `governance/routine-controller.yml` | `docs/governance/routine-controller.yml` | Reference routine auto-merge controller — separated bot identity, gated on routine-qualified + config-reconciliation (rc.12 WS2.3) |
 | `governance/CODEOWNERS.template` | `CODEOWNERS` | The control-plane ownership map (replace @your-org/… — the gate fails until you do) |
 | `governance/control-catalog.template.json` | `docs/governance/control-catalog.json` | The machine-readable control state of record |
 | `governance/identities.template.json` | `docs/governance/identities.json` | The identity registry (approvals resolve against it) |
@@ -56,6 +57,7 @@ are repo-root-relative.
 | `governance/service-readiness.template.json` | `docs/governance/services/example-service.json` | Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills) |
 | `governance/product-evals.template.json` | `docs/governance/product-evals.json` | Product-outcome evals (discovery-linked, measures scored, commit-bound) |
 | `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | The second-line-owned routine-change envelope (HG-0013) |
+| `governance/config-baseline.template.json` | `docs/governance/config-baseline.json` | The approved control-plane configuration reconciled against live observations (rc.12 WS2.4) |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | Token-spend ledger (a report, never a merge gate) |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | The neutral adapter contract |
 | `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |

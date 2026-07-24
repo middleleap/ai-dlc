@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { compile, loadProfiles, resolveBindings, canonical, planHash, TIERS } from './policy-compiler.mjs';
+import { compile, loadProfiles, resolveBindings, canonical, planHash, TIERS, mergeCapabilities } from './policy-compiler.mjs';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const profile = (p) => JSON.parse(readFileSync(`${HARNESS}/profiles/${p}.json`, 'utf8'));
@@ -39,6 +39,63 @@ test('PROPERTY — monotonicity: a higher tier only ever ADDS requirements, for 
       }
     }
   }
+});
+
+test('rc.13 WS3 — a high-tier regulated change compiles the data_risk_register + model_risk capabilities', () => {
+  const { plan } = compile(envelope({ risk_tier: 'high' }), ALL.slice(0, 3));
+  assert.equal(plan.required_capabilities.data_risk_register.required, true);
+  assert.equal(plan.required_capabilities.data_risk_register.minimum_version, '3.1');
+  assert.equal(plan.required_capabilities.data_risk_register.institution_owned, true);
+  assert.equal(plan.required_capabilities.model_risk.required, true);
+});
+
+test('rc.13 WS3 — a low-tier software change does NOT compile the register capability (light path)', () => {
+  const { plan } = compile(envelope({ change_type: 'software-change', risk_tier: 'low', required_profiles: ['regulated-bank'] }), [ALL[0]]);
+  assert.ok(!plan.required_capabilities.data_risk_register, 'a low-tier change should not require the data-risk register');
+});
+
+test('rc.13 WS3 — mergeCapabilities is strongest-wins: version max, tier max, required/institution_owned OR', () => {
+  const m = mergeCapabilities({}, { x: { required: false, minimum_version: '3.0', minimum_tier: 'low' } });
+  mergeCapabilities(m, { x: { required: true, minimum_version: '3.10', minimum_tier: 'high', institution_owned: true } });
+  assert.deepEqual(m.x, { required: true, minimum_version: '3.10', minimum_tier: 'high', institution_owned: true });
+});
+
+test('PROPERTY — capabilities are monotonic: never dropped and attributes only strengthen up the tiers', () => {
+  let prev = null;
+  for (const tier of TIERS) {
+    const { plan } = compile(envelope({ risk_tier: tier, change_type: tier === 'low' ? 'software-change' : 'new-product' }), ALL.slice(0, 3));
+    if (prev) {
+      for (const [name, spec] of Object.entries(prev.required_capabilities)) {
+        assert.ok(plan.required_capabilities[name], `${tier} dropped capability ${name}`);
+        if (spec.required) assert.equal(plan.required_capabilities[name].required, true, `${tier} un-required ${name}`);
+      }
+    }
+    prev = plan;
+  }
+});
+
+test('rc.13 WS3.3 — product-type profiles compile DIFFERENT capabilities', () => {
+  const compileWith = (names) => compile(
+    envelope({ risk_tier: 'high', required_profiles: ['regulated-bank', 'uae-bank', ...names] }),
+    [profile('regulated-bank'), profile('jurisdictions/uae-bank'), ...names.map((n) => profile(`products/${n}`))],
+  ).plan.required_capabilities;
+
+  const islamic = compileWith(['islamic-product']);
+  assert.equal(islamic.shariah_governance.required, true, 'an Islamic product must require Shari’ah governance');
+
+  const ai = compileWith(['ai-decision-system']);
+  assert.equal(ai.human_oversight.required, true, 'an AI decision system must require human oversight');
+  assert.equal(ai.model_risk.minimum_tier, 'high', 'an AI decision system raises the model-risk floor');
+
+  const of = compileWith(['open-finance']);
+  assert.equal(of.consent_management.required, true);
+  assert.equal(of.tpp_due_diligence.required, true);
+  assert.ok(!of.shariah_governance, 'a non-Islamic product does not require Shari’ah governance');
+
+  // Composition: an Islamic consumer-lending product carries BOTH profiles' capabilities.
+  const both = compileWith(['consumer-lending', 'islamic-product']);
+  assert.equal(both.consumer_credit_risk.required, true);
+  assert.equal(both.shariah_governance.required, true);
 });
 
 test('an unclassified change is blocked', () => {

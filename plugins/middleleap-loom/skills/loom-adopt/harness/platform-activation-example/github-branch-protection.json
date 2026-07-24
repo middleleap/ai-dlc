@@ -1,0 +1,24 @@
+{
+  "_comment": "REFERENCE SHAPE (rc.12 · WS2) — a platform-activation observation. attestation.signature is an ADOPT placeholder; a real record is produced by `loom activate --platform github` querying the live platform and signed by your observer's registered ed25519 key (an identity OUTSIDE the coding agent's write authority). observed_at / tested_at must be fresh. See README.md.",
+  "platform": "github",
+  "repository": "your-org/your-service",
+  "satisfies_control": "HG-0001",
+  "mechanism": "branch_protection",
+  "observation": {
+    "required_status_checks": ["gates"],
+    "enforce_admins": true,
+    "allow_force_pushes": false,
+    "required_pull_request_reviews": { "required_approving_review_count": 1, "require_code_owner_reviews": true }
+  },
+  "bypass_test": {
+    "attempted": "direct push to main by a builder identity",
+    "result": "rejected",
+    "tested_at": "ADOPT-run-loom-activate"
+  },
+  "observer_identity": "padmin-zoe",
+  "observed_at": "ADOPT-run-loom-activate",
+  "attestation": {
+    "issuer": "demo-platform-observer",
+    "signature": "ADOPT-signed-by-your-observer-key"
+  }
+}
