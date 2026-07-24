@@ -69,6 +69,25 @@ jobs:
           # The ADOPT step: replace the placeholder with a real team, as an adopter would.
           sed -i 's|@your-org/|@dryrun-bank/|g' CODEOWNERS
           node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+          # rc.12 WS2: model `loom activate` — generate a today-dated, independently-signed
+          # observation that the live platform refused a bypass, and register the observer key. Done
+          # BEFORE the base commit so the record + registry entry are TRACKED — the negative-bypass
+          # section restores them with `git checkout --` and survives its `git reset --hard`.
+          # (A committed static record would age out; generating per-run keeps it perpetually fresh
+          # and faithful to how a real observation is produced.)
+          node -e '
+            const {generateKeyPairSync,sign,createHash}=require("crypto"),fs=require("fs");
+            const canonical=(v)=>Array.isArray(v)?`[${v.map(canonical).join(",")}]`:(v&&typeof v==="object")?`{${Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canonical(v[k])).join(",")}}`:JSON.stringify(v);
+            const {publicKey,privateKey}=generateKeyPairSync("ed25519"),today=new Date().toISOString();
+            const rec={platform:"github",repository:"dryrun-bank/service",satisfies_control:"HG-0001",mechanism:"branch_protection",observation:{required_status_checks:["gates"],enforce_admins:true,allow_force_pushes:false,required_pull_request_reviews:{required_approving_review_count:1,require_code_owner_reviews:true}},bypass_test:{attempted:"direct push to main by a builder",result:"rejected",tested_at:today},observer_identity:"padmin-zoe",observed_at:today};
+            const {attestation,...rest}=rec,h=createHash("sha256").update(canonical(rest)).digest("hex");
+            rec.attestation={issuer:"demo-platform-observer",signature:sign(null,Buffer.from(h,"utf8"),privateKey).toString("base64")};
+            fs.mkdirSync("docs/governance/platform-activation",{recursive:true});
+            fs.writeFileSync("docs/governance/platform-activation/github-branch-protection.json",JSON.stringify(rec,null,2));
+            const reg=JSON.parse(fs.readFileSync("docs/governance/attestation-issuers.json"));
+            reg.issuers.push({id:"demo-platform-observer",mechanism:"ed25519",verify:{public_key:publicKey.export({type:"spki",format:"pem"}).toString()}});
+            fs.writeFileSync("docs/governance/attestation-issuers.json",JSON.stringify(reg,null,2));
+          '
           # Q1b + the secrets history scan diff against git — give the adopted layout a history.
           git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
           git add -A && git commit -qm base
@@ -94,24 +113,7 @@ jobs:
           node scripts/decision-log-check.mjs
           node scripts/adapter-check.mjs
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
-          # rc.12 WS2: model `loom activate` — generate a today-dated, independently-signed
-          # observation that the live platform refused a bypass, register the observer key, then
-          # verify it. (A committed signed record would age out; this stays perpetually fresh and
-          # is faithful to how a real observation is produced.)
-          node -e '
-            const {generateKeyPairSync,sign,createHash}=require("crypto"),fs=require("fs");
-            const canonical=(v)=>Array.isArray(v)?`[${v.map(canonical).join(",")}]`:(v&&typeof v==="object")?`{${Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canonical(v[k])).join(",")}}`:JSON.stringify(v);
-            const {publicKey,privateKey}=generateKeyPairSync("ed25519"),today=new Date().toISOString();
-            const rec={platform:"github",repository:"dryrun-bank/service",satisfies_control:"HG-0001",mechanism:"branch_protection",observation:{required_status_checks:["gates"],enforce_admins:true,allow_force_pushes:false,required_pull_request_reviews:{required_approving_review_count:1,require_code_owner_reviews:true}},bypass_test:{attempted:"direct push to main by a builder",result:"rejected",tested_at:today},observer_identity:"padmin-zoe",observed_at:today};
-            const {attestation,...rest}=rec,h=createHash("sha256").update(canonical(rest)).digest("hex");
-            rec.attestation={issuer:"demo-platform-observer",signature:sign(null,Buffer.from(h,"utf8"),privateKey).toString("base64")};
-            fs.mkdirSync("docs/governance/platform-activation",{recursive:true});
-            fs.writeFileSync("docs/governance/platform-activation/github-branch-protection.json",JSON.stringify(rec,null,2));
-            const reg=JSON.parse(fs.readFileSync("docs/governance/attestation-issuers.json"));
-            reg.issuers.push({id:"demo-platform-observer",mechanism:"ed25519",verify:{public_key:publicKey.export({type:"spki",format:"pem"}).toString()}});
-            fs.writeFileSync("docs/governance/attestation-issuers.json",JSON.stringify(reg,null,2));
-          '
-          node scripts/platform-activation-check.mjs   # rc.12 WS2 — observation is signed, independent, bypass-tested, fresh; no overstated platform-enforced claim
+          node scripts/platform-activation-check.mjs   # rc.12 WS2 — observation is signed, independent, bypass-tested, fresh; no overstated platform-enforced claim (record generated + committed above)
           node scripts/config-reconciliation-check.mjs  # rc.12 WS2.4 — observed config matches the approved baseline; no identity drift
           # rc.7: product evals (commit-bound); the example's evaluated_commit is stamped to HEAD
           # as a real adopter's CI would, then verified against the shipping commit.
