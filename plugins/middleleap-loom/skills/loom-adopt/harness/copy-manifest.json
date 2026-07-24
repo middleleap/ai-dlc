@@ -26,6 +26,7 @@
     { "source": "governance/product-evals.template.json", "dest": "docs/governance/product-evals.json", "kind": "file", "adopt": "template", "seam": "Product-outcome evals (discovery-linked, measures scored, commit-bound)" },
     { "source": "governance/routine-envelope.template.json", "dest": "docs/governance/routine-envelope.json", "kind": "file", "adopt": "template", "seam": "The second-line-owned routine-change envelope (HG-0013)" },
     { "source": "governance/config-baseline.template.json", "dest": "docs/governance/config-baseline.json", "kind": "file", "adopt": "template", "seam": "The approved control-plane configuration reconciled against live observations (rc.12 WS2.4)" },
+    { "source": "governance/assurance-sla.template.json", "dest": "docs/governance/assurance-sla.json", "kind": "file", "adopt": "template", "seam": "Service-level expectations for continuous-assurance cases (rc.14 WS6)" },
     { "source": "governance/token-ledger.template.json", "dest": "docs/governance/token-ledger.json", "kind": "file", "adopt": "template", "seam": "Token-spend ledger (a report, never a merge gate)" },
     { "source": "adapters/README.md", "dest": "docs/governance/adapters/README.md", "kind": "file", "seam": "The neutral adapter contract" },
     { "source": "guardrails", "dest": "guardrails", "kind": "dir", "seam": "Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks)" },

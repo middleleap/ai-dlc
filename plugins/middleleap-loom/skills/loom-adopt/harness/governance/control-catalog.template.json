@@ -483,6 +483,21 @@
       "note": "The reference controller workflow ships (routine-controller.yml): it runs routine-qualified + config-reconciliation under a separated bot token and enables auto-merge only on both green. Running it with a real, separated bot identity and a merge-queue ruleset is the adopter's — platform-enforced is theirs to claim once the separated identity and ruleset are active and a bypass is recorded"
     },
     {
+      "control_id": "ASSURANCE-CASE",
+      "objective": "A runtime signal from a declared source opens a governed case that runs the lifecycle (assess → map controls → run tests → assemble evidence → second-line decision → remediation) within its SLA; a runtime breach records a containment action (suspend autonomy, block release, rollback, model fallback) and an overdue open breach blocks unless the second line risk-accepts it",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/assurance-case-check.mjs",
+      "test_ref": "scripts/assurance-case-check.test.mjs",
+      "lane": "scheduled",
+      "paths": [
+        "docs/governance/assurance-cases/",
+        "docs/governance/assurance-sla.json"
+      ],
+      "note": "Operationalises the signal→action half of continuous assurance (closes F8). The Loom validates and reconciles the case; the accountable decision stays human (the second line's). Signal ingestion from the eight adapter sources is the adopter's orchestrator wiring"
+    },
+    {
       "control_id": "ADAPTERS",
       "objective": "Enterprise adapters map external systems to catalog controls via signed evidence envelopes, keeping the core vendor-neutral",
       "owner_role": "platform-admin",

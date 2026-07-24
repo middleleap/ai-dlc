@@ -44,6 +44,8 @@ jobs:
           cp -r "$H/register-example" "$A/docs/governance/data-risk-register"
           cp "$H/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
           cp "$H/assurance-example/decision-log.json" "$A/docs/governance/decision-log.json"
+          mkdir -p "$A/docs/governance/assurance-cases"
+          cp "$H/assurance-example/assurance-case.json" "$A/docs/governance/assurance-cases/CASE-2026-0007.json"
           cp "$H/adapters/reference/"*.json "$A/docs/governance/adapters/"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
@@ -110,6 +112,7 @@ jobs:
           node scripts/data-lifecycle-check.mjs
           node scripts/operations-signal-check.mjs
           node scripts/assurance-cycle-check.mjs
+          node scripts/assurance-case-check.mjs        # rc.14 WS6 — signal-triggered cases within SLA, mapped, contained, second-line decided
           node scripts/decision-log-check.mjs
           node scripts/adapter-check.mjs
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
@@ -295,6 +298,13 @@ jobs:
             echo "::error::guardrail-policy gate accepted a claimed protection whose mechanism does not exist"; exit 1
           fi
           git checkout -- guardrails/guardrail-policy.json
+          # 23 · rc.14 WS6 — a runtime breach (high severity) with its containment removed must fail
+          #      the assurance-case gate; a breach must be contained.
+          node -e 'const fs=require("fs");const p="docs/governance/assurance-cases/CASE-2026-0007.json";const s=JSON.parse(fs.readFileSync(p));delete s.steps.remediation.containment;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/assurance-case-check.mjs; then
+            echo "::error::assurance-case gate passed a runtime breach with no containment action"; exit 1
+          fi
+          git checkout -- docs/governance/assurance-cases/CASE-2026-0007.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green

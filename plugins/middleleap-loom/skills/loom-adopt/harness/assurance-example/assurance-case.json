@@ -1,0 +1,24 @@
+{
+  "_comment": "EXAMPLE (rc.14 · WS6) — a signal-triggered assurance CASE run to closure within SLA. A model-monitoring signal (drift on the credit model) opened a high-severity case: assessed within 24h, mapped to the model-provenance control, contained by a model fallback, second-line decided by Aisha (Model Risk), and closed. Mounts at docs/governance/assurance-cases/<id>.json. Times are illustrative; in operation they are stamped by the orchestrator.",
+  "case_id": "CASE-2026-0007",
+  "signal": {
+    "source": "model-monitoring",
+    "severity": "high",
+    "opened_at": "2026-07-20T08:00:00Z",
+    "summary": "PSI drift above threshold on the credit-decision model"
+  },
+  "steps": {
+    "assess": { "status": "done", "at": "2026-07-20T14:00:00Z" },
+    "map_controls": { "status": "done", "controls": ["HG-0006"] },
+    "run_tests": { "status": "done", "note": "re-ran the model eval suite against the live population" },
+    "assemble_evidence": { "status": "done", "evidence_ref": "docs/governance/evidence/case-2026-0007/" },
+    "second_line_decision": { "status": "done", "by": "mrm-aisha", "decision": "contain-and-revalidate" },
+    "remediation": {
+      "status": "closed",
+      "containment": ["model-fallback"],
+      "closed_at": "2026-07-24T10:00:00Z",
+      "note": "fell back to the champion model; challenger queued for revalidation"
+    }
+  },
+  "outcome": "closed"
+}

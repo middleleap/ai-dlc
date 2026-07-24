@@ -409,3 +409,36 @@ CI: two new gates, two new negative bypass cases (21 F5-derivation, 22 implied-c
 adopter-side. Honesty invariant holds: compiled capabilities beyond `data_risk_register` are emitted but
 only D6 consumes one so far (no gate claims to enforce the others), and no guardrail implies coverage a
 runtime lacks.
+
+## 2.0-rc.14 addendum — adoption state machine (WS5) + continuous-assurance cases (WS6)
+
+WS5 and WS6 of the control-plane plan.
+
+**WS5 — adoption as a controlled state machine (closes F7).** Installation was automated;
+configuration, validation, activation and approval were not.
+- `adoption-status.mjs` projects a five-stage matrix (installed → configured → validated → platform →
+  organisation) from the control catalog (single state of record — no second ledger), plus an
+  explicit unresolved-marker inventory.
+- `adoption-attest.mjs`: a signed adoption report CANNOT be produced while any mandatory item is
+  adopt-pending, the attester must resolve to a non-agent human, and the signature must verify.
+- `loom.mjs`: the adoption CLI — `adopt | configure | verify | activate | attest-adoption | status`.
+- New control ADOPTION-STATE (execute:false — an on-demand adopter tool, not a per-PR gate).
+
+**WS6 — operationalize continuous assurance (closes F8).** The assurance-cycle gate verified the
+periodic ritual; this operationalises the signal-triggered half.
+- `assurance-case-check.mjs`: a signal from a declared source (SIEM, model-monitoring, regulatory-
+  intelligence, …) opens a governed case that must run the lifecycle (assess → map controls → run
+  tests → assemble evidence → second-line decision → remediation) within its SLA
+  (`assurance-sla.json`). A runtime breach (high/critical) must record a CONTAINMENT action (suspend
+  autonomy, block release, rollback, model fallback); an open breach past its remediation deadline
+  blocks unless the second line risk-accepts it. The Loom validates and reconciles; the accountable
+  decision stays human.
+- New control ASSURANCE-CASE.
+
+CI: two new gates, one new negative bypass case (23 — a breach with no containment), plus the
+`loom status` / `attest-adoption` adoption assertions from WS5. Full suite **431 green** (+20 tests);
+adopted `node --test` 0 fail. Version bumped to rc.14. Scorecard (generated): **41 mechanically
+validated · 7 defined · 7 absent · 0 platform / 0 organisationally enforced** across 55 controls, 13
+flagged adopter-side. Honesty invariant holds: signal INGESTION from the eight adapter sources is the
+adopter's orchestrator wiring (the bundle validates the case records), and the adoption SIGNATURE is
+adopter-side.
