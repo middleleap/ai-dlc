@@ -11,6 +11,10 @@ import { evaluate } from './guardrail-policy-check.mjs';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const allExist = () => true;
+// The hooks live at hooks/ in the bundle and .claude/hooks/ in an adopted repo — resolve either.
+const HOOKS_DIR = ['.claude/hooks', 'hooks'].map((d) => join(HARNESS, d)).find((d) => existsSync(join(d, 'pii-guard.sh')));
+// A policy mechanism resolves in either layout (.claude/hooks/foo.sh ↔ hooks/foo.sh; scripts/… as-is).
+const mechExists = (m) => [m, m.replace(/^\.claude\/hooks\//, 'hooks/')].some((x) => existsSync(join(HARNESS, x)));
 
 const guardrail = (over = {}) => ({
   id: 'g1', event: 'before-file-write', decision: 'block', description: 'x',
@@ -52,25 +56,25 @@ test('a runtime with no coverage stated fails — every runtime must be declared
 // (.claude/hooks/foo.sh → hooks/foo.sh).
 test('the shipped guardrail policy is honest — every claimed mechanism exists', () => {
   const p = JSON.parse(readFileSync(join(HARNESS, 'guardrails/guardrail-policy.json'), 'utf8'));
-  const exists = (m) => existsSync(join(HARNESS, m.replace(/^\.claude\/hooks\//, 'hooks/')));
-  assert.deepEqual(evaluate(p, exists), []);
+  assert.deepEqual(evaluate(p, mechExists), []);
 });
 
 // ---- Hostile scenarios through the claude-code adapter (prove `enforced` is REAL) ----
+// Skip cleanly in a bare layout with no hooks (same pattern as the attestation/register tests).
 const runHook = (script, input, opts = {}) =>
-  spawnSync('bash', [join(HARNESS, 'hooks', script)], { input: JSON.stringify(input), encoding: 'utf8', ...opts }).stdout || '';
+  spawnSync('bash', [join(HOOKS_DIR, script)], { input: JSON.stringify(input), encoding: 'utf8', ...opts }).stdout || '';
 
-test('hostile: a PII-shaped literal is DENIED by the claude-code pii-guard adapter', () => {
+test('hostile: a PII-shaped literal is DENIED by the claude-code pii-guard adapter', { skip: !HOOKS_DIR }, () => {
   const out = runHook('pii-guard.sh', { tool_input: { content: 'Emirates ID 784-1990-1234567-1' } });
   assert.match(out, /"permissionDecision":\s*"deny"/);
 });
 
-test('hostile: a synthetic (999-prefixed) id is ALLOWED — the guard is not a blunt block', () => {
+test('hostile: a synthetic (999-prefixed) id is ALLOWED — the guard is not a blunt block', { skip: !HOOKS_DIR }, () => {
   const out = runHook('pii-guard.sh', { tool_input: { content: 'synthetic 999-1990-1234567-1' } });
   assert.doesNotMatch(out, /"permissionDecision":\s*"deny"/);
 });
 
-test('hostile: a test-weakening edit is DENIED by the claude-code test-tripwire adapter', () => {
+test('hostile: a test-weakening edit is DENIED by the claude-code test-tripwire adapter', { skip: !HOOKS_DIR }, () => {
   // test-tripwire only fires on a spec/test path inside a feature/claude branch.
   const repo = mkdtempSync(join(tmpdir(), 'gr-'));
   try {
