@@ -7,6 +7,7 @@
 //   node discovery/render/render.mjs <document|deck|prototype> <spec.json> <out.html> [--brand <design.md>]
 //
 import { readFileSync, writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { parseTokens, tokenResolver } from './tokens.mjs';
 import { MARKER } from '../gates/brand.mjs';
 
@@ -123,7 +124,12 @@ export function renderDeck(spec, brand) {
 export function renderPrototype(spec, brand) {
   const t = tokenResolver(brand.tokens);
   const tiles = (spec.tiles || []).map((tile) => {
-    const pill = tile.status ? `<span class="pill" style="background:var(--${tile.status === 'ok' ? 'accent' : tile.status})">${esc(tile.pill || tile.status)}</span>` : '';
+    // tile.status names a CSS custom property, so it must be a bare token — NOT esc()'d text.
+    // esc() guards HTML text nodes but leaves `)`, `;`, `{` intact, which inside a style="" attr
+    // would let a crafted status close var() and inject rules (or a </style>…<script>). Restrict
+    // it to [a-z0-9-] so only a real token name can ever reach the stylesheet.
+    const statusVar = tile.status === 'ok' ? 'accent' : String(tile.status).toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const pill = tile.status ? `<span class="pill" style="background:var(--${statusVar})">${esc(tile.pill || tile.status)}</span>` : '';
     return `<div class="card"><div class="label">${esc(tile.label)}</div>
       <div class="metric">${esc(tile.value || '')} ${pill}</div>
       ${tile.sub ? `<div class="sub">${esc(tile.sub)}</div>` : ''}</div>`;
@@ -181,4 +187,4 @@ function main(argv) {
   console.log(`rendered ${mode} -> ${outPath}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main(process.argv);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main(process.argv);

@@ -5,6 +5,7 @@
 //   node discovery/render/render-office.mjs <xlsx|docx|pptx> <spec.json> <out> [--brand <design.md>]
 //
 import { readFileSync, writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { parseTokens, tokenResolver, brainkitProvenance } from './tokens.mjs';
 import { BUILDERS } from './office/ooxml.mjs';
 
@@ -30,4 +31,4 @@ function main(argv) {
   console.log(`rendered ${fmt} -> ${outPath} (${buf.length} bytes, brand ${brandPath})`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main(process.argv);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main(process.argv);

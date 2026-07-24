@@ -15,6 +15,13 @@ const J = (...candidates) => {
   if (!p) throw new Error(`fixture not found: ${candidates.join(' | ')}`);
   return JSON.parse(readFileSync(p, 'utf8'));
 };
+// In a BARE adoption the worked-example change is in neither layout; skip cleanly rather than
+// throw at module load. The pure evaluate() logic still runs wherever the example is mounted.
+const EXAMPLE_PRESENT = ['change-example/control-plan.json', 'docs/governance/changes/CHG-2026-0042/control-plan.json']
+  .some((c) => existsSync(`${HARNESS}/${c}`));
+if (!EXAMPLE_PRESENT) {
+  test('product-approval gate (worked-example change is bundle-only — skipped in an adopted layout)', { skip: true }, () => {});
+} else {
 const PLAN = J('change-example/control-plan.json', 'docs/governance/changes/CHG-2026-0042/control-plan.json');
 const PASSPORT = J('change-example/product-passport.json', 'docs/governance/changes/CHG-2026-0042/product-passport.json');
 const REGISTRY = J('governance/identities.template.json', 'docs/governance/identities.json');
@@ -70,3 +77,4 @@ test('ownership must resolve: product owner and accountable executive by role', 
 test('a plan with no PA1 gate compiles no product-approval requirements', () => {
   assert.deepEqual(evaluate(PASSPORT, { ...PLAN, required_gates: ['D', 'Q'] }, REGISTRY), []);
 });
+}

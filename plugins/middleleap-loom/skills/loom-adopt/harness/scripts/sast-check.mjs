@@ -11,6 +11,7 @@
 // Run from the repo root: `node scripts/sast-check.mjs [path/to/report.sarif]`.
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const SARIF_LOCATIONS = ['docs/governance/evidence/sast.sarif', 'sast.sarif'];
 // ADOPT: your severity policy. Zero errors is the floor for a regulated release.
@@ -47,7 +48,7 @@ export function evaluate(sarif, { maxErrors = MAX_ERRORS, maxWarnings = MAX_WARN
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const arg = process.argv[2];
   const path = arg || SARIF_LOCATIONS.map((p) => `${process.cwd()}/${p}`).find(existsSync);
   let findings;

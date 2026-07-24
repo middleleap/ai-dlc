@@ -43,8 +43,8 @@ are repo-root-relative.
 | `core` | `core` | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
 | `profiles` | `profiles` | Profiles as data: base + jurisdiction + product-type |
 | `hooks/*.sh` | `.claude/hooks/` | Pre-write guardrail hooks (pii-guard, spec/test tripwires) |
-| `hooks/settings.hooks.json` | `.claude/settings.json` | Hook wiring for Claude Code |
-| `governance/runbooks/*.md` | `docs/governance/runbooks/` | Six adoption runbooks + the supervised-pilot playbook |
+| `hooks/settings.hooks.json` | `.claude/settings.json` | Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand) |
+| `governance/runbooks/*.md` | `docs/governance/runbooks/` | Seven adoption runbooks + the supervised-pilot playbook |
 | `governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | How to activate branch protection, IAM, the routine lane |
 | `governance/CODEOWNERS.template` | `CODEOWNERS` | The control-plane ownership map (replace @your-org/… — the gate fails until you do) |
 | `governance/control-catalog.template.json` | `docs/governance/control-catalog.json` | The machine-readable control state of record |

@@ -12,6 +12,14 @@ const J = (...candidates) => {
   const p = candidates.map((c) => `${HARNESS}/${c}`).find(existsSync);
   return JSON.parse(readFileSync(p, 'utf8'));
 };
+// The evidence manifest resolves in BOTH layouts: the bundle (evidence-example/) and an adopted
+// repo that mounted it (docs/governance/evidence/). In a BARE adoption it is in neither, so skip
+// cleanly rather than crash at module load.
+const MANIFEST_PATH = ['evidence-example/manifest.json', 'docs/governance/evidence/manifest.json']
+  .map((c) => `${HARNESS}/${c}`).find(existsSync);
+if (!MANIFEST_PATH) {
+  test('attestation verification (evidence example is bundle-only — skipped in an adopted layout)', { skip: true }, () => {});
+} else {
 const MANIFEST = J('evidence-example/manifest.json', 'docs/governance/evidence/manifest.json');
 const ISSUERS = J('governance/attestation-issuers.template.json', 'docs/governance/attestation-issuers.json');
 
@@ -47,3 +55,4 @@ test('platform mechanisms report UNVERIFIED-HERE rather than pretending', () => 
   const m = { ...MANIFEST, attestation: { issuer: 'bank-ci', signature: 'whatever' } };
   assert.ok(verifyAnchorAttestation(m, ISSUERS).some((f) => /UNVERIFIED-HERE/.test(f)));
 });
+}

@@ -17,6 +17,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 import { aggregateRequirements, requiredBy } from './compiled-requirements.mjs';
+import { pathToFileURL } from 'node:url';
 
 export const LANES = ['pr', 'release', 'scheduled'];
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
@@ -62,7 +63,7 @@ function changedSince(base) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const argv = process.argv;
   const arg = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const lane = arg('--lane') || 'pr';

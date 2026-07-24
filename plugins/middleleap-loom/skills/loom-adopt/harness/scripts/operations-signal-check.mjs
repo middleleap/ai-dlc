@@ -18,6 +18,7 @@
 //   `node scripts/operations-signal-check.mjs` (exit 1 on any finding).
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const MANIFEST_LOCATIONS = ['docs/governance/operations-signal.json', 'operations-signal.json'];
 
@@ -105,7 +106,7 @@ function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const findings = run();
   if (findings.length) {
     process.stderr.write('\nOperations → Discovery feedback gate — FAIL\n\n');

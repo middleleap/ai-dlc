@@ -20,6 +20,7 @@ import process from 'node:process';
 import { loadIssuers, verifySignatureOver } from '../core/attestations.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { aggregateRequirements, requiredBy } from '../core/compiled-requirements.mjs';
+import { pathToFileURL } from 'node:url';
 
 export const CYCLES_DIR = 'docs/governance/assurance-cycles';
 export const STEPS = ['watch', 'assess', 'check', 'test', 'evidence', 'confirm'];
@@ -162,7 +163,7 @@ export function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { findings, count } = run();
   if (findings.length) {
     process.stderr.write('\nAssurance-cycle gate — FAIL\n\n');

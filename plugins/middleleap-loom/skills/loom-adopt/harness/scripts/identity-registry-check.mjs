@@ -10,6 +10,7 @@
 // Run from the repo root: `node scripts/identity-registry-check.mjs`.
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const REGISTRY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
 export const KINDS = ['human', 'agent'];
@@ -65,7 +66,7 @@ export function evaluate(registry) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const registry = loadRegistry();
   const findings = registry ? evaluate(registry)
     : [`no identity registry found (looked in ${REGISTRY_LOCATIONS.join(', ')}) — approvals cannot resolve`];

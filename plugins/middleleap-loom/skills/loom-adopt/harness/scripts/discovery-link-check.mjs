@@ -16,6 +16,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { validateRun } from '../discovery/gates/validate.mjs';
+import { pathToFileURL } from 'node:url';
 
 const BACKLOG = 'docs/backlog.yaml';
 // ADOPT: set this to your feature-item id convention (infra items should NOT match).
@@ -60,14 +61,17 @@ const field = (text, re) => (text.match(re) || [])[1];
 export function checkItems(text, resolveRun, feature = FEATURE) {
   const findings = [];
   for (const block of parseItems(text)) {
-    const id = field(block, /\bid:\s*([A-Za-z0-9-]+)/);
+    const id = field(block, /\bid:\s*["']?([A-Za-z0-9-]+)/);
     if (!id || !feature.test(id)) continue; // only PRD feature items are waist-gated
     // Trigger on EXPLICIT `status: pending` only. The loop's Pick step picks pending items, so
     // an un-statused stub (id+title, a someday-maybe) cannot enter delivery until someone marks
     // it pending — which is exactly when the hand-off must exist. No status ≠ pending here.
-    const status = field(block, /\bstatus:\s*([a-z-]+)/);
-    const slug = field(block, /\bdiscovery:\s*([a-z0-9-]+)/);
-    const exempt = /\bdiscovery_exempt:\s*true\b/.test(block);
+    // Tolerate quoted/cased YAML scalars: `status: "Pending"` is the same as `status: pending`.
+    // Matching only bare lowercase let a quoted or capitalized status slip the waist gate.
+    const rawStatus = field(block, /\bstatus:\s*["']?([A-Za-z-]+)/);
+    const status = rawStatus ? rawStatus.toLowerCase() : undefined;
+    const slug = field(block, /\bdiscovery:\s*["']?([A-Za-z0-9-]+)/);
+    const exempt = /\bdiscovery_exempt:\s*["']?true\b/i.test(block);
 
     if (slug) {
       // Check 1 — the link must resolve to a green discovery run.
@@ -102,7 +106,7 @@ export function check() {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const findings = check();
   if (findings.length) {
     process.stderr.write('\nDiscovery → delivery waist gate (HG-0007) — FAIL\n\n');

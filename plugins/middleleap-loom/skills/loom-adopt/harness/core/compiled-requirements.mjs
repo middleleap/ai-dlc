@@ -14,6 +14,7 @@
 // gate reports the missing plan); it never silently lowers a requirement.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 // Production states — once a change reaches one, cadence-style capabilities apply even if the
@@ -52,7 +53,7 @@ export function requiredBy(agg, family) {
 }
 
 // CLI: print the aggregated requirements (diagnostic).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const agg = aggregateRequirements();
   process.stdout.write(JSON.stringify({
     families: [...agg.families].sort(),

@@ -1,6 +1,6 @@
 # The Institutional BrainKit
 
-> Loom 2.0-rc.8. The BrainKit is the **institution-owned seed of the Loom's context brain** — the
+> Loom 2.0-rc.10. The BrainKit is the **institution-owned seed of the Loom's context brain** — the
 > portable, governed core of institutional knowledge that every repository inherits before it
 > writes a line of code, a PRD, an ADR or a report. It is not another public plugin, and it is not
 > a brand kit. It is the institution's own DNA, versioned and mechanically validated.

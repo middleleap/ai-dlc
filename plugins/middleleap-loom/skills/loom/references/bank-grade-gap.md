@@ -235,8 +235,9 @@ runtime drift monitoring, an external WORM/timestamping store, and the real-PII 
 ## The org-side, in runbooks
 
 The items above that stay **Defined** or **Absent** because they need owners outside
-engineering are not left as a shrug. The loom-adopt harness ships six adoption runbooks
-(`governance/runbooks/`) that say, honestly, what a plugin bundle cannot enforce and what the
+engineering are not left as a shrug. The loom-adopt harness ships seven adoption runbooks
+(`governance/runbooks/`, plus the supervised-pilot playbook) that say, honestly, what a plugin
+bundle cannot enforce and what the
 adopting institution must stand up — each with a "why a bundle cannot enforce this" note and a
 "verify — evidence, not vibes" checklist:
 

@@ -22,6 +22,7 @@ import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { evaluate as evaluateSarif } from './sast-check.mjs';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
+import { pathToFileURL } from 'node:url';
 
 const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
 const GENESIS = 'GENESIS';
@@ -125,6 +126,15 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
   }
   let prev = GENESIS;
   entries.forEach((e, i) => {
+    // sealOf() delimits fields with "\n", so a field carrying an embedded newline could shift a
+    // boundary and forge a colliding seal. type/ref never legitimately contain one (type is an
+    // enum; ref is a filename), so reject it here — this closes the boundary ambiguity WITHOUT
+    // changing the hash, which would invalidate the externally-signed anchor we cannot re-sign.
+    for (const f of ['type', 'ref']) {
+      if (typeof e[f] === 'string' && /[\n\r]/.test(e[f])) {
+        findings.push(`entry ${i}: ${f} contains a newline — not permitted (it could forge a seal-field boundary)`);
+      }
+    }
     const expectSeal = sealOf(prev, e);
     if (e.prev !== prev) {
       findings.push(`entry ${i} (${e.type}): broken chain — prev pointer ${JSON.stringify(e.prev)} ≠ expected ${JSON.stringify(prev)}`);
@@ -170,7 +180,7 @@ function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const findings = run();
   if (findings.length) {
     process.stderr.write('\nEvidence-seal gate (HG-0003) — FAIL\n\n');

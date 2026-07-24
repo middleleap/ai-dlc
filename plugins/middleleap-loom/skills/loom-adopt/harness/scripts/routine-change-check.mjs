@@ -31,6 +31,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
+import { pathToFileURL } from 'node:url';
 
 export const ENVELOPE_PATH = 'docs/governance/routine-envelope.json';
 export const CLAIM_PATH = 'docs/governance/routine-claim.json';
@@ -84,8 +85,11 @@ export function evaluate(envelope, claim, registry, asOf) {
     }
   }
 
-  // The envelope expires. A stale authorization is no authorization.
+  // The envelope expires. A stale authorization is no authorization. An unparseable expiry
+  // must FAIL, not silently never-expire (`new Date('not-a-date')` is NaN, and every NaN
+  // comparison is false — the "bounded in time" property would evaporate without this).
   if (!envelope.expires) findings.push(`${eid}: envelope has no expiry — a routine authorization must be bounded in time`);
+  else if (Number.isNaN(new Date(envelope.expires).getTime())) findings.push(`${eid}: envelope expiry ${JSON.stringify(envelope.expires)} is not a valid date — cannot confirm the authorization is in force`);
   else if (asOf && new Date(asOf) > new Date(envelope.expires)) findings.push(`${eid}: envelope expired ${envelope.expires} — re-authorize with the second line`);
 
   // The claim names a class the envelope allows (and that is a known routine class).
@@ -118,10 +122,13 @@ export function evaluate(envelope, claim, registry, asOf) {
 }
 
 /** Derive the real changed paths + line count from git, so the lane is judged on the actual
- *  diff, not on what the claim asserts. Best-effort: returns null if git is unavailable. */
+ *  diff, not on what the claim asserts. Returns null if git is unavailable — the caller MUST
+ *  treat that as fatal (see check()), never as a fallback to the claim's self-declared paths.
+ *  `--no-renames` is essential: with rename detection on, git emits `{src => scripts}/x.mjs`,
+ *  a form the FLOOR_DENY patterns do not match, so a rename INTO the control plane would slip. */
 export function gitDiff(base) {
   try {
-    const out = execSync(`git diff --numstat ${base}...HEAD`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const out = execSync(`git diff --numstat --no-renames ${base}...HEAD`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
     const changed_paths = [];
     let diff_lines = 0;
     for (const line of out.split('\n')) {
@@ -139,9 +146,16 @@ export function check(cwd = process.cwd(), base = 'origin/main') {
   const claim = JSON.parse(readFileSync(`${cwd}/${CLAIM_PATH}`, 'utf8'));
   const envelope = existsSync(`${cwd}/${ENVELOPE_PATH}`) ? JSON.parse(readFileSync(`${cwd}/${ENVELOPE_PATH}`, 'utf8')) : null;
   const registry = loadRegistry(cwd);
-  // Prefer the real git diff over the claim's self-declared paths.
+  // Judge the lane on the REAL git diff, never on the claim's self-declared paths. If git
+  // cannot produce the diff (missing base ref, shallow clone, detached worktree), that is
+  // fatal for a control whose whole point is "judged on the actual diff" — fail to the normal
+  // human-merge lane rather than trusting what the PR author wrote.
   const real = gitDiff(base);
-  if (real) { claim.changed_paths = real.changed_paths; claim.diff_lines = real.diff_lines; }
+  if (!real) {
+    return { claimed: true, findings: [`cannot compute the git diff against ${base} — the routine lane must be judged on the actual diff, not the claim; take the normal human-merge lane`] };
+  }
+  claim.changed_paths = real.changed_paths;
+  claim.diff_lines = real.diff_lines;
   return { claimed: true, findings: evaluate(envelope, claim, registry, new Date()) };
 }
 
@@ -156,7 +170,7 @@ export function check(cwd = process.cwd(), base = 'origin/main') {
 // A GitHub ruleset cannot read explanatory text — only the exit of a named check — so the two
 // outcomes MUST live in two check contexts. Auto-merge requires `routine-qualified`; that an
 // ordinary PR fails `--assert-routine` is exactly why it cannot enter the routine queue.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const baseArg = process.argv.indexOf('--base');
   const base = baseArg >= 0 ? process.argv[baseArg + 1] : 'origin/main';
   const assertRoutine = process.argv.includes('--assert-routine');

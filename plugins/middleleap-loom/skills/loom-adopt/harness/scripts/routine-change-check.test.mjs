@@ -53,6 +53,11 @@ test('NEGATIVE — an expired envelope does not qualify', () => {
   assert.ok(f.some((m) => /expired/.test(m)));
 });
 
+test('NEGATIVE — an unparseable expiry does not silently never-expire', () => {
+  const f = evaluate({ ...ENVELOPE, expires: 'not-a-date' }, CLAIM, REGISTRY, ASOF);
+  assert.ok(f.some((m) => /not a valid date/.test(m)), 'a NaN date must fail, not pass');
+});
+
 test('NEGATIVE — an agent-owned envelope is rejected', () => {
   const f = evaluate({ ...ENVELOPE, owner: 'loom-agent' }, CLAIM, REGISTRY, ASOF);
   assert.ok(f.some((m) => /not a human/.test(m)));

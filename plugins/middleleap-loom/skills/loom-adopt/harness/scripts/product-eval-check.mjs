@@ -23,6 +23,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { aggregateRequirements, requiredBy } from '../core/compiled-requirements.mjs';
+import { pathToFileURL } from 'node:url';
 
 const MANIFEST_LOCATIONS = ['docs/governance/product-evals.json', 'product-evals.json'];
 
@@ -105,9 +106,14 @@ export function run(cwd = process.cwd(), shippingCommit = null) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  // On a pull_request build GITHUB_SHA is the EPHEMERAL merge commit, which an eval committed on
+  // the PR head cannot possibly name — so relying on it fails every PR as "stale". Prefer an
+  // explicit --commit (the CI passes the PR head sha), then GITHUB_HEAD_SHA if the workflow set
+  // it, and only then GITHUB_SHA (correct on push / merge_group).
   const ci = process.argv.indexOf('--commit');
-  const shippingCommit = ci >= 0 ? process.argv[ci + 1] : (process.env.GITHUB_SHA || null);
+  const shippingCommit = ci >= 0 ? process.argv[ci + 1]
+    : (process.env.GITHUB_HEAD_SHA || process.env.GITHUB_SHA || null);
   const { present, findings } = run(process.cwd(), shippingCommit);
   if (!present && findings.length === 0) {
     process.stdout.write('Product-eval gate — no product-evals.json; not a product-bearing repo. OK\n');

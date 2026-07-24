@@ -25,8 +25,9 @@ The BrainKit is the **institution-owned seed of the Loom's context brain**. This
 
 1. **Inspect.** Read the repository (README, architecture docs, existing `AGENTS.md`/`CLAUDE.md`,
    package manifests) and the **approved sources the user provides**. List what you found.
-2. **Scaffold from the templates.** Copy the neutral templates from the harness
-   (`loom-adopt/harness/brainkit/`) into `institution/brainkit/` if not already present.
+2. **Scaffold from the templates.** In an adopted repo the neutral templates are already at
+   `institution/brainkit/` (the `loom-adopt` installer places them there); use those. Only when
+   working directly in the plugin bundle are they under `loom-adopt/harness/brainkit/`.
 3. **Draft each section**, grounded only in approved sources, recording provenance:
    - `identity/design.md` — institutional identity + design language (the D7 projection source).
    - `terminology.md` — the binding vocabulary.
@@ -43,14 +44,18 @@ The BrainKit is the **institution-owned seed of the Loom's context brain**. This
 6. **Fill the manifest** (`manifest.json`): `schema_version`, `brainkit_id`, `institution_id`,
    semantic `version`, `status: draft`, `effective_at`, accountable `owners` by section (each an
    identity in `docs/governance/identities.json`), and `approved_sources`. Leave `approvals` empty.
-7. **Seal the digests**: `node loom-adopt/harness/scripts/brainkit-check.mjs --seal`. This records
+7. **Seal the digests**: `node scripts/brainkit-check.mjs --seal` (an adopted repo installs the gate
+   at `scripts/`; in the plugin bundle it is `loom-adopt/harness/scripts/`). This records
    what the files hash to — it does **not** approve.
 8. **Generate the D7 compatibility projection** `discovery/brand/design.md` from
    `institution/brainkit/identity/design.md`, carrying the BrainKit id/version/digest in the
    frontmatter (so rendered artifacts inherit the provenance). Preserve the existing D7 brand marker.
 9. **Produce the gap register** — a list of every decision you could not make for lack of an approved
    source or a named authority (e.g. "no approved brand tokens", "architecture principle 3 has no
-   source", "no institutional-context-owner in the registry"). These block approval.
+   source", "no institutional-context-owner in the registry"). This is the accountable owners'
+   review agenda: they must resolve or explicitly accept every gap **before** they approve. (The
+   resolution is human judgement — `brainkit-check` digest-checks provenance and approvals, but does
+   not itself track gap closure; do not present the register as a machine-enforced block.)
 10. **Wire the repository instructions**: reference `institution/brainkit/repository-instructions.md`
     from the repo's `AGENTS.md`/`CLAUDE.md`/`.cursorrules` — propose a concise pointer, and patch an
     existing file only after the user confirms. Never overwrite it.

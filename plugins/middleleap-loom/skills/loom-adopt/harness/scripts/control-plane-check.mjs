@@ -14,6 +14,7 @@
 // Run from the repo root: `node scripts/control-plane-check.mjs` (exit 1 on any finding).
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 // ADOPT: the control-plane files the agent must never change without four-eyes — EVERY gate,
 // hook, workflow, and governance manifest, not representative samples (1.10: an unlisted gate
@@ -131,7 +132,7 @@ function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const findings = run();
   if (findings.length) {
     process.stderr.write('\nControl-plane integrity gate (HG-0002) — FAIL\n\n');

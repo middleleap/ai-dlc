@@ -15,6 +15,7 @@
 // exit 2 when there is no git history to diff against — unverifiable is not a pass.
 import { execFileSync } from 'node:child_process';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 // ADOPT: what counts as a test file, and what counts as an assertion, in your stack.
 export const TEST_FILE = /(\.|_|\/)(test|spec)s?\.[cm]?[jt]sx?$|(^|\/)tests?\//i;
@@ -71,7 +72,7 @@ export function resolveBase(argv = process.argv) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try { git(['rev-parse', '--git-dir'], { stdio: ['ignore', 'pipe', 'ignore'] }); }
   catch {
     process.stderr.write('Test-integrity gate (Q1b) — CANNOT VERIFY: not a git checkout. Unverifiable is not a pass.\n');
@@ -83,8 +84,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(2);
   }
   const findings = evaluate(collect(base), collect(null));
-  let branch = '';
-  try { branch = git(['rev-parse', '--abbrev-ref', 'HEAD']); } catch { /* detached */ }
+  // On a GitHub Actions PR checkout HEAD is DETACHED, so `rev-parse --abbrev-ref HEAD` returns
+  // "HEAD", not the branch — the -testfix- escape hatch would never fire in the very environment
+  // this gate calls the merge-blocking control of record. GITHUB_HEAD_REF carries the real PR
+  // source branch on pull_request events; fall back to rev-parse for local runs.
+  let branch = process.env.GITHUB_HEAD_REF || '';
+  if (!branch) { try { branch = git(['rev-parse', '--abbrev-ref', 'HEAD']); } catch { /* detached */ } }
   const testfix = /testfix/i.test(branch);
   if (findings.length) {
     const head = testfix

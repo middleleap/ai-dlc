@@ -16,6 +16,7 @@
 // Run from the repo root: `node scripts/operational-readiness-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 export const SERVICES_DIR = 'docs/governance/services';
 export const CRITICALITIES = ['critical', 'important', 'standard'];
@@ -96,7 +97,7 @@ export function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { findings, count } = run();
   if (findings.length) {
     process.stderr.write('\nOperational-readiness gate (R1–R6) — FAIL\n\n');

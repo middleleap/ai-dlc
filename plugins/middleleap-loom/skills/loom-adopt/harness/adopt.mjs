@@ -15,6 +15,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSy
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const HARNESS = dirname(fileURLToPath(import.meta.url));
 const MANIFEST = join(HARNESS, 'copy-manifest.json');
@@ -40,6 +41,20 @@ function copyEntry(e, destRoot, dryRun) {
   const dst = resolve(destRoot, e.dest);
   if (!existsSync(src)) return { ...e, status: 'source-missing' };
   let status = 'installed';
+  if (e.kind === 'file' && e.adopt === 'merge') {
+    // NEVER clobber a merge-file the adopter may already own (e.g. .claude/settings.json). An
+    // identical file is already-current; a DIFFERENT existing file is preserved untouched and the
+    // Loom's version is dropped beside it as a .loom.json sidecar for the adopter to merge by hand
+    // — which is also when the hooks activate (that consent is the point, per SKILL.md).
+    if (existsSync(dst)) {
+      if (sha(src) === sha(dst)) return { source: e.source, dest: e.dest, seam: e.seam, status: 'already-current' };
+      const sidecar = dst.replace(/\.json$/, '') + '.loom.json';
+      if (!dryRun) { mkdirSync(dirname(sidecar), { recursive: true }); cpSync(src, sidecar); }
+      return { source: e.source, dest: `${e.dest} (sidecar: ${e.dest.replace(/\.json$/, '')}.loom.json)`, seam: e.seam, status: 'merge-required' };
+    }
+    if (!dryRun) { mkdirSync(dirname(dst), { recursive: true }); cpSync(src, dst); }
+    return { source: e.source, dest: e.dest, seam: e.seam, status: 'installed' };
+  }
   if (e.kind === 'file') {
     if (existsSync(dst)) status = sha(src) === sha(dst) ? 'already-current' : 'updated';
     if (!dryRun) { mkdirSync(dirname(dst), { recursive: true }); cpSync(src, dst); }
@@ -67,7 +82,7 @@ export function install(destRoot, { dryRun = false, manifest = loadManifest() } 
 }
 
 // CLI.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const argv = process.argv;
   const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   if (argv.includes('--print-table')) { process.stdout.write(copyTable() + '\n'); process.exit(0); }
@@ -81,6 +96,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const r of report) process.stdout.write(`  ${r.status.padEnd(22)} ${r.dest}  · ${r.seam}\n`);
     const pending = report.filter((r) => r.status === 'adopt-pending');
     if (pending.length) process.stdout.write(`\n${pending.length} template(s) ADOPT-PENDING — fill the placeholders and re-run the gates; the installer never fakes activation.\n`);
+    const merge = report.filter((r) => r.status === 'merge-required');
+    if (merge.length) process.stdout.write(`\n${merge.length} file(s) MERGE-REQUIRED — an existing file was preserved and the Loom's version dropped beside it as a .loom.json sidecar; merge it in by hand (this is also when the hooks activate).\n`);
   }
   process.exit(missing.length ? 1 : 0);
 }

@@ -14,6 +14,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -59,7 +60,7 @@ export async function run(fix = false) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const fix = process.argv.includes('--fix');
   const findings = await run(fix);
   if (findings.length) {

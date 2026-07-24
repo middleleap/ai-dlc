@@ -21,6 +21,7 @@ import { compile, loadProfiles, resolveBindings, planHash } from '../core/policy
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { evaluate as evaluateReadiness, SERVICES_DIR } from './operational-readiness-check.mjs';
 import { loadIssuers, verifyAnchorAttestation } from '../core/attestations.mjs';
+import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 export const STATES = ['classified', 'permission-to-develop', 'in-delivery', 'delivery-complete',
@@ -185,7 +186,7 @@ export function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { findings, count } = run();
   if (findings.length) {
     process.stderr.write('\nChange-envelope gate — FAIL\n\n');

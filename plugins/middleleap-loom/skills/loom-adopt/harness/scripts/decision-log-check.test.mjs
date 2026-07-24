@@ -28,6 +28,14 @@ test('APPEND-ONLY — editing an entry after logging breaks its seal', () => {
   assert.ok(evaluate(l, opts).some((x) => /seal mismatch/.test(x)));
 });
 
+test('field-boundary shuffle cannot forge a colliding seal (canonical encoding)', () => {
+  // decision:"A\nB",rationale:"" vs decision:"A",rationale:"B" collided under a plain "\n".join.
+  const base = { seq: 0, at: 't', actor: 'agent-x', change_id: 'CHG-1', inputs_ref: 'i', tool_calls: [] };
+  const [x] = buildChain([{ ...base, decision: 'A\nB', rationale: '' }]);
+  const [y] = buildChain([{ ...base, decision: 'A', rationale: 'B' }]);
+  assert.notEqual(x.seal, y.seal, 'moving text across a field boundary must change the seal');
+});
+
 test('reordering entries breaks the chain', () => {
   const l = log(3);
   [l.entries[1], l.entries[2]] = [l.entries[2], l.entries[1]];

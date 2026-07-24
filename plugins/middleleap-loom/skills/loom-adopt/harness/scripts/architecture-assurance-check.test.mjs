@@ -9,9 +9,15 @@ import { evaluate, SECTIONS } from './architecture-assurance-check.mjs';
 import { existsSync } from 'node:fs';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// The fixture resolves in BOTH layouts: the bundle and an adopted repo.
+// The fixture resolves in BOTH layouts: the bundle (change-example/) and an adopted repo that
+// mounted the worked example (docs/governance/changes/CHG-2026-0042/). In a BARE adoption it is
+// in neither, so skip cleanly rather than crash at module load — the pure evaluate() logic is
+// covered by the negative cases against the mounted example wherever it exists.
 const GOOD_PATH = ['change-example/architecture-assurance.json', 'docs/governance/changes/CHG-2026-0042/architecture-assurance.json']
   .map((c) => `${HARNESS}/${c}`).find(existsSync);
+if (!GOOD_PATH) {
+  test('architecture-assurance gate (worked-example fixture is bundle-only — skipped in an adopted layout)', { skip: true }, () => {});
+} else {
 const GOOD = JSON.parse(readFileSync(GOOD_PATH, 'utf8'));
 
 test('the shipped worked example passes A1–A5', () => {
@@ -53,3 +59,4 @@ test('the section set is exactly A1–A5', () => {
   assert.equal(SECTIONS.length, 5);
   assert.ok(SECTIONS.every((s) => /^A[1-5]-/.test(s)));
 });
+}

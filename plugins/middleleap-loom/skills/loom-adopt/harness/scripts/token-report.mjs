@@ -12,6 +12,7 @@
 // Run from the repo root: `node scripts/token-report.mjs` (print) or `--check` (validate shape).
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const LEDGER_LOCATIONS = ['docs/governance/token-ledger.json', 'token-ledger.json'];
 
@@ -51,7 +52,7 @@ function loadLedger(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const ledger = loadLedger();
   if (!ledger) { process.stdout.write('Token telemetry — no token-ledger.json yet. OK\n'); process.exit(0); }
   if (process.argv.includes('--check')) {

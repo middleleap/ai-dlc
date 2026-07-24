@@ -13,6 +13,7 @@
 // Run from the repo root: `node scripts/data-lifecycle-check.mjs` (exit 1 on any finding).
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const MANIFEST_LOCATIONS = ['docs/governance/data-lifecycle.json', 'data-lifecycle.json'];
 
@@ -21,12 +22,18 @@ const PERSONAL = new Set(['personal', 'sensitive']);
 // ADOPT: values that are not a real bounded retention.
 const BAD_PERIOD = new Set(['', 'indefinite', 'forever', 'permanent', 'n/a', 'none']);
 
+// A real ISO-8601 duration: P[nY][nM][nW][nD][T[nH][nM][nS]] with at least one component.
+// The lookaheads reject bare "P", a "PT" with no time part, and prose like "perpetual"
+// or "pending" that merely starts with "p" (the old /^p\w/ accepted those and let an
+// unbounded hold pass the right-to-erasure gate).
+const ISO8601_DURATION = /^p(?=[0-9t])(\d+y)?(\d+m)?(\d+w)?(\d+d)?(t(?=[0-9])(\d+h)?(\d+m)?(\d+s)?)?$/;
+
 /** A bounded retention period: an ISO-8601 duration (P…) or "<N> days|months|years". */
 export function validPeriod(p) {
   if (typeof p !== 'string') return false;
   const s = p.trim().toLowerCase();
   if (BAD_PERIOD.has(s)) return false;
-  if (/^p\w/.test(s)) return true;
+  if (ISO8601_DURATION.test(s)) return true;
   return /^\d+\s*(d|m|y|day|days|month|months|year|years)$/.test(s);
 }
 
@@ -76,7 +83,7 @@ function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const findings = run();
   if (findings.length) {
     process.stderr.write('\nData-lifecycle gate (retention & right-to-erasure) — FAIL\n\n');

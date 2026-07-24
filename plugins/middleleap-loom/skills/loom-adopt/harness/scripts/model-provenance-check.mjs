@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
+import { pathToFileURL } from 'node:url';
 
 const MANIFEST_LOCATIONS = ['docs/governance/model-manifest.json', 'model-manifest.json'];
 
@@ -128,7 +129,7 @@ function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const findings = run();
   if (findings.length) {
     process.stderr.write('\nModel-provenance gate (HG-0006) — FAIL\n\n');

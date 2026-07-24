@@ -42,6 +42,16 @@ test('content is HTML-escaped (no injection)', () => {
   assert.ok(html.includes('&lt;script&gt;bad'));
 });
 
+test('a crafted tile.status cannot break out of the CSS var() into markup', () => {
+  const html = render('prototype', {
+    title: 'T', wordmark: 'D',
+    tiles: [{ label: 'L', value: 'V', status: 'x)"><script>alert(1)</script>' }],
+  }, brand);
+  assert.ok(!html.includes('<script>alert(1)'), 'status must not inject a script tag');
+  // the sanitized token keeps only [a-z0-9-]
+  assert.ok(html.includes('var(--xscriptalert1script)'), 'status reduced to a bare token');
+});
+
 test('unknown mode throws', () => {
   assert.throws(() => render('poster', {}, brand));
 });

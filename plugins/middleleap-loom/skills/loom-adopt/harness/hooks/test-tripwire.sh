@@ -17,8 +17,16 @@
 # the open, on its own branch, not silently mid-implementation.
 set -euo pipefail
 
+# Fail CLOSED if jq is absent: without it the hook cannot tell whether this edit weakens a test,
+# so it must deny rather than silently exit non-zero (a non-blocking error = silent disarm).
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Test tripwire cannot run: jq is not installed, so it cannot verify whether this edit disables or narrows a test. Failing closed — install jq."}}'
+  exit 0
+fi
+
 input=$(cat)
-file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // ""')
+# NotebookEdit carries notebook_path, not file_path — read both so a matched-path notebook cell is scanned.
+file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.notebook_path // ""')
 [ -n "$file_path" ] || exit 0
 
 # Is this a test file? Vitest specs (.spec / .int.spec / .smoke.spec), anything under a
@@ -40,10 +48,12 @@ case "$branch" in
   *-testfix-* | *-spec-*) exit 0 ;;
 esac
 
-# The new content this edit introduces (Write content, Edit new_string, or each MultiEdit).
+# The new content this edit introduces (Write content, Edit new_string, MultiEdit edits, or a
+# NotebookEdit new_source — pii-guard already reads new_source; align so notebooks are covered too).
 new_content=$(printf '%s' "$input" | jq -r '
   (.tool_input.content // "") + "\n" +
   (.tool_input.new_string // "") + "\n" +
+  (.tool_input.new_source // "") + "\n" +
   ([.tool_input.edits[]?.new_string // empty] | join("\n"))')
 
 deny() {

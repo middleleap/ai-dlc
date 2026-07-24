@@ -17,15 +17,20 @@ import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { aggregateRequirements, requiredBy } from '../core/compiled-requirements.mjs';
+import { pathToFileURL } from 'node:url';
 
 export const LOG_LOCATIONS = ['docs/governance/decision-log.json', 'decision-log.json'];
 const GENESIS = 'GENESIS';
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
-/** The seal for one entry chained onto `prev`: hash of the ordered payload fields. */
+/** The seal for one entry chained onto `prev`: hash of the ordered payload fields.
+ *  The fields are JSON-encoded as an array, NOT "\n".join()'d: `decision` and `rationale` are
+ *  free text that can contain newlines, and a plain join let text move across a field boundary
+ *  (decision:"A\nB", rationale:"" ⇄ decision:"A", rationale:"B") for an IDENTICAL seal. JSON
+ *  encoding makes every field boundary explicit, so a boundary shuffle changes the hash. */
 export function sealOf(prev, e) {
-  const payload = [prev, e.seq, e.at, e.actor, e.change_id, e.decision, e.rationale, e.inputs_ref,
-    JSON.stringify(e.tool_calls || [])].join('\n');
+  const payload = JSON.stringify([prev, e.seq, e.at, e.actor, e.change_id, e.decision, e.rationale,
+    e.inputs_ref, e.tool_calls || []]);
   return sha256(payload);
 }
 
@@ -86,7 +91,7 @@ export function run(cwd = process.cwd()) {
 }
 
 // CLI (skipped when imported by the test suite).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const findings = run();
   if (findings.length) {
     process.stderr.write('\nDecision-log gate — FAIL\n\n');
