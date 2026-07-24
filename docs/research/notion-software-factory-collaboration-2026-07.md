@@ -357,7 +357,71 @@ conversation, and where a human *decides*, that decision comes home as a signed 
 
 ---
 
-## 6 · A phased adoption path
+## 6 · Where artifacts live — the freeze lifecycle
+
+**Confidence: design proposal**, grounded in verified repo mechanics.
+
+The crosswalk in §5 answers *what maps where*; this section answers the storage question directly:
+can Notion *store* the PRD and its siblings, or only mirror them? The naïve version — Notion as
+the canonical home of governed artifacts — breaks the Loom mechanically:
+
+- **The gates are file-based and local.** D1–D9 validate markdown under `discovery/runs/<slug>/`
+  (`discovery/gates/validate.mjs` — pure Node, zero dependencies, no network), and the **waist
+  gate** (`scripts/discovery-link-check.mjs`) refuses delivery entry without a gate-green
+  `handoff.md` *in the repo*.
+- **The core never learns a vendor's API** (`adapters/README.md`). A gate that fetched Notion at
+  validation time would violate the seam the whole integration stands on.
+
+So storage splits by role: **Notion is the authoring home; git is the evidence home.** An
+artifact may be *born and lived-in* on the floor — multiplayer drafting, comments, stakeholder
+reactions — but at each gate moment it is **frozen into git**:
+
+1. **Draft on the floor.** The PRD, synthesis, or problem statement is a Notion page; teammates
+   co-edit and comment; D9 stakeholder reactions land in place.
+2. **Freeze at the gate moment.** The export (the API serves Notion-flavored Markdown) lands in
+   `discovery/runs/<slug>/` **by pull request**, opened by the builder-class sync identity.
+3. **Gates run on the export.** D1–D9 and the renderer operate on the frozen file exactly as
+   today — nothing about the gate mechanics changes.
+4. **The merged snapshot is the artifact of record.** The Notion page is stamped
+   *frozen at `<sha>` · vN* with a backlink to the file.
+5. **Drift is visible, never silent.** If the page's `last_edited_time` moves past the freeze
+   timestamp — or a scheduled doc-integrity-style digest comparison mismatches — the floor shows
+   a **drift badge: "draft ahead of record."** Drift never blocks a gate (the gate reads the
+   frozen sha, not the live page), but it is always visible where the team works.
+
+**Three questions decide any artifact's home:**
+
+1. **Does a gate read it?** → the gate-read copy lives in git, always.
+2. **Does its authoring benefit from multiplayer?** → author it on the floor, freeze at gates.
+3. **Does authority depend on it** (approval, hold, control plane)? → git under CODEOWNERS,
+   never writable from the floor.
+
+### The split
+
+| Artifact | Canonical home | Notion's role |
+|---|---|---|
+| **PRD / `handoff.md`** | Git (frozen snapshot) | **Born here** — co-authored, then frozen by PR; D-gates re-run on the export |
+| Discovery drafts (research log, synthesis, problem statement) | Git at gate time | Born here; frozen per gate moment |
+| Stakeholder reactions (D9) | Git at gate time | Born here — reactions in place, exported |
+| Meeting, workshop, interview notes | **Notion** | **Lives here permanently** — feeds the research log as cited evidence |
+| Roadmap, portfolio, pre-discovery briefs | **Notion** | Lives here — upstream of the Loom's frame |
+| Solution Direction Record, ADRs | Git | Drafted on the floor; the record lands in git |
+| `docs/backlog.yaml` | Git | Read-only board; proposals return by PR |
+| Product passport (PA1/PA2), change envelope | Git | Approval pages route the decision; it returns as a signed envelope by PR |
+| Control plan | Git | Projection only — compiled, never hand-written anywhere |
+| Decision log, sealed evidence, eval reports | Git | Read-only feed / MI dashboard |
+| `identities.json`, BrainKit, profiles | Git (digest-sealed) | Read-only roster and reference views |
+| Code, API contracts, tests, CI, gates, hooks | Git | None — control plane (HG-0002) |
+| **`release-hold.json`** | Git | **Never writable from the floor**; view only |
+
+**Phasing:** the freeze machinery is Phase 2 equipment — it needs the PR round-trip and the sync
+identity; Phases 0–1 are unchanged by it. And the one-line pattern holds: **drafts and
+conversation live in Notion; anything a gate, an approval, or an auditor touches is a frozen,
+digest-checked file in git — and the freeze is a PR.**
+
+---
+
+## 7 · A phased adoption path
 
 Deliberately staged so value lands before any governance risk, and nothing becomes a "gate" before
 the control-plane foundations the roadmap is fixing are in place.
@@ -383,7 +447,7 @@ Each phase names its control tie-in and states honestly whether it is *declared*
 
 ---
 
-## 7 · Risks & caveats
+## 8 · Risks & caveats
 
 - **The appearance-of-control trap (highest).** A pretty Notion board can *look* like governance while
   the real controls sit elsewhere. Mitigation: §4.1 — git is truth, decisions round-trip as signed
@@ -414,7 +478,7 @@ Each phase names its control tie-in and states honestly whether it is *declared*
 
 ---
 
-## 8 · Recommendation — where the Loom invests next
+## 9 · Recommendation — where the Loom invests next
 
 The collaboration edge is the Loom's clearest *unclaimed adjacency*: the harness already produces
 every artifact a team needs to collaborate around, and Notion has — as of May 2026 — built the exact

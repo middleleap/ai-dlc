@@ -113,6 +113,7 @@ code,.mono{font-family:var(--mono);font-size:.92em;color:var(--bone-1)}
 .badge-positive{background:var(--positive-dim);color:var(--positive)}.badge-positive::before{background:var(--positive)}
 .badge-caution{background:var(--caution-dim);color:var(--caution)}.badge-caution::before{background:var(--caution)}
 .badge-critical{background:var(--critical-dim);color:var(--critical-text)}.badge-critical::before{background:var(--critical)}
+.badge-info{background:var(--info-dim);color:var(--info)}.badge-info::before{background:var(--info)}
 
 /* diagram */
 .figwrap{border:1px solid var(--ink-border);background:var(--ink-1);padding:18px}
@@ -296,7 +297,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
     <a class="btn btn-secondary" href="the-loom.html"><span class="pv"></span>The method deck ↗</a>
   </div>
   <div class="factrow">
-    <div class="fact"><div class="n">9</div><div class="l">Artifacts mapped</div></div>
+    <div class="fact"><div class="n">10</div><div class="l">Views mapped</div></div>
     <div class="fact"><div class="n">12</div><div class="l">Approver roles routed</div></div>
     <div class="fact"><div class="n">5</div><div class="l">Governing rules</div></div>
     <div class="fact"><div class="n">4</div><div class="l">Adoption phases</div></div>
@@ -362,8 +363,10 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
           <line x1="550" y1="260" x2="414" y2="260" stroke-width="1.5" class="svg-line-e"/>
           <path d="M414 260 l9 -5 v10 z" class="svg-arr-e"/>
           <text x="480" y="248" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-ember">SIGNED ENVELOPE · BY PR</text>
-          <text x="480" y="292" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">adapter contract</text>
-          <text x="480" y="308" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">HG-0008</text>
+          <line x1="550" y1="322" x2="414" y2="322" stroke-width="1.5" class="svg-line"/>
+          <path d="M414 322 l9 -5 v10 z" class="svg-arr"/>
+          <text x="480" y="310" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">FROZEN DRAFT · BY PR</text>
+          <text x="480" y="352" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle" class="svg-sub">adapter contract · HG-0008</text>
         </g>
         <!-- humans -->
         <g class="part" data-part="humans" tabindex="0" role="button" aria-label="Humans — they dispose">
@@ -400,7 +403,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
   <div class="wrap">
     <div class="eyebrow">Run it</div>
     <h2>One approval, end to end — <em>run it yourself.</em></h2>
-    <p class="lede">Follow a PA1 approval from a pending passport in git, out to the floor, through a human decision, and home again as signed evidence. Then pick a failure scenario and watch the contract refuse it.</p>
+    <p class="lede">Follow a PA1 approval from a pending passport in git, out to the floor, through a human decision, and home again as signed evidence. Then pick a scenario: four the contract refuses — and one that drifts, the floor edited after a freeze while git holds the sha.</p>
     <div class="sim">
       <div class="simhead">
         <select id="scenario" aria-label="Choose a scenario"></select>
@@ -414,7 +417,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
         <div class="simlog" id="simlog" aria-live="polite"></div>
         <div class="simdetail" id="simdetail"><div class="t">The journey</div><p>Press <span class="mono">Run the round-trip</span>, or step through stage by stage. Click any stage to read what happens there.</p></div>
       </div>
-      <div class="verdict" id="verdict" aria-live="polite">READY — a clean approval will land; four scenarios will not.</div>
+      <div class="verdict" id="verdict" aria-live="polite">READY — a clean approval lands; four scenarios refuse; one drifts.</div>
     </div>
   </div>
 </section>
@@ -422,8 +425,8 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
 <section id="crosswalk">
   <div class="wrap">
     <div class="eyebrow">The crosswalk</div>
-    <h2>Nine artifacts mapped — git owns the truth, <em>Notion hosts the conversation.</em></h2>
-    <p class="lede">Every governed file gets a view on the floor. Three round-trip classes: read-only projection, PR round-trip, and never-writable. Filter by name, view, or rule.</p>
+    <h2>Every view mapped — git owns the truth, <em>Notion hosts the conversation.</em></h2>
+    <p class="lede">Every artifact gets a view on the floor — and a class: read-only projection · PR round-trip · born on the floor, frozen by PR · lives on the floor · never writable. Filter by name, view, or rule.</p>
     <input class="filter" id="xfilter" type="search" placeholder="Filter — e.g. passport, board, never" aria-label="Filter the crosswalk">
     <div class="xgrid" id="xgrid"></div>
   </div>
@@ -521,7 +524,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
 (function(){
   var DESC={
     git:{t:'Git — the system of record',p:'Every fact the gates trust lives here: the D and Q gates, the governance passports and envelopes, CODEOWNERS and branch protection, the sealed evidence chain. Nothing on the floor changes this — it is projected out, and it receives evidence home.'},
-    seam:{t:'The seam — an adapter, not an API',p:'One direction projects governed files into views. The other carries a human decision home as a signed approval-attestation envelope that lands by pull request. The core never learns the vendor’s API — it reads envelopes (HG-0008). Swap Notion for Jira or Linear and the gates do not change.'},
+    seam:{t:'The seam — an adapter, not an API',p:'One direction projects governed files into views. Two flows come home, both by pull request: a human decision as a signed approval-attestation envelope, and a frozen draft — the PRD co-authored on the floor, exported at gate time so the D-gates run on the file. The core never learns the vendor’s API — it reads files and envelopes (HG-0008). Swap Notion for Jira or Linear and the gates do not change.'},
     notion:{t:'Notion — the factory floor',p:'The board over the backlog, approval pages with the evidence carried in, threads bound to artifacts, the agents’ queue mirror. A place to see, discuss and decide — never the place truth lives.'},
     humans:{t:'Humans — they dispose',p:'Twelve approver roles route to named people in the identity registry. Four-eyes merges, PA1/PA2 sign-offs and the release hold stay human, in git, under CODEOWNERS. The floor makes the queue visible; it grants no authority.'},
     agents:{t:'Agents — they propose',p:'Claude Code and its peers work the queue as named partner agents: pick, build, open PRs. They hold no approval role anywhere — floor or loom (HG-0001). The PR is the light switch.'}
@@ -603,7 +606,8 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
     agent:{name:'A workspace agent clicks approve',block:'decide',why:'The “approve” came from an agent identity. Agents hold no approval authority (HG-0001) — the decision is void; a named human must act.'},
     role:{name:'The approver lacks the role',block:'envelope',why:'The sync worker refuses to draft: this identity does not hold risk-second-line in identities.json. Routing is not authority.'},
     hold:{name:'The floor tries to write the release hold',block:'pr',why:'release-hold.json is second-line territory in CODEOWNERS. The sync worker’s PR cannot touch it, and branch protection refuses a direct write.'},
-    stale:{name:'Stale activation evidence',block:'gate',why:'The adapter’s activation evidence is 41 days old — declared, not active. The envelope is not trusted; PA1 stays pending.'}
+    stale:{name:'Stale activation evidence',block:'gate',why:'The adapter’s activation evidence is 41 days old — declared, not active. The envelope is not trusted; PA1 stays pending.'},
+    drift:{name:'A frozen PRD is edited on the floor',block:null,drift:true,why:''}
   };
   var sel=document.getElementById('scenario'),track=document.getElementById('track'),log=document.getElementById('simlog'),
       det=document.getElementById('simdetail'),ver=document.getElementById('verdict'),
@@ -627,7 +631,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
     clearTimeout(timer);idx=0;running=false;approved=false;done=false;
     STAGES.forEach(function(s){mark(s.id,null);});
     log.innerHTML='';bApp.disabled=true;bPlay.disabled=false;bStep.disabled=false;
-    setVerdict('READY — a clean approval will land; four scenarios will not.','');
+    setVerdict('READY — a clean approval lands; four scenarios refuse; one drifts.','');
     det.innerHTML='<div class="t">The journey</div><p>Press <span class="mono">Run the round-trip</span>, or step through stage by stage. Click any stage to read what happens there.</p>';
   }
   function advance(){
@@ -645,8 +649,10 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
       bApp.disabled=false;running=false;return 'wait';
     }
     mark(s.id,'pass');line('✓ '+s.lab+' — '+s.ph,'ok');
+    if(s.id==='gate'&&sc.drift){line('◇ DRIFT — the handoff page moved after the freeze; badge raised. The gate reads the frozen sha, not the live page.','wt');}
     if(s.id==='green'){
-      setVerdict('✓ PA1 APPROVED — the decision came home as signed evidence. Git never left charge.','good');
+      if(sc.drift){setVerdict('✓ PA1 APPROVED — with a drift badge on the floor: the PRD draft is ahead of the frozen record. Git held the sha; freeze again to update the record.','wt');}
+      else{setVerdict('✓ PA1 APPROVED — the decision came home as signed evidence. Git never left charge.','good');}
       done=true;bPlay.disabled=true;bStep.disabled=true;return 'endok';
     }
     idx++;
@@ -689,11 +695,12 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
     {a:'product-passport.json',n:'Approvals DB + approval pages',u:'PA1/PA2 routed across all 12 roles, evidence carried in; who is blocking is visible.',r:'PR round-trip',c:'ember'},
     {a:'change-envelope.json',n:'Change record page',u:'One place to watch a change move through its states, tier and receipts.',r:'read-only projection',c:'neutral'},
     {a:'release-hold.json',n:'Release gate view',u:'The second line’s go/no-go, visible to everyone. Missing hold = HELD, always.',r:'never writable from the floor',c:'critical'},
-    {a:'handoff.md + discovery run',n:'Co-authored discovery pages',u:'Facilitator and stakeholders co-edit; D9 reactions land in place, not in email.',r:'PR round-trip · D-gates re-run',c:'ember'},
+    {a:'handoff.md + discovery run',n:'Co-authored discovery pages',u:'Born on the floor: facilitator and stakeholders co-edit, D9 reactions land in place. Frozen into discovery/runs/ at gate time; a drift badge marks any draft ahead of record.',r:'born on the floor · frozen by PR',c:'ember'},
     {a:'operations-signal.json',n:'Triage board',u:'Incidents, drift and CVEs triaged together; every signal typed, rated, routed.',r:'PR round-trip',c:'ember'},
     {a:'identities.json',n:'Workspace roster',u:'Human-readable “who approves what” — the registry stays canonical in git.',r:'read-only projection',c:'neutral'},
     {a:'decision-log.json',n:'Agent activity feed',u:'Teammates see what the agent decided and why — the hash chain stays in git.',r:'read-only projection',c:'neutral'},
-    {a:'Sealed evidence bundle',n:'MI dashboard',u:'Standing management information for board and second line, assembled continuously.',r:'read-only projection',c:'neutral'}
+    {a:'Sealed evidence bundle',n:'MI dashboard',u:'Standing management information for board and second line, assembled continuously.',r:'read-only projection',c:'neutral'},
+    {a:'Meeting notes · roadmap · briefs',n:'Pre-discovery, on the floor',u:'Workshops, interviews, portfolio — upstream of the frame. Canonical in Notion; cited into the research log as evidence.',r:'lives on the floor',c:'info'}
   ];
   var grid=document.getElementById('xgrid'),fi=document.getElementById('xfilter');
   grid.innerHTML=X.map(function(x){
