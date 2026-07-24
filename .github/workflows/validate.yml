@@ -281,6 +281,13 @@ jobs:
           mv docs/governance/changes/CHG-2026-0042 /tmp/chg-f5
           node -e 'import("./discovery/gates/validate.mjs").then(m=>{if(m.registerMandatory(".",{flag:false})){console.error("::error::register still mandatory with no compiling change — it is hardcoded, not derived from policy");process.exit(1)}console.log("F5: register correctly not mandatory once no compiled plan requires it")})'
           mv /tmp/chg-f5 docs/governance/changes/CHG-2026-0042
+          # rc.14 WS5: `loom status` projects the five-stage adoption matrix (must run clean) …
+          node scripts/loom.mjs status --json > /tmp/loom-status.json
+          node -e 'const s=require("/tmp/loom-status.json");if(!Array.isArray(s.capabilities)||!s.capabilities.length){console.error("::error::loom status produced no capability matrix");process.exit(1)}console.log("loom status:",s.capabilities.length,"capabilities,",s.unresolved.length,"adopt-pending")'
+          # … and `attest-adoption` must REFUSE while the reference repo is adopt-pending (F7).
+          if node scripts/loom.mjs attest-adoption; then
+            echo "::error::attest-adoption signed an adoption report while items are still adopt-pending"; exit 1
+          fi
           # 22 · rc.13 WS4 — a guardrail policy that CLAIMS enforcement via a mechanism that does
           #      not exist (implied coverage) must fail; the Loom must not imply a protection it lacks.
           node -e 'const fs=require("fs");const p="guardrails/guardrail-policy.json";const s=JSON.parse(fs.readFileSync(p));s.guardrails[0].coverage["local-git"]={state:"enforced",mechanism:"hooks/does-not-exist.sh"};fs.writeFileSync(p,JSON.stringify(s,null,2))'

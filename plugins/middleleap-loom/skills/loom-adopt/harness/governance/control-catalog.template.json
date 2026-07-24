@@ -558,6 +558,19 @@
       "note": "The gate proves the policy is honest and the capability matrix (guardrails/README.md, doc-integrity-gated) tracks it. The local hooks are Claude Code-specific; the CI gates are the enforcement of record where a runtime lacks a hook. Hostile scenarios (PII literal, test weakening) are driven through the real adapters in the test"
     },
     {
+      "control_id": "ADOPTION-STATE",
+      "objective": "Adoption is a five-stage state machine (installed → configured → validated → platform → organisation) projected from the control catalog; a signed adoption report cannot be produced while any mandatory item is adopt-pending, and an agent cannot certify its own adoption",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/adoption-attest.mjs",
+      "test_ref": "scripts/adoption-status.test.mjs",
+      "lane": "pr",
+      "execute": false,
+      "execute_note": "adopter tool (loom status / attest-adoption), run on demand — not a per-PR merge gate (a reference repo is intentionally adopt-pending). The gate ships mechanically-validated; producing the signed report is the adopter's",
+      "note": "loom status projects the stage matrix + the unresolved-marker inventory; attest-adoption refuses to sign while adopt-pending (closes F7). The signature is adopter-side"
+    },
+    {
       "control_id": "DOC-INTEGRITY",
       "objective": "Generated docs (copy table, scorecard) cannot drift from their source of truth \u2014 drift fails the build",
       "owner_role": "platform-admin",

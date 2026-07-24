@@ -1,0 +1,105 @@
+// Tests for the adoption state machine (rc.14 · WS5). Node runner: `node --test`.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { generateKeyPairSync, sign } from 'node:crypto';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { computeStatus, unresolvedMarkers } from './adoption-status.mjs';
+import { evaluate, attestationHash } from './adoption-attest.mjs';
+
+// A tiny adopted repo: a catalog + some governance files (optionally still carrying ADOPT markers).
+function repo({ controls, files = {} }) {
+  const dir = mkdtempSync(join(tmpdir(), 'ad-'));
+  mkdirSync(join(dir, 'docs/governance'), { recursive: true });
+  writeFileSync(join(dir, 'docs/governance/control-catalog.json'), JSON.stringify({ controls }));
+  for (const [path, content] of Object.entries(files)) {
+    mkdirSync(join(dir, path, '..'), { recursive: true });
+    writeFileSync(join(dir, path), content);
+  }
+  return dir;
+}
+
+test('unresolvedMarkers finds ADOPT / @your-org / draft markers', () => {
+  const dir = repo({ controls: [], files: { 'docs/governance/x.json': '{"owner":"@your-org/team"}', 'docs/governance/y.json': '{"ok":true}' } });
+  try {
+    const u = unresolvedMarkers(dir);
+    assert.ok(u.includes('docs/governance/x.json'));
+    assert.ok(!u.includes('docs/governance/y.json'));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('computeStatus projects the five stages from the catalog; a validated code control is installed+validated', () => {
+  const dir = repo({ controls: [{ control_id: 'A', state: 'mechanically-validated', mechanism_ref: 'scripts/a.mjs' }] });
+  try {
+    const s = computeStatus(dir);
+    const a = s.capabilities.find((c) => c.control_id === 'A');
+    assert.equal(a.installed, true);
+    assert.equal(a.validated, true);
+    assert.equal(a.platform, false);       // bundle ships 0 platform-enforced
+    assert.equal(a.organisation, false);
+    assert.equal(s.adoptPending, false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a control whose governed path still has a marker is installed but NOT configured', () => {
+  const dir = repo({
+    controls: [{ control_id: 'B', state: 'mechanically-validated', mechanism_ref: 'scripts/b.mjs', paths: ['docs/governance/b.json'] }],
+    files: { 'docs/governance/b.json': '{"team":"@your-org/x"}' },
+  });
+  try {
+    const s = computeStatus(dir);
+    const b = s.capabilities.find((c) => c.control_id === 'B');
+    assert.equal(b.installed, true);
+    assert.equal(b.configured, false);
+    assert.equal(s.adoptPending, true);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a platform-activation record advances a control to platform; an adoption attestation to organisation', () => {
+  const dir = repo({ controls: [{ control_id: 'HG-0001', state: 'defined', doc_ref: 'runbook.md' }] });
+  try {
+    mkdirSync(join(dir, 'docs/governance/platform-activation'), { recursive: true });
+    writeFileSync(join(dir, 'docs/governance/platform-activation/x.json'), JSON.stringify({ satisfies_control: 'HG-0001' }));
+    writeFileSync(join(dir, 'docs/governance/adoption-attestation.json'), JSON.stringify({ approved_controls: ['HG-0001'] }));
+    const c = computeStatus(dir).capabilities.find((x) => x.control_id === 'HG-0001');
+    assert.equal(c.platform, true);
+    assert.equal(c.organisation, true);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---- attest-adoption ----
+const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+const ISSUERS = { issuers: [{ id: 'org', mechanism: 'ed25519', verify: { public_key: publicKey.export({ type: 'spki', format: 'pem' }).toString() } }] };
+const REGISTRY = { identities: [{ id: 'exec', kind: 'human' }, { id: 'agent-x', kind: 'agent' }] };
+const clean = { adoptPending: false, unresolved: [] };
+function attestation(over = {}) {
+  const rec = { attested_at: new Date(Date.parse('2026-07-24T00:00:00Z')).toISOString(), attested_by: 'exec', approved_controls: ['A'], ...over };
+  rec.attestation = { issuer: 'org', signature: sign(null, Buffer.from(attestationHash(rec), 'utf8'), privateKey).toString('base64') };
+  return rec;
+}
+const NOW = Date.parse('2026-07-24T00:00:00Z');
+const ev = (status, att, over = {}) => evaluate(status, att, { issuers: ISSUERS, registry: REGISTRY, now: NOW, ...over });
+
+test('attest — a clean, signed, human-attested adoption verifies', () => {
+  assert.deepEqual(ev(clean, attestation()), []);
+});
+
+test('attest — CANNOT sign while adopt-pending (the F7 rule)', () => {
+  const f = ev({ adoptPending: true, unresolved: ['docs/governance/x.json'] }, attestation());
+  assert.ok(f.some((x) => /adoption is not complete/.test(x)));
+});
+
+test('attest — an agent cannot certify its own adoption', () => {
+  assert.ok(ev(clean, attestation({ attested_by: 'agent-x' })).some((x) => /an agent cannot certify/.test(x)));
+});
+
+test('attest — a tampered signature fails', () => {
+  const a = attestation(); const sig = Buffer.from(a.attestation.signature, 'base64'); sig[0] ^= 0xff;
+  a.attestation.signature = sig.toString('base64');
+  assert.ok(ev(clean, a).some((x) => /does NOT verify/.test(x)));
+});
+
+test('attest — a missing attestation is not attested', () => {
+  assert.ok(ev(clean, null).some((x) => /no adoption-attestation/.test(x)));
+});
