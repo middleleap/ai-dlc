@@ -13,7 +13,7 @@
     {
       "id": "bank-approvals",
       "mechanism": "sigstore",
-      "description": "Human approval attestations (control functions) via sigstore/cosign",
+      "description": "SUPERSEDED for human approvals — human approval assertions now live in assertion-issuers.json (Factory Floor WS2 · D2.4), which is deliberately a SEPARATE registry so that a service key can never vouch for a person. Keep this entry only for service-issued envelopes; do not reuse its trust anchor in the assertion registry (the gate rejects a shared anchor).",
       "verify": {
         "kind": "sigstore-identity",
         "issuer": "https://your-idp.example/oidc",
@@ -31,9 +31,10 @@
     {
       "id": "demo-floor-bridge",
       "mechanism": "ed25519",
+      "identity": "svc-floor-bridge",
       "description": "DEMO reference issuer — the transcribing service identity for the bundled approval-attestation example. Proves CUSTODY only: a transcription signature is never approval authority (see governance/assertion-issuers.template.json). Private key NOT shipped.",
       "verify": {
-        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAASa5IlnBa190jVkYi1E66hrvZ5cKEuA0E/Y7Rt774hU=\n-----END PUBLIC KEY-----\n"
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAXGQjn53lqsQlqZB1Q2lekoD4g8SSCUbQfv9gRZAkQ3M=\n-----END PUBLIC KEY-----\n"
       }
     }
   ]

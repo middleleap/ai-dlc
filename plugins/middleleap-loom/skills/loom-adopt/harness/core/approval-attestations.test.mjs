@@ -28,9 +28,15 @@ const ROGUE = generateKeyPairSync('ed25519');
 const ASSERTION_ISSUERS = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { public_key: pem(IDP) } }] };
 const SERVICE_ISSUERS = {
   issuers: [
-    { id: 'svc-floor-bridge', mechanism: 'ed25519', verify: { public_key: pem(BRIDGE) } },
-    // the same key material registered as a SERVICE issuer under an IdP-looking name
-    { id: 'bank-idp-service-copy', mechanism: 'ed25519', verify: { public_key: pem(IDP) } },
+    { id: 'svc-floor-bridge', mechanism: 'ed25519', identity: 'svc-floor-bridge', verify: { public_key: pem(BRIDGE) } },
+  ],
+};
+// A service registry that ALSO holds the identity provider's key, under a different id — the
+// shape that reduces the service/human separation to a naming convention.
+const SERVICE_ISSUERS_SHARING_ANCHOR = {
+  issuers: [
+    ...SERVICE_ISSUERS.issuers,
+    { id: 'bank-idp-service-copy', mechanism: 'ed25519', identity: 'svc-floor-bridge', verify: { public_key: pem(IDP) } },
   ],
 };
 
@@ -162,7 +168,48 @@ test('a SERVICE key cannot vouch for a human — the bridge signing the assertio
 
 test('an identity-provider key registered as a service issuer is still refused as an assertion issuer', () => {
   const rec = signed(validRecord({ subject: { assertion: { issuer: 'bank-idp-service-copy' } } }));
-  failsWith(rec, /registered SERVICE attestation issuer/);
+  failsWith(rec, /registered SERVICE attestation issuer/, ctx({ issuers: SERVICE_ISSUERS_SHARING_ANCHOR }));
+});
+
+test('separation holds on KEY MATERIAL, not on the id someone typed', () => {
+  // The assertion quotes the *assertion* registry's id — the id check passes. The same key is
+  // also a service issuer under another id, so quoting the right name is not enough.
+  failsWith(signed(validRecord()), /one trust anchor in both registries/, ctx({ issuers: SERVICE_ISSUERS_SHARING_ANCHOR }));
+});
+
+test('a signing key not bound to a registry identity cannot credit a custodian', () => {
+  const issuers = { issuers: [{ ...SERVICE_ISSUERS.issuers[0] }] };
+  delete issuers.issuers[0].identity;
+  failsWith(signed(validRecord()), /declares no `identity`/, ctx({ issuers }));
+});
+
+test('the credited custodian must be the identity that actually signed', () => {
+  const issuers = { issuers: [{ ...SERVICE_ISSUERS.issuers[0], identity: 'svc-floor-projector' }] };
+  failsWith(signed(validRecord()), /the credited custodian is not the signer/, ctx({ issuers }));
+});
+
+test('an audience or step-up level the registry pins is checked, not merely carried', () => {
+  const pinned = { issuers: [{ ...ASSERTION_ISSUERS.issuers[0], verify: { public_key: pem(IDP), audience: 'loom-approvals', required_acr: 'high' } }] };
+  // carried but wrong
+  failsWith(signed(validRecord({ subject: { assertion: { audience: 'something-else', acr: 'high' } } })),
+    /audience .* does not match/, ctx({ assertionIssuers: pinned }));
+  // pinned but absent
+  failsWith(signed(validRecord()), /pins audience .* but the assertion carries none/, ctx({ assertionIssuers: pinned }));
+});
+
+test('expiry, revocation, origin and custodian are all under the signature', () => {
+  for (const [mutate, what] of [
+    [(r) => { r.validity.revoked = false; }, 'un-revoking'],
+    [(r) => { r.validity.expires_at = '2099-12-31T00:00:00Z'; }, 'extending expiry'],
+    [(r) => { r.origin.system = 'notion-2'; }, 'evading the replay key'],
+    [(r) => { r.origin.event_id = 'evt_other'; }, 'reattributing the event'],
+    [(r) => { r.transcription.by = 'svc-floor-projector'; }, 'reattributing custody'],
+  ]) {
+    const rec = signed(validRecord({ validity: { revoked: true } }));
+    mutate(rec);
+    const findings = verifyApprovalAttestation(rec, ctx());
+    assert.ok(findings.some((f) => /does NOT verify/.test(f)), `${what} must break the signature\ngot: ${findings.join('\n')}`);
+  }
 });
 
 test('an unpinned identity provider is not trusted', () => {

@@ -30,6 +30,7 @@
 /docs/governance/changes/               @your-org/risk-second-line
 /docs/governance/identities.json        @your-org/risk-second-line
 /docs/governance/attestation-issuers.json  @your-org/risk-second-line
+/docs/governance/assertion-issuers.json    @your-org/risk-second-line
 /docs/governance/services/              @your-org/platform-admins
 
 # The Institutional BrainKit is institution-owned context — owned by the accountable

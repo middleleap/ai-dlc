@@ -23,6 +23,23 @@
 // Honest gaps, in the tradition of `attestations.mjs`: `ed25519` assertion material is verified
 // here for real; `oidc-step-up` and `sigstore` declare mechanisms an adopter wires to pinned IdP
 // metadata, and are reported UNVERIFIED-HERE — a finding, never a silent pass.
+//
+// TWO RESIDUALS THIS MODULE DOES NOT CLOSE, named so silence is not mistaken for coverage:
+//
+//   1. The identity-provider subject is BOUND but not JOINED. `idp_subject` and `registry_id`
+//      sit side by side under the human's signature, so neither can be altered afterwards — but
+//      nothing independent asserts they are the same person. That join is the second-line-owned
+//      identity map specified in `docs/notion-floor-identity-mapping.md`, which no gate reads
+//      yet. Until it exists, a compromised bridge with a valid assertion for subject A could
+//      name registry identity B, and every check here would still pass.
+//   2. `source_sha` and `artifact_digest` are BOUND but not RECONCILED. They are inside the
+//      signed payload, so an approval cannot be re-pointed at different code after the fact;
+//      this module does not, however, check that the sha names the change's actual source state
+//      or that the digest names a built artifact. Reconciliation belongs to the release-subject
+//      and evidence gates, which hold that state.
+//
+// Both are "the approval is authentic and immutable, but its subject is asserted, not proven".
+// Neither is closable here without state this module deliberately does not reach for.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import process from 'node:process';
@@ -73,12 +90,35 @@ export function canonicalDecisionPayload(rec) {
     b.passport_digest ?? '',
     b.source_sha ?? '',
     b.artifact_digest ?? '',
+    // Provenance and replay keys are signed: the replay guard is keyed on origin, so leaving
+    // origin unsigned would let a carrier evade deduplication by editing one unsigned word.
+    rec?.origin?.system ?? '',
+    rec?.origin?.event_id ?? '',
     rec?.origin?.nonce ?? '',
     // The claimed decision time is signed too, so a carrier cannot back- or forward-date a
     // decision without breaking the human's signature. Without this the only anchor for "when"
     // is the merge time of the file, which is the bridge's word until git records it.
     rec?.validity?.issued_at ?? '',
+    // …as are expiry and revocation. Outside the signature they are editable JSON, and a dead
+    // or withdrawn approval could be revived by a carrier flipping one field.
+    rec?.validity?.expires_at ?? '',
+    String(rec?.validity?.revoked === true),
+    // The custodian is named under the human's signature, so custody cannot be reattributed.
+    rec?.transcription?.by ?? '',
   ].map((v) => JSON.stringify(typeof v === 'string' ? v : String(v ?? ''))).join('\n');
+}
+
+/**
+ * The verification material an issuer entry actually trusts, normalised for comparison.
+ * Separation between the SERVICE and ASSERTION registries has to hold on key material, not on
+ * the id someone typed: registering one key under two ids in two files would otherwise let a
+ * service key vouch for a human simply by quoting the other id.
+ */
+export function trustAnchor(issuer) {
+  const v = issuer?.verify || {};
+  if (isStr(v.public_key)) return `key:${v.public_key.replace(/\s+/g, '')}`;
+  if (isStr(v.issuer)) return `oidc:${v.issuer}${isStr(v.subject_pattern) ? `|${v.subject_pattern}` : ''}`;
+  return `raw:${JSON.stringify(v, Object.keys(v).sort())}`;
 }
 
 const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
@@ -178,10 +218,20 @@ export function verifySubjectAssertion(rec, ctx, label) {
   }
   if (!isStr(a.issuer)) return [`${label}: assertion has no issuer — an unattributed assertion is not evidence`];
 
-  // A service key may never vouch for a human. This is the whole point of the contract.
-  const serviceIssuer = (ctx.issuers?.issuers || []).some((i) => i.id === a.issuer);
-  if (serviceIssuer) {
+  // A service key may never vouch for a human. This is the whole point of the contract, and it
+  // has to hold on KEY MATERIAL, not on the id someone typed — the same key registered under two
+  // ids in two files would otherwise defeat the separation by simply quoting the other id.
+  const serviceIssuers = ctx.issuers?.issuers || [];
+  if (serviceIssuers.some((i) => i.id === a.issuer)) {
     findings.push(`${label}: assertion issuer ${JSON.stringify(a.issuer)} is a registered SERVICE attestation issuer — a service signing for a human authenticates the service, not the approver`);
+  }
+  const declared = (ctx.assertionIssuers?.issuers || []).find((i) => i.id === a.issuer);
+  if (declared) {
+    const anchor = trustAnchor(declared);
+    const shared = serviceIssuers.find((i) => trustAnchor(i) === anchor);
+    if (shared) {
+      findings.push(`${label}: the assertion issuer's verification material is also registered as SERVICE issuer ${JSON.stringify(shared.id)} — one trust anchor in both registries makes the service/human separation a naming convention rather than a control`);
+    }
   }
   if (isStr(rec?.transcription?.by) && a.issuer === rec.transcription.by) {
     findings.push(`${label}: the transcriber ${JSON.stringify(a.issuer)} issued the subject assertion — the bridge transcribes, it never vouches`);
@@ -223,6 +273,13 @@ export function verifySubjectAssertion(rec, ctx, label) {
     findings.push(`${label}: assertion issuer ${JSON.stringify(a.issuer)} is not in the assertion-issuers registry — an unpinned identity provider is not trusted`);
     return findings;
   }
+  // What the registry pins, the gate checks. An audience or step-up level carried in the record
+  // but never compared is decoration: it reads as a control and enforces nothing.
+  for (const [claim, pinned] of [['audience', idp.verify?.audience], ['acr', idp.verify?.required_acr]]) {
+    if (!isStr(pinned) || /^ADOPT:/.test(pinned)) continue; // unpinned by the adopter — nothing to check against
+    if (!isStr(a[claim])) findings.push(`${label}: the registry pins ${claim} for ${idp.id} but the assertion carries none`);
+    else if (a[claim] !== pinned) findings.push(`${label}: assertion ${claim} ${JSON.stringify(a[claim])} does not match the ${JSON.stringify(pinned)} pinned for ${idp.id}`);
+  }
   if (a.mechanism === 'ed25519' && idp.mechanism === 'ed25519') {
     findings.push(...verifySignatureOver(payload, { issuer: a.issuer, signature: a.signature }, reg, 'decision payload')
       .map((f) => `${label}: ${f}`));
@@ -245,6 +302,18 @@ export function verifyTranscription(rec, ctx, label) {
   if (isStr(t.by) && !who) findings.push(`${label}: transcriber ${JSON.stringify(t.by)} is not in the identity registry`);
   if (who && (who.roles || []).length > 0) {
     findings.push(`${label}: transcriber ${t.by} holds approval roles (${(who.roles || []).join(', ')}) — the bridge must hold none`);
+  }
+  // The named custodian must be the one who actually signed. `transcription.by` is a REGISTRY
+  // identity and the signature carries an ISSUER id — two namespaces — so the issuer entry binds
+  // them with `identity`. Without that binding `by` is free text: one service signs and another
+  // is credited, and the custody chain names the wrong party.
+  if (isStr(t.by) && isStr(t.attestation?.issuer)) {
+    const signer = (ctx.issuers?.issuers || []).find((i) => i.id === t.attestation.issuer);
+    if (signer && !isStr(signer.identity)) {
+      findings.push(`${label}: attestation issuer ${JSON.stringify(signer.id)} declares no \`identity\` — the signing key is not bound to a registry identity, so the credited custodian cannot be checked`);
+    } else if (signer && signer.identity !== t.by) {
+      findings.push(`${label}: transcription.by is ${JSON.stringify(t.by)} but issuer ${JSON.stringify(signer.id)} signs for ${JSON.stringify(signer.identity)} — the credited custodian is not the signer`);
+    }
   }
   findings.push(...verifySignatureOver(canonicalDecisionPayload(rec), t.attestation, ctx.issuers, 'transcribed decision')
     .map((f) => `${label}: ${f}`));

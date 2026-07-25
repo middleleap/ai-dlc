@@ -64,6 +64,7 @@ export const CONTROL_TARGETS = [
   'docs/governance/evidence/manifest.json',
   'docs/governance/identities.json',
   'docs/governance/attestation-issuers.json',
+  'docs/governance/assertion-issuers.json',  // WS2 D2.4 — the identity-provider material that makes a human approval a human approval; a new root of trust is owned, or it is not a root of trust
   'docs/governance/routine-envelope.json', // HG-0013 — the standing routine authorization is second-line-owned, not agent-writable
   'docs/governance/config-baseline.json',  // rc.12 WS2.4 — the approved control-plane config; weakening it would hide drift, so it is owned, not agent-writable
   'docs/governance/platform-activation/any.json', // rc.12 WS2 — ownership probe: the observed-config evidence is owned

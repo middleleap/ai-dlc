@@ -407,12 +407,34 @@ closes them.
   `eng-omar` holds `engineering` and `enterprise-architect` — one person, two hats — and the three
   floor service identities ship holding **no** approval role.
 
+**Hardened by an adversarial review of this very work, before it shipped.** Four defects were
+confirmed against the code and closed. Separation between the service and identity-provider
+registries was enforced by *issuer id* rather than by key material — and the shipped templates
+already carried one trust anchor in both, reducing the control to a naming convention. Expiry,
+revocation, origin and the credited custodian all sat **outside** the signed payload, so a carrier
+could un-revoke a dead approval, extend its expiry, evade the replay key by editing one unsigned
+word, or credit the wrong custodian. The signing key was never bound to a registry identity. And
+`audience` / `acr` were pinned in the registry, carried in the record, and never compared. All are
+now signed, compared, or refused, each with its own negative test. The new trust root
+(`assertion-issuers.json`) joins the control-plane protected paths and the CODEOWNERS template — a
+root of trust that is not owned is not a root of trust.
+
+Two residuals are **named in the module header** rather than papered over: the identity-provider
+subject is bound but not *joined* to the registry identity (that join is the second-line identity
+map, which no gate reads yet), and the source sha and artifact digest are bound but not
+*reconciled* against actual build state. Both are "authentic and immutable, but its subject is
+asserted, not proven".
+
 The worked example (`approval-attestation-example/`) is signed for real against the bundled plan and
 passport and verified in the suite, so editing the example passport breaks it — the same binding a
-live approval gets. Suite **433 green** (26 new unit tests, including the full negative set: an
-agent's click void, an unregistered human refused, a service key refused as a human voucher, a
-forged signature, a replayed nonce and event id, an expired assertion, and content mutated after
-the decision).
+live approval gets. Its assertion is a realistic five-minute step-up token verified a year later,
+which pins the expiry semantics: an assertion is judged against the **signed decision time**, never
+against verification time, because the opposite would have made every genuine approval rot on a
+timer. Suite **445 green** (38 new tests, including the full negative set: an agent's click void,
+an unregistered human refused, a service key refused as a human voucher whether by id *or* by
+shared key material, a forged signature, a replayed nonce and event id, an assertion already
+expired when the decision was made, a back-dated decision, delimiter injection in the canonical
+payload, un-revocation, custody reattribution, and content mutated after the decision).
 
 **What this release does not claim.** No shipped profile compiles the capability, so nothing in the
 bundle demands attestation-backed approvals today; the contract ships **declared, not active**. The

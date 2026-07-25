@@ -16,8 +16,8 @@
       "acr": "urn:mace:incommon:iap:silver",
       "issued_at": "2026-07-19T11:04:00Z",
       "expires_at": "2026-07-19T11:09:00Z",
-      "nonce": "sha256:dd87a438d83ae1325593f4ade9f361ef6498470144083b15f8b310f4dc7abac7",
-      "signature": "nUfAkbmPXg3wreh24Jf4GoUhTM9KwX+CbnITQcPDVMA6zuYFLwgencKmFszgUNor7t3MPFyr0B3NN45Lh5y0AQ=="
+      "nonce": "sha256:79641f75b3d481e8e0d2ed37b64bc9c3a383f8ae94727f6761d1e12c82edc01e",
+      "signature": "JrNTySyQLJKBzHgz3gLC/OTbzJgXc5Ghbhjo0U75VnQh6/CKRZW0czAdL+2VuMDKGkfz9VX1uAd913kXd3TRCA=="
     }
   },
   "bound_to": {
@@ -45,7 +45,7 @@
     "transcribed_at": "2026-07-19T11:04:09Z",
     "attestation": {
       "issuer": "demo-floor-bridge",
-      "signature": "96xxcZve1gGqUV6u6xA62jtFBiuIpGcagoWA9GLjsYtn+ClSikyJdQhjfi59GVqHVcyKh7nBcfsrM6zW2Gs6BA=="
+      "signature": "JkVzb8CABoZkFSq7/0+auf0rI5i7FLaV1hJeTavEBjAacLNF+ZlZKoW5tB4+FJu6bePe2AvJ6zvH8tnepvGwDw=="
     }
   }
 }
