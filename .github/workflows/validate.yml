@@ -49,6 +49,9 @@ jobs:
           # exercised end to end in the adopted layout rather than skipping there (it is bundle
           # demonstration data, so the installer does not ship it).
           cp -r "$H/approval-attestation-example" "$A/approval-attestation-example"
+          # rc.13 WS4: the export example, so the deterministic exporter's positive AND abort
+          # cases run in the adopted layout too (bundle demonstration data, not adopter machinery).
+          cp -r "$H/floor-export-example" "$A/floor-export-example"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
@@ -99,6 +102,7 @@ jobs:
           node scripts/control-plane-check.mjs
           node scripts/template-parity-check.mjs   # floor forms in step with the git templates
           node scripts/identity-map-check.mjs      # P6 — the map that says WHO a signed subject is
+          node scripts/freeze-stamp-check.mjs      # D4.1 — a frozen artifact still matches its stamp
           node scripts/control-catalog-check.mjs
           node scripts/identity-registry-check.mjs
           node scripts/change-envelope-check.mjs

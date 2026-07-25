@@ -419,6 +419,20 @@ now signed, compared, or refused, each with its own negative test. The new trust
 (`assertion-issuers.json`) joins the control-plane protected paths and the CODEOWNERS template — a
 root of trust that is not owned is not a root of trust.
 
+**The freeze round-trip's git half ships too** (WS4 · D4.1). `core/floor-export.mjs` converts a
+fetched floor page to markdown as a *pure function* — no network call, no clock, no vendor SDK —
+and it **fails closed**: an unknown block type, a refused type, a truncated block list, a table
+whose rows were not read, or a block that declares children and carries none **aborts the export
+and writes nothing**. That refusal is the design. A converter that silently drops what it does not
+understand produces a document that looks complete, passes the D-gates, and is missing the
+paragraph where someone wrote down the risk — so there is no partial mode and no `--force`.
+Determinism is enforced rather than hoped for: frontmatter keys are sorted, annotation order is
+fixed, list items stay tight, and the tail is stable, so the same page produces the same bytes and
+a re-freeze of unchanged content produces the same digest. `scripts/freeze-stamp-check.mjs` then
+catches the ordinary, well-intentioned failure — a quick correction typed straight into a frozen
+file instead of going back to the floor and re-freezing. Both halves of the worked example ship: a
+page that exports, and a page that must abort. 26 new tests.
+
 **The first residual is now closed.** `core/identity-map.mjs` + `scripts/identity-map-check.mjs`
 (Factory Floor P6) perform the join the attestation contract deliberately left open: the map, owned
 by the second line and never writable by a service, says who a signed subject *is*, and the record's

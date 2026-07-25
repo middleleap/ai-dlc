@@ -157,6 +157,11 @@ and availability risk — what it carries **none of** is governance authority.
   `discovery/runs/<slug>/` → PR by `svc-floor-freezer`. Unknown/unsupported blocks, truncated
   content, or permission gaps **abort the freeze** with a visible reason; the export digest is
   recorded in the freeze stamp.
+  **→ the git half SHIPPED** in loom `2.0.0-rc.13`: `core/floor-export.mjs` is the conversion as a
+  pure function — no network call, no clock, no vendor SDK — and `scripts/freeze-stamp-check.mjs`
+  is the gate that catches a frozen artifact edited in place. Both halves of the worked example
+  ship: a page that exports, and a page that must **abort**. What still needs a workspace is the
+  fetching and the PR-opening around it.
 - **D4.2** **Drift, narrowed**: drift never retroactively invalidates the merged git record —
   but it **blocks new freeze and approval claims** against the out-of-sync page until
   re-frozen.

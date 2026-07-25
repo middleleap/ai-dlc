@@ -1,0 +1,9 @@
+{
+  "_comment": "ILLUSTRATIVE — the SAME page after someone dragged an image onto it and the fetch stopped early. Running the exporter over this must ABORT and write nothing. It is the negative half of the example: a converter that silently dropped the image and froze the fragment would produce a document that looks complete and passes the D-gates.",
+  "title": "Problem statement — linked-accounts-retail",
+  "has_more": true,
+  "blocks": [
+    { "type": "paragraph", "paragraph": { "rich_text": [{ "plain_text": "Retail customers cannot see their accounts together.", "annotations": {} }] } },
+    { "type": "image", "image": { "file": { "url": "https://example.invalid/expiring-url" } } }
+  ]
+}

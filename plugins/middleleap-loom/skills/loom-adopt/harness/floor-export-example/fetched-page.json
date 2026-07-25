@@ -1,0 +1,27 @@
+{
+  "_comment": "ILLUSTRATIVE — a Notion page as the freezer would have fetched it, trimmed to the fields the exporter reads. Fictional throughout. `node core/floor-export.mjs floor-export-example/fetched-page.json` renders it and prints the digest the freeze stamp records.",
+  "title": "Problem statement — linked-accounts-retail",
+  "frontmatter": { "artifact": "problem-statement", "stage": "discover", "run": "linked-accounts-retail" },
+  "has_more": false,
+  "blocks": [
+    { "type": "quote", "quote": { "rich_text": [{ "plain_text": "Discover (diverge). Gate D1 (framing).", "annotations": {} }] } },
+    { "type": "heading_2", "heading_2": { "rich_text": [{ "plain_text": "The problem", "annotations": {} }] } },
+    { "type": "paragraph", "paragraph": { "rich_text": [
+      { "plain_text": "Retail customers who hold accounts at more than one licensed institution cannot see them together, so ", "annotations": {} },
+      { "plain_text": "they reconcile by hand", "annotations": { "bold": true } },
+      { "plain_text": " at the end of every month.", "annotations": {} }
+    ] } },
+    { "type": "heading_2", "heading_2": { "rich_text": [{ "plain_text": "What would prove this problem does not exist", "annotations": {} }] } },
+    { "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [{ "plain_text": "Fewer than 1 in 20 retail customers hold an account elsewhere.", "annotations": {} }] } },
+    { "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [{ "plain_text": "Those who do report no reconciliation effort in interviews.", "annotations": {} }] } },
+    { "type": "heading_2", "heading_2": { "rich_text": [{ "plain_text": "Evidence so far", "annotations": {} }] } },
+    { "type": "table", "table": { "table_width": 3 }, "children": [
+      { "type": "table_row", "table_row": { "cells": [
+        [{ "plain_text": "Signal", "annotations": {} }], [{ "plain_text": "Source", "annotations": {} }], [{ "plain_text": "Strength", "annotations": {} }] ] } },
+      { "type": "table_row", "table_row": { "cells": [
+        [{ "plain_text": "Manual reconciliation described unprompted", "annotations": {} }], [{ "plain_text": "INT-004", "annotations": {} }], [{ "plain_text": "strong", "annotations": {} }] ] } },
+      { "type": "table_row", "table_row": { "cells": [
+        [{ "plain_text": "Asked for a combined view", "annotations": {} }], [{ "plain_text": "INT-007", "annotations": {} }], [{ "plain_text": "moderate", "annotations": {} }] ] } }
+    ] }
+  ]
+}
