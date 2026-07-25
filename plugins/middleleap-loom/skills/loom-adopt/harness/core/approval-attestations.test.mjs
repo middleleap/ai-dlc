@@ -323,21 +323,31 @@ test('attestation-backed approval is required only when the compiled plan says s
 // fails — which is the same binding the gate enforces for a real approval.
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const F = (p) => `${HARNESS}/${p}`;
-const EXAMPLE = F('approval-attestation-example/pa1-risk-second-line.json');
-if (!existsSync(EXAMPLE)) {
-  test('shipped approval-attestation example (bundle-only — skipped in an adopted layout)', { skip: true }, () => {});
+// Fixtures resolve in BOTH layouts: the bundle, and an adopted repo that mounted them elsewhere.
+const FIND = (...candidates) => candidates.map((c) => `${HARNESS}/${c}`).find(existsSync) || null;
+const CHANGE = 'docs/governance/changes/CHG-2026-0042';
+const SRC = {
+  example: FIND('approval-attestation-example/pa1-risk-second-line.json'),
+  plan: FIND('change-example/control-plan.json', `${CHANGE}/control-plan.json`),
+  passport: FIND('change-example/product-passport.json', `${CHANGE}/product-passport.json`),
+  identities: FIND('governance/identities.template.json', 'docs/governance/identities.json'),
+  attIssuers: FIND('governance/attestation-issuers.template.json', 'docs/governance/attestation-issuers.json'),
+  asrIssuers: FIND('governance/assertion-issuers.template.json', 'docs/governance/assertion-issuers.json'),
+};
+if (Object.values(SRC).some((p) => !p)) {
+  test('shipped approval-attestation example (fixtures absent in this layout — skipped)', { skip: true }, () => {});
 } else {
-  const J = (p) => JSON.parse(readFileSync(F(p), 'utf8'));
+  const EXAMPLE = SRC.example;
+  const J = (p) => JSON.parse(readFileSync(p, 'utf8'));
   const exampleCtx = () => ({
     stage: 'PA1',
     role: 'risk-second-line',
     by: 'risk-lena',
-    plan: J('change-example/control-plan.json'),
-    passportDigest: sha256(readFileSync(F('change-example/product-passport.json'), 'utf8')),
-    registry: J('governance/identities.template.json'),
-    issuers: J('governance/attestation-issuers.template.json'),
-    assertionIssuers: J('governance/assertion-issuers.template.json'),
+    plan: J(SRC.plan),
+    passportDigest: sha256(readFileSync(SRC.passport, 'utf8')),
+    registry: J(SRC.identities),
+    issuers: J(SRC.attIssuers),
+    assertionIssuers: J(SRC.asrIssuers),
     resolveApprover,
     identityOf,
     seen: new Map(),

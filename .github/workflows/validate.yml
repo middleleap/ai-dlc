@@ -45,6 +45,10 @@ jobs:
           cp "$H/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
           cp "$H/assurance-example/decision-log.json" "$A/docs/governance/decision-log.json"
           cp "$H/adapters/reference/"*.json "$A/docs/governance/adapters/"
+          # rc.13: the approval-attestation worked example, so the PA gate's attestation path is
+          # exercised end to end in the adopted layout rather than skipping there (it is bundle
+          # demonstration data, so the installer does not ship it).
+          cp -r "$H/approval-attestation-example" "$A/approval-attestation-example"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"

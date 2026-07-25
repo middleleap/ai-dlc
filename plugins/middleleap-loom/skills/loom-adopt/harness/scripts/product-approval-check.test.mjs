@@ -107,9 +107,24 @@ test('the attestation must match the stage and role it is offered for', () => {
   assert.ok(f.some((x) => /PA1 · risk-second-line: no approval attestation/.test(x)));
 });
 
-test('run() wires the whole path end to end in a real repo layout', () => {
+// First existing candidate, or null — the bundle and an adopted repo hold these in different
+// places, and the approval example is bundle-only (studied, never copied).
+const FIND = (...candidates) => candidates.map((c) => `${HARNESS}/${c}`).find(existsSync) || null;
+
+test('run() wires the whole path end to end in a real repo layout', (t) => {
   // evaluate() proves the logic; this proves the WIRING — that run() finds the approvals
   // directory, loads both issuer registries, digests the passport off disk, and threads them in.
+  const srcs = {
+    passport: FIND('change-example/product-passport.json', 'docs/governance/changes/CHG-2026-0042/product-passport.json'),
+    approval: FIND('approval-attestation-example/pa1-risk-second-line.json'),
+    identities: FIND('governance/identities.template.json', 'docs/governance/identities.json'),
+    attIssuers: FIND('governance/attestation-issuers.template.json', 'docs/governance/attestation-issuers.json'),
+    asrIssuers: FIND('governance/assertion-issuers.template.json', 'docs/governance/assertion-issuers.json'),
+  };
+  if (Object.values(srcs).some((p) => !p)) {
+    t.skip('bundle-only fixtures absent in this layout');
+    return;
+  }
   const dir = mkdtempSync(join(tmpdir(), 'pa-'));
   try {
     const base = join(dir, 'docs/governance/changes/CHG-2026-0042');
@@ -119,13 +134,11 @@ test('run() wires the whole path end to end in a real repo layout', () => {
     plan.required_capabilities = { ...plan.required_capabilities, approval_attestation: { required: true } };
     writeFileSync(join(base, 'control-plan.json'), JSON.stringify(plan));
     writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: 'CHG-2026-0042', control_plan: 'control-plan.json' }));
-    cpSync(`${HARNESS}/change-example/product-passport.json`, join(base, 'product-passport.json'));
-    cpSync(`${HARNESS}/approval-attestation-example/pa1-risk-second-line.json`, join(base, 'approvals/pa1-risk-second-line.json'));
-    for (const [src, dst] of [
-      ['governance/identities.template.json', 'identities.json'],
-      ['governance/attestation-issuers.template.json', 'attestation-issuers.json'],
-      ['governance/assertion-issuers.template.json', 'assertion-issuers.json'],
-    ]) cpSync(`${HARNESS}/${src}`, join(gov, dst));
+    cpSync(srcs.passport, join(base, 'product-passport.json'));
+    cpSync(srcs.approval, join(base, 'approvals/pa1-risk-second-line.json'));
+    cpSync(srcs.identities, join(gov, 'identities.json'));
+    cpSync(srcs.attIssuers, join(gov, 'attestation-issuers.json'));
+    cpSync(srcs.asrIssuers, join(gov, 'assertion-issuers.json'));
 
     const { findings, count } = run(dir);
     assert.equal(count, 1);
