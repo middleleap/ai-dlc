@@ -16,6 +16,11 @@
 > (the competitive harness scan this doc extends into the collaboration dimension).
 > **Visualization:** [`docs/loom-factory-floor.html`](../loom-factory-floor.html) — the interactive,
 > brand-styled companion page (open it in a browser).
+> **Supersession note:** the execution plan ([`docs/notion-floor-plan.md`](../notion-floor-plan.md),
+> v2 — revised per an external control review) **supersedes this document where they differ** —
+> notably §7's "zero governance risk" phrasing (now *no governance authority*) and the single sync
+> identity (now four least-privilege identities, with the approval bridge a transcriber that never
+> signs).
 
 ---
 
