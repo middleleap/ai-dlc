@@ -13,6 +13,8 @@ import {
   verifyApprovalAttestation,
   attestationRequired,
   sha256,
+  passportDigest,
+  stableStringify,
 } from './approval-attestations.mjs';
 import { resolveApprover, identityOf } from '../scripts/identity-registry-check.mjs';
 import { readFileSync, existsSync } from 'node:fs';
@@ -293,14 +295,14 @@ test('a replayed decision nonce is rejected — a nonce is single-use', () => {
   const first = signed(validRecord());
   assert.deepEqual(verifyApprovalAttestation(first, c, 'first'), []);
   const second = signed(validRecord({ origin: { event_id: 'evt_2' } }));
-  assert.ok(verifyApprovalAttestation(second, c, 'second').some((f) => /nonce replays first/.test(f)));
+  assert.ok(verifyApprovalAttestation(second, c, 'second').some((f) => /nonce replays the one already used by first/.test(f)));
 });
 
 test('a replayed webhook event id is rejected — webhooks are signals, deduplicated', () => {
   const c = ctx();
   verifyApprovalAttestation(signed(validRecord()), c, 'first');
   const replay = signed(validRecord({ origin: { nonce: 'nonce-2' } }));
-  assert.ok(verifyApprovalAttestation(replay, c, 'second').some((f) => /event_id replays first/.test(f)));
+  assert.ok(verifyApprovalAttestation(replay, c, 'second').some((f) => /event_id replays the one already used by first/.test(f)));
 });
 
 test('an expired or revoked attestation does not count', () => {
@@ -355,6 +357,65 @@ test('with no pinned identity-provider material the assertion is UNVERIFIED-HERE
   failsWith(signed(validRecord()), /UNVERIFIED-HERE/, ctx({ assertionIssuers: null }));
 });
 
+// --- gaps a mutation review exposed: guards no test could fail ------------------------------
+
+test('an unparseable expiry is a finding, not an approval that never expires', () => {
+  failsWith(signed(validRecord({ validity: { expires_at: '31/12/2026' } })), /not a parseable timestamp/);
+});
+
+test('a record with no origin block is refused — the replay guard is not opt-out by omission', () => {
+  const rec = signed(validRecord());
+  delete rec.origin;
+  for (const f of ['system', 'event_id', 'nonce']) failsWith(rec, new RegExp(`origin\\.${f} missing`));
+});
+
+test('a forged CUSTODY signature does not verify either — both signatures are real crypto', () => {
+  const rec = signed(validRecord(), { bridgeKey: ROGUE.privateKey });
+  failsWith(rec, /does NOT verify/);
+});
+
+test('the trust anchor is the provider, not the scope — a subject pattern cannot hide an overlap', () => {
+  const shared = {
+    issuers: [
+      SERVICE_ISSUERS.issuers[0],
+      // same identity provider, narrowed by a subject pattern — still the same anchor
+      { id: 'bank-approvals', mechanism: 'sigstore', identity: 'svc-floor-bridge', verify: { issuer: 'https://idp.example/oidc', subject_pattern: '*@bank.example' } },
+    ],
+  };
+  const assertionReg = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { issuer: 'https://idp.example/oidc', public_key: undefined } }] };
+  const rec = signed(validRecord({ subject: { assertion: { issuer: 'bank-idp' } } }));
+  failsWith(rec, /one trust anchor in both registries/, ctx({ issuers: shared, assertionIssuers: assertionReg }));
+});
+
+test('stableStringify sorts at every depth — nested material cannot collide', () => {
+  assert.notEqual(stableStringify({ verify: { kind: 'x', cfg: { a: 1 } } }), stableStringify({ verify: { kind: 'x', cfg: { a: 2 } } }));
+  assert.equal(stableStringify({ b: 1, a: { d: 2, c: 3 } }), stableStringify({ a: { c: 3, d: 2 }, b: 1 }));
+});
+
+// The contract has to survive its own use case: a high-tier change needs up to twelve approvals,
+// each recorded into the passport as it arrives. Binding the whole passport would invalidate every
+// signature already given, so sequential approval would be impossible.
+test('a second approval does not invalidate the first — the binding is over the ANALYSIS', () => {
+  const passport = {
+    sections: { classification: { materiality: 'material' }, ownership: { product_owner: 'po-fatima' } },
+    pa1: { decision: 'approved', approvals: [{ role: 'risk-second-line', by: 'risk-lena' }] },
+  };
+  const digestOf = (p) => sha256(stableStringify(p.sections));
+  const first = signed(validRecord({ bound_to: { passport_digest: digestOf(passport) } }));
+  const c = ctx({ passportDigest: digestOf(passport) });
+  assert.deepEqual(verifyApprovalAttestation(first, c), []);
+
+  // …the next role signs, and the passport grows. The analysis has not changed.
+  passport.pa1.approvals.push({ role: 'compliance', by: 'comp-imran' });
+  assert.deepEqual(verifyApprovalAttestation(first, ctx({ passportDigest: digestOf(passport) })), [],
+    'an earlier approval must survive a later one being recorded');
+
+  // …but editing the ANALYSIS still breaks it.
+  passport.sections.classification.materiality = 'non-material';
+  assert.ok(verifyApprovalAttestation(first, ctx({ passportDigest: digestOf(passport) }))
+    .some((f) => /passport_digest does not match/.test(f)));
+});
+
 // --- mandatory-when-compiled -----------------------------------------------------------------
 
 test('attestation-backed approval is required only when the compiled plan says so', () => {
@@ -391,7 +452,7 @@ if (Object.values(SRC).some((p) => !p)) {
     role: 'risk-second-line',
     by: 'risk-lena',
     plan: J(SRC.plan),
-    passportDigest: sha256(readFileSync(SRC.passport, 'utf8')),
+    passportDigest: passportDigest(dirname(SRC.passport)),
     registry: J(SRC.identities),
     issuers: J(SRC.attIssuers),
     assertionIssuers: J(SRC.asrIssuers),
@@ -407,7 +468,7 @@ if (Object.values(SRC).some((p) => !p)) {
 
   test('editing the approved passport breaks the shipped example — the binding is live, not decorative', () => {
     const c = exampleCtx();
-    c.passportDigest = sha256('{"the passport":"as edited after the decision"}');
+    c.passportDigest = sha256('{"the analysis":"as edited after the decision"}');
     assert.ok(verifyApprovalAttestation(JSON.parse(readFileSync(EXAMPLE, 'utf8')), c)
       .some((f) => /passport_digest does not match/.test(f)));
   });

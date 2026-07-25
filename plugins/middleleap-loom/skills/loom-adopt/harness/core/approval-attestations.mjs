@@ -105,6 +105,11 @@ export function canonicalDecisionPayload(rec) {
     String(rec?.validity?.revoked === true),
     // The custodian is named under the human's signature, so custody cannot be reattributed.
     rec?.transcription?.by ?? '',
+    // The assurance context of the authentication itself. Checking `audience` and `acr` against
+    // the registry means nothing if a carrier can edit them: a weak session would present itself
+    // as a step-up one. Verified AND signed, or they are decoration.
+    rec?.subject?.assertion?.audience ?? '',
+    rec?.subject?.assertion?.acr ?? '',
   ].map((v) => JSON.stringify(typeof v === 'string' ? v : String(v ?? ''))).join('\n');
 }
 
@@ -117,8 +122,22 @@ export function canonicalDecisionPayload(rec) {
 export function trustAnchor(issuer) {
   const v = issuer?.verify || {};
   if (isStr(v.public_key)) return `key:${v.public_key.replace(/\s+/g, '')}`;
-  if (isStr(v.issuer)) return `oidc:${v.issuer}${isStr(v.subject_pattern) ? `|${v.subject_pattern}` : ''}`;
-  return `raw:${JSON.stringify(v, Object.keys(v).sort())}`;
+  // The anchor is the PROVIDER, never the scope. A subject pattern narrows who that provider may
+  // speak for; it does not make it a different provider — folding it in would let the same issuer
+  // sit in both registries undetected, which is exactly the overlap this check exists to catch.
+  if (isStr(v.issuer)) return `oidc:${v.issuer}`;
+  return `raw:${stableStringify(v)}`;
+}
+
+/**
+ * Deterministic JSON with sorted keys AT EVERY DEPTH. `JSON.stringify(v, sortedTopLevelKeys)`
+ * looks equivalent and is not: the array form is a key *filter* applied at all depths, so nested
+ * keys absent from the top-level list are silently dropped and two different objects can collide.
+ */
+export function stableStringify(v) {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v) ?? 'null';
+  if (Array.isArray(v)) return `[${v.map(stableStringify).join(',')}]`;
+  return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stableStringify(v[k])}`).join(',')}}`;
 }
 
 const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
@@ -174,17 +193,16 @@ export function verifyApprovalAttestation(rec, ctx, label = 'approval') {
   for (const f of ['system', 'event_id', 'nonce']) {
     if (!isStr(o[f])) findings.push(`${label}: origin.${f} missing — provenance and replay protection depend on it`);
   }
-  if (ctx.seen && isStr(o.nonce)) {
-    const key = `${o.system}:${o.nonce}`;
+  // Replay is tracked per RECORD SITE, not per label: two change directories can carry the same
+  // change_id (a copy, a re-launch route), which makes their labels identical — and a guard that
+  // exempts a matching label would then wave through the very duplication it exists to catch.
+  const site = ctx.site || label;
+  for (const [field, why] of [['nonce', 'a decision nonce is single-use'], ['event_id', 'webhooks are signals, deduplicated on event id']]) {
+    if (!ctx.seen || !isStr(o[field])) continue;
+    const key = `${o.system}:${field}:${o[field]}`;
     const prior = ctx.seen.get(key);
-    if (prior && prior !== label) findings.push(`${label}: origin.nonce replays ${prior} — a decision nonce is single-use`);
-    else ctx.seen.set(key, label);
-  }
-  if (ctx.seen && isStr(o.event_id)) {
-    const key = `${o.system}:event:${o.event_id}`;
-    const prior = ctx.seen.get(key);
-    if (prior && prior !== label) findings.push(`${label}: origin.event_id replays ${prior} — webhooks are signals, deduplicated on event id`);
-    else ctx.seen.set(key, label);
+    if (prior && prior !== site) findings.push(`${label}: origin.${field} replays the one already used by ${prior} — ${why}`);
+    else if (!prior) ctx.seen.set(key, site);
   }
 
   // 5 · WHEN — validity.
@@ -332,11 +350,23 @@ export function loadApprovals(changeDir) {
     .map((n) => ({ file: n, record: readJson(`${dir}/${n}`) }));
 }
 
-/** The digest of a passport as committed — what an approval binds itself to. */
+/**
+ * The digest an approval binds itself to: the passport's ANALYSIS (`sections`), not the whole
+ * file. This distinction is load-bearing. A high-tier change needs up to twelve approvals, each
+ * recorded into `pa1.approvals` as it arrives — so a digest over the whole passport would change
+ * on every signature and invalidate every approval already given. Sequential approval would be
+ * impossible, and the contract would only ever work for changes needing exactly one approver.
+ *
+ * What an approver is approving is the analysis. Who else approved it is the record of the
+ * process, verified separately: the gate resolves every named approver and cross-checks each
+ * attestation's subject against the passport entry it evidences.
+ */
 export function passportDigest(changeDir) {
   const p = `${changeDir}/product-passport.json`;
   if (!existsSync(p)) return null;
-  return sha256(readFileSync(p, 'utf8'));
+  let passport;
+  try { passport = JSON.parse(readFileSync(p, 'utf8')); } catch { return null; }
+  return sha256(stableStringify(passport?.sections ?? null));
 }
 
 // CLI: print the canonical decision payload and its digest for a record — the string an

@@ -30,7 +30,7 @@
       "mechanism": "ed25519",
       "description": "DEMO reference issuer — a real ed25519 key pair standing in for an identity provider so the contract is exercised end to end in the bundle. The private key is NOT shipped. Do not carry this entry into a real registry: replace it with your provider before the capability is compiled for any change.",
       "verify": {
-        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA8iSoRKgJoFhE/ZDBPbR9qe/Nwxd5H9VGCuHBMzFLbGQ=\n-----END PUBLIC KEY-----\n"
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATAsISc/hw6zXXJzoUOl+rTrtt60nVfWUo/Ksx+M9sE4=\n-----END PUBLIC KEY-----\n"
       }
     }
   ]

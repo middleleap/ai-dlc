@@ -430,7 +430,7 @@ passport and verified in the suite, so editing the example passport breaks it â€
 live approval gets. Its assertion is a realistic five-minute step-up token verified a year later,
 which pins the expiry semantics: an assertion is judged against the **signed decision time**, never
 against verification time, because the opposite would have made every genuine approval rot on a
-timer. Suite **445 green** (38 new tests, including the full negative set: an agent's click void,
+timer. Suite **453 green** (46 new tests, including the full negative set: an agent's click void,
 an unregistered human refused, a service key refused as a human voucher whether by id *or* by
 shared key material, a forged signature, a replayed nonce and event id, an assertion already
 expired when the decision was made, a back-dated decision, delimiter injection in the canonical

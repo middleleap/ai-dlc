@@ -66,6 +66,7 @@ function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
         resolveApprover,
         identityOf,
         seen: att.seen,
+        site: att.site,
         now: att.now,
       }, `${label} · ${role}`));
     }
@@ -85,7 +86,14 @@ export function evaluate(passport, plan, registry, att = {}) {
   const id = plan?.change_id || '(no id)';
   if (!passport) return [`${id}: product passport missing — a product change without a passport is blocked`];
   const gates = new Set(plan?.required_gates || []);
-  if (!gates.has('PA1')) return []; // the plan compiled no product-approval route
+  if (!gates.has('PA1')) {
+    // No product-approval route compiled. If the plan nonetheless requires attestation-backed
+    // approvals, say so rather than exiting quietly: a requirement with nowhere to apply reads as
+    // satisfied, and a silently inert control is the failure this whole contract exists to avoid.
+    return attestationRequired(plan)
+      ? [`${id}: the plan requires the ${'approval_attestation'} capability but compiles no PA gate — the requirement has nothing to apply to, which is a plan defect, not a pass`]
+      : [];
+  }
   // Mandatory-when-compiled: the attestation path activates from the plan, never from a flag.
   const attCtx = { ...att, required: attestationRequired(plan), plan, seen: att.seen || new Map() };
 
@@ -142,7 +150,10 @@ export function run(cwd = process.cwd()) {
     if (!envelope) continue; // the envelope gate reports this
     const plan = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
     if (!plan) continue; // ditto
-    if (!(plan.required_gates || []).includes('PA1')) continue;
+    // A plan that requires attestation but compiles no PA gate is still reported (evaluate says
+    // so) — skipping it here would restore exactly the silent pass that check exists to close.
+    const planPath = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
+    if (!(plan.required_gates || []).includes('PA1') && !attestationRequired(planPath)) continue;
     count++;
     const att = {
       records: loadApprovals(base).map((a) => a.record),
@@ -150,6 +161,7 @@ export function run(cwd = process.cwd()) {
       assertionIssuers,
       passportDigest: passportDigest(base),
       seen,
+      site: name, // the change DIRECTORY — two directories may carry one change_id
     };
     findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry, att));
   }

@@ -153,6 +153,28 @@ test('run() wires the whole path end to end in a real repo layout', (t) => {
   }
 });
 
+test('the PA2 stage is attested in its own right — a PA1 record cannot grant permission to launch', () => {
+  // Without this, changing the stage argument on the PA2 call site to 'PA1' passes the suite —
+  // and a PA1 decision would satisfy permission to launch.
+  const pa1Only = {
+    schema: 'loom.approval-attestation/v1',
+    change_id: PLAN.change_id, stage: 'PA1', outcome: 'approved', role: 'compliance',
+    subject: { registry_id: 'comp-imran' },
+  };
+  const pa2 = { decision: 'approved', approvals: (PLAN.required_approver_roles || []).map((role) => ({ role, by: 'po-fatima' })) };
+  const f = evaluate({ ...PASSPORT, pa2 }, ATTESTED_PLAN, REGISTRY, { records: [pa1Only] });
+  assert.ok(f.some((x) => /PA2 · compliance: no approval attestation/.test(x)),
+    `a PA1 record must not answer for PA2:\n${f.join('\n')}`);
+});
+
+test('a plan requiring attestation but compiling no PA gate is a defect, not a pass', () => {
+  const noPa = { ...ATTESTED_PLAN, required_gates: ['D', 'Q'] };
+  const f = evaluate(PASSPORT, noPa, REGISTRY, {});
+  assert.ok(f.some((x) => /compiles no PA gate/.test(x)), `expected a finding, got: ${JSON.stringify(f)}`);
+  // …and without the capability it stays silent, as before.
+  assert.deepEqual(evaluate(PASSPORT, { ...PLAN, required_gates: ['D', 'Q'] }, REGISTRY, {}), []);
+});
+
 test('an attestation that does not bind the compiled plan hash is refused', () => {
   const rec = {
     schema: 'loom.approval-attestation/v1',
