@@ -478,6 +478,8 @@ with the AlTareq consent journey. (Illustrative and fictional, like `CHG-2026-00
 | `handoff.md` (the PRD) | Git, frozen + sha-stamped | Co-authored on the floor; drift badge after freeze |
 | Change envelope, control plan, passport PA1/PA2 | Git | Approvals routed on the floor; decisions return as signed envelopes |
 | Delivery queue | Git, waist-gated | Board mirror; a card is never a hand-off |
+| Solution Direction Record · ADRs | Git — the loop drafts ADRs, never merges them | Directions argued on the floor; each ADR decided via the architect's inbox |
+| `architecture-assurance.json` (A1–A5) | Git | Routed and evidenced on the floor before PA2 |
 | AlTareq CX certification | Git, adapter envelope | Visible status only |
 | `release-hold.json` | Git, second-line CODEOWNERS | Never writable from the floor |
 | Operations signals / triage | Git | Triage board; routes return by PR |
@@ -485,6 +487,44 @@ with the AlTareq consent journey. (Illustrative and fictional, like `CHG-2026-00
 What the example proves: the floor improves every *human* moment — reactions in place, routed
 approvals, a watchable board — while every fact a gate, the CBUAE, or an auditor would ask
 about stays a frozen, signed file in git.
+
+### 6b · The cast — roles, not headcount
+
+Two personas are easy to miss in the walkthrough above, and finding them exposes a real
+observation about the harness.
+
+**The architects.** The **enterprise architect** holds the standing context — the BrainKit's
+`architecture.md` and `technology-policy.json` (with or as the institutional-context-owner),
+bound into every compiled change via `brainkit-conformance` — and, at change level, owns the
+**A1–A5 architecture-assurance record** verified before PA2. The **solution architect** owns the
+right diamond: leading Develop's solution directions to the **Solution Direction Record**,
+authoring the binding API conventions that feed the contract-conformance reviewer and the spec
+tripwire, and deciding **ADRs** during delivery. The ADR flow is the delivery loop's escalation
+valve, and it is where the floor earns its keep in the build half: the agent never decides
+architecture — it drafts the ADR, parks the story `blocked`, and a human decides
+(`next-story`: spec PRs and ADRs are never self-merged). Today that is a file plus one push
+notification; on the floor it is an inbox card in the *solution architect's* queue, with the
+decision returning to git as the merged ADR.
+
+**Finding — the registry names no architect.** The shipped `identities.template.json` defines
+~13 roles (engineering, product-owner, the second-line functions, accountable-executive,
+institutional-context-owner, platform-admin, …) — none is an architect, while the architects'
+*artifacts* (A1–A5, the SDR, ADRs, BrainKit architecture) all ship. Architecture authority
+currently hides inside `engineering` + `institutional-context-owner`. Adopters should add
+`enterprise-architect` and `solution-architect` roles and wire them into the compiled approver
+sets, CODEOWNERS, and the A-gate — a registry-level fix, no new machinery.
+
+**Roles, not headcount.** The compiled role set is a **regulatory minimum of roles, not an org
+chart**. The registry maps roles to people, and one person may wear several hats — an
+engineering manager may act as the enterprise architect, owning the domain alongside the
+product owner; the facilitator may be the PM. What can never be collapsed is small and already
+enforced: **`builders` and `second-line` are disjoint** (the registry check fails otherwise),
+**agents approve nothing**, and **four-eyes needs a second human at the merge**. Everything
+else is the adopter's mapping. This is the AI-first discipline the whole design serves: the
+Loom must not reimport the organisational complexity of a pre-AI bank. Regulation demands the
+roles and the separations; **agents do the production labour between the gates**; the humans'
+job is the judgment moments §6a tags — a small crew wearing compiled hats, with the floor
+routing each hat's queue, is the intended operating point.
 
 ---
 
