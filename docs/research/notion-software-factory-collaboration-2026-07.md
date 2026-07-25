@@ -526,6 +526,41 @@ roles and the separations; **agents do the production labour between the gates**
 job is the judgment moments §6a tags — a small crew wearing compiled hats, with the floor
 routing each hat's queue, is the intended operating point.
 
+### 6c · The template catalog — guided surfaces for the non-technical teammate
+
+The floor's user-friendliness is delivered through **templates in pairs**: the git template is
+the contract (most already ship in the bundle — `discovery/templates/*.md`, the
+`governance/*.template.json` set); the Notion template is the guided authoring surface over it.
+Three rules keep the pairs honest:
+
+1. **Git-first.** No Notion template without a git contract behind it. The exercise exposes two
+   git-side gaps to close first: an **ADR template** (`next-story` references ADRs; none ships)
+   and a **Solution Direction Record template** (the Develop skill describes it; none ships).
+2. **Required-field parity with the gates.** Any field a gate validates is a *required property*
+   on the floor — the template surfaces the gate's demands before the gate, in plain language
+   ("What would prove this problem doesn't exist?"), not as a red CI run.
+3. **Parity is mechanical and checkable.** Floor templates are generated from the git templates'
+   section structure, and a doc-integrity-style check compares the section lists — the two sides
+   cannot drift apart silently.
+
+Every template carries a **write-class banner**: *born here — will be frozen* · *decision routed
+— signs into git* · *read-only mirror* · *never writable*.
+
+| Suite | Templates | Git contract | Class |
+|---|---|---|---|
+| **A · Discovery** (authoring) | Problem statement (D1) · Research log (D2, as a database) · Synthesis (D5) · **Data governance** (D6 — the privacy template, with a risk-register relation) · Prototype (D7/D8) · Stakeholder reaction (D9) · **Hand-off/PRD** (with a live freeze checklist) | `discovery/templates/*.md` | Born on the floor, frozen per gate |
+| **B · Decisions** (approval surfaces) | PA1/PA2 approval page (evidence carried in, people-properties resolve to the registry) · Change-classification questionnaire · **ADR inbox card** (new git template) · **SDR** (new git template) · A1–A5 sign-off · Operations-signal intake form · Release-hold status card (no inputs by design) | `product-passport.json` · `change-envelope.json` · `docs/adr/` · `architecture-assurance.json` · `operations-signal.template.json` | Decision routed — signs into git (hold: never writable) |
+| **C · Floor-only** (citable, never frozen) | Meeting/workshop notes (stable ids, cite-into-research-log relation) · Interview note (**PII discipline built in** — pseudonyms, consent checkbox; HG-0011 applies to templates too) · Product brief · Roadmap/portfolio | — | Lives on the floor |
+| **D · Scaffolding** | Role dashboards ("what's waiting on me" — per *hat*, per §6b) · MI dashboard · the shared freeze/drift block | — | Read-only mirrors |
+
+**MVP: three templates demo the whole story** — the PRD/hand-off, data governance, and the PA1
+approval page: guided authoring → freeze → gate → routed decision → signed envelope. Floor-keeper
+Custom Agents pre-fill everything that isn't a judgment field (the risk-register picker, the
+registry people list, the evidence block) — the AI-first lean applied to paperwork.
+
+**The execution plan** — prerequisites, workstreams, acceptance criteria, and sequencing — lives
+in [`docs/notion-floor-plan.md`](../notion-floor-plan.md).
+
 ---
 
 ## 7 · A phased adoption path
