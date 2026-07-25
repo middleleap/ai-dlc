@@ -1,8 +1,10 @@
 # ADR-0005 — How a human decision is proven, independently of the bridge
 
-**Status:** proposed · **Date:** 2026-07-25 · **Deciders:** `information-security` ·
-`risk-second-line` · `data-protection` · `enterprise-architect` — **AWAITING:** assignment to
-named registry identities · **Programme:** Factory Floor (`docs/notion-floor-plan.md`)
+**Status:** **accepted** · **Date:** 2026-07-25 · **Accepted:** 2026-07-25 by **@michartmann**,
+repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
+acceptance** below · **Institutional deciders (per adopter, unassigned here):**
+`information-security` · `risk-second-line` · `data-protection` · `enterprise-architect` ·
+**Programme:** Factory Floor (`docs/notion-floor-plan.md`)
 **Companions:** plan §0 finding **F1** · §4 WS5 entry gate and D5.2 · §7 open decision 5 · WS2 ·
 D2.4/D2.5 · `docs/notion-floor-identity-mapping.md` (P6 — the subject → registry join) ·
 `docs/notion-floor-threat-model.md` · `plugins/middleleap-loom/skills/loom-adopt/harness/core/approval-attestations.mjs`
@@ -157,9 +159,32 @@ The seven criteria the deciders should weigh, applied to each option below:
 | Key custody | IdP holds signing keys; no new custodian | Observer key; the bridge problem relocated | Ephemeral keys + CA + log to run or trust |
 | Auditor legibility | Familiar: "they logged in again, over this decision" | Misleadingly reassuring; weakest under scrutiny | Precise but specialist |
 
+## Scope of this acceptance
+
+This ADR is **accepted for the method** — it settles what mechanism the Loom's contract is built
+around, and `core/approval-attestations.mjs` may be developed against Option A plus the hard
+condition below without the decision being reopened. That is a decision about *this repository*,
+which is a method and harness, not a bank.
+
+It is deliberately **not** a substitute for two things it does not have standing to grant:
+
+- **An adopting institution's own sign-off.** The four decider roles above stay unassigned here on
+  purpose. A CBUAE-regulated adopter records its own `information-security`, `risk-second-line`,
+  `data-protection` and `enterprise-architect` decision against its own identity provider, its own
+  assurance levels, and its own joiner/mover/leaver process. Nothing in this file speaks for them.
+- **The WS5 entry gate.** That gate has *two* conditions (plan §4, WS5): the F1–F4 corrections
+  merged, **and an independent second-line review of the workstream's design**. This acceptance
+  settles the first condition's mechanism question. The second is a review of routing, surfaces and
+  operations — a different artifact — and it stands.
+
+Accepting a mechanism is not the same as activating it. No shipped profile compiles the
+`approval_attestation` capability; the contract remains **declared, not active**, and `oidc-step-up`
+still reports UNVERIFIED-HERE until an adopter pins provider metadata and records activation
+evidence. A superseding ADR — not an edit to this one — moves the mechanism to Option C.
+
 ## Decision
 
-**Recommended: Option A — step-up OIDC re-authentication (`oidc-step-up`) as the primary
+**Accepted: Option A — step-up OIDC re-authentication (`oidc-step-up`) as the primary
 mechanism**, subject to one hard condition, with Option C named as the strategic direction and
 Option B admitted only as corroboration.
 
@@ -192,8 +217,10 @@ human read the evidence, understood it, or was not under duress. No mechanism in
 The comprehension control is D5.1's evidence-carried-in rule and the second line's own review; this
 ADR must not be cited as covering it.
 
-Status stays **proposed**, and it is blocked behind the IdP nonce verification above and the D2.4
-amendment below.
+**Accepted** 25 Jul 2026 for the method (see *Scope of this acceptance*). Acceptance settles the
+mechanism, not its activation: the D2.4 amendment below has since shipped, but `oidc-step-up`
+reports UNVERIFIED-HERE until an adopter pins their identity provider's metadata and the nonce is
+verified against it. The comprehension control named just above is not covered by either.
 
 ## Consequences
 

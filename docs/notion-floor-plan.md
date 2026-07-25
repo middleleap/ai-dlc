@@ -173,6 +173,12 @@ and availability risk — what it carries **none of** is governance authority.
 independent second-line review of this workstream's design**. Until both, every WS5 surface
 runs **labelled non-authoritative**.
 
+> **Condition 1, mechanism half — settled.** ADR-0005 is **accepted** (25 Jul 2026): Option A
+> `oidc-step-up` with the nonce-binding hard condition, Option C held open as the strategic
+> direction. D2.4/D2.5 have shipped against it. What remains of condition 1 is the **P6 mapping
+> going live** — no gate reads the identity map yet. Condition 2 — the independent second-line
+> review of *this workstream's* design — is untouched by that acceptance and still gates M4.
+
 - **D5.1** Approvals database + PA approval page: one section per compiled role,
   people-property resolving through the P6 mapping, **evidence carried in** (change summary,
   gate results, decision-log excerpt — assembled by a floor-keeper, never by the approver).
@@ -237,7 +243,7 @@ runs **labelled non-authoritative**.
 6. Activate WS5 only after the independent second-line review and real negative tests.
 7. Add floor-keepers and MI last, with no access to authoritative decision fields.
 
-## 7 · Open decisions — all five drafted as ADRs, all awaiting deciders
+## 7 · Open decisions — all five drafted as ADRs; 0005 accepted, four awaiting deciders
 
 Each is written against `delivery/templates/adr.md`, the template this programme added to the
 harness — its first customers. Every one is **`proposed`**: a recommendation with its reasoning
@@ -249,7 +255,7 @@ and its open blockers stated, not a decision taken.
 | [0002](adrs/0002-sync-service-hosting.md) | Where the sync services run | Bank-controlled service for freezer + bridge; Workers **projection-only** while beta |
 | [0003](adrs/0003-freeze-trigger-ux.md) | How a freeze is triggered | Explicit human freeze — a freeze is an intent, like the merge |
 | [0004](adrs/0004-projection-cadence.md) | How fresh the projection must be | On-merge push **plus** periodic reconcile — what makes G4's 10 minutes measurable rather than aspirational |
-| [0005](adrs/0005-human-assertion-mechanism.md) | How a human decision is proven independently of the bridge | The **WS5 entry-gate decision** — answers finding F1 directly; requires independent second-line review |
+| [0005](adrs/0005-human-assertion-mechanism.md) | How a human decision is proven independently of the bridge | **ACCEPTED** 25 Jul 2026 (@michartmann, for the method): Option A `oidc-step-up` + the nonce-binding hard condition, Option C the strategic direction. Answers finding F1. An adopter's own four-role sign-off, and the WS5 workstream review, are **not** granted by this |
 
 ## 8 · Risks
 
