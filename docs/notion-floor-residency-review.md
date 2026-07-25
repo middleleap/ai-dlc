@@ -3,9 +3,16 @@
 **Status:** **DRAFT — not approved. Nothing in this record is in force.** · **Deliverable:** D0.1
 (WS0), prerequisite **P1** of `docs/notion-floor-plan.md` · **Drafted:** 2026-07-25 ·
 **Owner:** AWAITING — programme owner to be named, must resolve to a registry identity ·
-**Approvers required:** data-protection + risk-second-line (see §10) · **Companions:**
+**Approvers required:** data-protection + risk-second-line (see §11) · **Companions:**
 `docs/notion-floor-plan.md` · `docs/research/notion-software-factory-collaboration-2026-07.md` ·
 `plugins/middleleap-loom/skills/loom/references/governance.md`.
+
+> **To review or send this:** two working instruments accompany this record and are not part of
+> it — `docs/notion-floor-p1-reviewer-brief.md` (what the two signatories are and are not being
+> asked to accept, and where the drafter thinks they should push back) and
+> `docs/notion-floor-p1-vendor-questionnaire.md` (§8's vendor questions in sendable form, with
+> the two institution-specific ones separated out so they are not sent by mistake). Answers come
+> back **into this record**, which is the thing that gets signed.
 
 This record states, class by class, what content of a governed Loom repository may be projected
 into or authored on a SaaS workspace ("the floor"), at what fidelity, and what must never leave
@@ -350,6 +357,17 @@ answer.
     classification tier, and does the intended content class table fit inside that approval?
 15. **INSTITUTION-SPECIFIC:** Does this arrangement meet the materiality threshold for
     outsourcing, and does it require regulatory notification or no-objection before WS1?
+
+**Identity** — added after the identity-mapping specification (`notion-floor-identity-mapping.md`
+§6, drift class D-C) surfaced it; it is not a residency question, but it is a vendor question and
+it belongs in one list.
+
+16. **VENDOR-QUESTION:** Does the vendor document a **person-id reassignment policy**? Can a
+    workspace person UUID ever be reissued to a different human — after deprovisioning and
+    re-provisioning, a domain migration, or an account merge? If ids are never reused, drift
+    class D-C is bounded and reconciliation is a periodic check. **If there is no documented
+    policy the risk is unbounded**, reconciliation becomes the only defence, and its cadence —
+    an operational cost — has to be set against that.
 
 ## 9 · Residual risks proposed for acceptance
 
