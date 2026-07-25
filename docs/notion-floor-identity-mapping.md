@@ -339,22 +339,24 @@ nothing, and neither behaviour should be invisible.
 Given an approval attestation (`loom.approval-attestation/v1`) and the passport entry it claims to
 evidence, resolution proceeds in this fixed order. **Shipped** steps are performed today by
 `core/approval-attestations.mjs` and `scripts/identity-registry-check.mjs`; **proposed** steps are
-the mapping extension this document specifies and which no code performs yet (§9, GAP-3).
+the mapping extension this document specifies. **All five landed** in `core/identity-map.mjs` and
+`scripts/identity-map-check.mjs` (loom `2.0.0-rc.13`); the table below is updated and GAP-3 is
+closed.
 
 | # | Step | State |
 |---|---|---|
 | 1 | Verify the subject assertion cryptographically over the canonical decision payload; refuse a service-key issuer; refuse the transcriber as issuer | Shipped |
 | 2 | Confirm the assertion's subject claim equals the record's `idp_subject` | Shipped |
-| 3 | Look up the **single `active` entry** in `identity-map.json` whose `idp_subject` equals it. Zero entries → reject. More than one → reject | **Proposed** |
-| 4 | Confirm `entry.registry_id === record.subject.registry_id`. The record's registry id is a *claim* by whoever wrote the file; **the map is the authority** | **Proposed** |
-| 5 | Where the record's `origin` carries a person id, confirm it equals `entry.notion_person_id` — the click and the mapping must agree | **Proposed** |
+| 3 | Look up the **single `active` entry** in `identity-map.json` whose `idp_subject` equals it. Zero entries → reject. More than one → reject | **Shipped** |
+| 4 | Confirm `entry.registry_id === record.subject.registry_id`. The record's registry id is a *claim* by whoever wrote the file; **the map is the authority** | **Shipped** |
+| 5 | Where the record's `origin` carries a person id, confirm it equals `entry.notion_person_id` — the click and the mapping must agree | **Shipped** |
 | 6 | Resolve `registry_id` in `identities.json`; it must exist | Shipped |
 | 7 | Confirm `kind === "human"` — agents approve nothing | Shipped |
 | 8 | Confirm the identity holds the required role **now, from the registry** — never from `roles_at_mapping` | Shipped |
 | 9 | For second-line roles, confirm the identity is not in `builders` | Shipped |
 | 10 | Confirm the identity is not a service identity, and is not the transcriber | Shipped (see §7 for the residual) |
-| 11 | Confirm the mapping was **active at decision time**: `mapped_at ≤ t` and (`status === "active"` or `revoked_at > t`) | **Proposed** |
-| 12 | Confirm the map file's own invariants (schema, uniqueness, no service subjects) and that its reconciliation observation is present and fresh | **Proposed** |
+| 11 | Confirm the mapping was **active at decision time**: `mapped_at ≤ t` and (`status === "active"` or `revoked_at > t`) | **Shipped** |
+| 12 | Confirm the map file's own invariants (schema, uniqueness, no service subjects) and that its reconciliation observation is present and fresh | **Shipped** |
 
 **On decision time `t`.** The canonical decision payload the human signs — `SCHEMA_ID`,
 `change_id`, `stage`, `outcome`, `role`, `registry_id`, `idp_subject`, `plan_hash`,
@@ -383,23 +385,23 @@ switch on this path would recreate F1 with extra steps.
 | IM-R06 | Assertion or attestation expired, or `validity.revoked` | Shipped | Stale authority is not authority |
 | IM-R07 | Record carries no `idp_subject` | Shipped | A workspace-scoped person id is reassignable |
 | IM-R08 | Assertion subject ≠ record `idp_subject` | Shipped | The assertion must be about this decision's subject |
-| IM-R09 | **No active map entry for the subject** | Proposed | An unmapped human is an unknown human |
-| IM-R10 | **More than one active map entry for the subject** | Proposed | Ambiguity resolves to refusal, never to a pick |
-| IM-R11 | **Map `registry_id` ≠ record `registry_id`** | Proposed | The map is the authority; the record is a claim |
-| IM-R12 | **Origin person id ≠ map `notion_person_id`** | Proposed | The click and the mapping must be the same account |
-| IM-R13 | **Map entry `status: "revoked"`** | Proposed | A revoked binding grants nothing |
-| IM-R14 | **Mapping not active at decision time** | Proposed | Authority must have existed when it was exercised |
-| IM-R15 | **Decision time not determinable** | Proposed | An unanchored decision cannot be tested against a lifecycle |
+| IM-R09 | **No active map entry for the subject** | Shipped | An unmapped human is an unknown human |
+| IM-R10 | **More than one active map entry for the subject** | Shipped | Ambiguity resolves to refusal, never to a pick |
+| IM-R11 | **Map `registry_id` ≠ record `registry_id`** | Shipped | The map is the authority; the record is a claim |
+| IM-R12 | **Origin person id ≠ map `notion_person_id`** | Shipped | The click and the mapping must be the same account |
+| IM-R13 | **Map entry `status: "revoked"`** | Shipped | A revoked binding grants nothing |
+| IM-R14 | **Mapping not active at decision time** | Shipped | Authority must have existed when it was exercised |
+| IM-R15 | **Decision time not determinable** | Shipped | An unanchored decision cannot be tested against a lifecycle |
 | IM-R16 | `registry_id` not in the registry | Shipped | Unresolvable approvals do not count |
 | IM-R17 | Identity `kind` is not `human` | Shipped | Agents approve nothing |
 | IM-R18 | Identity does not hold the required role now | Shipped | Roles are read fresh, never cached |
 | IM-R19 | Second-line role held by a member of `builders` | Shipped | You cannot challenge your own work |
 | IM-R20 | `registry_id` is a service identity (projector, freezer, bridge, delivery agent) | Shipped via empty roles; **partial** (§7) | A service has no clicks to attest to |
 | IM-R21 | The approver is the transcriber | Shipped | Custody and decision must be separable |
-| IM-R22 | The role is present only in `roles_at_mapping` | Proposed | The map is not a second role registry |
-| IM-R23 | Map file fails schema or uniqueness invariants | Proposed | An unsound map resolves nothing |
-| IM-R24 | Reconciliation observation missing or stale | Proposed | Observed, not declared |
-| IM-R25 | Reconciliation reports the subject disabled at the IdP | Proposed | The directory is authoritative over the map |
+| IM-R22 | The role is present only in `roles_at_mapping` | Shipped | The map is not a second role registry |
+| IM-R23 | Map file fails schema or uniqueness invariants | Shipped | An unsound map resolves nothing |
+| IM-R24 | Reconciliation observation missing or stale | Shipped | Observed, not declared |
+| IM-R25 | Reconciliation reports the subject disabled at the IdP | Shipped | The directory is authoritative over the map |
 
 **A design-time rejection, not a runtime one:** any code path that compares email addresses to
 establish identity is refused at review (§2.3). It has no IM code because it must never reach a
@@ -524,7 +526,7 @@ resolves.
 |---|---|---|---|
 | **GAP-1** | **The registry has no leaver representation.** `identities.template.json` carries id, kind, display, roles, groups — and no temporal field. The PA gate re-derives role-holding on every CI run, so stripping a leaver's roles retroactively fails every passport they ever approved | Institutions face a false choice: keep departed staff apparently in role, or break historical approvals | A registry-schema question, not a mapping question. Proposed: a `valid_until` or `status` field on the registry entry, with the gate honouring the decision time. **AWAITING:** the registry owner's decision. Until then, §4.3 step 4 has no good answer and this document will not invent one |
 | ~~**GAP-2**~~ | ~~Decision time is not bound by the human's signature~~ — **CLOSED** in loom `2.0.0-rc.13` | — | `canonicalDecisionPayload()` now binds `validity.issued_at`; a back-dated decision fails signature verification (negative-tested). This specification found the gap and WS2 · D2.4 closed it |
-| **GAP-3** | **No shipped gate reads the map.** `identity-map-check.mjs` does not exist; steps 3, 4, 5, 11, 12 are proposed | Until it ships, the mapping is a document, not a control — and per the HG catalog's enforcement-of-record rule, a document that no mechanism enforces is a label | Must land before WS5's entry gate. Negative tests in §10 |
+| ~~**GAP-3**~~ | ~~No shipped gate reads the map~~ — **CLOSED** in loom `2.0.0-rc.13` | The mapping was a document, and per the HG catalog's enforcement-of-record rule a document that no mechanism enforces is a label | `core/identity-map.mjs` performs steps 3, 4, 5, 11 and 22 per approval; `scripts/identity-map-check.mjs` performs step 12 over the file. Mandatory-when-compiled via `identity_map`. Proved by a probe: a record with a **real ed25519 assertion for subject A** naming registry identity B verified clean before, and is refused as IM-R11 now |
 | ~~**GAP-4**~~ | ~~The assertion-issuers registry template does not ship~~ — **CLOSED** in loom `2.0.0-rc.13` | — | `governance/assertion-issuers.template.json` ships and is wired into the copy manifest, mounted at `docs/governance/assertion-issuers.json`. An unpinned provider still fails closed as UNVERIFIED-HERE, which is the intended behaviour, not a gap |
 | **GAP-5** | **Vendor person-id semantics are unestablished.** VENDOR-QUESTION: is the person id stable, is it ever reassigned, and is reassignment documented? | Drift class D-C is unbounded if the answer is unknown | Must be answered before WS5. If the vendor makes no commitment, say so in the record rather than assume stability |
 | **GAP-6** | **The pivot is only as good as the directory.** A compromised or misconfigured IdP compromises every mapping downstream | Out of scope here; it is the D0.4 threat model's territory and the institution's identity control set | Companion document (part 1) |

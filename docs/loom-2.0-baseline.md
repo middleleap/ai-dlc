@@ -419,9 +419,23 @@ now signed, compared, or refused, each with its own negative test. The new trust
 (`assertion-issuers.json`) joins the control-plane protected paths and the CODEOWNERS template — a
 root of trust that is not owned is not a root of trust.
 
-Three residuals are **named in the module header** rather than papered over: the identity-provider
-subject is bound but not *joined* to the registry identity (that join is the second-line identity
-map, which no gate reads yet); the source sha and artifact digest are bound but not *reconciled*
+**The first residual is now closed.** `core/identity-map.mjs` + `scripts/identity-map-check.mjs`
+(Factory Floor P6) perform the join the attestation contract deliberately left open: the map, owned
+by the second line and never writable by a service, says who a signed subject *is*, and the record's
+own `registry_id` is only a claim until the two agree. A probe makes the difference concrete — a
+record with a **real ed25519 assertion for subject A** that names registry identity B verified
+clean before, and is refused as `IM-R11` now. The pivot is the identity-provider subject, never the
+workspace person id and never an email: the schema has no field for an address, and carrying one is
+refused on sight, because a schema with no field for it is what stops a well-meaning shortcut from
+being written. Mandatory-when-compiled via `identity_map`; a repository that has not adopted the
+floor sees no change, and a copied-but-empty map is *unadopted*, not stale. Reconciliation is
+required the moment one entry exists — absent or stale, currency is unproven (`IM-R24`), and a
+subject the directory reports disabled is refused even while its entry still reads `active`
+(`IM-R25`). 32 new tests.
+
+Two residuals remain **named in the module header** rather than papered over: the join is only as
+good as the map's currency, and an *unmapped* deployment is still bound-but-not-joined — the
+capability closes the gap, adopting it is a human act; the source sha and artifact digest are bound but not *reconciled*
 against actual build state; and `demo: true` is refused by *this* module but not read by the older
 evidence-anchor path, so the bundle's `demo-anchor-signer` stays live for that gate until an adopter
 replaces it — flagged in the registry, not fixed. The first two are "authentic and immutable, but its

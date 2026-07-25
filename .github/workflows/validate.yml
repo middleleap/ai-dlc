@@ -98,6 +98,7 @@ jobs:
           node scripts/discovery-link-check.mjs
           node scripts/control-plane-check.mjs
           node scripts/template-parity-check.mjs   # floor forms in step with the git templates
+          node scripts/identity-map-check.mjs      # P6 — the map that says WHO a signed subject is
           node scripts/control-catalog-check.mjs
           node scripts/identity-registry-check.mjs
           node scripts/change-envelope-check.mjs

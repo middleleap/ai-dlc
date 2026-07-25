@@ -350,7 +350,7 @@ footer{border-top:1px solid var(--ink-border);padding:30px 0 60px;color:var(--bo
     <g class="fl fl-dec fl-assert">
       <rect class="s-box" x="934" y="212" width="234" height="82" data-id="registries"/>
       <text class="s-t" x="948" y="234">Identity + issuer registries</text>
-      <text class="s-s" x="948" y="251">identities.json</text>
+      <text class="s-s" x="948" y="251">identities.json · identity-map (P6)</text>
       <text class="s-s" x="948" y="266">attestation-issuers (service)</text>
       <text class="s-s" x="948" y="281">assertion-issuers (IdP)</text>
     </g>
@@ -536,7 +536,8 @@ footer{border-top:1px solid var(--ink-border);padding:30px 0 60px;color:var(--bo
       <div class="k">Specified, not built</div>
       <p>Every Notion-side surface: the workspace, the projector, the freezer, the bridge. They need a
       workspace and a token, and the residency review (P1) must be signed by data-protection and
-      risk-second-line first. The P6 identity map is fully specified and <strong>no gate reads it yet</strong>.</p>
+      risk-second-line first. The P6 identity map now <strong>has a gate</strong> — what it does not have is
+      entries, because a mapping is a human act and the shipped template carries none.</p>
     </div>
     <div class="card">
       <div class="k">Production-blocked, by design</div>
@@ -546,13 +547,21 @@ footer{border-top:1px solid var(--ink-border);padding:30px 0 60px;color:var(--bo
       <strong>non-authoritative</strong>.</p>
     </div>
   </div>
-  <div class="alert caution">
-    <div class="k">The residual worth naming</div>
-    <p>The identity-provider subject is <em>bound</em> but not <em>joined</em>: the assertion's subject and the
-    registry identity sit side by side under one signature, so neither can be altered afterwards — but nothing
-    independent yet asserts they are the same person. That join is the P6 identity map, which no gate reads.
-    Until it does, a compromised bridge holding a valid assertion for subject A could name registry identity B,
-    and every check in the drawing would still pass.</p>
+  <div class="alert info">
+    <div class="k">The residual that closed — and what replaced it</div>
+    <p>The identity-provider subject used to be <em>bound</em> but not <em>joined</em>: the assertion's subject
+    and the registry identity sat side by side under one signature, so neither could be altered afterwards — but
+    nothing independent asserted they were the same person. A compromised bridge holding a valid assertion for
+    subject A could name registry identity B, and every check in this drawing would still have passed. The
+    <strong>P6 identity map</strong> now closes it: the map is the authority, the record's <code>registry_id</code>
+    is only a claim, and a probe shows the difference — that exact forgery verified clean before and is refused
+    as <code>IM-R11</code> now.</p>
+    <p style="margin-top:10px">What replaces it is smaller and honest. The join is only as good as the map's
+    <em>currency</em> — three systems, three lifecycles, no shared transaction, so drift is a permanent condition
+    rather than a bug fixed once. Absent or stale reconciliation means currency is unproven and the gate refuses;
+    a subject the directory reports disabled is refused even while its entry still reads <code>active</code>. And
+    an <em>unmapped</em> deployment is still bound-but-not-joined: the capability closes the gap, adopting it is a
+    human act.</p>
   </div>
 </section>
 
@@ -627,8 +636,8 @@ footer{border-top:1px solid var(--ink-border);padding:30px 0 60px;color:var(--bo
       p:'<code>change-envelope.json</code> (state), <code>control-plan.json</code> (compiled from the risk classification — never hand-written, and hand-editing it fails reconciliation), and <code>product-passport.json</code> (the analysis the approvals are given over).',
       tags:[['ok','shipped']]},
     registries:{t:'Identity and issuer registries',k:'Record · trust roots',
-      p:'<code>identities.json</code> maps registry identities to roles and groups. <code>attestation-issuers.json</code> holds <strong>service</strong> keys (custody). <code>assertion-issuers.json</code> holds <strong>identity-provider</strong> material (authority). Separation is enforced on key material, not on the id someone typed — one anchor appearing in both registries is refused. All three are CODEOWNERS-protected: a root of trust that is not owned is not a root of trust.',
-      tags:[['ok','shipped'],['ok','no demo key ships']]},
+      p:'<code>identities.json</code> maps registry identities to roles and groups. <code>attestation-issuers.json</code> holds <strong>service</strong> keys (custody). <code>assertion-issuers.json</code> holds <strong>identity-provider</strong> material (authority). Separation is enforced on key material, not on the id someone typed — one anchor appearing in both registries is refused. <code>identity-map.json</code> is the <strong>P6 join</strong>: it says which registry identity a signed IdP subject actually is, and it is the authority where the record is only a claim. Its pivot is the IdP subject — never the workspace person id, which is reassignable, and never an email, for which the schema has no field at all. All are CODEOWNERS-protected and never writable by a service: a root of trust that is not owned is not a root of trust.',
+      tags:[['ok','shipped'],['ok','no demo key ships'],['ok','P6 join enforced']]},
     runs:{t:'discovery/runs/&lt;slug&gt;/',k:'Record · frozen artifacts',
       p:'Where a floor page lands when it freezes: Notion-flavored Markdown plus a freeze stamp carrying the export digest and the commit sha. The D-gates re-run on the export, so the thing that passed is the thing that landed — not the thing that was on screen.',
       tags:[['ok','gates shipped'],['no','exporter not built']]},

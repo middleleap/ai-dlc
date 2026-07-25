@@ -34,6 +34,7 @@ jobs:
           node scripts/control-catalog-check.mjs       # control state of record cannot overstate itself
           node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
           node scripts/template-parity-check.mjs      # the guided floor form cannot drift from the git template
+          node scripts/identity-map-check.mjs         # P6 — the join from a signed subject to a registry identity
           node scripts/routine-change-check.mjs        # HG-0013 · normal-human-review — an unqualified routine CLAIM fails; ordinary work passes
 
       - name: Product-governance gates (envelope · PA1/PA2 · A1–A5 · identities)

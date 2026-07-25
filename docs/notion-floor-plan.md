@@ -175,8 +175,10 @@ runs **labelled non-authoritative**.
 
 > **Condition 1, mechanism half — settled.** ADR-0005 is **accepted** (25 Jul 2026): Option A
 > `oidc-step-up` with the nonce-binding hard condition, Option C held open as the strategic
-> direction. D2.4/D2.5 have shipped against it. What remains of condition 1 is the **P6 mapping
-> going live** — no gate reads the identity map yet. Condition 2 — the independent second-line
+> direction. D2.4/D2.5 have shipped against it, and the **P6 mapping join now ships too**
+> (`core/identity-map.mjs` + `identity-map-check.mjs`, mandatory-when-compiled): condition 1 is
+> met in the harness. What it still needs from an institution is a *populated* map — mappings are
+> human acts, and the shipped template carries none. Condition 2 — the independent second-line
 > review of *this workstream's* design — is untouched by that acceptance and still gates M4.
 
 - **D5.1** Approvals database + PA approval page: one section per compiled role,

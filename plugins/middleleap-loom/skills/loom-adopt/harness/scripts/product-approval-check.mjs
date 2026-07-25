@@ -23,6 +23,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf, resolveApprover } from './identity-registry-check.mjs';
 import { loadIssuers } from '../core/attestations.mjs';
+import { loadIdentityMap, mapRequired } from '../core/identity-map.mjs';
 import {
   attestationRequired,
   loadApprovals,
@@ -68,6 +69,8 @@ function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
         seen: att.seen,
         site: att.site,
         now: att.now,
+        map: att.map,
+        mapRequired: att.mapRequired,
       }, `${label} · ${role}`));
     }
   }
@@ -147,6 +150,7 @@ export function run(cwd = process.cwd()) {
   // Attestation material is loaded once; `seen` spans every change, so a decision nonce
   // replayed across changes is caught, not just one replayed within a change.
   const issuers = loadIssuers(cwd);
+  const identityMap = loadIdentityMap(cwd);
   const assertionIssuers = loadAssertionIssuers(cwd);
   const seen = new Map();
   const findings = [];
@@ -171,6 +175,10 @@ export function run(cwd = process.cwd()) {
       passportDigest: passportDigest(base),
       seen,
       site: name, // the change DIRECTORY — two directories may carry one change_id
+      // The P6 join. Loaded once, applied per approval: the map says who a signed subject IS,
+      // and the record's own registry_id is only a claim until the two agree.
+      map: identityMap,
+      mapRequired: mapRequired(plan),
     };
     findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry, att));
   }

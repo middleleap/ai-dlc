@@ -26,12 +26,14 @@
 //
 // TWO RESIDUALS THIS MODULE DOES NOT CLOSE, named so silence is not mistaken for coverage:
 //
-//   1. The identity-provider subject is BOUND but not JOINED. `idp_subject` and `registry_id`
-//      sit side by side under the human's signature, so neither can be altered afterwards — but
-//      nothing independent asserts they are the same person. That join is the second-line-owned
-//      identity map specified in `docs/notion-floor-identity-mapping.md`, which no gate reads
-//      yet. Until it exists, a compromised bridge with a valid assertion for subject A could
-//      name registry identity B, and every check here would still pass.
+//   1. The identity-provider subject is BOUND, and JOINED only when a map is supplied.
+//      `idp_subject` and `registry_id` sit side by side under the human's signature, so neither
+//      can be altered afterwards — but nothing in THIS module asserts they are the same person.
+//      That join is the second-line-owned identity map in `core/identity-map.mjs` (P6), applied
+//      at step 8 below and mandatory-when-compiled via `identity_map`. Without a map, a
+//      compromised bridge with a valid assertion for subject A could still name registry
+//      identity B and every check here would pass — so the residual is now "unmapped", not
+//      "unclosable". The map itself is only as current as its reconciliation observation.
 //   2. `source_sha` and `artifact_digest` are BOUND but not RECONCILED. They are inside the
 //      signed payload, so an approval cannot be re-pointed at different code after the fact;
 //      this module does not, however, check that the sha names the change's actual source state
@@ -49,6 +51,7 @@ import { createHash } from 'node:crypto';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { verifySignatureOver } from './attestations.mjs';
+import { CAPABILITY as MAP_CAPABILITY, verifyMapping } from './identity-map.mjs';
 
 export const SCHEMA_ID = 'loom.approval-attestation/v1';
 export const APPROVALS_SUBDIR = 'approvals';
@@ -261,6 +264,15 @@ export function verifyApprovalAttestation(rec, ctx, label = 'approval') {
 
   // 7 · The BRIDGE's transcription — custody, never authority.
   findings.push(...verifyTranscription(rec, ctx, label));
+
+  // 8 · The identity-map JOIN (P6) — residual 1 above, closed when a map is supplied. Everything
+  // before this proves the record is authentic and immutable; only this proves that the signed
+  // IdP subject and the claimed registry identity are the same person. Mandatory-when-compiled:
+  // a plan that does not compile `identity_map` is unaffected, exactly as before this existed.
+  if (ctx.map) findings.push(...verifyMapping(rec, ctx, label));
+  else if (ctx.mapRequired) {
+    findings.push(`${label}: the plan requires the ${MAP_CAPABILITY} capability but no identity map was loaded — the subject is bound but not joined, which is the residual this capability exists to close`);
+  }
 
   return findings;
 }

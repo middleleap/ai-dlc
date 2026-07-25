@@ -54,6 +54,8 @@ are repo-root-relative.
 | `governance/identities.template.json` | `docs/governance/identities.json` | The identity registry (approvals resolve against it) |
 | `governance/attestation-issuers.template.json` | `docs/governance/attestation-issuers.json` | Allowed-issuers registry for ed25519 attestations |
 | `governance/assertion-issuers.template.json` | `docs/governance/assertion-issuers.json` | Identity-provider material for human approval assertions (kept separate from service keys) |
+| `governance/identity-map.template.json` | `docs/governance/identity-map.json` | The P6 join: surface person id → IdP subject → registry identity. Second-line owned; never written by a service |
+| `governance/identity-map-reconciliation.template.json` | `docs/governance/identity-map-reconciliation.json` | The observer's signed observation that the map is still current (observed, not declared) |
 | `governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory (pinned, tiered, evaluated, runtime-governed) |
 | `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data classification, retention, erasure, residency |
 | `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | The Run→Discovery feedback log |
