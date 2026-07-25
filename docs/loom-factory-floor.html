@@ -175,6 +175,8 @@ code,.mono{font-family:var(--mono);font-size:.92em;color:var(--bone-1)}
 .verdict.good{color:var(--positive);border-color:rgba(95,166,113,.4)}
 .verdict.bad{color:var(--critical-text);border-color:rgba(214,69,69,.4)}
 .verdict.wt{color:var(--caution);border-color:rgba(217,160,60,.4)}
+.adrflow{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.adrflow .node{pointer-events:none}
 
 /* crosswalk */
 .filter{font-family:var(--mono);font-size:13px;background:var(--ink-0);color:var(--bone-0);border:1px solid var(--ink-4);padding:12px 14px;border-radius:0;width:100%;max-width:420px;margin-bottom:22px}
@@ -297,7 +299,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
     <a class="btn btn-secondary" href="the-loom.html"><span class="pv"></span>The method deck ↗</a>
   </div>
   <div class="factrow">
-    <div class="fact"><div class="n">10</div><div class="l">Views mapped</div></div>
+    <div class="fact"><div class="n">11</div><div class="l">Views mapped</div></div>
     <div class="fact"><div class="n">12</div><div class="l">Approver roles routed</div></div>
     <div class="fact"><div class="n">5</div><div class="l">Governing rules</div></div>
     <div class="fact"><div class="n">4</div><div class="l">Adoption phases</div></div>
@@ -461,6 +463,44 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
         <div class="hardline"><b>The hard line</b>The waist gate is never bypassed. A card is not a hand-off; the authoritative queue stays <span class="mono">docs/backlog.yaml</span>, and feature entry still requires a gate-green <span class="mono">handoff.md</span>.</div>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="architects">
+  <div class="wrap">
+    <div class="eyebrow">The right diamond</div>
+    <h2>The architects — and the ADR, the loop's <em>escalation valve.</em></h2>
+    <p class="lede">The agent never decides architecture. Two owners hold the right diamond, and when the loop hits a decision it cannot make, the ADR flow routes it to a human — through the floor, back into git.</p>
+    <div class="grid g2">
+      <div class="card dim-card">
+        <h3><span class="dia" aria-hidden="true"></span>Enterprise architect</h3>
+        <ul>
+          <li><span class="dia" aria-hidden="true"></span>Owns the standing context — BrainKit architecture + technology policy, compiled into every change</li>
+          <li><span class="dia" aria-hidden="true"></span>Reviews estate fit at discovery; grants technology-policy exceptions by envelope</li>
+          <li><span class="dia" aria-hidden="true"></span>Owns the A1–A5 architecture-assurance record before PA2</li>
+        </ul>
+        <div class="hardline"><b>Roles, not headcount</b>Often a hat, not a hire — an engineering manager can act as enterprise architect, owning the domain alongside the product owner.</div>
+      </div>
+      <div class="card dim-card">
+        <h3><span class="dia" aria-hidden="true"></span>Solution architect</h3>
+        <ul>
+          <li><span class="dia" aria-hidden="true"></span>Leads Develop — N solution directions converge to one Solution Direction Record</li>
+          <li><span class="dia" aria-hidden="true"></span>Authors the binding API conventions the contract reviewer and spec tripwire enforce</li>
+          <li><span class="dia" aria-hidden="true"></span>Decides ADRs during delivery — the inbox the floor routes</li>
+        </ul>
+        <div class="hardline"><b>The finding</b>The shipped registry names no architect role while shipping all the architects' artifacts — adopters add the role; the machinery already exists.</div>
+      </div>
+    </div>
+    <div class="adrflow" role="img" aria-label="The ADR flow: the loop hits a decision, drafts the ADR, parks the story; the architect's inbox routes it; a human decides; the ADR merges; the loop resumes">
+      <div class="node"><span class="ph">Loom · loop</span><span class="lab">Decision hit</span></div>
+      <div class="node"><span class="ph">Loom · loop</span><span class="lab">ADR drafted</span></div>
+      <div class="node wait"><span class="ph">Loom · git</span><span class="lab">Story parked</span></div>
+      <div class="node cur"><span class="ph">Notion · floor</span><span class="lab">Architect's inbox</span></div>
+      <div class="node"><span class="ph">Notion · floor</span><span class="lab">Human decides</span></div>
+      <div class="node pass"><span class="ph">Loom · git</span><span class="lab">ADR merges</span></div>
+      <div class="node"><span class="ph">Loom · loop</span><span class="lab">Loop resumes</span></div>
+    </div>
+    <div class="callout"><b>Three lines never collapse.</b> Builders and second line stay disjoint — the registry check fails otherwise; agents approve nothing; four-eyes needs a second human at the merge. Everything else is hats — agents do the production labour between the gates.</div>
   </div>
 </section>
 
@@ -697,6 +737,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
     {a:'release-hold.json',n:'Release gate view',u:'The second line’s go/no-go, visible to everyone. Missing hold = HELD, always.',r:'never writable from the floor',c:'critical'},
     {a:'handoff.md + discovery run',n:'Co-authored discovery pages',u:'Born on the floor: facilitator and stakeholders co-edit, D9 reactions land in place. Frozen into discovery/runs/ at gate time; a drift badge marks any draft ahead of record.',r:'born on the floor · frozen by PR',c:'ember'},
     {a:'operations-signal.json',n:'Triage board',u:'Incidents, drift and CVEs triaged together; every signal typed, rated, routed.',r:'PR round-trip',c:'ember'},
+    {a:'Solution Direction Record · ADRs',n:'The architect’s inbox',u:'The loop drafts the ADR and parks the story; the solution architect decides; the merged ADR is the record.',r:'drafted by the loop · human-decided',c:'ember'},
     {a:'identities.json',n:'Workspace roster',u:'Human-readable “who approves what” — the registry stays canonical in git.',r:'read-only projection',c:'neutral'},
     {a:'decision-log.json',n:'Agent activity feed',u:'Teammates see what the agent decided and why — the hash chain stays in git.',r:'read-only projection',c:'neutral'},
     {a:'Sealed evidence bundle',n:'MI dashboard',u:'Standing management information for board and second line, assembled continuously.',r:'read-only projection',c:'neutral'},
@@ -715,7 +756,7 @@ footer{border-top:1px solid var(--ink-border);padding:40px 0 56px}
 
 /* ---------- chrome: progress, dotnav, anchors ---------- */
 (function(){
-  var SECTIONS=[['idea','The idea'],['worlds','The map'],['rules','The rules'],['roundtrip','Run it'],['crosswalk','Crosswalk'],['dimensions','Teammates'],['phases','Phases'],['risks','Risks']];
+  var SECTIONS=[['idea','The idea'],['worlds','The map'],['rules','The rules'],['roundtrip','Run it'],['crosswalk','Crosswalk'],['dimensions','Teammates'],['architects','Architects'],['phases','Phases'],['risks','Risks']];
   var bar=document.getElementById('progress');
   addEventListener('scroll',function(){
     var h=document.documentElement,max=h.scrollHeight-innerHeight;
