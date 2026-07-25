@@ -40,6 +40,7 @@ are repo-root-relative.
 | `discovery/brand/design.md` | `discovery/brand/design.md` | Brand seam (neutral demo instance) |
 | `discovery/brand/examples` | `discovery/brand/examples` | A second brand proving the seam swap |
 | `delivery/templates` | `delivery/templates` | One template per delivery decision artifact (ADR · Solution Direction Record) |
+| `floor/templates` | `floor/templates` | Guided collaboration-surface forms, GENERATED from the git templates (parity-gated) |
 | `scripts/*.mjs` | `scripts/` | Every gate + its tests (globbed — a per-file list silently drops new gates) |
 | `core` | `core` | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
 | `profiles` | `profiles` | Profiles as data: base + jurisdiction + product-type |

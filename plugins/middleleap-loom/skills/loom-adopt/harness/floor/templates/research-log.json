@@ -1,0 +1,95 @@
+{
+  "_comment": "GENERATED from the git template named in `source` — do not hand-edit. Regenerate with `node scripts/template-parity-check.mjs --fix`; the gate fails when this file and its source disagree, so the guided form on the floor cannot drift from the artifact the gates read.",
+  "schema": "loom.floor-template/v1",
+  "artifact": "research-log",
+  "title": "Research log",
+  "stage": "discover",
+  "write_class": "born-on-the-floor",
+  "source": "discovery/templates/research-log.md",
+  "source_digest": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
+  "gates": [
+    "D2",
+    "D5"
+  ],
+  "guidance": "Discover (diverge). Every signal recorded here is referenced by `synthesis.md` and gates D2/D5. Synthetic/illustrative signals must be tagged `[synthetic]`. Zero real PII.",
+  "properties": [
+    {
+      "name": "Run",
+      "type": "title",
+      "required": true,
+      "help": "The discovery run this artifact belongs to."
+    },
+    {
+      "name": "Status",
+      "type": "select",
+      "required": true,
+      "options": [
+        "draft",
+        "in review",
+        "gate-green",
+        "frozen"
+      ]
+    },
+    {
+      "name": "Frozen at",
+      "type": "text",
+      "required": false,
+      "read_only": true,
+      "help": "Commit sha of the merged snapshot. Empty until the first freeze."
+    },
+    {
+      "name": "Version",
+      "type": "text",
+      "required": false,
+      "read_only": true
+    },
+    {
+      "name": "Drift",
+      "type": "select",
+      "required": false,
+      "read_only": true,
+      "options": [
+        "none",
+        "draft ahead of record"
+      ],
+      "help": "Never blocks. It says the draft and the record have diverged."
+    }
+  ],
+  "sections": [
+    {
+      "name": "Stakeholders consulted",
+      "required": true,
+      "kind": "table",
+      "help": "",
+      "columns": [
+        "Stakeholder (role, synthetic)",
+        "Scope of input",
+        "Date"
+      ]
+    },
+    {
+      "name": "Signals",
+      "required": true,
+      "kind": "table",
+      "help": "",
+      "columns": [
+        "Signal id",
+        "Source",
+        "Observation",
+        "Type (pain/need/constraint/quote)",
+        "Confidence"
+      ]
+    },
+    {
+      "name": "Evidence index",
+      "required": true,
+      "kind": "table",
+      "help": "",
+      "columns": [
+        "File",
+        "Backs signal(s)",
+        "Notes"
+      ]
+    }
+  ]
+}
