@@ -83,13 +83,22 @@ produces counts as governed evidence.
 ### WS0 — Foundations, residency & threat model *(S–M; blocks everything)*
 
 - **D0.1** Residency review record (P1) — in git, signed.
+  → **drafted:** [`notion-floor-residency-review.md`](notion-floor-residency-review.md) ·
+  *awaiting data-protection + risk-second-line sign-off, which gates WS1 onward*
 - **D0.2** Registry + issuer entries for the **four split identities** (P4).
+  → **bundle-side shipped** in loom `2.0.0-rc.13`: `svc-floor-projector`, `svc-floor-freezer`
+  and `svc-floor-bridge` ship in `identities.template.json` holding **no** approval role; the
+  observer is an existing platform-admin role. The adopter still registers their real keys.
 - **D0.3** Workspace scaffold: teamspace; empty databases — Changes, Backlog (mirror),
   Approvals, Signals, Discovery Runs, Notes; role dashboards stubbed; the shared
-  **freeze/drift block** defined.
+  **freeze/drift block** defined. *(Blocked on P1.)*
 - **D0.4** **Threat model + identity mapping** (P6): Notion↔IdP↔registry mapping, per-identity
   capability matrix, automated pre-egress filter design.
+  → **drafted:** [`notion-floor-threat-model.md`](notion-floor-threat-model.md) (part 1) ·
+  [`notion-floor-identity-mapping.md`](notion-floor-identity-mapping.md) (part 2)
 - **D0.5** **API compatibility ADR** (P3) — immediate.
+  → **drafted:** [`adrs/0001-api-compatibility.md`](adrs/0001-api-compatibility.md), with the
+  four remaining open decisions as ADR-0002…0005 (§7).
 - **Acceptance:** residency record and identity-mapping/capability matrix merged; tokens in
   vault; the empty workspace navigable by a non-technical reader without explanation.
 
@@ -124,6 +133,15 @@ and availability risk — what it carries **none of** is governance authority.
   `node scripts/validate-marketplace.mjs`; respect the `loom-adopt` ↔ `ofbo` drift note.
 - **Acceptance:** validator + adoption dry-run + doc-integrity green; D2.5 negative-tested
   with fixtures (unsigned, replayed, subject-mismatched envelopes all fail).
+- **→ DELIVERED in loom `2.0.0-rc.13`.** `core/approval-attestations.mjs` (D2.4) with the
+  two-signature contract that refuses a service key vouching for a human;
+  `product-approval-check` extended, mandatory-when-compiled (D2.5);
+  `assertion-issuers.template.json` as a registry deliberately separate from service keys;
+  `delivery/templates/{adr,solution-direction-record}.md` wired into the manifest and the
+  `next-story` / `develop` skills; `enterprise-architect` + `solution-architect` roles.
+  Suite **433 green**, the full negative set among them, and the shipped worked example is
+  signed against the bundled plan and passport so editing either breaks it. Nothing compiles
+  the capability by default: the contract ships **declared, not active**.
 
 ### WS3 — Template pairs, authoring suite *(M–L; needs WS0; acceptance depends on D4.1)*
 
@@ -219,15 +237,19 @@ runs **labelled non-authoritative**.
 6. Activate WS5 only after the independent second-line review and real negative tests.
 7. Add floor-keepers and MI last, with no access to authoritative decision fields.
 
-## 7 · Open decisions (each becomes an ADR — the template's first customers)
+## 7 · Open decisions — all five drafted as ADRs, all awaiting deciders
 
-1. **Sync-service hosting** — recommendation: bank-controlled service for freezer + bridge;
-   Workers projection-only while beta.
-2. **Freeze trigger UX** — explicit freeze action (a freeze is a human intent).
-3. **Projection cadence** — on-merge push + hourly reconcile.
-4. **API compatibility** — **due now**: `2025-09-03` pin vs current `2026-03-11`.
-5. **Human-assertion mechanism** for D5.2 — step-up SSO vs observed IdP assertion vs
-   Sigstore-style token; decided in the WS5 entry-gate review.
+Each is written against `delivery/templates/adr.md`, the template this programme added to the
+harness — its first customers. Every one is **`proposed`**: a recommendation with its reasoning
+and its open blockers stated, not a decision taken.
+
+| ADR | Decision | Recommendation |
+|---|---|---|
+| [0001](adrs/0001-api-compatibility.md) | Notion API version — pin `2025-09-03` or adopt current `2026-03-11` | Adopt current **now**, while the migration surface is a config value in an unwritten service; the pin then moves only by a superseding ADR |
+| [0002](adrs/0002-sync-service-hosting.md) | Where the sync services run | Bank-controlled service for freezer + bridge; Workers **projection-only** while beta |
+| [0003](adrs/0003-freeze-trigger-ux.md) | How a freeze is triggered | Explicit human freeze — a freeze is an intent, like the merge |
+| [0004](adrs/0004-projection-cadence.md) | How fresh the projection must be | On-merge push **plus** periodic reconcile — what makes G4's 10 minutes measurable rather than aspirational |
+| [0005](adrs/0005-human-assertion-mechanism.md) | How a human decision is proven independently of the bridge | The **WS5 entry-gate decision** — answers finding F1 directly; requires independent second-line review |
 
 ## 8 · Risks
 
