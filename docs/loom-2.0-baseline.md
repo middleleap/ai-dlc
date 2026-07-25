@@ -371,3 +371,52 @@ mechanically validated · 7 defined · 7 absent · 0 platform / 0 organisational
 controls, 13 flagged adopter-side. Platform-*enforced* stays 0 by design: the bundle ships the
 observation machinery; the live observation, the separated controller identity and the pilot are the
 adopter's — recorded honestly, not gestured at.
+
+## rc.13 addendum — the approval-attestation contract (Factory Floor WS2)
+
+Upstream half of the Factory Floor programme (`docs/notion-floor-plan.md`), landed **before** any
+collaboration-surface integration exists. An external control review of the programme plan found
+four defects in its decision-routing design; all four were verified against this harness and held.
+Two of them were defects in *the harness's own vocabulary*, not just the plan, and this release
+closes them.
+
+- **The approval-attestation contract (D2.4)** — `core/approval-attestations.mjs`. When a product
+  approval is made somewhere other than this repository, the record must answer an auditor's two
+  questions: **who decided**, and **what exactly did they approve**. It carries two signatures with
+  deliberately different meanings — `subject.assertion` (the institution's identity provider,
+  binding an immutable subject to the decision payload) proves a human decided;
+  `transcription.attestation` (the carrying service) proves only custody. A record with just the
+  second **authenticates the worker, not the approver**, and is refused: an assertion whose issuer
+  appears in the *service* registry is rejected, and the transcriber may never be the subject.
+  `canonicalDecisionPayload()` binds the compiled `plan_hash`, the passport digest and the source
+  sha or artifact digest, so an approval cannot outlive the thing it approved.
+- **The PA-gate extension (D2.5)** — `product-approval-check.mjs` gains an envelope-verification
+  path, **mandatory-when-compiled** from `required_capabilities.approval_attestation`. It tightens
+  the gate and never loosens it: a plan that does not compile the capability behaves exactly as it
+  did before, which the tests assert directly.
+- **A second issuer registry** — `assertion-issuers.template.json`, deliberately separate from
+  `attestation-issuers.json`. Service keys and identity-provider material must not share a
+  namespace; keeping them apart is what makes "a service may not vouch for a human" checkable.
+- **Delivery templates** — `delivery/templates/adr.md` and `solution-direction-record.md`, wired
+  into the manifest and referenced from the `next-story` and `develop` skills. The build loop drafts
+  an ADR and parks the story; a human decides. Both artifacts were named across the canon and
+  shipped no template until now.
+- **Architect roles** — `enterprise-architect` and `solution-architect` join the registry, closing a
+  gap where every architect *artifact* shipped (A1–A5, the SDR, ADRs, the BrainKit architecture)
+  but no architect *role* existed. The template also now demonstrates **roles, not headcount**:
+  `eng-omar` holds `engineering` and `enterprise-architect` — one person, two hats — and the three
+  floor service identities ship holding **no** approval role.
+
+The worked example (`approval-attestation-example/`) is signed for real against the bundled plan and
+passport and verified in the suite, so editing the example passport breaks it — the same binding a
+live approval gets. Suite **433 green** (26 new unit tests, including the full negative set: an
+agent's click void, an unregistered human refused, a service key refused as a human voucher, a
+forged signature, a replayed nonce and event id, an expired assertion, and content mutated after
+the decision).
+
+**What this release does not claim.** No shipped profile compiles the capability, so nothing in the
+bundle demands attestation-backed approvals today; the contract ships **declared, not active**. The
+`oidc-step-up` and `sigstore` mechanisms report UNVERIFIED-HERE until an adopter pins provider
+metadata — only `ed25519` is verified in-process. Decision routing itself (WS5) stays blocked for
+production until the identity design passes an independent second-line review. This is the
+foundation that review asked for, not the integration.

@@ -1,0 +1,51 @@
+{
+  "_comment": "REFERENCE SHAPE (Factory Floor WS2 · D2.4) — one PA1 approval made on an external surface and brought home. Signed for REAL against the bundled CHG-2026-0042 plan and passport: core/approval-attestations.test.mjs verifies it, so this file is exercised, not decorative. The private keys were generated to sign it and DISCARDED — regenerate your own. The two signatures mean different things: subject.assertion proves the HUMAN decided; transcription.attestation proves the bridge carried it faithfully. A record with only the second authenticates the worker, not the approver.",
+  "schema": "loom.approval-attestation/v1",
+  "change_id": "CHG-2026-0042",
+  "stage": "PA1",
+  "outcome": "approved",
+  "role": "risk-second-line",
+  "subject": {
+    "registry_id": "risk-lena",
+    "idp_subject": "idp|8f14e45fceea167a5a36dedd4bea2543",
+    "assertion": {
+      "mechanism": "ed25519",
+      "issuer": "demo-assertion-signer",
+      "subject": "idp|8f14e45fceea167a5a36dedd4bea2543",
+      "audience": "loom-approval-surface",
+      "acr": "urn:mace:incommon:iap:silver",
+      "issued_at": "2026-07-19T11:04:00Z",
+      "expires_at": "2026-07-19T11:09:00Z",
+      "nonce": "sha256:dd87a438d83ae1325593f4ade9f361ef6498470144083b15f8b310f4dc7abac7",
+      "signature": "nUfAkbmPXg3wreh24Jf4GoUhTM9KwX+CbnITQcPDVMA6zuYFLwgencKmFszgUNor7t3MPFyr0B3NN45Lh5y0AQ=="
+    }
+  },
+  "bound_to": {
+    "plan_hash": "85f13191152a72831c75f6a24155fda4da86c43cdaf4b3dc73f209523d7b0074",
+    "passport_digest": "sha256:d82580cec0ebd2e541f7df2abd16d4d64d901332b228c3d6e32258ac6cc72734",
+    "source_sha": "4b0bc5c1e2f3a495867d0c1b2a3948576e8f9012",
+    "control_plan_path": "control-plan.json"
+  },
+  "origin": {
+    "system": "notion",
+    "workspace_id": "ws_3f9a2c",
+    "page_id": "pg_7d1e4b",
+    "data_source_id": "ds_approvals_1",
+    "event_id": "evt_01J8ZQ4K2M",
+    "nonce": "n-5260375ec23371475039",
+    "observed_at": "2026-07-19T11:04:07Z"
+  },
+  "validity": {
+    "issued_at": "2026-07-19T11:04:07Z",
+    "expires_at": "2099-01-01T00:00:00Z",
+    "revoked": false
+  },
+  "transcription": {
+    "by": "svc-floor-bridge",
+    "transcribed_at": "2026-07-19T11:04:09Z",
+    "attestation": {
+      "issuer": "demo-floor-bridge",
+      "signature": "96xxcZve1gGqUV6u6xA62jtFBiuIpGcagoWA9GLjsYtn+ClSikyJdQhjfi59GVqHVcyKh7nBcfsrM6zW2Gs6BA=="
+    }
+  }
+}

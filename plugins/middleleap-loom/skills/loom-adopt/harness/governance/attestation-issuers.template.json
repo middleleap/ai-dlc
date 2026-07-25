@@ -27,6 +27,14 @@
       "verify": {
         "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsbjIWdwF4iiTTOfICsqf2J/YWtw4YVRNhXhswb8TAzI=\n-----END PUBLIC KEY-----\n"
       }
+    },
+    {
+      "id": "demo-floor-bridge",
+      "mechanism": "ed25519",
+      "description": "DEMO reference issuer — the transcribing service identity for the bundled approval-attestation example. Proves CUSTODY only: a transcription signature is never approval authority (see governance/assertion-issuers.template.json). Private key NOT shipped.",
+      "verify": {
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAASa5IlnBa190jVkYi1E66hrvZ5cKEuA0E/Y7Rt774hU=\n-----END PUBLIC KEY-----\n"
+      }
     }
   ]
 }

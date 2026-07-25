@@ -77,4 +77,43 @@ test('ownership must resolve: product owner and accountable executive by role', 
 test('a plan with no PA1 gate compiles no product-approval requirements', () => {
   assert.deepEqual(evaluate(PASSPORT, { ...PLAN, required_gates: ['D', 'Q'] }, REGISTRY), []);
 });
+
+// --- mandatory-when-compiled: attestation-backed approvals (Factory Floor WS2 · D2.5) ---------
+// The capability activates from the compiled plan, never from a CI flag. It TIGHTENS the gate:
+// a plan that does not compile it behaves exactly as it did before this path existed.
+
+const ATTESTED_PLAN = { ...PLAN, required_capabilities: { 'approval_attestation': { required: true } } };
+
+test('without the compiled capability the gate is unchanged — no attestation is demanded', () => {
+  assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, {}), []);
+});
+
+test('with the capability compiled, a named approver alone is no longer enough', () => {
+  const f = evaluate(PASSPORT, ATTESTED_PLAN, REGISTRY, { records: [] });
+  assert.ok(f.some((x) => /no approval attestation — an approval recorded only as a name in a file is a claim, not evidence/.test(x)));
+});
+
+test('the attestation must match the stage and role it is offered for', () => {
+  const stray = {
+    schema: 'loom.approval-attestation/v1',
+    change_id: PLAN.change_id, stage: 'PA2', outcome: 'approved', role: 'risk-second-line',
+    subject: { registry_id: 'risk-lena' },
+  };
+  const f = evaluate(PASSPORT, ATTESTED_PLAN, REGISTRY, { records: [stray] });
+  // PA1 finds no record for its stage — the PA2 record does not answer for PA1.
+  assert.ok(f.some((x) => /PA1 · risk-second-line: no approval attestation/.test(x)));
+});
+
+test('an attestation that does not bind the compiled plan hash is refused', () => {
+  const rec = {
+    schema: 'loom.approval-attestation/v1',
+    change_id: PLAN.change_id, stage: 'PA1', outcome: 'approved', role: 'risk-second-line',
+    subject: { registry_id: 'risk-lena', idp_subject: 'idp|x', assertion: { mechanism: 'ed25519', issuer: 'bank-idp' } },
+    bound_to: { plan_hash: 'a-stale-hash', passport_digest: 'sha256:whatever' },
+    origin: { system: 'notion', event_id: 'e1', nonce: 'n1' },
+    transcription: { by: 'svc-floor-bridge' },
+  };
+  const f = evaluate(PASSPORT, { ...ATTESTED_PLAN, plan_hash: 'the-real-hash' }, REGISTRY, { records: [rec] });
+  assert.ok(f.some((x) => /plan_hash does not match the compiled plan/.test(x)));
+});
 }
