@@ -15,7 +15,22 @@ And the central disciplines, inherited from the research and the control-plane p
 the system of record; decisions and frozen drafts come home by PR; observed, not declared;
 agents approve nothing; no new gates before the control-plane foundations land.**
 
-## 0 · Scope and non-goals
+## 0 · Goals — what done looks like
+
+Six goals define success. Each carries a measure that is **demonstrated, not asserted**, and
+the milestone (§4) at which it is proven. A milestone is not done until its goals' measures
+have been shown.
+
+| # | Goal | Measure | Proven at |
+|---|---|---|---|
+| **G1** | **Non-technical teammates never touch git.** A PM authors the PRD, a stakeholder reacts, a second-line approver decides — entirely on the floor. | The M2 demo runs with the PRD author and the PA1 approver never opening GitHub; every field a gate will check is reachable through a guided template. | M2 |
+| **G2** | **Zero loss of control.** The integration changes no gate, no compiled approver set, no CODEOWNERS line — enforcement is identical with the floor present or absent. | Gate set and CODEOWNERS diff-empty against pre-integration; the four refusal scenarios (agent click void · role-less approver refused · release-hold write rejected · stale activation distrusted) pass in reality. | M4 (WS5 acceptance) |
+| **G3** | **Every decision auditable end-to-end.** Any floor decision resolves to a registry identity, a signed envelope, and a merged PR. | An auditor walks a PA1 from approval page → envelope → gate verdict entirely inside git, without asking anyone. | M4 |
+| **G4** | **Live shared visibility.** Current state — the queue, who is blocking, what has drifted — is visible without asking. | Projection fresh within 10 minutes of a merge; every compiled role's "waiting on me" dashboard populated (per *hat*, per the roles-not-headcount model). | M1 · M3 |
+| **G5** | **Agents do the labour; humans do judgment.** Paperwork arrives prefilled; human input is judgment fields; blocks route to the right hat. | In the MVP demo, the majority of template fields arrive prefilled by floor-keepers or projection; a `blocked` item reaches the correct role inbox, not a broadcast notification. | M2 · M5 |
+| **G6** | **Honesty preserved.** Nothing reads as more controlled than it is. | Adapter and projections show *declared vs active* truthfully in the scorecard; drift is always visible and never blocking. | Every milestone |
+
+## 1 · Scope and non-goals
 
 **In scope:** a read-only projection of the governed repo into Notion; guided template pairs for
 authoring and approvals; the freeze round-trip for discovery artifacts; decision routing with
@@ -26,7 +41,7 @@ write path from Notion into the control plane or `release-hold.json`; a Notion c
 into the harness core (sync machinery is adopter-side wiring, per the adapter contract); the
 macro-ring "enterprise hub" (out of scope per `enterprise-rings.md`); new blocking gates.
 
-## 1 · Prerequisites (do these before WS0 closes)
+## 2 · Prerequisites (do these before WS0 closes)
 
 | # | Prerequisite | Detail |
 |---|---|---|
@@ -36,7 +51,7 @@ macro-ring "enterprise hub" (out of scope per `enterprise-rings.md`); new blocki
 | P4 | **Sync identity registered** | `svc-floor-sync` added to `identities.json` as builder-class, **no approval role**; its ed25519 key registered in `attestation-issuers.json`. CODEOWNERS untouched. |
 | P5 | **Hosting decision for the sync worker** | Options: Notion Workers · adopter CI job · small service. Record as an ADR — it is the first entry in the new ADR template. |
 
-## 2 · Workstreams
+## 3 · Workstreams
 
 Sequencing: **WS0 → WS1 → (WS2 ∥ WS3) → WS4 → WS5 → WS6.** Each workstream lists deliverables
 and the acceptance test that closes it. Sizes: S (≤1 day), M (days), L (a week-plus, agent-driven).
@@ -138,7 +153,7 @@ The two contracts the catalog exposed as missing, plus the registry finding:
 - **Acceptance:** a filed signal exits triage traceable end-to-end; MI reflects the last sealed
   bundle; a floor-keeper's attempted approval is demonstrably void.
 
-## 3 · Milestones
+## 4 · Milestones
 
 | Milestone | Contents | Proves |
 |---|---|---|
@@ -148,7 +163,7 @@ The two contracts the catalog exposed as missing, plus the registry finding:
 | **M4 — Governed floor** | + WS5 complete (adapter active, not declared) | Approvals route with evidence; refusals real |
 | **M5 — Closed loop** | + WS6 | Signals and MI close the arc back to Discovery |
 
-## 4 · Open decisions (each becomes an ADR — the template's first customers)
+## 5 · Open decisions (each becomes an ADR — the template's first customers)
 
 1. **Sync worker hosting** (P5): Notion Workers vs CI job vs small service — trade: latency vs
    operational surface vs credentials locality.
@@ -160,14 +175,16 @@ The two contracts the catalog exposed as missing, plus the registry finding:
 4. **Notion API risk posture**: the 2025-09-03 data-source model is pinned; revisit on Notion's
    next dated API version; the self-hosted MCP is not a dependency.
 
-## 5 · Risks carried from the research (do not re-litigate, re-read)
+## 6 · Risks carried from the research (do not re-litigate, re-read)
 
 Appearance-of-control · comprehension-debt acceleration (the evidence-carried-in rule is the
 mitigation and is **load-bearing** in D5.1) · system-of-record temptation · residency/PII
 (HG-0011 — P1 gates the plan) · platform movement · cost/tier. See research doc §8.
 
-## 6 · Verification, plan-wide
+## 7 · Verification, plan-wide
 
+- **The goal measures (§0) for the milestone under review are demonstrated, not asserted** —
+  a milestone review opens with its goals' measures shown live.
 - Every workstream's acceptance test, plus: the **honesty rule** — the adapter and every
   projection ships *declared, not active* until its first real observed evidence, and the
   scorecard says so.
