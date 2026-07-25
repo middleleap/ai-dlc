@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notion × the Loom × GitHub — the architecture · MiddleLeap</title>
+<meta name="description" content="The architectural drawing for the Factory Floor: how a Notion workspace, three service identities, a GitHub repository and a protected CI plane fit together — with the four data flows, the four trust boundaries, and an honest status on every component. MiddleLeap brand, Ink and Paper modes.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='9' width='14' height='14' rx='2.2' fill='%23E65C2D' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+/* pre-paint theme: ?theme=paper|ink beats the saved preference; default is ink */
+(function(){try{
+  var q=/[?&]theme=(paper|ink)/.exec(location.search);
+  var m=q?q[1]:localStorage.getItem('floor-theme');
+  if(m==='paper')document.documentElement.setAttribute('data-theme','paper');
+}catch(e){}})();
+</script>
+<style>
+:root{
+  --ink-0:#080808;--ink-1:#101010;--ink-2:#181817;--ink-3:#232321;--ink-4:#33322F;--ink-border:#1E1E1C;
+  --bone-0:#ECE9E1;--bone-1:#DEDBD4;--bone-2:#A8A59E;--bone-3:#87847D;
+  --ember-300:#F58F55;--ember-400:#F0722E;--ember-500:#E65C2D;--ember-600:#CE451B;
+  --ember-dim:rgba(230,92,45,.14);
+  --positive:#5FA671;--positive-dim:rgba(95,166,113,.14);
+  --caution:#D9A03C;--caution-dim:rgba(217,160,60,.14);
+  --critical:#D64545;--critical-dim:rgba(214,69,69,.14);--critical-text:#E06060;
+  --info:#5D8FA6;--info-dim:rgba(93,143,166,.14);
+  --serif:"Instrument Serif",Georgia,serif;--sans:"DM Sans",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;
+  --ease-out:cubic-bezier(.2,0,0,1);--ease-leap:cubic-bezier(.34,1.3,.4,1);
+  --eyebrow-c:var(--ember-400);--ember-text:var(--ember-300);
+  --link-c:var(--ember-400);--link-h:var(--ember-300);
+  --shadow-2:0 4px 16px rgba(0,0,0,.45);
+}
+[data-theme="paper"]{
+  --ink-0:#FAF9F5;--ink-1:#FFFFFF;--ink-2:#FFFFFF;--ink-3:#F4F2EC;--ink-4:#D6D2C8;--ink-border:#E7E4DC;
+  --bone-0:#14130F;--bone-1:#2A2925;--bone-2:#6E6A60;--bone-3:#6E6A60;
+  --ember-dim:rgba(206,69,27,.10);
+  --positive:#2F7048;--positive-dim:rgba(47,112,72,.12);
+  --caution:#8F6614;--caution-dim:rgba(143,102,20,.12);
+  --critical:#B23434;--critical-dim:rgba(178,52,52,.12);--critical-text:#B23434;
+  --info:#3A6E86;--info-dim:rgba(58,110,134,.12);
+  --eyebrow-c:#6E6A60;--ember-text:#A83614;--link-c:#A83614;--link-h:#CE451B;
+  --shadow-2:0 1px 2px rgba(20,19,15,.05),0 8px 24px rgba(20,19,15,.09);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink-0);color:var(--bone-1);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--ember-500);color:#110D0A}
+a{color:var(--link-c);text-decoration:none}
+a:hover{color:var(--link-h)}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--bone-0);letter-spacing:0;line-height:1.2}
+em{font-style:italic;color:var(--ember-500)}
+[data-theme="paper"] em{color:var(--ember-600)}
+:focus-visible{outline:2px solid var(--ember-400);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+
+/* header */
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  padding:20px 0;border-bottom:1px solid var(--ink-border)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
+.brand .sq{width:13px;height:13px;border-radius:16%;background:var(--bone-0)}
+.brand .dm{width:13px;height:13px;border-radius:16%;background:linear-gradient(135deg,#F0722E,#CE451B);transform:rotate(45deg)}
+.brand b{font-weight:600;color:var(--bone-0)}
+.brand i{font-style:normal;color:var(--ember-500)}
+.tgl{display:flex;align-items:center;gap:10px}
+.tgl label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-3);cursor:pointer}
+.track{position:relative;width:48px;height:26px;background:var(--ink-3);border:1px solid var(--ink-4);cursor:pointer;display:block}
+.track .thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:16%;background:var(--bone-2);
+  transition:transform .4s var(--ease-leap),background .3s var(--ease-out)}
+.tgl input{position:absolute;opacity:0;width:48px;height:26px;margin:0;cursor:pointer}
+.tgl input:checked + .track{background:var(--ember-dim);border-color:var(--ember-500)}
+.tgl input:checked + .track .thumb{transform:translateX(22px) rotate(45deg);background:var(--ember-500)}
+.tgl input:focus-visible + .track{outline:2px solid var(--ember-400);outline-offset:2px}
+
+/* hero */
+.hero{padding:56px 0 32px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--eyebrow-c);margin-bottom:18px}
+h1{font-size:clamp(38px,5.4vw,62px);margin-bottom:20px}
+.lede{font-size:19px;color:var(--bone-2);max-width:74ch}
+.rule{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--bone-1);border-left:2px solid var(--ember-500);
+  padding:12px 0 12px 16px;margin-top:26px;max-width:78ch;background:var(--ember-dim)}
+
+/* section chrome */
+section{padding:44px 0}
+h2{font-size:clamp(26px,3.2vw,36px);margin-bottom:10px}
+.sub{color:var(--bone-2);max-width:80ch;margin-bottom:26px}
+h3{font-size:20px;margin-bottom:8px}
+
+/* flow picker */
+.picker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.picker button{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--ink-2);color:var(--bone-2);border:1px solid var(--ink-border);padding:9px 13px;cursor:pointer;
+  border-radius:0;transition:border-color .2s var(--ease-out),color .2s var(--ease-out)}
+.picker button:hover{color:var(--bone-0);border-color:var(--ink-4)}
+.picker button .d{display:inline-block;width:7px;height:7px;transform:rotate(45deg);margin-right:7px;vertical-align:middle}
+.picker button.on{color:var(--bone-0);border-color:var(--bone-3);background:var(--ink-3)}
+.picker button[data-f="proj"] .d{background:var(--info)}
+.picker button[data-f="freeze"] .d{background:var(--positive)}
+.picker button[data-f="dec"] .d{background:var(--ember-500)}
+.picker button[data-f="assert"] .d{background:var(--ember-300)}
+.picker button[data-f="all"] .d{background:var(--bone-2)}
+
+/* the drawing */
+.canvas{border:1px solid var(--ink-border);background:var(--ink-1);padding:8px;overflow-x:auto}
+.canvas svg{display:block;min-width:1000px;width:100%;height:auto}
+.svgnote{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--bone-3);
+  margin-top:12px;display:flex;gap:20px;flex-wrap:wrap}
+
+/* svg primitives */
+.s-band{fill:var(--ink-2);stroke:var(--ink-border)}
+.s-bandlab{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;fill:var(--bone-3)}
+.s-plane{font-family:var(--serif);font-size:19px;fill:var(--bone-0)}
+.s-planesub{font-family:var(--sans);font-size:11.5px;fill:var(--bone-3)}
+.s-box{fill:var(--ink-3);stroke:var(--ink-4);cursor:pointer}
+.s-box:hover{stroke:var(--bone-3)}
+.s-box.sel{stroke:var(--ember-500);stroke-width:1.6}
+.s-t{font-family:var(--sans);font-size:13px;font-weight:600;fill:var(--bone-0);pointer-events:none}
+.s-s{font-family:var(--sans);font-size:10.5px;fill:var(--bone-2);pointer-events:none}
+.s-m{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;fill:var(--bone-3);pointer-events:none}
+.s-pill{stroke:none;pointer-events:none}
+.s-pilltx{font-family:var(--mono);font-size:8px;letter-spacing:.09em;pointer-events:none}
+.s-tb{stroke:var(--ink-4);stroke-width:1;stroke-dasharray:3 5;fill:none}
+.s-tblab{font-family:var(--mono);font-size:9px;letter-spacing:.12em;fill:var(--bone-3)}
+.s-flowlab{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em}
+.ln{fill:none;stroke-width:1.7}
+.ln-proj{stroke:var(--info)}   .tx-proj{fill:var(--info)}
+.ln-freeze{stroke:var(--positive)} .tx-freeze{fill:var(--positive)}
+.ln-dec{stroke:var(--ember-500)}   .tx-dec{fill:var(--ember-500)}
+.ln-assert{stroke:var(--ember-400);stroke-dasharray:6 4} .tx-assert{fill:var(--ember-400)}
+.ln-gate{stroke:var(--bone-3)} .tx-gate{fill:var(--bone-3)}
+.s-stop{fill:var(--critical-dim);stroke:var(--critical)}
+.s-stoptx{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;fill:var(--critical-text)}
+.fl{transition:opacity .3s var(--ease-out)}
+svg[data-flow="proj"]   .fl:not(.fl-proj),
+svg[data-flow="freeze"] .fl:not(.fl-freeze),
+svg[data-flow="dec"]    .fl:not(.fl-dec),
+svg[data-flow="assert"] .fl:not(.fl-assert){opacity:.1}
+.chip-r{fill:var(--ink-2);stroke:var(--ink-4)}
+.chip-t{font-family:var(--mono);font-size:9px;letter-spacing:.06em;fill:var(--bone-2)}
+
+/* detail panel */
+.detail{border:1px solid var(--ink-border);background:var(--ink-2);padding:22px 24px;margin-top:16px;min-height:132px}
+.detail .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--eyebrow-c);margin-bottom:8px}
+.detail h3{margin-bottom:6px}
+.detail p{color:var(--bone-2);font-size:14.5px;max-width:92ch}
+.detail .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:2px;
+  border:1px solid var(--ink-4);color:var(--bone-2)}
+.tag.ok{border-color:var(--positive);color:var(--positive);background:var(--positive-dim)}
+.tag.dec{border-color:var(--caution);color:var(--caution);background:var(--caution-dim)}
+.tag.spec{border-color:var(--info);color:var(--info);background:var(--info-dim)}
+.tag.no{border-color:var(--ink-4);color:var(--bone-3)}
+
+/* tables + grids */
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--ink-border);vertical-align:top}
+th{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--bone-3);font-weight:400}
+td{color:var(--bone-2)}
+td strong,td b{color:var(--bone-0);font-weight:600}
+code{font-family:var(--mono);font-size:.9em;color:var(--bone-1);background:var(--ink-3);padding:1px 5px;border-radius:2px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:8px}
+.card{border:1px solid var(--ink-border);background:var(--ink-2);padding:20px 22px}
+.card .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--eyebrow-c);margin-bottom:9px}
+.card p{font-size:14px;color:var(--bone-2)}
+.alert{border:1px solid var(--ink-4);border-left-width:2px;background:var(--ink-2);padding:16px 20px;margin-top:18px}
+.alert.caution{border-left-color:var(--caution)}
+.alert.info{border-left-color:var(--info)}
+.alert p{font-size:14px;color:var(--bone-2)}
+.alert .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--bone-3);margin-bottom:6px}
+footer{border-top:1px solid var(--ink-border);padding:30px 0 60px;color:var(--bone-3);font-size:13px}
+
+@media(max-width:820px){.g2{grid-template-columns:1fr}.hero{padding:40px 0 24px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="headrow">
+    <div class="brand"><span class="sq"></span><span class="dm"></span>&nbsp;<b>Middle</b><i>Leap</i></div>
+    <div class="tgl">
+      <input type="checkbox" id="theme" aria-label="Switch to paper mode">
+      <label for="theme" class="track"><span class="thumb"></span></label>
+      <label for="theme" id="themelab">Ink</label>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Factory Floor · architecture</div>
+    <h1>Notion, the Loom,<br>and <em>the record</em></h1>
+    <p class="lede">Three planes and four flows. A Notion workspace where people author and decide, three
+    service identities that carry things across, and a GitHub repository that is the only source of truth —
+    with a protected CI plane underneath that reads files and signed envelopes, and never a vendor API.</p>
+    <p class="rule">AI proposes; humans and a protected control plane dispose. Notion is where work is
+    authored. Git is where it counts. Nothing in this drawing changes which one is which.</p>
+  </div>
+</div>
+
+<div class="wrap">
+<section id="drawing">
+  <h2>The drawing</h2>
+  <p class="sub">Pick a flow to isolate it. Click any component for what it is, what it may do, and whether it
+  exists yet — the status pills are not aspirational.</p>
+
+  <div class="picker" role="group" aria-label="Isolate a data flow">
+    <button data-f="all" class="on"><span class="d"></span>All flows</button>
+    <button data-f="proj"><span class="d"></span>1 · Projection</button>
+    <button data-f="freeze"><span class="d"></span>2 · Freeze</button>
+    <button data-f="dec"><span class="d"></span>3 · Decision</button>
+    <button data-f="assert"><span class="d"></span>4 · Assertion (TB-0)</button>
+  </div>
+
+  <div class="canvas">
+  <svg id="map" viewBox="0 0 1200 900" role="img" aria-label="Architecture: the Notion floor, three service identities, the GitHub record, and the protected CI plane, with four data flows and four trust boundaries.">
+    <defs>
+      <marker id="aP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5D8FA6"/></marker>
+      <marker id="aF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5FA671"/></marker>
+      <marker id="aD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#E65C2D"/></marker>
+      <marker id="aA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#F0722E"/></marker>
+      <marker id="aG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#87847D"/></marker>
+    </defs>
+
+    <!-- ============ TB-0 band ============ -->
+    <rect class="s-band" x="16" y="16" width="1168" height="98"/>
+    <text class="s-bandlab" x="32" y="38">TB-0 · human ↔ identity provider — the path that does not run through the seam</text>
+
+    <g class="fl fl-assert">
+      <rect class="s-box" x="40" y="50" width="196" height="48" data-id="human"/>
+      <text class="s-t" x="56" y="70">The approver</text>
+      <text class="s-s" x="56" y="86">a named human holding a compiled role</text>
+
+      <rect class="s-box" x="276" y="50" width="232" height="48" data-id="idp"/>
+      <text class="s-t" x="292" y="70">Institution IdP</text>
+      <text class="s-s" x="292" y="86">step-up OIDC · ADR-0005 accepted</text>
+      <rect class="s-pill" x="466" y="56" width="34" height="12" fill="rgba(95,166,113,.16)"/>
+      <text class="s-pilltx" x="471" y="65" fill="#5FA671">ADR</text>
+
+      <path class="ln ln-assert" d="M236 74 H 268" marker-end="url(#aA)"/>
+      <path class="ln ln-assert" d="M508 74 H 1176 V 435 H 1172" marker-end="url(#aA)"/>
+      <text class="s-flowlab tx-assert" x="544" y="90">4 · subject-bound assertion — nonce = sha256(canonical decision payload)</text>
+      <text class="s-flowlab tx-assert" x="544" y="104">issued to the human · carried by the bridge · valid independently of it</text>
+    </g>
+
+    <!-- ============ trust boundaries ============ -->
+    <path class="s-tb" d="M374 142 V 706"/>
+    <path class="s-tb" d="M630 142 V 706"/>
+    <path class="s-tb" d="M24 716 H 1176"/>
+    <text class="s-tblab" x="361" y="136">TB-1</text>
+    <text class="s-tblab" x="617" y="136">TB-2</text>
+    <text class="s-tblab" x="30" y="732">TB-3</text>
+
+    <!-- ============ Plane A · the floor ============ -->
+    <rect class="s-band" x="16" y="142" width="342" height="564"/>
+    <text class="s-plane" x="34" y="176">The floor</text>
+    <text class="s-planesub" x="34" y="194">Notion workspace · authoring and deciding</text>
+
+    <g class="fl fl-proj">
+      <rect class="s-box" x="34" y="212" width="306" height="82" data-id="mirrors"/>
+      <text class="s-t" x="50" y="234">Read-only mirrors</text>
+      <text class="s-s" x="50" y="251">backlog board · MI · decision log</text>
+      <text class="s-s" x="50" y="266">freeze / drift block — display only</text>
+      <text class="s-m" x="50" y="284">CLASS · READ-ONLY MIRROR</text>
+    </g>
+
+    <g class="fl fl-freeze">
+      <rect class="s-box" x="34" y="308" width="306" height="82" data-id="authoring"/>
+      <text class="s-t" x="50" y="330">Authoring surfaces</text>
+      <text class="s-s" x="50" y="347">problem statement · research log · synthesis</text>
+      <text class="s-s" x="50" y="362">data governance · prototype · reaction · PRD</text>
+      <text class="s-m" x="50" y="380">CLASS · BORN ON THE FLOOR</text>
+    </g>
+
+    <g class="fl fl-dec fl-assert">
+      <rect class="s-box" x="34" y="404" width="306" height="82" data-id="approvals-ui"/>
+      <text class="s-t" x="50" y="426">Approval + decision surfaces</text>
+      <text class="s-s" x="50" y="443">PA1 / PA2 page · ADR inbox · SDR</text>
+      <text class="s-s" x="50" y="458">A1–A5 sign-off · operations-signal intake</text>
+      <text class="s-m" x="50" y="476">CLASS · DECISION ROUTED</text>
+    </g>
+
+    <rect class="s-box" x="34" y="500" width="306" height="66" data-id="flooronly"/>
+    <text class="s-t" x="50" y="522">Floor-only artifacts</text>
+    <text class="s-s" x="50" y="539">meeting + interview notes · briefs · roadmap</text>
+    <text class="s-m" x="50" y="556">CLASS · LIVES ON THE FLOOR — never frozen</text>
+
+    <rect class="s-box" x="34" y="580" width="306" height="66" data-id="keepers"/>
+    <text class="s-t" x="50" y="602">Floor-keeper agents</text>
+    <text class="s-s" x="50" y="619">triage · drafting · MI — separate databases</text>
+    <text class="s-m" x="50" y="636">NO GRANT ON APPROVAL FIELDS · NO ROLE</text>
+
+    <text class="s-m" x="34" y="672">Every template carries its write-class banner —</text>
+    <text class="s-m" x="34" y="686">the one thing no form can infer for its author.</text>
+
+    <!-- ============ Plane B · the seam ============ -->
+    <rect class="s-band" x="392" y="142" width="220" height="564"/>
+    <text class="s-plane" x="410" y="176">The seam</text>
+    <text class="s-planesub" x="410" y="194">three service identities</text>
+
+    <g class="fl fl-proj">
+      <rect class="s-box" x="404" y="212" width="196" height="82" data-id="projector"/>
+      <text class="s-t" x="418" y="236">svc-floor-</text>
+      <text class="s-t" x="418" y="252">projector</text>
+      <text class="s-s" x="418" y="270">record → floor, one way</text>
+      <rect class="s-pill" x="418" y="278" width="86" height="12" fill="rgba(93,143,166,.18)"/>
+      <text class="s-pilltx" x="423" y="287" fill="#5D8FA6">CANNOT WRITE GIT</text>
+    </g>
+
+    <g class="fl fl-freeze">
+      <rect class="s-box" x="404" y="308" width="196" height="82" data-id="freezer"/>
+      <text class="s-t" x="418" y="332">svc-floor-</text>
+      <text class="s-t" x="418" y="348">freezer</text>
+      <text class="s-s" x="418" y="366">exports · opens a PR</text>
+      <rect class="s-pill" x="418" y="374" width="98" height="12" fill="rgba(214,69,69,.16)"/>
+      <text class="s-pilltx" x="423" y="383" fill="#E06060">CANNOT MERGE ITS PR</text>
+    </g>
+
+    <g class="fl fl-dec fl-assert">
+      <rect class="s-box" x="404" y="404" width="196" height="82" data-id="bridge"/>
+      <text class="s-t" x="418" y="428">svc-floor-</text>
+      <text class="s-t" x="418" y="444">bridge</text>
+      <text class="s-s" x="418" y="462">transcribes — nothing more</text>
+      <rect class="s-pill" x="418" y="470" width="112" height="12" fill="rgba(230,92,45,.18)"/>
+      <text class="s-pilltx" x="423" y="479" fill="#E65C2D">CUSTODY, NEVER AUTHORITY</text>
+    </g>
+
+    <rect class="s-stop" x="404" y="504" width="196" height="62"/>
+    <text class="s-stoptx" x="418" y="524">NONE HOLDS AN</text>
+    <text class="s-stoptx" x="418" y="538">APPROVAL ROLE.</text>
+    <text class="s-stoptx" x="418" y="556">NONE CAN MERGE.</text>
+    <text class="s-m" x="404" y="588">HG-0001 · builders ∩</text>
+    <text class="s-m" x="404" y="602">second-line = ∅</text>
+
+    <!-- ============ Plane C · the record ============ -->
+    <rect class="s-band" x="648" y="142" width="536" height="564"/>
+    <text class="s-plane" x="666" y="176">The record</text>
+    <text class="s-planesub" x="666" y="194">GitHub repository · the only source of truth</text>
+
+    <g class="fl fl-proj fl-dec">
+      <rect class="s-box" x="666" y="212" width="250" height="82" data-id="change"/>
+      <text class="s-t" x="680" y="234">docs/governance/changes/</text>
+      <text class="s-s" x="680" y="251">change-envelope · control-plan</text>
+      <text class="s-s" x="680" y="266">(compiled, never hand-written)</text>
+      <text class="s-s" x="680" y="281">product-passport</text>
+    </g>
+
+    <g class="fl fl-dec fl-assert">
+      <rect class="s-box" x="934" y="212" width="234" height="82" data-id="registries"/>
+      <text class="s-t" x="948" y="234">Identity + issuer registries</text>
+      <text class="s-s" x="948" y="251">identities.json</text>
+      <text class="s-s" x="948" y="266">attestation-issuers (service)</text>
+      <text class="s-s" x="948" y="281">assertion-issuers (IdP)</text>
+    </g>
+
+    <g class="fl fl-freeze">
+      <rect class="s-box" x="666" y="308" width="250" height="82" data-id="runs"/>
+      <text class="s-t" x="680" y="330">discovery/runs/&lt;slug&gt;/</text>
+      <text class="s-s" x="680" y="347">frozen artifacts + freeze stamp</text>
+      <text class="s-s" x="680" y="362">export digest recorded</text>
+      <text class="s-m" x="680" y="380">D-GATES RE-RUN ON THE EXPORT</text>
+    </g>
+
+    <g class="fl fl-proj">
+      <rect class="s-box" x="934" y="308" width="234" height="82" data-id="evidence"/>
+      <text class="s-t" x="948" y="330">Evidence + decision log</text>
+      <text class="s-s" x="948" y="347">sealed envelopes · adapters</text>
+      <text class="s-s" x="948" y="362">product evals · release subject</text>
+      <text class="s-m" x="948" y="380">OBSERVED, NOT DECLARED</text>
+    </g>
+
+    <g class="fl fl-dec fl-assert">
+      <rect class="s-box" x="666" y="404" width="502" height="62" data-id="attestations"/>
+      <text class="s-t" x="680" y="426">changes/&lt;id&gt;/approvals/*.json — approval-attestation records</text>
+      <text class="s-s" x="680" y="444">two signatures: the human's assertion (authority) · the bridge's transcription (custody)</text>
+      <text class="s-m" x="680" y="459">BOUND TO plan_hash · passport digest · source sha or artifact digest</text>
+    </g>
+
+    <rect class="s-stop" x="666" y="480" width="502" height="56"/>
+    <text class="s-stoptx" x="680" y="502">release-hold.json · CODEOWNERS · branch protection · the gate scripts</text>
+    <text class="s-stoptx" x="680" y="522">NEVER WRITABLE FROM THE FLOOR — HG-0002, THE CONTROL PLANE</text>
+
+    <rect class="s-box" x="666" y="550" width="502" height="52" data-id="merge" style="cursor:pointer"/>
+    <text class="s-t" x="680" y="572">Every write arrives as a pull request</text>
+    <text class="s-s" x="680" y="590">a second human merges — the seam opens PRs, it never closes them</text>
+
+    <text class="s-m" x="666" y="628">Notion holds no authority in this plane. Remove the workspace and every</text>
+    <text class="s-m" x="666" y="642">gate still reaches the same verdict from the files — that is the test.</text>
+    <text class="s-m" x="666" y="664">The projection is a convenience. The record is the record.</text>
+
+    <!-- ============ flow arrows ============ -->
+    <!-- 1 projection: record → projector → floor -->
+    <g class="fl fl-proj">
+      <path class="ln ln-proj" d="M666 250 H 604" marker-end="url(#aP)"/>
+      <path class="ln ln-proj" d="M404 250 H 344" marker-end="url(#aP)"/>
+      <text class="s-flowlab tx-proj" x="352" y="206">1 · projection — read-only, on merge</text>
+    </g>
+    <!-- 2 freeze: floor → freezer → record -->
+    <g class="fl fl-freeze">
+      <path class="ln ln-freeze" d="M344 346 H 400" marker-end="url(#aF)"/>
+      <path class="ln ln-freeze" d="M604 346 H 662" marker-end="url(#aF)"/>
+      <text class="s-flowlab tx-freeze" x="352" y="302">2 · freeze — explicit, human-triggered, fails closed</text>
+    </g>
+    <!-- 3 decision: floor → bridge → attestation record -->
+    <g class="fl fl-dec">
+      <path class="ln ln-dec" d="M344 440 H 400" marker-end="url(#aD)"/>
+      <path class="ln ln-dec" d="M604 440 H 662" marker-end="url(#aD)"/>
+      <text class="s-flowlab tx-dec" x="352" y="398">3 · decision — webhook verified, deduplicated, transcribed</text>
+    </g>
+    <!-- gates -->
+    <g class="fl fl-proj fl-freeze fl-dec fl-assert">
+      <path class="ln ln-gate" d="M840 706 V 748" marker-end="url(#aG)"/>
+      <path class="ln ln-gate" d="M980 748 V 706" marker-end="url(#aG)"/>
+      <text class="s-flowlab tx-gate" x="852" y="736">files + envelopes</text>
+      <text class="s-flowlab tx-gate" x="992" y="736">verdicts + sealed evidence</text>
+    </g>
+
+    <!-- ============ Plane D · execution ============ -->
+    <rect class="s-band" x="16" y="748" width="1168" height="136"/>
+    <text class="s-plane" x="34" y="782">Execution</text>
+    <text class="s-planesub" x="34" y="800">protected CI · the Loom's gates — no network call, no vendor SDK</text>
+
+    <g class="chips">
+      <rect class="chip-r" x="34" y="816" width="120" height="22"/><text class="chip-t" x="44" y="831">D1–D9 discovery</text>
+      <rect class="chip-r" x="164" y="816" width="112" height="22"/><text class="chip-t" x="174" y="831">Q1–Q5 delivery</text>
+      <rect class="chip-r" x="286" y="816" width="118" height="22"/><text class="chip-t" x="296" y="831">PA1 · PA2 product</text>
+      <rect class="chip-r" x="414" y="816" width="132" height="22"/><text class="chip-t" x="424" y="831">A1–A5 architecture</text>
+      <rect class="chip-r" x="556" y="816" width="120" height="22"/><text class="chip-t" x="566" y="831">R1–R6 readiness</text>
+      <rect class="chip-r" x="686" y="816" width="152" height="22"/><text class="chip-t" x="696" y="831">HG-0001…0013 warp</text>
+      <rect class="chip-r" x="848" y="816" width="180" height="22"/><text class="chip-t" x="858" y="831">product-approval-check (D2.5)</text>
+    </g>
+    <text class="s-m" x="34" y="862">A gate never learns a vendor's API. It reads a signed evidence envelope tied to a named catalog control — so the floor can be replaced without touching a single gate.</text>
+  </svg>
+  </div>
+
+  <div class="svgnote">
+    <span>◆ 1 projection — read only</span>
+    <span>◆ 2 freeze — content comes home</span>
+    <span>◆ 3 decision — transcribed</span>
+    <span>◆ 4 assertion — authority</span>
+  </div>
+
+  <div class="detail" id="detail" aria-live="polite">
+    <div class="k">Component</div>
+    <h3>Click a box in the drawing</h3>
+    <p>Each one carries its real status — what has shipped in <code>2.0.0-rc.13</code>, what is specified but
+    unbuilt, and what is deliberately declared rather than active.</p>
+  </div>
+</section>
+
+<section id="flows">
+  <h2>The four flows, in <em>one line</em> each</h2>
+  <p class="sub">Direction is the whole design. Three of the four are one-way, and the fourth — the one that
+  carries authority — deliberately does not pass through the service that carries it.</p>
+  <table>
+    <thead><tr><th>Flow</th><th>Direction</th><th>Carried by</th><th>What makes it safe</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1 · Projection</strong></td><td>record → floor</td><td><code>svc-floor-projector</code></td>
+        <td>The token cannot write git — proved by a capability-matrix probe, recorded. A projection that lies is a stale board, never a false approval.</td></tr>
+      <tr><td><strong>2 · Freeze</strong></td><td>floor → record</td><td><code>svc-floor-freezer</code></td>
+        <td>Explicitly human-triggered; a freeze is an intent, like a merge. The exporter <strong>fails closed</strong> on unknown blocks, truncation or permission gaps, and stamps the export digest.</td></tr>
+      <tr><td><strong>3 · Decision</strong></td><td>floor → record</td><td><code>svc-floor-bridge</code></td>
+        <td>The webhook is a <em>signal</em>, not a record: signature verified, deduplicated on event id, current state refetched. Bot and agent authors are rejected outright.</td></tr>
+      <tr><td><strong>4 · Assertion</strong></td><td>human → IdP → record</td><td>the bridge, as courier only</td>
+        <td>The gate verifies the <strong>assertion's</strong> issuer, never the bridge's. A service key signing for a human authenticates the worker, not the approver — and the contract refuses that shape.</td></tr>
+    </tbody>
+  </table>
+  <div class="alert info">
+    <div class="k">Why flow 4 is drawn over the top</div>
+    <p>If the proof of a human decision travelled <em>through</em> the bridge, a compromised bridge could
+    manufacture any registered human's approval for any change. That was finding F1. The correction is
+    architectural, not procedural: the assertion is minted on TB-0, where the bridge has no reach, and it binds
+    a nonce equal to the digest of this exact decision — so it cannot be replayed onto another one.</p>
+  </div>
+</section>
+
+<section id="boundaries">
+  <h2>Four trust boundaries</h2>
+  <p class="sub">Each one names what crosses, in which direction, and what goes wrong if the control fails.</p>
+  <table>
+    <thead><tr><th>ID</th><th>Between</th><th>What crosses</th><th>Direction</th><th>If it fails</th></tr></thead>
+    <tbody>
+      <tr><td><strong>TB-0</strong></td><td>human ↔ IdP</td><td>the subject-bound decision assertion</td><td>human → IdP → record</td>
+        <td>If this path runs <em>through</em> the bridge, F1 is unfixed and any approval can be fabricated.</td></tr>
+      <tr><td><strong>TB-1</strong></td><td>floor ↔ seam</td><td>projected state · page content for export · webhook events</td><td>both</td>
+        <td>A spoofed or replayed event; an over-broad integration token.</td></tr>
+      <tr><td><strong>TB-2</strong></td><td>seam ↔ record</td><td>branches · PRs · envelopes · transcriptions</td><td>seam → record only</td>
+        <td>A service identity that can merge collapses four-eyes (HG-0001).</td></tr>
+      <tr><td><strong>TB-3</strong></td><td>record ↔ execution</td><td>gate scripts · workflows · managed settings</td><td>record → execution</td>
+        <td>An agent that can edit its own guardrails (HG-0002).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="split">
+  <h2>What lives where — and what <em>never</em> crosses</h2>
+  <p class="sub">The one-line pattern: drafts and conversation live in Notion; anything a gate, an approval or an
+  auditor touches is a frozen, digest-checked file in git — and the freeze is a pull request.</p>
+  <table>
+    <thead><tr><th>Artifact</th><th>Canonical home</th><th>Notion's role</th></tr></thead>
+    <tbody>
+      <tr><td><strong>PRD / hand-off</strong>, discovery drafts, stakeholder reactions</td><td>Git (frozen snapshot)</td><td><strong>Born on the floor</strong> — co-authored, frozen by PR; D-gates re-run on the export</td></tr>
+      <tr><td>Meeting, workshop and interview notes; briefs; roadmap</td><td><strong>Notion</strong></td><td><strong>Lives on the floor</strong> permanently — cited as evidence, never frozen</td></tr>
+      <tr><td>Solution Direction Record · ADRs</td><td>Git</td><td>Drafted on the floor; the record lands in git</td></tr>
+      <tr><td>Product passport · change envelope</td><td>Git</td><td>Approval pages route the decision; it returns as a signed envelope by PR</td></tr>
+      <tr><td>Control plan</td><td>Git</td><td>Projection only — compiled, never hand-written anywhere</td></tr>
+      <tr><td>Decision log · sealed evidence · eval reports · registries</td><td>Git (digest-sealed)</td><td>Read-only feed and MI dashboard</td></tr>
+      <tr><td>Code · API contracts · tests · CI · gates · hooks</td><td>Git</td><td><strong>None</strong> — this is the control plane (HG-0002)</td></tr>
+      <tr><td><code>release-hold.json</code></td><td>Git</td><td><strong>Never writable from the floor</strong>; view only</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="status">
+  <h2>Where this actually <em>is</em></h2>
+  <p class="sub">The drawing shows the target architecture. This is how much of it exists today, so the picture
+  is not mistaken for a deployment.</p>
+  <div class="g2">
+    <div class="card">
+      <div class="k">Shipped · loom 2.0.0-rc.13</div>
+      <p>The approval-attestation contract and its two-signature refusal · the PA-gate extension
+      (mandatory-when-compiled) · both issuer registries, kept deliberately separate · the identity registry
+      including the three floor service identities, none holding an approval role · nine generated floor
+      template pairs with a parity gate · the ADR and SDR templates.</p>
+    </div>
+    <div class="card">
+      <div class="k">Declared, not active</div>
+      <p>No shipped profile compiles the <code>approval_attestation</code> capability, so nothing demands
+      envelope-backed approvals today. <code>oidc-step-up</code> and <code>sigstore</code> report
+      UNVERIFIED-HERE until an adopter pins provider metadata and records activation evidence. All four
+      evidence adapters ship declared until their own real evidence lands.</p>
+    </div>
+    <div class="card">
+      <div class="k">Specified, not built</div>
+      <p>Every Notion-side surface: the workspace, the projector, the freezer, the bridge. They need a
+      workspace and a token, and the residency review (P1) must be signed by data-protection and
+      risk-second-line first. The P6 identity map is fully specified and <strong>no gate reads it yet</strong>.</p>
+    </div>
+    <div class="card">
+      <div class="k">Production-blocked, by design</div>
+      <p>Decision routing (WS5). ADR-0005 settled the mechanism on 25 Jul 2026 — step-up OIDC with the
+      nonce-binding condition — but the entry gate has a second condition that stands: an independent
+      second-line review of the workstream's design. Until then every decision surface runs labelled
+      <strong>non-authoritative</strong>.</p>
+    </div>
+  </div>
+  <div class="alert caution">
+    <div class="k">The residual worth naming</div>
+    <p>The identity-provider subject is <em>bound</em> but not <em>joined</em>: the assertion's subject and the
+    registry identity sit side by side under one signature, so neither can be altered afterwards — but nothing
+    independent yet asserts they are the same person. That join is the P6 identity map, which no gate reads.
+    Until it does, a compromised bridge holding a valid assertion for subject A could name registry identity B,
+    and every check in the drawing would still pass.</p>
+  </div>
+</section>
+
+<footer>
+  <div>Companions: <code>docs/notion-floor-plan.md</code> (the executable plan) ·
+  <code>docs/research/notion-software-factory-collaboration-2026-07.md</code> (§4 the governing rules, §6 the
+  storage split) · <code>docs/notion-floor-threat-model.md</code> (the boundaries and the capability matrix) ·
+  <code>docs/adrs/0005-human-assertion-mechanism.md</code> · <a href="loom-factory-floor.html">the factory-floor walkthrough</a>.</div>
+</footer>
+</div>
+
+<script>
+(function(){
+  /* ---- theme ---------------------------------------------------------- */
+  var box=document.getElementById('theme'),lab=document.getElementById('themelab');
+  function paint(p){
+    document.documentElement.setAttribute('data-theme',p?'paper':'ink');
+    lab.textContent=p?'Paper':'Ink';
+    box.setAttribute('aria-label','Switch to '+(p?'ink':'paper')+' mode');
+  }
+  box.checked=document.documentElement.getAttribute('data-theme')==='paper';
+  paint(box.checked);
+  box.addEventListener('change',function(){
+    paint(box.checked);
+    try{localStorage.setItem('floor-theme',box.checked?'paper':'ink');}catch(e){}
+  });
+
+  /* ---- flow isolation -------------------------------------------------- */
+  var svg=document.getElementById('map');
+  document.querySelectorAll('.picker button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.picker button').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on');
+      var f=b.dataset.f;
+      if(f==='all')svg.removeAttribute('data-flow');else svg.setAttribute('data-flow',f);
+    });
+  });
+
+  /* ---- component detail ------------------------------------------------ */
+  var INFO={
+    human:{t:'The approver',k:'Human · TB-0',
+      p:'A named human holding a compiled approver role in <code>identities.json</code>. The gate resolves them by registry identity, checks they hold the role the change requires, and refuses them if they are also a builder on it — builders and second line never intersect.',
+      tags:[['ok','registry shipped']]},
+    idp:{t:'Institution identity provider',k:'Trust root · TB-0',
+      p:'Step-up OIDC re-authentication at the moment of decision, per ADR-0005 (accepted 25 Jul 2026, Option A). Its verification material is pinned in <code>assertion-issuers.json</code> — a registry deliberately separate from service keys, because that separation is what makes “a service may not vouch for a human” checkable rather than a naming convention. Sigstore-style tokens (Option C) are the held-open strategic direction; the record shape does not change.',
+      tags:[['ok','ADR accepted'],['dec','unverified-here until pinned']]},
+    mirrors:{t:'Read-only mirrors',k:'Floor · class: read-only mirror',
+      p:'The backlog board, MI, the decision log and the shared freeze/drift block. Written only by the projector, never by a person. Drift is shown and <strong>never blocks</strong> — it says the draft and the record have diverged, which is information, not a verdict.',
+      tags:[['no','needs a workspace']]},
+    authoring:{t:'Authoring surfaces',k:'Floor · class: born on the floor',
+      p:'The seven discovery artifacts. Each guided form is <strong>generated</strong> from the git template that the gate actually reads, and a parity gate regenerates it on every CI run — so a teammate is asked for exactly what the gate will check. Edit the markdown without regenerating and the build fails.',
+      tags:[['ok','9 template pairs shipped'],['no','floor surface not built']]},
+    'approvals-ui':{t:'Approval and decision surfaces',k:'Floor · class: decision routed',
+      p:'One section per compiled role, with the <strong>evidence carried in</strong> — change summary, gate results, decision-log excerpt, assembled by a floor-keeper and never by the approver. This is the comprehension control; no cryptography substitutes for it.',
+      tags:[['dec','production-blocked (WS5)'],['no','not built']]},
+    flooronly:{t:'Floor-only artifacts',k:'Floor · class: lives on the floor',
+      p:'Meeting, workshop and interview notes; product briefs; roadmap. These never freeze — they feed the research log as cited evidence. Interview notes carry PII discipline in the template itself: pseudonyms and a consent checkbox, because HG-0011 applies to templates too.',
+      tags:[['no','not built']]},
+    keepers:{t:'Floor-keeper agents',k:'Floor · no authority',
+      p:'Triage, drafting and MI agents living in <strong>separate, non-authoritative databases</strong>. Notion page and database grants are not property-level protection, so approval fields live where these agents hold no grant at all. None holds a registry role. A floor-keeper’s attempted approval must be demonstrably void — that is an acceptance test, not a policy.',
+      tags:[['no','not built']]},
+    projector:{t:'svc-floor-projector',k:'Seam · flow 1',
+      p:'One-way record → floor on merge to main. Carries <strong>no governance authority</strong> — which is not the same as no risk: it still carries residency, over-sharing, stale-data and token-custody risk. Its credentials must be unable to write git, proved by a capability probe and recorded as evidence.',
+      tags:[['ok','identity in registry'],['no','service not built']]},
+    freezer:{t:'svc-floor-freezer',k:'Seam · flow 2',
+      p:'Runs the deterministic exporter and opens a pull request. It <strong>cannot merge its own PR</strong> — probed and recorded. A post-freeze edit raises the drift badge and blocks a second freeze until re-frozen, so drift can never quietly become the record.',
+      tags:[['ok','identity in registry'],['no','service not built']]},
+    bridge:{t:'svc-floor-bridge',k:'Seam · flow 3',
+      p:'Receives the verified, deduplicated webhook and <strong>transcribes — nothing more</strong>. It signs the transcription, which proves custody: that a machine carried the record faithfully. It never signs for the human. A record carrying only the bridge’s signature authenticates the worker, not the approver, and the contract refuses that shape outright.',
+      tags:[['ok','contract shipped'],['dec','production-blocked (WS5)']]},
+    change:{t:'The change directory',k:'Record · git',
+      p:'<code>change-envelope.json</code> (state), <code>control-plan.json</code> (compiled from the risk classification — never hand-written, and hand-editing it fails reconciliation), and <code>product-passport.json</code> (the analysis the approvals are given over).',
+      tags:[['ok','shipped']]},
+    registries:{t:'Identity and issuer registries',k:'Record · trust roots',
+      p:'<code>identities.json</code> maps registry identities to roles and groups. <code>attestation-issuers.json</code> holds <strong>service</strong> keys (custody). <code>assertion-issuers.json</code> holds <strong>identity-provider</strong> material (authority). Separation is enforced on key material, not on the id someone typed — one anchor appearing in both registries is refused. All three are CODEOWNERS-protected: a root of trust that is not owned is not a root of trust.',
+      tags:[['ok','shipped'],['ok','no demo key ships']]},
+    runs:{t:'discovery/runs/&lt;slug&gt;/',k:'Record · frozen artifacts',
+      p:'Where a floor page lands when it freezes: Notion-flavored Markdown plus a freeze stamp carrying the export digest and the commit sha. The D-gates re-run on the export, so the thing that passed is the thing that landed — not the thing that was on screen.',
+      tags:[['ok','gates shipped'],['no','exporter not built']]},
+    evidence:{t:'Evidence and decision log',k:'Record · observed, not declared',
+      p:'Sealed evidence envelopes, adapter records, product evals and the release subject. The adapter contract is the load-bearing idea: an external system produces a <strong>signed evidence envelope tied to a named catalog control</strong>, and the gates read envelopes. They never learn a vendor’s API — so the floor can be swapped without touching a gate.',
+      tags:[['ok','shipped'],['dec','4 floor adapters declared']]},
+    attestations:{t:'The approval-attestation records',k:'Record · flow 3 + 4 land here',
+      p:'<code>loom.approval-attestation/v1</code>. Two signatures with deliberately different meanings, and the canonical payload binds the compiled <code>plan_hash</code>, the passport digest, the source sha (PA1) or artifact digest (PA2), the origin nonce, the decision time, expiry and revocation — so an approval cannot outlive the thing it approved, be back-dated, be un-revoked, or be replayed onto another decision.',
+      tags:[['ok','shipped + negative-tested'],['dec','declared, not active']]},
+    merge:{t:'The pull request',k:'Record · the uncollapsible rule',
+      p:'Every write from the seam arrives as a PR, and <strong>a second human merges it</strong>. The seam opens pull requests; it never closes them. This is the third of the three separations the method will not collapse: builders and second line never intersect, agents approve nothing, and a second human sits at every merge.',
+      tags:[['ok','HG-0001 enforced']]}
+  };
+  var d=document.getElementById('detail');
+  function show(id){
+    var i=INFO[id]; if(!i)return;
+    svg.querySelectorAll('.s-box').forEach(function(b){b.classList.toggle('sel',b.dataset.id===id);});
+    d.innerHTML='<div class="k">'+i.k+'</div><h3>'+i.t+'</h3><p>'+i.p+'</p><div class="meta">'+
+      i.tags.map(function(t){return '<span class="tag '+t[0]+'">'+t[1]+'</span>';}).join('')+'</div>';
+  }
+  svg.querySelectorAll('.s-box[data-id]').forEach(function(b){
+    b.setAttribute('tabindex','0');
+    b.setAttribute('role','button');
+    b.addEventListener('click',function(){show(b.dataset.id);});
+    b.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();show(b.dataset.id);}
+    });
+  });
+})();
+</script>
+</body>
+</html>
