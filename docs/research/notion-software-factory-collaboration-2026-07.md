@@ -419,6 +419,73 @@ identity; Phases 0–1 are unchanged by it. And the one-line pattern holds: **dr
 conversation live in Notion; anything a gate, an approval, or an auditor touches is a frozen,
 digest-checked file in git — and the freeze is a PR.**
 
+### 6a · The lifecycle, worked — a retail TPP use case
+
+A concrete run, using the harness's fictional bank so it composes with the bundle's worked
+examples: **Meridian Trust wants "Linked Accounts" in its retail app** — the bank, in its TPP
+capacity, lets a retail customer connect accounts held at other UAE banks and see one
+balance-and-spending view, consuming other LFIs' Bank Data Sharing APIs through the API Hub,
+with the AlTareq consent journey. (Illustrative and fictional, like `CHG-2026-0042`.)
+
+1. **The spark — lives on the floor, forever.** The retail PM's brief ("our customers juggle
+   three banking apps"), the workshop notes, the competitor scan, the Standards v2.1 reading
+   notes. Nothing is governed yet; everything is citable.
+2. **Discovery — born on the floor, frozen per gate.** A run opens at
+   `discovery/runs/linked-accounts/`. Interview notes stay in Notion; the **research log** cites
+   them with stable ids and freezes for D2. The **problem statement** freezes for D1 — and its
+   success measure ("account linked in under 3 minutes; ≥70% consent-journey completion") later
+   *is* the product-eval target. The **data-governance artifact** is the heavy one here —
+   account/transaction categories, PDPL, the consent lifecycle, minimisation — mapped to the
+   mounted data-risk register and judged by the data-governance reviewer before D6 freezes. The
+   **prototype** (AlTareq consent screens, progress bar) freezes for D7/D8. **D9 stakeholder
+   reactions** happen *in place* as comments from the retail head, compliance, and ops — then
+   freeze. The **`handoff.md`** freezes last, gate-green: the PRD of record, its Notion page
+   stamped *frozen at `<sha>` · v1*.
+3. **Drift, concretely.** A week later the PM "just tidies" the PRD page — adding a line about
+   *initiating payments* from linked accounts. The drift badge flips to **draft ahead of
+   record**. Nothing blocks; delivery keeps building against the frozen sha — and everyone can
+   see that payment initiation needs its own trip through the diamond, not a quiet edit.
+4. **Classification, the compiled plan, PA1 — git-canonical, floor-routed.** A human with
+   authority classifies the change (material: new regulated activity, personal data, new
+   third-party dependency); the policy compiler takes `regulated-bank + uae-bank + open-finance`
+   and emits the control plan — gates, evidence, approver roles. The passport fills: target
+   market, foreseeable harm (consent confusion, over-sharing), obligations (Open Finance
+   Regulation, PDPL, Consumer Protection), the CBUAE notification assessment (within TPP licence
+   scope?), and the **Nebras / API Hub** dependency. The floor routes each role an inbox card
+   with the evidence carried in; each decision comes home as a **signed envelope, by PR, under
+   CODEOWNERS**, and `product-approval-check` resolves identity and role. An agent clicking
+   approve is void.
+5. **Develop, then delivery.** Three solution directions (SDK embed vs Ozone Connect direct vs
+   middleware aggregation) judged against the D1 measures and inherited D6 conditions → one
+   Solution Direction Record in git. Backlog items — each behind the waist gate, each carrying
+   `discovery: linked-accounts` — run the loop: FAPI 2.0 mTLS client, consent-lifecycle store,
+   minimisation filters, consent UI. `pii-guard` blocks a realistic Emirates ID in a fixture;
+   the spec tripwire stops casual contract edits; the agent opens PRs and stops. The floor
+   mirrors the queue; a `blocked` item ("which consent-expiry UX when an LFI revokes?") lands in
+   the *right person's* inbox instead of one push notification to "the user."
+6. **Launch and run.** AlTareq **CX certification** enters as an adapter evidence envelope
+   (external fact — observed, not declared). The product eval binds the D1 measure to the
+   shipping commit. PA2 needs the full compiled role set — routed on the floor, landed as
+   envelopes — and production still hangs on the one file the floor can see but never touch:
+   `release-hold.json`, set by the second line. After launch, operations signals (a
+   consent-completion drop, a Standards errata, a complaint about the revocation screen) feed
+   the floor's triage board and route back into Discovery by PR.
+
+| Artifact (this change) | Home | Floor's role |
+|---|---|---|
+| Brief, workshop/interview notes, Standards notes | Notion | Canonical forever; cited as evidence |
+| Research log, problem statement, data-governance, prototype, D9 reactions | Git at each gate | Born on the floor, frozen by PR per gate |
+| `handoff.md` (the PRD) | Git, frozen + sha-stamped | Co-authored on the floor; drift badge after freeze |
+| Change envelope, control plan, passport PA1/PA2 | Git | Approvals routed on the floor; decisions return as signed envelopes |
+| Delivery queue | Git, waist-gated | Board mirror; a card is never a hand-off |
+| AlTareq CX certification | Git, adapter envelope | Visible status only |
+| `release-hold.json` | Git, second-line CODEOWNERS | Never writable from the floor |
+| Operations signals / triage | Git | Triage board; routes return by PR |
+
+What the example proves: the floor improves every *human* moment — reactions in place, routed
+approvals, a watchable board — while every fact a gate, the CBUAE, or an auditor would ask
+about stays a frozen, signed file in git.
+
 ---
 
 ## 7 · A phased adoption path
