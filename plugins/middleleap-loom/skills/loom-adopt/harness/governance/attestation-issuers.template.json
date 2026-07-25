@@ -23,18 +23,10 @@
     {
       "id": "demo-anchor-signer",
       "mechanism": "ed25519",
-      "description": "DEMO reference issuer — a real ed25519 key pair; the private key is NOT shipped (regenerate your own; this one signs only the bundled example anchor)",
+      "demo": true,
+      "description": "DEMO reference issuer — a real ed25519 key pair; the private key is NOT shipped (regenerate your own; this one signs only the bundled example anchor). `demo: true` is read by core/approval-attestations.mjs, which refuses a demo anchor outright; the older anchor gate does not read it, so REPLACE this entry before you trust the anchor chain.",
       "verify": {
         "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsbjIWdwF4iiTTOfICsqf2J/YWtw4YVRNhXhswb8TAzI=\n-----END PUBLIC KEY-----\n"
-      }
-    },
-    {
-      "id": "demo-floor-bridge",
-      "mechanism": "ed25519",
-      "identity": "svc-floor-bridge",
-      "description": "DEMO reference issuer — the transcribing service identity for the bundled approval-attestation example. Proves CUSTODY only: a transcription signature is never approval authority (see governance/assertion-issuers.template.json). Private key NOT shipped.",
-      "verify": {
-        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEARfrBenT2tIMDHFsRS3kQLgR7lYZsYvsENlhKnQNSpj0=\n-----END PUBLIC KEY-----\n"
       }
     }
   ]

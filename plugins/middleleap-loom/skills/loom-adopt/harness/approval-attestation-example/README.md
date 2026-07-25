@@ -42,14 +42,24 @@ ships **declared, not active**, exercised end to end in the bundle and switched 
 an institution that has done that review.
 
 The demo keys (`demo-assertion-signer`, `demo-floor-bridge`) are real ed25519 pairs whose private
-halves were generated to sign this file and **discarded**. Replace both with your own before the
-capability is compiled for any change: a demo issuer in a live registry is a control that proves
-nothing.
+halves were generated to sign this file and **discarded**. They live **here**, in
+`assertion-issuers.example.json` and `attestation-issuers.example.json` beside the record they
+verify — not in `governance/`, and not in `copy-manifest.json`. A working reference key in a file
+that gets copied into every adopting repository would be the *same* key in every adoption, with a
+private half that demonstrably exists: it signed this file.
+
+Both entries are marked `"demo": true`, which the gate **refuses outright** — so verifying this
+example produces exactly two findings, one per registry, and nothing else. That refusal is half of
+what the example demonstrates: the cryptography works, *and* a harness key cannot evidence a human
+decision. `governance/assertion-issuers.template.json` — the file you do get — deliberately
+carries no usable trust material at all, and a test asserts it stays that way.
 
 ## Related
 
 - `core/approval-attestations.mjs` — the contract and its verification
-- `governance/assertion-issuers.template.json` — identity-provider material (human proof)
+- `assertion-issuers.example.json` · `attestation-issuers.example.json` — this example's own
+  registries: bundle-only, `demo: true`, refused by the gate
+- `governance/assertion-issuers.template.json` — identity-provider material (human proof), empty
 - `governance/attestation-issuers.template.json` — service keys (custody proof)
 - `governance/identities.template.json` — the four floor service identities, none holding a role
 - `../../../../../docs/notion-floor-plan.md` — the programme, its goals, and the WS5 entry gate

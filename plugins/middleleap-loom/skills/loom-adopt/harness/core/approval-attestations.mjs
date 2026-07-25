@@ -40,6 +40,10 @@
 //
 // Both are "the approval is authentic and immutable, but its subject is asserted, not proven".
 // Neither is closable here without state this module deliberately does not reach for.
+//
+// A third, smaller one: `demo: true` anchors are refused HERE, but `core/attestations.mjs` — the
+// older evidence-envelope path — does not read the flag, so the bundle's `demo-anchor-signer` is
+// still live for the anchor gate until an adopter replaces it. Flagged in that registry, not fixed.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import process from 'node:process';
@@ -110,24 +114,49 @@ export function canonicalDecisionPayload(rec) {
     // as a step-up one. Verified AND signed, or they are decoration.
     rec?.subject?.assertion?.audience ?? '',
     rec?.subject?.assertion?.acr ?? '',
+    // The assertion's OWN validity window and subject claim, by the same rule. These decide whether
+    // the human's authentication was live AT the decision and whether the token names the person
+    // the record names — the entire liveness defence. Unsigned, a carrier deletes two fields and
+    // that defence disappears with no finding at all, which is the absent-vs-present asymmetry.
+    rec?.subject?.assertion?.issued_at ?? '',
+    rec?.subject?.assertion?.expires_at ?? '',
+    rec?.subject?.assertion?.subject ?? '',
   ].map((v) => JSON.stringify(typeof v === 'string' ? v : String(v ?? ''))).join('\n');
 }
 
 /**
- * The verification material an issuer entry actually trusts, normalised for comparison.
- * Separation between the SERVICE and ASSERTION registries has to hold on key material, not on
- * the id someone typed: registering one key under two ids in two files would otherwise let a
- * service key vouch for a human simply by quoting the other id.
+ * The verification material an issuer entry actually trusts, normalised for comparison — a SET,
+ * not one value. Separation between the SERVICE and ASSERTION registries has to hold on key
+ * material, not on the id someone typed: registering one key under two ids in two files would
+ * otherwise let a service key vouch for a human simply by quoting the other id.
+ *
+ * Why a set rather than the first material found: a realistic identity-provider entry pins BOTH
+ * the provider URL and the keys. Collapsing it to one anchor meant an adopter who did the more
+ * careful thing — pinning the key as well as naming the provider — silently switched the overlap
+ * detector off for that provider. The control degraded in exactly the configuration it most needs
+ * to inspect, and reported nothing.
+ *
+ * `ADOPT:` placeholders are not material. They are text nobody replaced, and treating them as
+ * anchors would make two unwired stubs collide and report a shared anchor that does not exist.
  */
-export function trustAnchor(issuer) {
+export function trustAnchors(issuer) {
   const v = issuer?.verify || {};
-  if (isStr(v.public_key)) return `key:${v.public_key.replace(/\s+/g, '')}`;
+  const real = (s) => isStr(s) && !/^ADOPT:/.test(s);
+  const out = new Set();
+  if (real(v.public_key)) out.add(`key:${v.public_key.replace(/\s+/g, '')}`);
   // The anchor is the PROVIDER, never the scope. A subject pattern narrows who that provider may
   // speak for; it does not make it a different provider — folding it in would let the same issuer
   // sit in both registries undetected, which is exactly the overlap this check exists to catch.
-  if (isStr(v.issuer)) return `oidc:${v.issuer}`;
-  return `raw:${stableStringify(v)}`;
+  if (real(v.issuer)) out.add(`oidc:${v.issuer}`);
+  if (real(v.jwks_uri)) out.add(`jwks:${v.jwks_uri}`);
+  return out;
 }
+
+/** Do two issuer entries rest on any of the same verification material? */
+export const sharesTrustAnchor = (a, b) => {
+  const anchors = trustAnchors(a);
+  return [...trustAnchors(b)].some((x) => anchors.has(x));
+};
 
 /**
  * Deterministic JSON with sorted keys AT EVERY DEPTH. `JSON.stringify(v, sortedTopLevelKeys)`
@@ -141,7 +170,16 @@ export function stableStringify(v) {
 }
 
 const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
-const parseTime = (v) => { const t = Date.parse(v); return Number.isNaN(t) ? null : t; };
+/**
+ * ISO-8601 timestamps only — the TYPE is part of the check. `Date.parse` coerces non-strings
+ * unpredictably (`true` → NaN, `0` → the year 2000), and the record's JSON is composed by the
+ * bridge, so the bridge would pick the type. A boolean expiry read as "unparseable, therefore
+ * skip" is an approval that never expires; the same value read as a date is an approval that
+ * expired in 2000. Neither is a judgement anyone made, so both are refused here.
+ */
+const parseTime = (v) => { if (typeof v !== 'string') return null; const t = Date.parse(v); return Number.isNaN(t) ? null : t; };
+/** Present, but not a timestamp this module will act on. */
+const badTime = (v) => v !== undefined && v !== null && parseTime(v) === null;
 
 /**
  * Verify one approval-attestation record.
@@ -193,10 +231,15 @@ export function verifyApprovalAttestation(rec, ctx, label = 'approval') {
   for (const f of ['system', 'event_id', 'nonce']) {
     if (!isStr(o[f])) findings.push(`${label}: origin.${f} missing — provenance and replay protection depend on it`);
   }
-  // Replay is tracked per RECORD SITE, not per label: two change directories can carry the same
-  // change_id (a copy, a re-launch route), which makes their labels identical — and a guard that
-  // exempts a matching label would then wave through the very duplication it exists to catch.
-  const site = ctx.site || label;
+  // Replay is tracked per record SLOT — (change directory · stage · role). Both coarser keys are
+  // wrong in opposite directions. Per LABEL is too loose across directories: two change directories
+  // can carry the same change_id (a copy, a re-launch route), making their labels identical, so the
+  // guard would exempt the very duplication it exists to catch. Per DIRECTORY is too loose within
+  // one: every role in a change would share a slot, and a single click on the external surface —
+  // one webhook event, one decision nonce — could back product-owner AND second-line AND
+  // permission-to-launch at once. Each (directory, stage, role) slot is visited exactly once per
+  // run, so keying on all three exempts a re-verification and nothing else.
+  const site = ctx.site ? [ctx.site, rec.stage ?? '', rec.role ?? ''].join(' · ') : label;
   for (const [field, why] of [['nonce', 'a decision nonce is single-use'], ['event_id', 'webhooks are signals, deduplicated on event id']]) {
     if (!ctx.seen || !isStr(o[field])) continue;
     const key = `${o.system}:${field}:${o[field]}`;
@@ -210,7 +253,7 @@ export function verifyApprovalAttestation(rec, ctx, label = 'approval') {
   if (v.revoked === true) findings.push(`${label}: the attestation is revoked`);
   const now = ctx.now ?? Date.now();
   const exp = parseTime(v.expires_at);
-  if (isStr(v.expires_at) && exp === null) findings.push(`${label}: validity.expires_at is not a parseable timestamp`);
+  if (badTime(v.expires_at)) findings.push(`${label}: validity.expires_at ${JSON.stringify(v.expires_at)} is not a parseable ISO-8601 timestamp — an unreadable expiry is a finding, not an approval that never expires`);
   else if (exp !== null && exp < now) findings.push(`${label}: the attestation expired at ${v.expires_at}`);
 
   // 6 · The HUMAN's assertion — the finding-F1 teeth.
@@ -245,8 +288,10 @@ export function verifySubjectAssertion(rec, ctx, label) {
   }
   const declared = (ctx.assertionIssuers?.issuers || []).find((i) => i.id === a.issuer);
   if (declared) {
-    const anchor = trustAnchor(declared);
-    const shared = serviceIssuers.find((i) => trustAnchor(i) === anchor);
+    if (trustAnchors(declared).size === 0) {
+      findings.push(`${label}: assertion issuer ${JSON.stringify(declared.id)} declares no verification material — no key, provider or JWKS to pin, so it cannot be told apart from a service key and the registry separation is UNVERIFIED-HERE`);
+    }
+    const shared = serviceIssuers.find((i) => sharesTrustAnchor(declared, i));
     if (shared) {
       findings.push(`${label}: the assertion issuer's verification material is also registered as SERVICE issuer ${JSON.stringify(shared.id)} — one trust anchor in both registries makes the service/human separation a naming convention rather than a control`);
     }
@@ -270,6 +315,18 @@ export function verifySubjectAssertion(rec, ctx, label) {
   // checking it against verification time would make every genuine approval rot on a timer, and
   // the contract would be unusable with exactly the mechanism it recommends. The decision time is
   // itself signed (it is in the canonical payload), so a carrier cannot move it to suit.
+  //
+  // The window has to FAIL CLOSED. Both comparisons below are `!== null`-guarded, so an assertion
+  // that simply omits its window skips them — and "no liveness evidence" would read exactly like
+  // "liveness proven". An assertion with no declared window cannot be judged at all, so its
+  // absence is a finding in its own right, as is a subject claim there is nothing to cross-check.
+  for (const f of ['issued_at', 'expires_at']) {
+    if (!isStr(a[f])) findings.push(`${label}: subject.assertion.${f} missing — an assertion with no declared validity window cannot be shown to have been live when the decision was made`);
+    else if (parseTime(a[f]) === null) findings.push(`${label}: subject.assertion.${f} ${JSON.stringify(a[f])} is not a parseable ISO-8601 timestamp`);
+  }
+  if (!isStr(a.subject)) {
+    findings.push(`${label}: subject.assertion.subject missing — without the provider's own subject claim there is nothing to cross-check the record's idp_subject against`);
+  }
   const decidedAt = parseTime(rec?.validity?.issued_at);
   const aExp = parseTime(a.expires_at);
   const aIat = parseTime(a.issued_at);
@@ -291,10 +348,24 @@ export function verifySubjectAssertion(rec, ctx, label) {
     findings.push(`${label}: assertion issuer ${JSON.stringify(a.issuer)} is not in the assertion-issuers registry — an unpinned identity provider is not trusted`);
     return findings;
   }
+  // A DEMO anchor exists so the contract can be exercised end to end in the bundle. It must never
+  // underwrite a real approval: every adopter who copied the file would hold the same key, and its
+  // private half demonstrably exists — it signed the worked example. A `description` saying so is
+  // not a control, because no gate reads prose.
+  if (idp.demo === true) {
+    findings.push(`${label}: assertion issuer ${JSON.stringify(idp.id)} is marked \`"demo": true\` — a reference key shipped with the harness cannot evidence a human decision; register your identity provider's own material`);
+  }
   // What the registry pins, the gate checks. An audience or step-up level carried in the record
-  // but never compared is decoration: it reads as a control and enforces nothing.
+  // but never compared is decoration: it reads as a control and enforces nothing. An `ADOPT:`
+  // placeholder is worse than absent — it looks configured. So it is reported, not skipped: the
+  // one thing this contract must never do is let an unapplied requirement read as satisfied.
+  // A field left out entirely is a genuine "nothing pinned"; `null` records that as deliberate.
   for (const [claim, pinned] of [['audience', idp.verify?.audience], ['acr', idp.verify?.required_acr]]) {
-    if (!isStr(pinned) || /^ADOPT:/.test(pinned)) continue; // unpinned by the adopter — nothing to check against
+    if (isStr(pinned) && /^ADOPT:/.test(pinned)) {
+      findings.push(`${label}: the assertion registry still carries an ADOPT: placeholder for ${claim} on ${idp.id} — the pin is unconfigured, so ${claim} is UNVERIFIED-HERE (set it, or set it to null to record a deliberate opt-out)`);
+      continue;
+    }
+    if (!isStr(pinned)) continue; // nothing pinned — nothing to check against
     if (!isStr(a[claim])) findings.push(`${label}: the registry pins ${claim} for ${idp.id} but the assertion carries none`);
     else if (a[claim] !== pinned) findings.push(`${label}: assertion ${claim} ${JSON.stringify(a[claim])} does not match the ${JSON.stringify(pinned)} pinned for ${idp.id}`);
   }
@@ -331,6 +402,9 @@ export function verifyTranscription(rec, ctx, label) {
       findings.push(`${label}: attestation issuer ${JSON.stringify(signer.id)} declares no \`identity\` — the signing key is not bound to a registry identity, so the credited custodian cannot be checked`);
     } else if (signer && signer.identity !== t.by) {
       findings.push(`${label}: transcription.by is ${JSON.stringify(t.by)} but issuer ${JSON.stringify(signer.id)} signs for ${JSON.stringify(signer.identity)} — the credited custodian is not the signer`);
+    }
+    if (signer?.demo === true) {
+      findings.push(`${label}: transcription issuer ${JSON.stringify(signer.id)} is marked \`"demo": true\` — a reference key shipped with the harness cannot evidence custody either; register your own carrying service`);
     }
   }
   findings.push(...verifySignatureOver(canonicalDecisionPayload(rec), t.attestation, ctx.issuers, 'transcribed decision')

@@ -419,22 +419,62 @@ now signed, compared, or refused, each with its own negative test. The new trust
 (`assertion-issuers.json`) joins the control-plane protected paths and the CODEOWNERS template — a
 root of trust that is not owned is not a root of trust.
 
-Two residuals are **named in the module header** rather than papered over: the identity-provider
+Three residuals are **named in the module header** rather than papered over: the identity-provider
 subject is bound but not *joined* to the registry identity (that join is the second-line identity
-map, which no gate reads yet), and the source sha and artifact digest are bound but not
-*reconciled* against actual build state. Both are "authentic and immutable, but its subject is
-asserted, not proven".
+map, which no gate reads yet); the source sha and artifact digest are bound but not *reconciled*
+against actual build state; and `demo: true` is refused by *this* module but not read by the older
+evidence-anchor path, so the bundle's `demo-anchor-signer` stays live for that gate until an adopter
+replaces it — flagged in the registry, not fixed. The first two are "authentic and immutable, but its
+subject is asserted, not proven".
+
+**Then hardened a second time, by a second adversarial review of the hardening itself.** Six more
+defects were verified by direct probe against the frozen tree and closed — two of them regressions
+introduced by the first round of fixes, which is the case for reviewing a fix as sceptically as the
+thing it fixed:
+
+- The assertion's **own** validity window and subject claim were compared but never signed. Judging
+  an assertion at the decision time is worth nothing if the carrier can rewrite the window to cover
+  the decision, or delete it and have both checks skip in silence. All three fields now sit inside
+  the payload, and their **absence is a finding** — no liveness evidence must not read like liveness
+  proven.
+- Keying the replay guard on the change **directory** (the first round's fix for cross-directory
+  reuse) exempted every record *inside* one: a single click could back product-owner and second-line
+  and permission-to-launch at once. The key is now the (directory · stage · role) **slot**, which is
+  visited exactly once per run, so re-verification is exempt and nothing else is.
+- `trustAnchor` collapsed an issuer to **one** anchor with pinned keys taking priority, so an entry
+  that named a provider *and* pinned its keys — what a careful adopter writes — hid the
+  provider-level overlap entirely. Anchors are now a **set**, matched by intersection, and an
+  `ADOPT:` placeholder is not trust material (two unwired stubs no longer collide).
+- A plan compiling **PA2 without PA1** returned early and skipped the entire gate: ownership, the
+  PA2 section set, every approver role and every attestation on the one gate that grants permission
+  to launch. Each PA gate is now evaluated on its own presence.
+- An `ADOPT:` audience or assurance-level pin was **silently skipped**, so the shipped registry
+  arrived with the step-up check inert and nothing said so. A placeholder is now reported as
+  unconfigured; `null` records a deliberate opt-out.
+- The unparseable-expiry guard only inspected **strings**, and the bridge composes the record's JSON
+  — so it picked the type. `true` meant "never expires"; `0` meant "expired in 2000". The type is
+  now part of the check.
+
+**And the bundle no longer ships a live root of trust.** `assertion-issuers.template.json` — copied
+verbatim into every adopting repository — carried a working ed25519 identity-provider key whose only
+guard was a JSON `description`, which no gate reads. The demo anchors now live *beside the example
+they serve*, outside the copy manifest, marked `"demo": true` and **refused outright** by the gate;
+the installed template deliberately carries no usable trust material, and a test asserts it stays
+that way. Verifying the worked example therefore produces exactly two findings — the two demo
+refusals — which makes the refusal itself part of what the example demonstrates.
 
 The worked example (`approval-attestation-example/`) is signed for real against the bundled plan and
 passport and verified in the suite, so editing the example passport breaks it — the same binding a
 live approval gets. Its assertion is a realistic five-minute step-up token verified a year later,
 which pins the expiry semantics: an assertion is judged against the **signed decision time**, never
 against verification time, because the opposite would have made every genuine approval rot on a
-timer. Suite **453 green** (46 new tests, including the full negative set: an agent's click void,
+timer. Suite **467 green** (60 new tests, including the full negative set: an agent's click void,
 an unregistered human refused, a service key refused as a human voucher whether by id *or* by
-shared key material, a forged signature, a replayed nonce and event id, an assertion already
-expired when the decision was made, a back-dated decision, delimiter injection in the canonical
-payload, un-revocation, custody reattribution, and content mutated after the decision).
+shared key material, a forged signature, a replayed nonce and event id — across directories, across
+roles and across both PA stages — an assertion already expired when the decision was made, a
+back-dated decision, a rewritten or deleted assertion window, delimiter injection in the canonical
+payload, un-revocation, custody reattribution, a demo anchor in either registry, an unconfigured
+`ADOPT:` pin, a non-string expiry, and content mutated after the decision).
 
 **What this release does not claim.** No shipped profile compiles the capability, so nothing in the
 bundle demands attestation-backed approvals today; the contract ships **declared, not active**. The

@@ -1,0 +1,15 @@
+{
+  "_comment": "BUNDLE-ONLY service (attestation) issuers registry for the worked example — NOT copied into adopting repositories. Holds the transcribing bridge key, which proves CUSTODY only: a transcription signature is never approval authority.",
+  "issuers": [
+    {
+      "id": "demo-floor-bridge",
+      "mechanism": "ed25519",
+      "identity": "svc-floor-bridge",
+      "demo": true,
+      "description": "DEMO reference issuer — the carrying service for the bundled example. Private key generated to sign it and discarded.",
+      "verify": {
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAxWAdGgdqDDSIU6bMi2cX/jsXlmZUvlza9aIi70SPwgI=\n-----END PUBLIC KEY-----\n"
+      }
+    }
+  ]
+}

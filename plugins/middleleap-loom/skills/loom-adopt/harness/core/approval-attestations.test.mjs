@@ -15,6 +15,7 @@ import {
   sha256,
   passportDigest,
   stableStringify,
+  trustAnchors,
 } from './approval-attestations.mjs';
 import { resolveApprover, identityOf } from '../scripts/identity-registry-check.mjs';
 import { readFileSync, existsSync } from 'node:fs';
@@ -67,7 +68,7 @@ function validRecord(over = {}) {
     subject: {
       registry_id: 'risk-lena',
       idp_subject: 'idp|0f3c9a11-immutable',
-      assertion: { mechanism: 'ed25519', issuer: 'bank-idp', subject: 'idp|0f3c9a11-immutable', expires_at: '2099-01-01T00:00:00Z' },
+      assertion: { mechanism: 'ed25519', issuer: 'bank-idp', subject: 'idp|0f3c9a11-immutable', issued_at: '2026-07-25T08:58:00Z', expires_at: '2099-01-01T00:00:00Z' },
     },
     bound_to: {
       plan_hash: 'plan-hash-abc',
@@ -343,6 +344,103 @@ test('without a signed decision time the assertion window cannot be judged', () 
   failsWith(rec, /without a signed decision time/);
 });
 
+// Judging the window at the decision is only worth anything if the WINDOW cannot be edited. These
+// two are the teeth of that: the bridge composes the JSON, so anything it can rewrite or delete
+// without breaking the human's signature is decoration, not a control.
+test('the assertion window is inside the signature — it cannot be rewritten to cover the decision', () => {
+  const stale = signed(validRecord({
+    validity: { issued_at: '2026-07-19T12:00:00Z' },
+    subject: { assertion: { issued_at: '2026-07-19T11:04:00Z', expires_at: '2026-07-19T11:09:00Z' } },
+  }));
+  failsWith(stale, /had already expired when the decision was made/);
+  // the same record, signature untouched, window moved to cover the decision
+  const rewritten = JSON.parse(JSON.stringify(stale));
+  rewritten.subject.assertion.issued_at = '2026-07-19T11:59:00Z';
+  rewritten.subject.assertion.expires_at = '2026-07-19T12:04:00Z';
+  failsWith(rewritten, /does NOT verify/);
+});
+
+test('deleting the assertion window is refused — no liveness evidence is not liveness proven', () => {
+  for (const field of ['issued_at', 'expires_at', 'subject']) {
+    const rec = JSON.parse(JSON.stringify(signed(validRecord())));
+    delete rec.subject.assertion[field];
+    const findings = verifyApprovalAttestation(rec, ctx());
+    assert.ok(findings.some((f) => new RegExp(`subject\\.assertion\\.${field} missing`).test(f)), `deleting ${field} must be a finding, got ${findings}`);
+    // and it cannot be deleted quietly: the field is signed, so the signature breaks too
+    assert.ok(findings.some((f) => /does NOT verify/.test(f)), `${field} must be inside the signature`);
+  }
+});
+
+test('an unparseable assertion window is a finding, not a skipped check', () => {
+  failsWith(signed(validRecord({ subject: { assertion: { expires_at: 'next Tuesday' } } })), /subject\.assertion\.expires_at .* is not a parseable ISO-8601/);
+});
+
+// One click on the external surface is one decision. Keying replay on the change DIRECTORY meant
+// every role inside it shared a slot, so a single webhook event could back product-owner AND
+// second-line AND permission-to-launch. Keying on the (directory · stage · role) slot is exact.
+test('one origin nonce cannot back two roles in the same change', () => {
+  const seen = new Map();
+  const site = 'CHG-2026-0117';
+  const first = verifyApprovalAttestation(signed(validRecord()), ctx({ seen, site }), 'PA1 · risk-second-line');
+  assert.deepEqual(first, []);
+  const second = signed(validRecord({ role: 'product-owner', subject: { registry_id: 'po-fatima', idp_subject: 'idp|po' } }));
+  const findings = verifyApprovalAttestation(second, ctx({ seen, site, role: 'product-owner', by: 'po-fatima' }), 'PA1 · product-owner');
+  assert.ok(findings.some((f) => /origin\.nonce replays/.test(f)), `same nonce, second role: ${findings}`);
+  assert.ok(findings.some((f) => /origin\.event_id replays/.test(f)));
+});
+
+test('one origin nonce cannot back both PA stages of the same change', () => {
+  const seen = new Map();
+  const site = 'CHG-2026-0117';
+  verifyApprovalAttestation(signed(validRecord()), ctx({ seen, site }), 'PA1');
+  const pa2 = signed(validRecord({ stage: 'PA2', bound_to: { artifact_digest: 'sha256:deadbeef' } }));
+  const findings = verifyApprovalAttestation(pa2, ctx({ seen, site, stage: 'PA2' }), 'PA2');
+  assert.ok(findings.some((f) => /origin\.nonce replays/.test(f)), `PA1 nonce reused for PA2: ${findings}`);
+});
+
+test('re-verifying the same slot is not a replay — the guard exempts exactly one thing', () => {
+  const seen = new Map();
+  const c = { seen, site: 'CHG-2026-0117' };
+  const rec = signed(validRecord());
+  assert.deepEqual(verifyApprovalAttestation(rec, ctx(c)), []);
+  assert.deepEqual(verifyApprovalAttestation(rec, ctx(c)), [], 'the same record in the same slot verifies twice');
+});
+
+// An `ADOPT:` placeholder is worse than an absent pin: it reads as configured. The one thing this
+// contract must never do is let an unapplied requirement read as satisfied.
+test('an ADOPT: placeholder pin is reported as unconfigured, never skipped', () => {
+  const unwired = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { public_key: pem(IDP), audience: 'ADOPT: the client id', required_acr: 'ADOPT: the level your policy demands' } }] };
+  const weak = signed(validRecord({ subject: { assertion: { audience: 'attacker-chosen', acr: 'password-only' } } }));
+  const findings = verifyApprovalAttestation(weak, ctx({ assertionIssuers: unwired }));
+  for (const claim of ['audience', 'acr']) {
+    assert.ok(findings.some((f) => new RegExp(`ADOPT: placeholder for ${claim}`).test(f)), `${claim}: ${findings}`);
+  }
+  // an explicit null records a deliberate opt-out and stays quiet
+  const optedOut = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { public_key: pem(IDP), audience: null, required_acr: null } }] };
+  assert.deepEqual(verifyApprovalAttestation(signed(validRecord()), ctx({ assertionIssuers: optedOut })), []);
+});
+
+// A reference key shipped in the bundle would be the same key in every adoption, and its private
+// half demonstrably exists — it signed the worked example. A `description` saying "do not use this"
+// is not a control, because no gate reads prose.
+test('an issuer marked demo cannot evidence a decision, in either registry', () => {
+  failsWith(signed(validRecord()), /is marked `"demo": true`/, ctx({
+    assertionIssuers: { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', demo: true, verify: { public_key: pem(IDP) } }] },
+  }));
+  failsWith(signed(validRecord()), /transcription issuer .* is marked `"demo": true`/, ctx({
+    issuers: { issuers: [{ id: 'svc-floor-bridge', mechanism: 'ed25519', identity: 'svc-floor-bridge', demo: true, verify: { public_key: pem(BRIDGE) } }] },
+  }));
+});
+
+test('the shipped assertion-issuers template carries no working key material', () => {
+  const path = FIND('governance/assertion-issuers.template.json', 'docs/governance/assertion-issuers.json');
+  if (!path) return; // absent in this layout; the shipped-example block below covers the pair
+  for (const issuer of (JSON.parse(readFileSync(path, 'utf8')).issuers || [])) {
+    assert.equal(trustAnchors(issuer).size, 0,
+      `${issuer.id} ships usable trust material in a file copied into every adopting repository`);
+  }
+});
+
 test('an unversioned record cannot be verified at all', () => {
   failsWith({ ...signed(validRecord()), schema: 'something.else/v9' }, /is not loom\.approval-attestation\/v1/);
   failsWith(null, /no approval attestation/);
@@ -360,7 +458,17 @@ test('with no pinned identity-provider material the assertion is UNVERIFIED-HERE
 // --- gaps a mutation review exposed: guards no test could fail ------------------------------
 
 test('an unparseable expiry is a finding, not an approval that never expires', () => {
-  failsWith(signed(validRecord({ validity: { expires_at: '31/12/2026' } })), /not a parseable timestamp/);
+  failsWith(signed(validRecord({ validity: { expires_at: '31/12/2026' } })), /not a parseable ISO-8601 timestamp/);
+});
+
+// The bridge composes the record's JSON, so the bridge picks each value's TYPE. A guard that only
+// inspects strings hands it the choice between "unparseable, therefore skip" (an approval that
+// never expires) and Date.parse's own coercions (`0` → the year 2000, i.e. already expired).
+// Neither is a judgement a human made.
+test('a non-string expiry is refused too — the type is part of the check', () => {
+  for (const bad of [true, 0, 1767139200000, { until: 'forever' }, ['never']]) {
+    failsWith(signed(validRecord({ validity: { expires_at: bad } })), /not a parseable ISO-8601 timestamp/);
+  }
 });
 
 test('a record with no origin block is refused — the replay guard is not opt-out by omission', () => {
@@ -382,9 +490,36 @@ test('the trust anchor is the provider, not the scope — a subject pattern cann
       { id: 'bank-approvals', mechanism: 'sigstore', identity: 'svc-floor-bridge', verify: { issuer: 'https://idp.example/oidc', subject_pattern: '*@bank.example' } },
     ],
   };
-  const assertionReg = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { issuer: 'https://idp.example/oidc', public_key: undefined } }] };
+  const assertionReg = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { issuer: 'https://idp.example/oidc', public_key: pem(IDP) } }] };
   const rec = signed(validRecord({ subject: { assertion: { issuer: 'bank-idp' } } }));
   failsWith(rec, /one trust anchor in both registries/, ctx({ issuers: shared, assertionIssuers: assertionReg }));
+});
+
+// An entry that names a provider AND pins its keys is what a careful adopter writes. Reducing the
+// entry to a single anchor meant the pinned key won and the provider-level overlap became
+// invisible — the control switched itself off in its most careful configuration.
+test('an issuer pinning BOTH key material and a provider still reveals a shared anchor', () => {
+  const assertionReg = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { issuer: 'https://idp.example/oidc', public_key: pem(IDP) } }] };
+  const svc = { issuers: [{ id: 'bank-approvals', mechanism: 'sigstore', identity: 'svc-floor-bridge', verify: { kind: 'sigstore-identity', issuer: 'https://idp.example/oidc' } }] };
+  failsWith(signed(validRecord()), /one trust anchor in both registries/, ctx({ issuers: svc, assertionIssuers: assertionReg }));
+  // …and a jwks_uri is material too, not decoration.
+  const viaJwks = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { public_key: pem(IDP), jwks_uri: 'https://idp.example/jwks' } }] };
+  const svcJwks = { issuers: [{ id: 'bank-approvals', mechanism: 'ci-oidc', identity: 'svc-floor-bridge', verify: { jwks_uri: 'https://idp.example/jwks' } }] };
+  failsWith(signed(validRecord()), /one trust anchor in both registries/, ctx({ issuers: svcJwks, assertionIssuers: viaJwks }));
+});
+
+test('two unwired ADOPT: stubs do not collide — a placeholder is not trust material', () => {
+  const stub = (id, extra) => ({ id, mechanism: 'sigstore', identity: 'svc-floor-bridge', ...extra, verify: { issuer: 'ADOPT: your identity provider' } });
+  const assertionReg = { issuers: [{ ...stub('bank-idp'), mechanism: 'ed25519', verify: { issuer: 'ADOPT: your identity provider', public_key: pem(IDP) } }] };
+  const svc = { issuers: [stub('bank-approvals')] };
+  const findings = verifyApprovalAttestation(signed(validRecord()), ctx({ issuers: svc, assertionIssuers: assertionReg }));
+  assert.ok(!findings.some((f) => /one trust anchor in both registries/.test(f)), `false positive: ${findings}`);
+});
+
+test('an assertion issuer with no verification material at all is reported, not trusted', () => {
+  failsWith(signed(validRecord()), /declares no verification material/, ctx({
+    assertionIssuers: { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { kind: 'oidc' } }] },
+  }));
 });
 
 test('stableStringify sorts at every depth — nested material cannot collide', () => {
@@ -439,8 +574,11 @@ const SRC = {
   plan: FIND('change-example/control-plan.json', `${CHANGE}/control-plan.json`),
   passport: FIND('change-example/product-passport.json', `${CHANGE}/product-passport.json`),
   identities: FIND('governance/identities.template.json', 'docs/governance/identities.json'),
-  attIssuers: FIND('governance/attestation-issuers.template.json', 'docs/governance/attestation-issuers.json'),
-  asrIssuers: FIND('governance/assertion-issuers.template.json', 'docs/governance/assertion-issuers.json'),
+  // The example's issuer registries live BESIDE the example, not in governance/: a working
+  // reference key in a file that gets copied into every adopting repository would be the same key
+  // in every adoption. These two are bundle-only and marked `demo: true`, which the gate refuses.
+  attIssuers: FIND('approval-attestation-example/attestation-issuers.example.json'),
+  asrIssuers: FIND('approval-attestation-example/assertion-issuers.example.json'),
 };
 if (Object.values(SRC).some((p) => !p)) {
   test('shipped approval-attestation example (fixtures absent in this layout — skipped)', { skip: true }, () => {});
@@ -462,8 +600,14 @@ if (Object.values(SRC).some((p) => !p)) {
     now: Date.parse('2026-07-25T00:00:00Z'),
   });
 
+  /** The demo-anchor refusals are the example's whole point being demonstrated; nothing else may survive. */
+  const beyondTheDemoRefusal = (findings) => findings.filter((f) => !/is marked `"demo": true`/.test(f));
+
   test('the shipped approval attestation verifies for REAL against the bundled plan and passport', () => {
-    assert.deepEqual(verifyApprovalAttestation(JSON.parse(readFileSync(EXAMPLE, 'utf8')), exampleCtx()), []);
+    const findings = verifyApprovalAttestation(JSON.parse(readFileSync(EXAMPLE, 'utf8')), exampleCtx());
+    assert.deepEqual(beyondTheDemoRefusal(findings), [], 'the example must verify: real ed25519 over the real payload');
+    // …and the two demo anchors must be refused, which is the other half of what it demonstrates.
+    assert.equal(findings.length, 2, `expected exactly the two demo refusals, got ${JSON.stringify(findings)}`);
   });
 
   test('editing the approved passport breaks the shipped example — the binding is live, not decorative', () => {

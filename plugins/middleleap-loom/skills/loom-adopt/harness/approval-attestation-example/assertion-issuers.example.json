@@ -1,0 +1,17 @@
+{
+  "_comment": "BUNDLE-ONLY assertion-issuers registry for the worked example — NOT copied into adopting repositories (see copy-manifest.json: only governance/assertion-issuers.template.json is, and it deliberately carries no key material). It lives beside the record it verifies so that no live reference key can reach a real registry by being copied along with a template.",
+  "_why_demo_true": "core/approval-attestations.mjs REFUSES an issuer marked `demo: true`. So this file proves the cryptography end to end AND proves the refusal: the example verifies with no signature finding and exactly the two demo findings. A key shipped to every adopter cannot evidence a human decision, and a JSON description saying so is not a control, because no gate reads prose.",
+  "issuers": [
+    {
+      "id": "demo-assertion-signer",
+      "mechanism": "ed25519",
+      "demo": true,
+      "description": "DEMO reference issuer standing in for an institution identity provider, so the D2.4 contract is exercised with real ed25519 material. The private key was generated to sign the example and discarded.",
+      "verify": {
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA8BmRKcpHmL7RGjdvcJ/W32vk0aa6w3CORDWWuzjGy2U=\n-----END PUBLIC KEY-----\n",
+        "audience": "loom-approval-surface",
+        "required_acr": "urn:mace:incommon:iap:silver"
+      }
+    }
+  ]
+}

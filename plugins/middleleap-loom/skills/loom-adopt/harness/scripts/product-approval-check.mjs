@@ -86,12 +86,17 @@ export function evaluate(passport, plan, registry, att = {}) {
   const id = plan?.change_id || '(no id)';
   if (!passport) return [`${id}: product passport missing — a product change without a passport is blocked`];
   const gates = new Set(plan?.required_gates || []);
-  if (!gates.has('PA1')) {
-    // No product-approval route compiled. If the plan nonetheless requires attestation-backed
+  // Either PA gate is a product-approval route, and each is evaluated on its OWN presence below.
+  // Testing PA1 alone here meant a plan compiling PA2 without PA1 — which the compiler can emit,
+  // since a conditional profile may add PA2 to a lower-tier change — returned early and skipped
+  // EVERYTHING: ownership, the PA2 section set, the approver roles and every attestation on the
+  // one gate that grants permission to launch.
+  if (!gates.has('PA1') && !gates.has('PA2')) {
+    // No product-approval route compiled at all. If the plan nonetheless requires attestation-backed
     // approvals, say so rather than exiting quietly: a requirement with nowhere to apply reads as
     // satisfied, and a silently inert control is the failure this whole contract exists to avoid.
     return attestationRequired(plan)
-      ? [`${id}: the plan requires the ${'approval_attestation'} capability but compiles no PA gate — the requirement has nothing to apply to, which is a plan defect, not a pass`]
+      ? [`${id}: the plan requires the ${'approval_attestation'} capability but compiles neither PA1 nor PA2 (gates: ${(plan?.required_gates || []).join(', ') || 'none'}) — the requirement has nothing to apply to, which is a plan defect, not a pass`]
       : [];
   }
   // Mandatory-when-compiled: the attestation path activates from the plan, never from a flag.
@@ -108,15 +113,17 @@ export function evaluate(passport, plan, registry, att = {}) {
     ...PA1_CORE_ROLES,
     ...(['high', 'critical'].includes(plan.risk_tier) ? PA1_HIGH_ROLES : []),
   ].filter((r) => (plan.required_approver_roles || []).includes(r));
-  if (passport.pa1?.decision === 'approved') {
-    for (const section of plan.pa1_sections || []) {
-      if (!hasSubstance(passport.sections?.[section])) {
-        findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
+  if (gates.has('PA1')) {
+    if (passport.pa1?.decision === 'approved') {
+      for (const section of plan.pa1_sections || []) {
+        if (!hasSubstance(passport.sections?.[section])) {
+          findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
+        }
       }
+      findings.push(...checkApprovals(passport.pa1.approvals, pa1Roles, registry, `${id} · PA1`, 'PA1', attCtx));
+    } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
+      findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
     }
-    findings.push(...checkApprovals(passport.pa1.approvals, pa1Roles, registry, `${id} · PA1`, 'PA1', attCtx));
-  } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
-    findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
   }
 
   // PA2 — permission to launch: the full section set, every compiled control function.
@@ -152,8 +159,10 @@ export function run(cwd = process.cwd()) {
     if (!plan) continue; // ditto
     // A plan that requires attestation but compiles no PA gate is still reported (evaluate says
     // so) — skipping it here would restore exactly the silent pass that check exists to close.
-    const planPath = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
-    if (!(plan.required_gates || []).includes('PA1') && !attestationRequired(planPath)) continue;
+    // Either PA gate brings a change into scope: a PA2-only plan is a launch approval to check,
+    // not a change to walk past.
+    const compiled = plan.required_gates || [];
+    if (!compiled.includes('PA1') && !compiled.includes('PA2') && !attestationRequired(plan)) continue;
     count++;
     const att = {
       records: loadApprovals(base).map((a) => a.record),

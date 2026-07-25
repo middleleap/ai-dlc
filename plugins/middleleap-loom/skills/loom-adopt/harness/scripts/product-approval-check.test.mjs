@@ -77,8 +77,26 @@ test('ownership must resolve: product owner and accountable executive by role', 
   assert.ok(f.some((x) => /ownership\.product_owner.*does not hold the required role/.test(x)));
 });
 
-test('a plan with no PA1 gate compiles no product-approval requirements', () => {
+test('a plan with NEITHER PA gate compiles no product-approval requirements', () => {
   assert.deepEqual(evaluate(PASSPORT, { ...PLAN, required_gates: ['D', 'Q'] }, REGISTRY), []);
+});
+
+// PA2 is a product-approval route too — the one that grants permission to LAUNCH. Testing PA1
+// alone meant a plan compiling PA2 without PA1 (which a conditional profile adding PA2 to a lower
+// tier can produce) returned early and skipped EVERYTHING: ownership, the PA2 section set, the
+// approver roles and every attestation on the launch gate.
+test('a PA2-only plan still checks the launch approval, ownership and sections', () => {
+  const pa2Only = { ...PLAN, required_gates: ['D', 'Q', 'PA2'] };
+  const passport = {
+    ...PASSPORT,
+    sections: { ...PASSPORT.sections, ownership: { product_owner: 'nobody-at-all', accountable_executive: 'nobody-either' } },
+    pa2: { decision: 'approved', approvals: [] },
+  };
+  const findings = evaluate(passport, pa2Only, REGISTRY);
+  assert.ok(findings.some((f) => /ownership\.product_owner/.test(f)), 'ownership must still resolve');
+  assert.ok(findings.some((f) => /PA2: no approval for required role/.test(f)), `PA2 roles unchecked: ${findings}`);
+  // …and PA1's own checks stay off, because PA1 is not compiled.
+  assert.ok(!findings.some((f) => /· PA1/.test(f)), `PA1 must not be demanded: ${findings}`);
 });
 
 // --- mandatory-when-compiled: attestation-backed approvals (Factory Floor WS2 · D2.5) ---------
@@ -118,8 +136,10 @@ test('run() wires the whole path end to end in a real repo layout', (t) => {
     passport: FIND('change-example/product-passport.json', 'docs/governance/changes/CHG-2026-0042/product-passport.json'),
     approval: FIND('approval-attestation-example/pa1-risk-second-line.json'),
     identities: FIND('governance/identities.template.json', 'docs/governance/identities.json'),
-    attIssuers: FIND('governance/attestation-issuers.template.json', 'docs/governance/attestation-issuers.json'),
-    asrIssuers: FIND('governance/assertion-issuers.template.json', 'docs/governance/assertion-issuers.json'),
+    // The example's own registries — bundle-only, and marked `demo: true` so the gate refuses
+    // them. The governance/ templates deliberately carry no working key material.
+    attIssuers: FIND('approval-attestation-example/attestation-issuers.example.json'),
+    asrIssuers: FIND('approval-attestation-example/assertion-issuers.example.json'),
   };
   if (Object.values(srcs).some((p) => !p)) {
     t.skip('bundle-only fixtures absent in this layout');
@@ -142,8 +162,12 @@ test('run() wires the whole path end to end in a real repo layout', (t) => {
 
     const { findings, count } = run(dir);
     assert.equal(count, 1);
-    // The role that carries a real attestation is satisfied — nothing is reported against it.
-    assert.ok(!findings.some((f) => /risk-second-line/.test(f)), `risk-second-line should verify:\n${findings.join('\n')}`);
+    // The role that carries a real attestation is satisfied — nothing is reported against it
+    // beyond the demo-anchor refusal, which is the harness refusing its own reference keys.
+    const real = findings.filter((f) => !/is marked `"demo": true`/.test(f));
+    assert.ok(!real.some((f) => /risk-second-line/.test(f)), `risk-second-line should verify:\n${real.join('\n')}`);
+    assert.ok(findings.some((f) => /risk-second-line.*is marked `"demo": true`/.test(f)),
+      'a demo anchor must be refused through run() too, not only in the unit path');
     // The other compiled PA1 roles have no attestation, and the gate says so for each.
     for (const role of ['product-owner', 'accountable-executive']) {
       assert.ok(findings.some((f) => f.includes(role) && /no approval attestation/.test(f)), `expected ${role} to be refused`);
@@ -170,7 +194,7 @@ test('the PA2 stage is attested in its own right — a PA1 record cannot grant p
 test('a plan requiring attestation but compiling no PA gate is a defect, not a pass', () => {
   const noPa = { ...ATTESTED_PLAN, required_gates: ['D', 'Q'] };
   const f = evaluate(PASSPORT, noPa, REGISTRY, {});
-  assert.ok(f.some((x) => /compiles no PA gate/.test(x)), `expected a finding, got: ${JSON.stringify(f)}`);
+  assert.ok(f.some((x) => /compiles neither PA1 nor PA2 \(gates: D, Q\)/.test(x)), `expected a finding, got: ${JSON.stringify(f)}`);
   // …and without the capability it stays silent, as before.
   assert.deepEqual(evaluate(PASSPORT, { ...PLAN, required_gates: ['D', 'Q'] }, REGISTRY, {}), []);
 });
