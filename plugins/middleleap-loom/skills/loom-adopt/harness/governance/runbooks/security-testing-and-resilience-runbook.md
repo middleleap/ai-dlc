@@ -230,6 +230,15 @@ infrastructure the agent's traffic is forced through and cannot route around.
 - **Named-only in the bundle → Enforced only when you wire the gateway.** Do not describe DLP as
   "enforced by the harness"; the harness at most emits the declaration the gateway consumes.
 
+> **The category is cheaper than it was.** A bundle still cannot ship a proxy, but self-hostable
+> credential-brokering egress proxies now exist that do the chokepoint, the allow-list and the
+> credential substitution in one box, alongside the cloud-native and enterprise-proxy options a
+> bank already runs. `../loom/references/agent-runtime-security.md` names four peers, the three
+> properties to require of any of them, and the two ways such a deployment is inert — a
+> default-forward unmatched-host policy, and environment-variable isolation the agent can unset.
+> None of that changes the grade: the control moves when the chokepoint is *observed* refusing a
+> bypass, not when it is installed.
+
 ## 10. FAPI 2.0 / mTLS conformance (Open Finance)
 
 Domain-specific and, for CBUAE Open Finance, non-negotiable: the security profile is **FAPI 2.0**

@@ -20,7 +20,7 @@ method in two forms: agents read the skill; people read the page.
 
 | Type | Name | What it does |
 |---|---|---|
-| Skill | `loom` | The method canon — the metaphor, the double diamond, the context brain, plus full references for the discovery harness (D1–D9 gates), the delivery harness (the autonomous loop, Q-gates, merge policy), the governance catalog (HG-0001…HG-0012), and the Institutional BrainKit (`references/brainkit.md`) |
+| Skill | `loom` | The method canon — the metaphor, the double diamond, the context brain, plus full references for the discovery harness (D1–D9 gates), the delivery harness (the autonomous loop, Q-gates, merge policy), the governance catalog (HG-0001…HG-0013), agent runtime security (`references/agent-runtime-security.md`), and the Institutional BrainKit (`references/brainkit.md`) |
 | Skill | `loom-adopt` | Stands the harness up in a repository — carries the machinery and walks the copy map (manifest-driven), seam mounting, ADOPT markers, BrainKit routing, and verification |
 | Skill | `brainkit-init` | Drafts an Institutional BrainKit + institution profile from an institution's approved sources — records provenance, seals digests, produces a gap register; never invents policy or approves |
 | Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line (D4) and prototype fidelity (D8) on a discovery run |
