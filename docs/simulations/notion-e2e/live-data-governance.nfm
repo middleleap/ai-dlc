@@ -1,0 +1,100 @@
+> Define (converge). Asked in discovery, not retrofitted in delivery. Gate D6.
+## Data the direction would touch
+<table header-row="true">
+<tr>
+<td>Data element (synthetic)</td>
+<td>Classification</td>
+<td>Subject</td>
+<td>Purpose</td>
+</tr>
+<tr>
+<td>Account balances at other LFIs</td>
+<td>Confidential — customer financial</td>
+<td>Retail customer</td>
+<td>Display an aggregated position</td>
+</tr>
+<tr>
+<td>Transaction narratives at other LFIs</td>
+<td>Confidential — may embed third-party names</td>
+<td>Retail customer + counterparties</td>
+<td>Display recent activity</td>
+</tr>
+<tr>
+<td>`IsShariaCompliant` / `ShariaStructure`</td>
+<td>Product attribute, third-party asserted</td>
+<td>The other LFI's product</td>
+<td>Label a product Islamic or conventional</td>
+</tr>
+<tr>
+<td>Balance categories incl. Interest \| Profit</td>
+<td>Product attribute, third-party asserted</td>
+<td>The other LFI's product</td>
+<td>Render a balance breakdown</td>
+</tr>
+</table>
+## Risk mapping (→ register)
+<table header-row="true">
+<tr>
+<td>Data element</td>
+<td>DR-\* category</td>
+<td>Inherent rating</td>
+<td>Regulatory driver(s)</td>
+<td>Mitigating CTRL-\*</td>
+</tr>
+<tr>
+<td>Balances / transactions at other LFIs</td>
+<td>DR-1.1-001</td>
+<td>High</td>
+<td>PDPL; CBUAE Consumer Protection; OF consent scope</td>
+<td>CTRL-001, CTRL-014</td>
+</tr>
+<tr>
+<td>`IsShariaCompliant` (defaults false)</td>
+<td>DR-2.3-004</td>
+<td>High</td>
+<td>HSA resolutions; CBUAE Consumer Protection (fair presentation)</td>
+<td>CTRL-031 (suppress-on-unpopulated)</td>
+</tr>
+<tr>
+<td>Interest balance category rendered in an Islamic app</td>
+<td>DR-2.3-005</td>
+<td>Medium</td>
+<td>HSA; AAOIFI presentation standards</td>
+<td>CTRL-032 (segregated rendering + disclaimer)</td>
+</tr>
+<tr>
+<td>Transaction narratives naming third parties</td>
+<td>DR-1.4-002</td>
+<td>Medium</td>
+<td>PDPL (data minimisation)</td>
+<td>CTRL-018 (no narrative persistence)</td>
+</tr>
+</table>
+## Residual-risk verdict (D6)
+- **Residual rating after controls:** Medium — contingent on the ISSC position recorded below.
+- **Acceptable for delivery?** Not yet. Two items are unresolved and both are Shariah questions, not engineering ones.
+- **Conditions / watch-items carried into hand-off:** no persistence of third-party narratives; suppress rather than assert compliance where the flag is unpopulated.
+## Uncovered risks
+The Open Finance flag `IsShariaCompliant` defaults to `false`. An LFI that simply never populates it therefore reports every one of its products as non-compliant. If Alpha renders that verbatim, Alpha tells its own customer that a competitor's genuinely halal Murabaha is not halal — a false statement about a third party's Shariah standing, produced by a schema default and not by anyone's assertion. Suppression is the proposed control, but suppression is itself a presentation decision.
+Second, aggregated conventional accounts carry an `Interest` balance category. Rendering a riba figure inside an Islamic bank's app is not a data question. Whether it is permissible, and under what framing, is an ISSC matter and is escalated as ADR-ALPHA-003.
+Neither item is resolvable by the delivery team. Both are recorded here rather than deferred, because D6 asks what is UNCOVERED, and an unanswered Shariah question is uncovered.
+---
+## Working notes (floor scratch — frozen with the rest)
+- [x] Pull the OF product schema and confirm the `IsShariaCompliant` default
+- [x] Map each element to a DR-\* category
+- [ ] ISSC position on rendering `Interest` — **blocked, ADR-ALPHA-003**
+- [ ] Confirm CTRL-032 disclaimer wording with Shariah compliance
+Counts used while drafting the risk table:
+```bash
+# how many products in the sandbox never populate the flag
+jq '[.products[] | select(.IsShariaCompliant == null)] | length' sandbox/products.json
+```
+<callout icon="💡" color="yellow_bg">
+	The suppression control (CTRL-031) is **declared, not active**. Nothing observes it yet. Under the Loom that label is load-bearing: a declared control cannot be relied on at a gate until an independent observer signs a bypass-tested observation of it.
+</callout>
+1. Draft here on the floor.
+2. Freeze to `discovery/runs/accounts-elsewhere/data-governance.md`.
+3. Gates run against the frozen file in CI, never against this page.
+<callout icon="🔒" color="gray_bg">
+	The frozen copy of this artifact carries digest `sha256:7063b9c3…` and is verified by CI on every push. Editing the frozen file in the repository instead of re-freezing from here fails the build.
+</callout>

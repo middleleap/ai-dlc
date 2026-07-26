@@ -151,6 +151,31 @@ collecting them. An author fixing an un-freezable page plays whack-a-mole one bl
 That is a behaviour change to shipped code with tests behind it, so it is recorded here rather than
 slipped into this commit.
 
+## 6b · The run, carried the whole way
+
+On 26 Jul the walkthrough was taken end to end against a real Business-tier workspace: a human
+authored the D6 artifact on the floor, it was read back live, exported by the shipped exporter,
+frozen with a stamp, and put in front of the shipped gate. Four checks, each derived from what
+happened rather than asserted — full output in `simulations/notion-e2e/run-transcript.txt`.
+
+| Check | Result |
+|---|---|
+| Export is deterministic — same tree twice, same bytes | **PASS** |
+| Gate passes on the frozen bytes | **PASS** |
+| Gate refuses a one-word tamper (`Medium` → `Low`) | **PASS** |
+| The page built to be un-freezable is refused | **PASS** |
+
+Frozen digest `sha256:2755e000…`, over 26 blocks — two tables of five rows, five headings, four
+to-dos, two callouts, a fenced code block, a divider, three list types, four paragraphs.
+
+**One link was substituted, and it is named rather than glossed.** `core/floor-fetch.mjs` did not
+run: `api.notion.com` is denied by the environment's egress policy, and that denial is to be
+reported, not routed around. The content came through the MCP connector, which returns
+Notion-flavored Markdown rather than raw block JSON, so a small bridge converts it back. That
+bridge is **not** in the shipped harness and must not be — its fidelity is lower than the API's,
+and two adapters producing two digests for one page is a governance problem. Everything downstream
+of the fetch is shipped code, unmodified.
+
 ## 7 · What is still unproven
 
 Stated plainly, because a walkthrough that oversells is worse than none:
