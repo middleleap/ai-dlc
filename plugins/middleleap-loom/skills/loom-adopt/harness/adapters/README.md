@@ -37,3 +37,20 @@ adapter, not the core, speaks the vendor's dialect.
 Reference mappings live in `reference/` — copy one, point it at your system, and mount it.
 They are illustrative shapes, not turnkey integrations: the fetch-and-sign step that fills
 `activation_evidence` is the adopter's platform wiring.
+
+| Reference mapping | System | Control | Closes |
+|---|---|---|---|
+| `github-branch-protection.json` | GitHub | `HG-0001` | Four-eyes is enforced by the forge, not by the agent |
+| `grc-control-register.json` | ServiceNow GRC | `OPS-READINESS` | The Loom's readiness declarations and the enterprise register do not drift |
+| `snyk-sca.json` | Snyk | `Q4-SUPPLY` | `dependency-audit.json` is asserted by the scanner org, not by the repository under test |
+| `chainguard-runtime.json` | Chainguard | `HG-0011` | The agent's own runtime image is digest-pinned and its attestation *verified*, not merely generated |
+
+The last two carry a **negative probe** (`tamper_probe`, `unsigned_image_probe`). Fill it: an
+adapter whose activation evidence proves only that the API answered has not shown that the
+reconciliation bites. See `../loom/references/supply-chain-security.md` §1.
+
+Note how they are scoped: one names `Q4-SUPPLY`, the other `HG-0011`, never both. That is
+`AD-R05` — **one adapter, one control**. Two adapters sharing a control makes their evidence
+interchangeable, so a probe of one mechanism appears to satisfy a claim it was never tested
+against. If two sources are genuinely needed for one control, make them one adapter with both
+negatives required.
