@@ -235,3 +235,95 @@ test('the title comes from whichever property is the title property', () => {
 test('MAX_BLOCKS is a real bound, not decoration', () => {
   assert.ok(MAX_BLOCKS > 0 && Number.isFinite(MAX_BLOCKS));
 });
+
+// --- properties: the fields a database-backed floor page keeps OUTSIDE its blocks ----------------
+//
+// These exist because of a defect found against a real workspace, not against a fixture. A floor
+// page living in a database carries stage, gate, owner and residual rating in PROPERTIES. The walk
+// read only blocks, so a D6 artifact rated `Medium` froze with no rating at all — silently, which
+// is the one failure mode this module and the exporter are jointly built to refuse.
+
+const propPage = (props) => ({ object: 'page', id: 'row1', archived: false, properties: { Artifact: { type: 'title', title: rt('D6 feasibility') }, ...props } });
+const fetchRow = (props, over = {}) => fetchPage('row1', {
+  notionVersion: VERSION,
+  request: requestFrom({ '/v1/pages/row1': propPage(props), '/v1/blocks/row1/children': list([para('b1', 'prose')]) }),
+  ...over,
+});
+const tryRow = async (props, over = {}) => tryFetchPage('row1', {
+  notionVersion: VERSION,
+  request: requestFrom({ '/v1/pages/row1': propPage(props), '/v1/blocks/row1/children': list([para('b1', 'prose')]) }),
+  ...over,
+});
+
+test('a database row\'s properties reach the export — the rating is not dropped', async () => {
+  const page = await fetchRow({
+    'Residual rating': { type: 'select', select: { name: 'Medium' } },
+    Owner: { type: 'rich_text', rich_text: rt('risk-lena') },
+    Frozen: { type: 'checkbox', checkbox: true },
+    Tags: { type: 'multi_select', multi_select: [{ name: 'pdpl' }, { name: 'shariah' }] },
+    Reviewed: { type: 'date', date: { start: '2026-07-25' } },
+  });
+  assert.equal(page.frontmatter.residual_rating, 'Medium');
+  assert.equal(page.frontmatter.owner, 'risk-lena');
+  assert.equal(page.frontmatter.frozen, true);
+  assert.equal(page.frontmatter.tags, 'pdpl, shariah');
+  assert.equal(page.frontmatter.reviewed, '2026-07-25');
+  // …and it survives into the frozen bytes, which is the part that actually matters.
+  const { markdown } = exportPage(page, { slug: 'accounts-elsewhere' });
+  assert.match(markdown, /residual_rating: Medium/);
+});
+
+test('a value the surface recomputes is refused, not frozen', async () => {
+  for (const [type, body] of [['formula', { formula: { type: 'number', number: 3 } }], ['rollup', { rollup: {} }]]) {
+    const { page, findings } = await tryRow({ Derived: { type, ...body } });
+    assert.equal(page, null, type);
+    assert.match(findings[0], /different bytes on different days|inherits/, `${type}: ${findings[0]}`);
+  }
+});
+
+test('a value that moves on its own is refused — it would make the digest unstable', async () => {
+  const { findings } = await tryRow({ Edited: { type: 'last_edited_time', last_edited_time: '2026-07-26T00:00:00Z' } });
+  assert.match(findings[0], /moves whenever anyone touches the page/);
+});
+
+test('people properties are refused — the record names people through the registry', async () => {
+  for (const type of ['people', 'created_by']) {
+    const { findings } = await tryRow({ Who: { type, [type]: type === 'people' ? [] : {} } });
+    assert.match(findings[0], /registry/, `${type}: ${findings[0]}`);
+  }
+});
+
+test('an unknown property type is refused rather than dropped', async () => {
+  const { page, findings } = await tryRow({ Mystery: { type: 'brand_new_thing_2027' } });
+  assert.equal(page, null);
+  assert.match(findings[0], /unhandled type/);
+  assert.match(findings[0], /rather than dropping it silently/);
+});
+
+test('two properties that collide on one frontmatter key abort', async () => {
+  const { findings } = await tryRow({
+    'Residual rating': { type: 'select', select: { name: 'Medium' } },
+    'residual  RATING': { type: 'rich_text', rich_text: rt('High') },
+  });
+  assert.match(findings[0], /both map to the frontmatter key/);
+});
+
+test('the caller\'s frontmatter wins — it knows the run, the page does not', async () => {
+  const page = await fetchRow(
+    { Run: { type: 'rich_text', rich_text: rt('whatever-the-page-says') } },
+    { frontmatter: { run: 'accounts-elsewhere', artifact: 'data-governance' } },
+  );
+  assert.equal(page.frontmatter.run, 'accounts-elsewhere');
+  assert.equal(page.frontmatter.artifact, 'data-governance');
+});
+
+test('an empty property is not a value, and a page with none is untouched', async () => {
+  const page = await fetchRow({
+    Blank: { type: 'rich_text', rich_text: [] },
+    Unset: { type: 'select', select: null },
+    None: { type: 'multi_select', multi_select: [] },
+  });
+  // No frontmatter invented, so digests of already-frozen non-database pages cannot shift.
+  assert.equal(page.frontmatter, undefined);
+  assert.doesNotMatch(exportPage(page, { slug: 's' }).markdown, /^---/);
+});

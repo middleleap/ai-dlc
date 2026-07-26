@@ -122,6 +122,78 @@ async function assemble(block, ctx, depth, at) {
   return block;
 }
 
+/**
+ * Property types that can be frozen, and how their value is read.
+ *
+ * WHY THIS EXISTS AT ALL. A floor page that lives in a database carries its load-bearing fields in
+ * PROPERTIES, not in blocks — stage, gate, owner, residual rating. Walking only the blocks exports
+ * the prose and drops the rating, and drops it *silently*, which is the one outcome this module and
+ * the exporter are jointly built to refuse. Found against a real workspace: a D6 artifact whose
+ * residual rating was `Medium` froze with no rating at all.
+ */
+const PROP_READERS = new Map([
+  ['rich_text', (p) => plainOf(p.rich_text)],
+  ['select', (p) => p.select?.name ?? null],
+  ['status', (p) => p.status?.name ?? null],
+  ['multi_select', (p) => (Array.isArray(p.multi_select) ? p.multi_select.map((o) => o?.name ?? '').filter(Boolean).join(', ') : null)],
+  ['number', (p) => (typeof p.number === 'number' ? p.number : null)],
+  ['checkbox', (p) => (typeof p.checkbox === 'boolean' ? p.checkbox : null)],
+  ['url', (p) => p.url ?? null],
+  ['email', (p) => p.email ?? null],
+  ['phone_number', (p) => p.phone_number ?? null],
+  ['created_time', (p) => p.created_time ?? null],
+  ['unique_id', (p) => (p.unique_id ? `${p.unique_id.prefix ? `${p.unique_id.prefix}-` : ''}${p.unique_id.number}` : null)],
+  ['date', (p) => (p.date?.start ? (p.date.end ? `${p.date.start}/${p.date.end}` : p.date.start) : null)],
+]);
+
+/**
+ * Property types a freeze must NOT record, each with the reason an author can act on. Two families:
+ * values that point at content the digest cannot see, and values that move on their own.
+ */
+export const PROP_REFUSED = new Map([
+  ['formula', 'a formula is recomputed by the surface, so the same page can export different bytes on different days — freeze the inputs, not the derived value'],
+  ['rollup', 'a rollup is computed across a relation, so it inherits the relation\'s problem and adds a formula on top'],
+  ['relation', 'a relation points at rows in another database whose contents can change after the freeze — the digest would vouch for a value it cannot see'],
+  ['files', 'a file property is a link to bytes held on the surface; freezing the link records a pointer, not the content it points at'],
+  ['last_edited_time', 'last-edited time moves whenever anyone touches the page, so freezing it makes the digest unstable for edits that changed nothing'],
+  ['last_edited_by', 'as unstable as last-edited time, and it names a person besides'],
+  ['people', 'a people property names workspace members. The record names people through the identity registry and the P6 identity map, not by copying a surface directory into a frozen artifact'],
+  ['created_by', 'as with any people property, the record names people through the registry — and who created a floor page is not who approved anything'],
+  ['button', 'a button is an action, not a value'],
+  ['verification', 'verification state is surface-side workflow, and the record has its own gates for that'],
+]);
+
+const plainOf = (rt) => (Array.isArray(rt) ? rt.map((t) => t?.plain_text ?? t?.text?.content ?? '').join('') : '');
+/** `Residual rating` → `residual_rating`. Deterministic, and readable in frontmatter. */
+const slugKey = (name) => String(name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
+/**
+ * A page's properties as frontmatter. Aborts on any property type that cannot be frozen — the same
+ * fail-closed stance the block walk takes, for the same reason: a governed artifact that quietly
+ * loses a field is worse than one that refuses to export.
+ */
+export function frontmatterFrom(page, at = 'page') {
+  const props = page?.properties || {};
+  const out = {};
+  for (const name of Object.keys(props).sort()) {
+    const p = props[name];
+    const type = p?.type;
+    if (type === 'title') continue; // already the H1
+    if (PROP_REFUSED.has(type)) {
+      abort(`property ${JSON.stringify(name)} is of type \`${type}\`, which cannot be frozen — ${PROP_REFUSED.get(type)}`, at);
+    }
+    const read = PROP_READERS.get(type);
+    if (!read) abort(`property ${JSON.stringify(name)} has unhandled type \`${type}\` — refusing rather than dropping it silently`, at);
+    const value = read(p);
+    if (value === null || value === undefined || value === '') continue; // an empty field is not a value
+    const key = slugKey(name);
+    if (!key) abort(`property ${JSON.stringify(name)} has no usable frontmatter key`, at);
+    if (key in out) abort(`two properties both map to the frontmatter key \`${key}\` — rename one on the floor, because the freeze cannot record both`, at);
+    out[key] = value;
+  }
+  return out;
+}
+
 /** The page's title, read from whichever property is the title property. */
 export function titleOf(page) {
   const props = page?.properties || {};
@@ -162,11 +234,17 @@ export async function fetchPage(pageId, ctx) {
   const blocks = await fetchChildren(pageId, inner, at);
   for (const [i, b] of blocks.entries()) await assemble(b, inner, 1, `${at} › block[${i}]`);
 
+  // Properties are part of the artifact, not decoration around it — see frontmatterFrom(). The
+  // caller's own frontmatter wins on a key collision: it is set by the freeze command, which knows
+  // things the page does not (which run, which artifact slug).
+  const fromProps = frontmatterFrom(page, at);
+  const frontmatter = { ...fromProps, ...(ctx.frontmatter || {}) };
+
   return {
     title: titleOf(page),
     blocks,
     has_more: false, // an unfinished walk threw; reaching here means the tree is whole
-    frontmatter: ctx.frontmatter,
+    frontmatter: Object.keys(frontmatter).length ? frontmatter : ctx.frontmatter,
     source: `notion:page/${pageId}`,
     blocks_read: inner.count.n,
   };
