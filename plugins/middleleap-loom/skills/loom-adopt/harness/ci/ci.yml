@@ -33,6 +33,14 @@ jobs:
           node scripts/control-plane-check.mjs        # HG-0002 — control-plane owned in CODEOWNERS
           node scripts/control-catalog-check.mjs       # control state of record cannot overstate itself
           node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
+          node scripts/template-parity-check.mjs      # the guided floor form cannot drift from the git template
+          node scripts/identity-map-check.mjs         # P6 — the join from a signed subject to a registry identity
+          node scripts/freeze-stamp-check.mjs         # D4.1 — no frozen artifact was edited in place
+          node scripts/drift-check.mjs                # D4.2 — no NEW claim against a page that has moved on
+          node scripts/floor-only-check.mjs           # D3.3 — a floor-only note must never reach the record
+          node scripts/projection-capability-check.mjs # WS1 — the projector is OBSERVED unable to write git
+          node scripts/approval-surface-check.mjs      # D5.1/D5.4 — the approvals page matches the COMPILED roles
+          node scripts/floor-keeper-check.mjs          # D6.3/D6.4 — keepers hold no grant where approvals live; a paused floor says so
           node scripts/routine-change-check.mjs        # HG-0013 · normal-human-review — an unqualified routine CLAIM fails; ordinary work passes
 
       - name: Product-governance gates (envelope · PA1/PA2 · A1–A5 · identities)
@@ -41,6 +49,7 @@ jobs:
           node scripts/change-envelope-check.mjs        # classified, compiled, reconciled, state receipts + compound prod auth
           node scripts/product-approval-check.mjs       # PA1 before Develop, PA2 before launch — approvals resolve
           node scripts/architecture-assurance-check.mjs # A1–A5 with threat→control→test traceability
+          node scripts/adapter-evidence-check.mjs       # D5.3 — one adapter, one control; declared is not active
           node scripts/operational-readiness-check.mjs  # R1–R6 with freshness windows — stale drills block
           node scripts/adapter-check.mjs                 # enterprise adapters map to real catalog controls
 

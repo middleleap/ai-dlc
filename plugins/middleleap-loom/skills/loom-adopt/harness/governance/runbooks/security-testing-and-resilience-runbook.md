@@ -229,6 +229,10 @@ infrastructure the agent's traffic is forced through and cannot route around.
   agent can skip are hygiene, the network chokepoint is the control.
 - **Named-only in the bundle → Enforced only when you wire the gateway.** Do not describe DLP as
   "enforced by the harness"; the harness at most emits the declaration the gateway consumes.
+- **The component, if you want one off the shelf:** `../../../loom/references/agent-egress-control.md`
+  names the neutral role, a recommended instance (CrabTrap), the two bypass probes, and the
+  `egress_proxy` activation mechanism that lets HG-0011/HG-0012 graduate once the gateway is real.
+  It also states the half a gateway of that shape does **not** close: it blocks, it does not redact.
 
 ## 10. FAPI 2.0 / mTLS conformance (Open Finance)
 

@@ -1,5 +1,7 @@
 {
   "_comment": "ADOPT: the identity registry seam (Loom 2.0 §8) — mounted as docs/governance/identities.json, CODEOWNERS-owned by a NON-builder group. Every approver, validator and classifier field resolves against this registry: `validated_by: 'Risk'` does not pass; an identity must exist, hold the required role, and satisfy the separation rules (agents approve nothing; second-line members are not builders). Authentication of these identities (SSO/signing) is the platform's half — see attestation-issuers.template.json; this registry is the repo-side contract the gates enforce deterministically.",
+  "_roles_not_headcount": "The role set is a regulatory minimum of ROLES, not an org chart. One person may hold several — eng-omar below carries `engineering` and `enterprise-architect`, the engineering manager who owns the domain's architecture alongside the product owner. Only three separations can never collapse, and the gates enforce all three: builders and second-line are disjoint; agents hold no approval role; and four-eyes needs a second human at the merge. Map the rest to as few people as your institution honestly can.",
+  "_architect_independence_residual": "STATED, NOT ENFORCED: both architect roles sit in `builders` in this reference registry, because architecture is first-line design work. The consequence is that a builder-held architect can sign the architecture assurance (A1–A5) for a change they helped build, with only the four-eyes merge behind it — architecture assurance here is FIRST-line assurance, and the independent challenge comes from the second line separately. If your institution requires architecture assurance to be independent, move `enterprise-architect` to a non-builder identity and add it to the second-line role set in `product-approval-check.mjs`. The Loom does not decide this for you; it refuses to let the choice stay implicit.",
   "groups": {
     "builders": "first-line identities that author changes (humans and agents)",
     "second-line": "independent risk / compliance / validation identities — MUST be disjoint from builders",
@@ -7,7 +9,11 @@
   },
   "identities": [
     { "id": "agent-loom-delivery", "kind": "agent", "display": "Loom delivery loop (service identity)", "roles": [], "groups": ["builders"] },
-    { "id": "eng-omar", "kind": "human", "display": "Omar (Engineering)", "roles": ["engineering"], "groups": ["builders"] },
+    { "id": "svc-floor-projector", "kind": "agent", "display": "Floor projector — git read → collaboration-surface write (delete if you run no external surface)", "roles": [], "groups": ["builders"] },
+    { "id": "svc-floor-freezer", "kind": "agent", "display": "Floor freezer — exports a collaborative draft into a branch and opens the PR; never merges", "roles": [], "groups": ["builders"] },
+    { "id": "svc-floor-bridge", "kind": "agent", "display": "Floor bridge — TRANSCRIBES an external decision into an approval attestation. Proves custody, never authority: it may not issue the human's assertion", "roles": [], "groups": ["builders"] },
+    { "id": "eng-omar", "kind": "human", "display": "Omar (Engineering Manager · acting Enterprise Architect)", "roles": ["engineering", "enterprise-architect"], "groups": ["builders"] },
+    { "id": "arch-tariq", "kind": "human", "display": "Tariq (Solution Architect)", "roles": ["solution-architect"], "groups": ["builders"] },
     { "id": "po-fatima", "kind": "human", "display": "Fatima (Product)", "roles": ["product-owner"], "groups": [] },
     { "id": "risk-lena", "kind": "human", "display": "Lena (Risk, 2nd line)", "roles": ["risk-second-line"], "groups": ["second-line"] },
     { "id": "comp-imran", "kind": "human", "display": "Imran (Compliance)", "roles": ["compliance"], "groups": ["second-line"] },

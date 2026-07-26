@@ -39,6 +39,10 @@ are repo-root-relative.
 | `discovery/templates` | `discovery/templates` | One template per discovery artifact |
 | `discovery/brand/design.md` | `discovery/brand/design.md` | Brand seam (neutral demo instance) |
 | `discovery/brand/examples` | `discovery/brand/examples` | A second brand proving the seam swap |
+| `delivery/templates` | `delivery/templates` | One template per delivery decision artifact (ADR · Solution Direction Record) |
+| `floor/templates` | `floor/templates` | Guided collaboration-surface forms, GENERATED from the git templates (parity-gated) |
+| `floor/catalog-b` | `floor/catalog-b` | Decision-routed floor forms (WS5 · D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed |
+| `floor/catalog-c` | `floor/catalog-c` | Floor-only forms (WS3 · D3.3) — write class `lives-on-the-floor`, NEVER frozen. The catalog where personal data actually turns up, because it is where people write prose about people: each form carries its write-class banner and asks for roles rather than names, and scripts/floor-only-check.mjs refuses one that has crossed into discovery/runs/ |
 | `scripts/*.mjs` | `scripts/` | Every gate + its tests (globbed — a per-file list silently drops new gates) |
 | `core` | `core` | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
 | `profiles` | `profiles` | Profiles as data: base + jurisdiction + product-type |
@@ -51,6 +55,9 @@ are repo-root-relative.
 | `governance/control-catalog.template.json` | `docs/governance/control-catalog.json` | The machine-readable control state of record |
 | `governance/identities.template.json` | `docs/governance/identities.json` | The identity registry (approvals resolve against it) |
 | `governance/attestation-issuers.template.json` | `docs/governance/attestation-issuers.json` | Allowed-issuers registry for ed25519 attestations |
+| `governance/assertion-issuers.template.json` | `docs/governance/assertion-issuers.json` | Identity-provider material for human approval assertions (kept separate from service keys) |
+| `governance/identity-map.template.json` | `docs/governance/identity-map.json` | The P6 join: surface person id → IdP subject → registry identity. Second-line owned; never written by a service |
+| `governance/identity-map-reconciliation.template.json` | `docs/governance/identity-map-reconciliation.json` | The observer's signed observation that the map is still current (observed, not declared) |
 | `governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory (pinned, tiered, evaluated, runtime-governed) |
 | `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data classification, retention, erasure, residency |
 | `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | The Run→Discovery feedback log |

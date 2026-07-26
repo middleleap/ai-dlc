@@ -48,6 +48,22 @@ jobs:
           cp "$H/assurance-example/assurance-case.json" "$A/docs/governance/assurance-cases/CASE-2026-0007.json"
           cp "$H/brainkit-example/brainkit-registry.json" "$A/docs/governance/brainkit-registry.json"   # rc.15 WS7 — BrainKit estate registry
           cp "$H/adapters/reference/"*.json "$A/docs/governance/adapters/"
+          # rc.13: the approval-attestation worked example, so the PA gate's attestation path is
+          # exercised end to end in the adopted layout rather than skipping there (it is bundle
+          # demonstration data, so the installer does not ship it).
+          cp -r "$H/approval-attestation-example" "$A/approval-attestation-example"
+          # rc.13 WS4: the export example, so the deterministic exporter's positive AND abort
+          # cases run in the adopted layout too (bundle demonstration data, not adopter machinery).
+          cp -r "$H/floor-export-example" "$A/floor-export-example"
+          # rc.13 WS4 · D4.1: a real frozen artifact + its stamp, so freeze-stamp-check verifies an
+          # actual digest instead of passing vacuously on a layout that has frozen nothing. The
+          # gate is silent where no run carries stamps, which is exactly why one has to be staged.
+          mkdir -p "$A/discovery/runs/accounts-elsewhere/.freeze"
+          cp "$H/freeze-example/data-governance.md" "$A/discovery/runs/accounts-elsewhere/data-governance.md"
+          cp "$H/freeze-example/data-governance.freeze.json" "$A/discovery/runs/accounts-elsewhere/.freeze/data-governance.json"
+          # …and the observer that watches it, so the D4.2 gate below has something real to compare.
+          cp -r "$H/freeze-example" "$A/freeze-example"
+          cp -r "$H/drift-example" "$A/drift-example"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
@@ -96,6 +112,31 @@ jobs:
           git add -A && git commit -qm base
           node scripts/discovery-link-check.mjs
           node scripts/control-plane-check.mjs
+          node scripts/template-parity-check.mjs   # floor forms in step with the git templates
+          node scripts/identity-map-check.mjs      # P6 — the map that says WHO a signed subject is
+          node scripts/freeze-stamp-check.mjs      # D4.1 — a frozen artifact still matches its stamp
+          # rc.15 WS4 · D4.2: the drift gate passed VACUOUSLY here — "nothing has been observed" —
+          # which is the same hole freeze-stamp-check had before a real artifact was staged beside
+          # it. Generate an observation of the bundled freeze (fresh: the gate refuses one over 7
+          # days old, so a committed one would fail every build within a week and get deleted) and
+          # assert BOTH directions, so a regression in drift detection fails the dry-run.
+          mkdir -p docs/governance/floor-drift
+          node drift-example/observe.mjs > docs/governance/floor-drift/alpha-in-sync.json
+          node scripts/drift-check.mjs | tee /tmp/drift-insync.txt
+          grep -q '0 drifted' /tmp/drift-insync.txt || {
+            echo "::error::an in-sync observation should report 0 drifted"; exit 1; }
+          rm docs/governance/floor-drift/alpha-in-sync.json
+          node drift-example/observe.mjs --drifted > docs/governance/floor-drift/alpha-drifted.json
+          node scripts/drift-check.mjs | tee /tmp/drift-moved.txt
+          grep -q '1 drifted' /tmp/drift-moved.txt || {
+            echo "::error::a page whose digest moved should be reported as drifted — detection is broken"; exit 1; }
+          rm docs/governance/floor-drift/alpha-drifted.json
+          node scripts/drift-check.mjs             # D4.2 — no NEW claim against a page that has moved on
+          node scripts/floor-only-check.mjs        # D3.3 — a floor-only note must never reach the record
+          node scripts/projection-capability-check.mjs  # WS1 — the projector is OBSERVED unable to write git
+          node scripts/approval-surface-check.mjs  # D5.1/D5.4 — the approvals page matches the COMPILED roles
+          node scripts/floor-keeper-check.mjs      # D6.3/D6.4 — no keeper grant where approvals live
+          node scripts/adapter-evidence-check.mjs  # D5.3 — one adapter, one control; declared is not active
           node scripts/control-catalog-check.mjs
           node scripts/identity-registry-check.mjs
           node scripts/change-envelope-check.mjs
@@ -160,7 +201,11 @@ jobs:
           fi
           git checkout -q main
           # 3 · Committed secret: a key in history must fail even after the file is gone.
-          printf 'aws_access_key_id = AKIAIOSFODNN7DRYRUN0\n' > leak.txt
+          # The marker below exempts THIS line only — it must sit on the same line as the match.
+          # leak.txt is written without it, so the gate still fails on the generated file exactly as
+          # the assertion below requires. Without the marker, the bundle's own secrets gate reports
+          # this workflow as a committed key: a false alarm for anyone running the adopter gates here.
+          printf 'aws_access_key_id = AKIAIOSFODNN7DRYRUN0\n' > leak.txt  # loom-allow-secret
           git add leak.txt && git commit -qm "leak" && git rm -q leak.txt && git commit -qm "remove leak"
           if node scripts/secrets-scan.mjs; then
             echo "::error::secrets gate passed a secret that lives in git history"; exit 1

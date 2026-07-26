@@ -13,17 +13,18 @@
     {
       "id": "bank-approvals",
       "mechanism": "sigstore",
-      "description": "Human approval attestations (control functions) via sigstore/cosign",
+      "description": "SUPERSEDED for human approvals — human approval assertions now live in assertion-issuers.json (Factory Floor WS2 · D2.4), which is deliberately a SEPARATE registry so that a service key can never vouch for a person. Keep this entry only for service-issued envelopes; do not reuse its trust anchor in the assertion registry (the gate rejects a shared anchor).",
       "verify": {
         "kind": "sigstore-identity",
-        "issuer": "https://your-idp.example/oidc",
+        "issuer": "ADOPT: a SERVICE issuer — it must NOT be the identity provider used in assertion-issuers.json (the gate rejects a shared trust anchor)",
         "subject_pattern": "*@your-org.example"
       }
     },
     {
       "id": "demo-anchor-signer",
       "mechanism": "ed25519",
-      "description": "DEMO reference issuer — a real ed25519 key pair; the private key is NOT shipped (regenerate your own; this one signs only the bundled example anchor)",
+      "demo": true,
+      "description": "DEMO reference issuer — a real ed25519 key pair; the private key is NOT shipped (regenerate your own; this one signs only the bundled example anchor). `demo: true` is read by core/approval-attestations.mjs, which refuses a demo anchor outright; the older anchor gate does not read it, so REPLACE this entry before you trust the anchor chain.",
       "verify": {
         "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsbjIWdwF4iiTTOfICsqf2J/YWtw4YVRNhXhswb8TAzI=\n-----END PUBLIC KEY-----\n"
       }

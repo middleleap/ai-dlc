@@ -42,8 +42,9 @@ rides the PR).
 merge it (contract changes are human-approved, always); set the story `blocked` with
 `reason: awaiting spec PR #N`, commit that to main, and start the next iteration item.
 
-**Genuinely uncovered gap** (new primitive needed) → write the ADR in `docs/adrs/`, set the item
-`blocked` with the ADR path, move on. Humans decide.
+**Genuinely uncovered gap** (new primitive needed) → write the ADR in `docs/adrs/` from
+`delivery/templates/adr.md`, set the item `blocked` with the ADR path, move on. Humans decide:
+drafting an ADR is not deciding it, and a `proposed` ADR unblocks nothing.
 
 ## 3. Verify — every gate, evidence in the log
 

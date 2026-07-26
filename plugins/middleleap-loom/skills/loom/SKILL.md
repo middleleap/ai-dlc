@@ -72,6 +72,9 @@ Full canon for each half:
 - `references/supply-chain-security.md` — how concrete SCA / SAST / image-scanning tooling
   (Chainguard, Snyk) fills slots the frame already has (Q2, Q4, HG-0002, the evidence bundle,
   continuous assurance) without changing the frame.
+- `references/agent-egress-control.md` — an **optional** component: the agent egress gateway that
+  fills HG-0011's block half and HG-0012's allow-list, the `egress_proxy` activation mechanism
+  that lets those rows graduate, and why the judge inside it is itself a model to govern.
 - `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
   eval-before-release, and independent validation, with the model-provenance gate that enforces
   the repo-side half.

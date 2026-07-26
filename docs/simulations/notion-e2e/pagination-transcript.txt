@@ -1,0 +1,24 @@
+PAGE_SIZE          : 100
+wall clock         : 3131 ms
+API calls          : 6
+   /v1/pages/3a980b86-f190-81d3-842a-ef8a2eac65f0       cursor=no  results=-   has_more=-
+   /v1/blocks/3a980b86-f190-81d3-842a-ef8a2eac65f0/children cursor=no  results=100 has_more=true
+   /v1/blocks/3a980b86-f190-81d3-842a-ef8a2eac65f0/children cursor=yes results=100 has_more=true
+   /v1/blocks/3a980b86-f190-81d3-842a-ef8a2eac65f0/children cursor=yes results=51  has_more=false
+   /v1/blocks/3a980b86-f190-81a2-809a-d6298dd5ce89/children cursor=no  results=100 has_more=true
+   /v1/blocks/3a980b86-f190-81a2-809a-d6298dd5ce89/children cursor=yes results=20  has_more=false
+
+blocks_read        : 371
+top-level blocks   : 251
+paragraphs         : 250   (expected 250)
+table rows         : 120   (expected 120)
+
+none dropped       : PASS
+order preserved    : PASS
+  first / last     : 1 … 250
+  across boundary  : …99, 100, 101, 102…   (100→101 is where page 1 ends)
+table rows ordered : PASS   1 … 120
+  across boundary  : …99, 100, 101, 102…
+
+exports            : 624 lines, digest sha256:5090b75f1c97727d451…
+markdown intact    : PASS — first, last and the final table row all present

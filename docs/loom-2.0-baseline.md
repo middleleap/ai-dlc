@@ -372,7 +372,156 @@ controls, 13 flagged adopter-side. Platform-*enforced* stays 0 by design: the bu
 observation machinery; the live observation, the separated controller identity and the pilot are the
 adopter's — recorded honestly, not gestured at.
 
-## 2.0-rc.13 addendum — compiler-bound regulated requirements (WS3) + runtime-neutral guardrails (WS4)
+## rc.13 addendum — the approval-attestation contract (Factory Floor WS2)
+
+Upstream half of the Factory Floor programme (`docs/notion-floor-plan.md`), landed **before** any
+collaboration-surface integration exists. An external control review of the programme plan found
+four defects in its decision-routing design; all four were verified against this harness and held.
+Two of them were defects in *the harness's own vocabulary*, not just the plan, and this release
+closes them.
+
+- **The approval-attestation contract (D2.4)** — `core/approval-attestations.mjs`. When a product
+  approval is made somewhere other than this repository, the record must answer an auditor's two
+  questions: **who decided**, and **what exactly did they approve**. It carries two signatures with
+  deliberately different meanings — `subject.assertion` (the institution's identity provider,
+  binding an immutable subject to the decision payload) proves a human decided;
+  `transcription.attestation` (the carrying service) proves only custody. A record with just the
+  second **authenticates the worker, not the approver**, and is refused: an assertion whose issuer
+  appears in the *service* registry is rejected, and the transcriber may never be the subject.
+  `canonicalDecisionPayload()` binds the compiled `plan_hash`, the passport digest and the source
+  sha or artifact digest, so an approval cannot outlive the thing it approved.
+- **The PA-gate extension (D2.5)** — `product-approval-check.mjs` gains an envelope-verification
+  path, **mandatory-when-compiled** from `required_capabilities.approval_attestation`. It tightens
+  the gate and never loosens it: a plan that does not compile the capability behaves exactly as it
+  did before, which the tests assert directly.
+- **A second issuer registry** — `assertion-issuers.template.json`, deliberately separate from
+  `attestation-issuers.json`. Service keys and identity-provider material must not share a
+  namespace; keeping them apart is what makes "a service may not vouch for a human" checkable.
+- **Delivery templates** — `delivery/templates/adr.md` and `solution-direction-record.md`, wired
+  into the manifest and referenced from the `next-story` and `develop` skills. The build loop drafts
+  an ADR and parks the story; a human decides. Both artifacts were named across the canon and
+  shipped no template until now.
+- **Architect roles** — `enterprise-architect` and `solution-architect` join the registry, closing a
+  gap where every architect *artifact* shipped (A1–A5, the SDR, ADRs, the BrainKit architecture)
+  but no architect *role* existed. The template also now demonstrates **roles, not headcount**:
+  `eng-omar` holds `engineering` and `enterprise-architect` — one person, two hats — and the three
+  floor service identities ship holding **no** approval role.
+
+**Hardened by an adversarial review of this very work, before it shipped.** Four defects were
+confirmed against the code and closed. Separation between the service and identity-provider
+registries was enforced by *issuer id* rather than by key material — and the shipped templates
+already carried one trust anchor in both, reducing the control to a naming convention. Expiry,
+revocation, origin and the credited custodian all sat **outside** the signed payload, so a carrier
+could un-revoke a dead approval, extend its expiry, evade the replay key by editing one unsigned
+word, or credit the wrong custodian. The signing key was never bound to a registry identity. And
+`audience` / `acr` were pinned in the registry, carried in the record, and never compared. All are
+now signed, compared, or refused, each with its own negative test. The new trust root
+(`assertion-issuers.json`) joins the control-plane protected paths and the CODEOWNERS template — a
+root of trust that is not owned is not a root of trust.
+
+**The freeze round-trip's git half ships too** (WS4 · D4.1). `core/floor-export.mjs` converts a
+fetched floor page to markdown as a *pure function* — no network call, no clock, no vendor SDK —
+and it **fails closed**: an unknown block type, a refused type, a truncated block list, a table
+whose rows were not read, or a block that declares children and carries none **aborts the export
+and writes nothing**. That refusal is the design. A converter that silently drops what it does not
+understand produces a document that looks complete, passes the D-gates, and is missing the
+paragraph where someone wrote down the risk — so there is no partial mode and no `--force`.
+Determinism is enforced rather than hoped for: frontmatter keys are sorted, annotation order is
+fixed, list items stay tight, and the tail is stable, so the same page produces the same bytes and
+a re-freeze of unchanged content produces the same digest. `scripts/freeze-stamp-check.mjs` then
+catches the ordinary, well-intentioned failure — a quick correction typed straight into a frozen
+file instead of going back to the floor and re-freezing. Both halves of the worked example ship: a
+page that exports, and a page that must abort. 26 new tests.
+
+**The first residual is now closed.** `core/identity-map.mjs` + `scripts/identity-map-check.mjs`
+(Factory Floor P6) perform the join the attestation contract deliberately left open: the map, owned
+by the second line and never writable by a service, says who a signed subject *is*, and the record's
+own `registry_id` is only a claim until the two agree. A probe makes the difference concrete — a
+record with a **real ed25519 assertion for subject A** that names registry identity B verified
+clean before, and is refused as `IM-R11` now. The pivot is the identity-provider subject, never the
+workspace person id and never an email: the schema has no field for an address, and carrying one is
+refused on sight, because a schema with no field for it is what stops a well-meaning shortcut from
+being written. Mandatory-when-compiled via `identity_map`; a repository that has not adopted the
+floor sees no change, and a copied-but-empty map is *unadopted*, not stale. Reconciliation is
+required the moment one entry exists — absent or stale, currency is unproven (`IM-R24`), and a
+subject the directory reports disabled is refused even while its entry still reads `active`
+(`IM-R25`). 32 new tests.
+
+Two residuals remain **named in the module header** rather than papered over: the join is only as
+good as the map's currency, and an *unmapped* deployment is still bound-but-not-joined — the
+capability closes the gap, adopting it is a human act; the source sha and artifact digest are bound but not *reconciled*
+against actual build state; and `demo: true` is refused by *this* module but not read by the older
+evidence-anchor path, so the bundle's `demo-anchor-signer` stays live for that gate until an adopter
+replaces it — flagged in the registry, not fixed. The first two are "authentic and immutable, but its
+subject is asserted, not proven".
+
+**Then hardened a second time, by a second adversarial review of the hardening itself.** Six more
+defects were verified by direct probe against the frozen tree and closed — two of them regressions
+introduced by the first round of fixes, which is the case for reviewing a fix as sceptically as the
+thing it fixed:
+
+- The assertion's **own** validity window and subject claim were compared but never signed. Judging
+  an assertion at the decision time is worth nothing if the carrier can rewrite the window to cover
+  the decision, or delete it and have both checks skip in silence. All three fields now sit inside
+  the payload, and their **absence is a finding** — no liveness evidence must not read like liveness
+  proven.
+- Keying the replay guard on the change **directory** (the first round's fix for cross-directory
+  reuse) exempted every record *inside* one: a single click could back product-owner and second-line
+  and permission-to-launch at once. The key is now the (directory · stage · role) **slot**, which is
+  visited exactly once per run, so re-verification is exempt and nothing else is.
+- `trustAnchor` collapsed an issuer to **one** anchor with pinned keys taking priority, so an entry
+  that named a provider *and* pinned its keys — what a careful adopter writes — hid the
+  provider-level overlap entirely. Anchors are now a **set**, matched by intersection, and an
+  `ADOPT:` placeholder is not trust material (two unwired stubs no longer collide).
+- A plan compiling **PA2 without PA1** returned early and skipped the entire gate: ownership, the
+  PA2 section set, every approver role and every attestation on the one gate that grants permission
+  to launch. Each PA gate is now evaluated on its own presence.
+- An `ADOPT:` audience or assurance-level pin was **silently skipped**, so the shipped registry
+  arrived with the step-up check inert and nothing said so. A placeholder is now reported as
+  unconfigured; `null` records a deliberate opt-out.
+- The unparseable-expiry guard only inspected **strings**, and the bridge composes the record's JSON
+  — so it picked the type. `true` meant "never expires"; `0` meant "expired in 2000". The type is
+  now part of the check.
+
+**And the bundle no longer ships a live root of trust.** `assertion-issuers.template.json` — copied
+verbatim into every adopting repository — carried a working ed25519 identity-provider key whose only
+guard was a JSON `description`, which no gate reads. The demo anchors now live *beside the example
+they serve*, outside the copy manifest, marked `"demo": true` and **refused outright** by the gate;
+the installed template deliberately carries no usable trust material, and a test asserts it stays
+that way. Verifying the worked example therefore produces exactly two findings — the two demo
+refusals — which makes the refusal itself part of what the example demonstrates.
+
+The worked example (`approval-attestation-example/`) is signed for real against the bundled plan and
+passport and verified in the suite, so editing the example passport breaks it — the same binding a
+live approval gets. Its assertion is a realistic five-minute step-up token verified a year later,
+which pins the expiry semantics: an assertion is judged against the **signed decision time**, never
+against verification time, because the opposite would have made every genuine approval rot on a
+timer. Suite **467 green** (60 new tests, including the full negative set: an agent's click void,
+an unregistered human refused, a service key refused as a human voucher whether by id *or* by
+shared key material, a forged signature, a replayed nonce and event id — across directories, across
+roles and across both PA stages — an assertion already expired when the decision was made, a
+back-dated decision, a rewritten or deleted assertion window, delimiter injection in the canonical
+payload, un-revocation, custody reattribution, a demo anchor in either registry, an unconfigured
+`ADOPT:` pin, a non-string expiry, and content mutated after the decision).
+
+**What this release does not claim.** No shipped profile compiles the capability, so nothing in the
+bundle demands attestation-backed approvals today; the contract ships **declared, not active**. The
+`oidc-step-up` and `sigstore` mechanisms report UNVERIFIED-HERE until an adopter pins provider
+metadata — only `ed25519` is verified in-process. Decision routing itself (WS5) stays blocked for
+production until the identity design passes an independent second-line review. This is the
+foundation that review asked for, not the integration.
+## 2.0-rc.16 addendum — the control-plane plan (WS3–WS8) merged onto the Factory Floor track
+
+The control-plane plan (`docs/loom-control-plane-plan.md`, findings F1–F8) and the Notion Factory
+Floor track advanced the plugin in parallel after WS1–WS2 shipped (rc.11–rc.12, #15). The Factory
+Floor track took rc.13→rc.15 (above); this branch independently developed the control-plane WS3–WS8
+under the same rc.13→rc.15 labels. To reconcile the collision, the two trains are unified here as a
+single **rc.16** release: the Factory Floor rc.13–15 stand as recorded, and the control-plane WS3–WS8
+below (originally branch rc.13–15) land on top as rc.16. Version numbers are monotonic again; no
+control was renamed and no gate was dropped from either track. The combined scorecard is regenerated
+from the merged control catalog.
+
+### Control-plane WS3 + WS4 (developed as branch rc.13)
 
 WS3 and WS4 of the control-plane plan.
 
@@ -410,7 +559,7 @@ adopter-side. Honesty invariant holds: compiled capabilities beyond `data_risk_r
 only D6 consumes one so far (no gate claims to enforce the others), and no guardrail implies coverage a
 runtime lacks.
 
-## 2.0-rc.14 addendum — adoption state machine (WS5) + continuous-assurance cases (WS6)
+### Control-plane WS5 + WS6 (developed as branch rc.14)
 
 WS5 and WS6 of the control-plane plan.
 
@@ -443,7 +592,7 @@ flagged adopter-side. Honesty invariant holds: signal INGESTION from the eight a
 adopter's orchestrator wiring (the bundle validates the case records), and the adoption SIGNATURE is
 adopter-side.
 
-## 2.0-rc.15 addendum — BrainKit estate service (WS7) + comprehension debt (WS8): the plan's bundle side is complete
+### Control-plane WS7 + WS8 (developed as branch rc.15)
 
 The final two workstreams of the control-plane plan.
 
