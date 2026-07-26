@@ -1,0 +1,21 @@
+{
+  "_comment": "ADOPT (rc.14 · WS6): the service-level expectations for continuous assurance, mounted as docs/governance/assurance-sla.json and owned by the second line. A signal from any declared source opens a CASE (assurance-case-check.mjs); the case must be assessed within the severity's window, remediated by its deadline, and — for a runtime breach (high/critical) — record a CONTAINMENT action (suspend routine autonomy, block release, rollback, or model fallback). An open breach past its deadline blocks unless the second line risk-accepts it. Tune the windows to your risk appetite; the Loom validates and reconciles — the accountable decision stays human.",
+  "sources": [
+    "regulatory-intelligence",
+    "siem",
+    "observability",
+    "model-monitoring",
+    "incident-management",
+    "grc",
+    "deployment-platform",
+    "product-analytics"
+  ],
+  "severities": {
+    "critical": { "assessment_hours": 4, "remediation_days": 7, "requires_containment": true },
+    "high": { "assessment_hours": 24, "remediation_days": 30, "requires_containment": true },
+    "medium": { "assessment_hours": 72, "remediation_days": 90, "requires_containment": false },
+    "low": { "assessment_hours": 168, "remediation_days": 180, "requires_containment": false }
+  },
+  "containment_actions": ["suspend-autonomy", "block-release", "rollback", "model-fallback"],
+  "revalidation_cadence_days": 90
+}

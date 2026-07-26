@@ -1,0 +1,94 @@
+{
+  "_comment": "The neutral guardrail policy (Loom 2.0-rc.13 · WS4). The Loom is distributed as a Claude Code plugin marketplace, so its local pre-write guardrails (hooks/) are Claude Code-specific. This policy states, per guardrail and per runtime, EXACTLY what is enforced where — and where it is NOT — so the Loom never implies equivalent protection on a runtime that lacks the hook. States: `enforced` (a local mechanism blocks it at the point of action) · `ci-backstop` (no local block, but a CI gate catches it before merge — the enforcement of record) · `uncovered` (no mechanism; an honest gap, which must be acknowledged with known_gap:true if the decision is `block`). scripts/guardrail-policy-check.mjs verifies every enforced/ci-backstop state names an EXISTING mechanism and every uncovered state names none — no implied coverage. The capability matrix in README.md is generated from this file and gated by doc-integrity.",
+  "schema_version": "1.0",
+  "runtimes": ["claude-code", "github-actions", "local-git"],
+  "events": [
+    "before-file-write",
+    "before-shell-execution",
+    "before-contract-modification",
+    "before-test-modification",
+    "before-network-egress",
+    "before-commit",
+    "before-pr-creation"
+  ],
+  "guardrails": [
+    {
+      "id": "pii-literal",
+      "event": "before-file-write",
+      "decision": "block",
+      "description": "PII-shaped literals (Emirates ID, IBAN) are blocked — synthetic data only",
+      "coverage": {
+        "claude-code": { "state": "enforced", "mechanism": ".claude/hooks/pii-guard.sh" },
+        "github-actions": { "state": "ci-backstop", "mechanism": "scripts/secrets-scan.mjs", "note": "catches the secret-shaped subset in tree + history; not a full PII scanner" },
+        "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped — wire pii-guard as a pre-commit hook to cover this runtime" }
+      }
+    },
+    {
+      "id": "test-integrity",
+      "event": "before-test-modification",
+      "decision": "block",
+      "description": "Test-disabling edits (it.skip/.only/.todo/.fails/xit, commented-out assertions) are blocked",
+      "coverage": {
+        "claude-code": { "state": "enforced", "mechanism": ".claude/hooks/test-tripwire.sh" },
+        "github-actions": { "state": "ci-backstop", "mechanism": "scripts/test-integrity-check.mjs" },
+        "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped" }
+      }
+    },
+    {
+      "id": "contract-freeze",
+      "event": "before-contract-modification",
+      "decision": "block",
+      "description": "The API contract cannot change inside a feature branch — spec changes take the spec lane",
+      "coverage": {
+        "claude-code": { "state": "enforced", "mechanism": ".claude/hooks/spec-tripwire.sh" },
+        "github-actions": { "state": "ci-backstop", "mechanism": "scripts/control-plane-check.mjs", "note": "the contract path is a CODEOWNERS-owned control target — a change requires Code Owner review" },
+        "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped" }
+      }
+    },
+    {
+      "id": "control-plane-freeze",
+      "event": "before-file-write",
+      "decision": "block",
+      "description": "The agent cannot edit its own guardrails (gates, workflows, governance data, CODEOWNERS)",
+      "coverage": {
+        "claude-code": { "state": "uncovered", "note": "no local hook blocks control-plane writes — the agent can PROPOSE the edit; CI + Code Owner review is what prevents it merging" },
+        "github-actions": { "state": "ci-backstop", "mechanism": "scripts/control-plane-check.mjs" },
+        "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped" }
+      }
+    },
+    {
+      "id": "brainkit-immutability",
+      "event": "before-file-write",
+      "decision": "block",
+      "description": "Institutional BrainKit content cannot be altered by a builder without the context owner",
+      "coverage": {
+        "claude-code": { "state": "uncovered", "note": "no local hook; institution/ is proposed like any file and blocked at merge" },
+        "github-actions": { "state": "ci-backstop", "mechanism": "scripts/brainkit-check.mjs" },
+        "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped" }
+      }
+    },
+    {
+      "id": "network-egress",
+      "event": "before-network-egress",
+      "decision": "block",
+      "description": "Unauthorized network/data egress during a build or agent session",
+      "known_gap": true,
+      "coverage": {
+        "claude-code": { "state": "uncovered", "note": "Claude Code ships no default network-egress hook; use a sandbox/allowlist at the runtime boundary" },
+        "github-actions": { "state": "uncovered", "note": "the bundle ships no egress gate; enforce with an egress-controlled runner (allowlist) or a network policy — adopter-side" },
+        "local-git": { "state": "uncovered", "note": "not a git-level concern" }
+      }
+    },
+    {
+      "id": "parser-fail-closed",
+      "event": "before-file-write",
+      "decision": "block",
+      "description": "A guard that cannot parse its input (jq missing) must DENY, never silently pass",
+      "coverage": {
+        "claude-code": { "state": "enforced", "mechanism": ".claude/hooks/pii-guard.sh", "note": "all three hooks emit a deny decision when jq is absent (rc.10)" },
+        "github-actions": { "state": "ci-backstop", "mechanism": "scripts/control-plane-check.mjs", "note": "CI gates run under Node with no jq dependency; a parse failure exits non-zero and blocks" },
+        "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped" }
+      }
+    }
+  ]
+}

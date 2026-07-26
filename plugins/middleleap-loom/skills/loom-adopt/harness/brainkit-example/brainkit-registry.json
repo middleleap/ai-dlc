@@ -1,0 +1,37 @@
+{
+  "_comment": "EXAMPLE (rc.15 · WS7) — the BrainKit estate registry for the fictional Meridian Trust. It answers the five questions a BrainKit release must: which repos use it, which controls changed, which products need re-evaluation, what supersedes what, and whether an unsafe release can be withdrawn across the estate. This is DATA (no live service); brainkit-registry-check.mjs verifies its integrity and — the point — that no repository pins a revoked release. Mounts at docs/governance/brainkit-registry.json, owned by the institutional context owner.",
+  "releases": [
+    {
+      "brainkit_id": "meridian-brainkit",
+      "version": "1.0.0",
+      "package_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "status": "superseded",
+      "superseded_by": "1.1.0",
+      "released_at": "2026-05-01T00:00:00Z",
+      "changed_controls": [],
+      "products_needing_reevaluation": []
+    },
+    {
+      "brainkit_id": "meridian-brainkit",
+      "version": "1.1.0",
+      "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "status": "active",
+      "released_at": "2026-06-15T00:00:00Z",
+      "compatibility": ">=1.0.0",
+      "changed_controls": ["DATA-LC"],
+      "products_needing_reevaluation": ["PRD-017"]
+    },
+    {
+      "brainkit_id": "meridian-brainkit",
+      "version": "0.9.0",
+      "package_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "status": "revoked",
+      "revocation_reason": "terminology section cited a retired regulatory source; withdrawn estate-wide",
+      "released_at": "2026-04-01T00:00:00Z"
+    }
+  ],
+  "adoption_inventory": [
+    { "repository": "meridian/credit-service", "brainkit_id": "meridian-brainkit", "version": "1.1.0", "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "acknowledged_at": "2026-06-16T09:00:00Z" },
+    { "repository": "meridian/deposits-service", "brainkit_id": "meridian-brainkit", "version": "1.1.0", "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "acknowledged_at": "2026-06-18T11:30:00Z" }
+  ]
+}
