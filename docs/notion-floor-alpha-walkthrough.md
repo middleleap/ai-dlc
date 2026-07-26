@@ -202,16 +202,46 @@ operator to the integration-permissions screen to debug a firewall.
 flag. Two regression tests cover it — one that a non-vendor body is not blamed on the vendor, one
 that a genuine `restricted_resource` still reads as a sharing problem.
 
+## 6c · Pagination, against a page built to force it
+
+The live page above fits in one page of results, so the cursor-following code — the most likely
+thing to break quietly on a real artifact — was still untested. A page was built to force it: **250
+numbered paragraphs and a table of 120 rows**, so the walk crosses a boundary at the top level
+*and* one level down, since `table_row` children come from their own paginated call.
+
+```
+6 API calls
+  /v1/pages/<page>                          —
+  /v1/blocks/<page>/children   cursor=no    results=100  has_more=true
+  /v1/blocks/<page>/children   cursor=yes   results=100  has_more=true
+  /v1/blocks/<page>/children   cursor=yes   results=51   has_more=false
+  /v1/blocks/<table>/children  cursor=no    results=100  has_more=true
+  /v1/blocks/<table>/children  cursor=yes   results=20   has_more=false
+
+371 blocks read · 251 top-level · 250 paragraphs · 120 table rows · 4.8 s
+```
+
+| Check | Result |
+|---|---|
+| Nothing dropped — all 250 present | **PASS** |
+| Order preserved across the boundary — `…99, 100, 101, 102…` | **PASS** |
+| Table rows ordered across *their* boundary | **PASS** |
+| Exports intact — first block, last block and row 120 all in the markdown | **PASS** |
+
+The blocks are **numbered** for a reason. Pagination fails in two ways, and both are invisible in a
+block count: it drops a page of results, or it returns them out of order. A test that only counted
+371 blocks would pass while the middle hundred were shuffled. Content that says where it belongs is
+what makes the assertion mean something.
+
 ## 7 · What is still unproven
 
 Stated plainly, because a walkthrough that oversells is worse than none:
 
-- **`floor-fetch.mjs` has now made live calls, but a narrow set of them.** One page, one workspace,
-  one API version, on a page small enough to fit in a single page of results — so the **pagination
-  path and the cursor guards are still unexercised**, and so is every error branch except the two
-  hit by accident (a proxy 403 and a genuine `object_not_found` from an unshared integration). The
-  `has_children` recursion *was* exercised: the two tables are children fetched separately, and
-  they render correctly.
+- **`floor-fetch.mjs` has now made live calls, including paginated ones** (see §6c). What remains
+  unexercised live is the **error branches** — everything except the two hit by accident, a proxy
+  403 and a genuine `object_not_found` from an unshared integration. Those stay covered by fixtures
+  only, which is the right place for them: a surface that reports `has_more` with no cursor is a
+  vendor bug, not something to provoke against a real workspace.
 - **The token used held write capabilities.** The integration had *Insert content* and *Update
   content* enabled. A freeze only ever reads, so a freezer's token holding a write path is
   over-privileged (HG-0004) — noted in the module and not yet enforced anywhere, because nothing

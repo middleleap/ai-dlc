@@ -67,9 +67,20 @@ blamed the vendor for a firewall. `classify()` now distinguishes a response carr
 `{ object: "error", code }` body and names the proxy, the egress policy and the Node flag; two
 regression tests cover both directions.
 
-**Still unexercised:** pagination and the cursor guards — this page fits in one page of results —
-and every error branch except the two hit by accident. The `has_children` recursion *was*
-exercised: both tables are children fetched separately.
+**Pagination was then exercised too**, against a page built to force it — 250 numbered paragraphs
+and a 120-row table, so the walk crosses a boundary at the top level and one level down (`table_row`
+children come from their own paginated call). Six API calls, 371 blocks, nothing dropped, order
+preserved across both boundaries — `mkbig.mjs` builds the page, `pagetest.mjs` instruments the
+transport and checks it.
+
+The blocks are **numbered** deliberately: pagination fails by dropping a page or by reordering, and
+neither shows up in a block count. A test that only counted 371 would pass while the middle hundred
+were shuffled.
+
+**Still unexercised live:** the error branches, other than the two hit by accident — a proxy 403 and
+a genuine `object_not_found` from an unshared integration. They stay covered by fixtures, which is
+the right place: a surface reporting `has_more` with no cursor is a vendor bug, not something to
+provoke against a real workspace.
 
 **Everything downstream of the fetch is the shipped code, unmodified**: `floor-export.mjs`
 produced the markdown and the digest, `freezeStamp()` produced the stamp, and
