@@ -47,9 +47,11 @@ floor. The brain is *governed*, not accumulated: a signal is a record with an ow
 history, not a note.
 
 Not all of Run is the *product's* production. The build environment runs too, and it has sensors of
-its own: an egress enforcement point in front of the agent (`agent-runtime-security.md`) emits onto
-this same wire — a blocked request to an unlisted host is a `near-miss`, an unsubstituted
-credential placeholder reaching the wire is an `incident` — and routes through exactly this triage.
+its own. An egress gateway in front of the agent emits onto this same wire — a routine deny is a
+`near-miss`, a deny matching a registered data risk is `risk-materialised` (`agent-egress-control.md`)
+— and a credential broker adds one more: an unsubstituted placeholder reaching the wire is an
+`incident` (`agent-credential-brokering.md`). Both route through exactly this triage, and neither
+needs a new signal type.
 
 ## The routing triage
 
@@ -130,8 +132,9 @@ nothing more. Claiming otherwise would be the exact dishonesty cluster E exists 
   waist-gate pattern this seam mirrors.
 - `delivery-harness.md` — the **⑦ DEPLOY / ⑧ EVIDENCE** seam Run begins at, and `spec-change`
   (the spec-fix route).
-- `agent-runtime-security.md` — the build environment's own sensor: what a credential-brokering
-  egress proxy emits onto this wire, and the routes its denials take.
+- `agent-egress-control.md` / `agent-credential-brokering.md` — the build environment's own
+  sensors: what an egress gateway and a credential broker emit onto this wire, and the routes
+  their denials and failures take.
 - `bank-grade-gap.md` — **cluster E** (operational resilience: the R1–R6 readiness declarations
   *mechanically validated*, the live drills/DAST/pentest *absent*); the "build-time frame
   strong, run-the-bank sparse" grade.

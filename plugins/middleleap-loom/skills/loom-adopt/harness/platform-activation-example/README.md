@@ -10,7 +10,7 @@ Each record (mount under `docs/governance/platform-activation/<mechanism>.json`)
 |---|---|
 | `platform`, `repository` | what was observed |
 | `satisfies_control` | the catalog control this observation activates |
-| `mechanism` | `branch_protection` \| `rulesets` \| `required_reviews` \| `codeowners` \| `workflow_permissions` \| `environment_protection` \| `oidc_subjects` |
+| `mechanism` | `branch_protection` \| `rulesets` \| `required_reviews` \| `codeowners` \| `workflow_permissions` \| `environment_protection` \| `oidc_subjects` \| `egress_proxy` |
 | `observation` | what the platform actually reported active |
 | `bypass_test` | a **negative** test executed against the platform — `result: "rejected"` |
 | `observer_identity` | resolves in the identity registry, **outside** the agent's write authority (not a builder/agent) |
@@ -21,6 +21,13 @@ Each record (mount under `docs/governance/platform-activation/<mechanism>.json`)
 is an `ADOPT` placeholder — a real observation is signed by your observer's key). The gate's
 graduation rule fails the build if any catalog control claims `platform-enforced` without a
 verified record naming it.
+
+**Not every mechanism is a git forge.** `egress_proxy` covers the network chokepoint an agent's
+outbound traffic is forced through — the optional agent-egress-control component (HG-0011 /
+HG-0012), whose canon is `../../../loom/references/agent-egress-control.md` and whose reference
+record is `crabtrap-egress-proxy.json`. The rule that makes it a mechanism rather than a
+deployment is the same one that governs branch protection: the `bypass_test` proves the platform
+*refused a route around it*, not that a config file says the right words.
 
 **Honesty.** The bundle ships the verifier, the schema, the observer-separation rule and this
 reference. The live query runs adopter-side with read-only platform credentials — a public

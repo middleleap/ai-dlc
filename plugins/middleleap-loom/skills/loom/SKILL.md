@@ -72,10 +72,13 @@ Full canon for each half:
 - `references/supply-chain-security.md` — how concrete SCA / SAST / image-scanning tooling
   (Chainguard, Snyk) fills slots the frame already has (Q2, Q4, HG-0002, the evidence bundle,
   continuous assurance) without changing the frame.
-- `references/agent-runtime-security.md` — the agent's *own* credentials and egress: the
-  credential-brokering egress proxy role that fills HG-0004, HG-0010, HG-0011 and HG-0012, four
-  peer instances, and why a placeholder beats a short-lived secret for a process that reads
-  untrusted input.
+- `references/agent-egress-control.md` — an **optional** component: the agent egress gateway that
+  fills HG-0011's block half and HG-0012's allow-list, the `egress_proxy` activation mechanism
+  that lets those rows graduate, and why the judge inside it is itself a model to govern.
+- `references/agent-credential-brokering.md` — its sibling on the **credential** side: the broker
+  that holds the secret so the agent never does, filling the vault half of HG-0004 that a gateway
+  leaves open. Why a placeholder beats a short-lived secret for a process that reads untrusted
+  input, and the deny → proposal → human-approval property worth requiring of any instance.
 - `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
   eval-before-release, and independent validation, with the model-provenance gate that enforces
   the repo-side half.
