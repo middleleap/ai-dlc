@@ -1,8 +1,9 @@
 # ADR-0002 — Where the sync services run
 
-**Status:** proposed · **Date:** 2026-07-25 · **Deciders:** `enterprise-architect` ·
-`platform-admin` · `information-security` · `risk-second-line` — **AWAITING:** assignment to named
-registry identities · **Programme:** Factory Floor (`docs/notion-floor-plan.md`)
+**Status:** **accepted** · **Date:** 2026-07-25 · **Accepted:** 2026-07-26 by **@michartmann**,
+repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
+acceptance** below · **Institutional deciders (per adopter, unassigned here):** `enterprise-architect` · `platform-admin` · `information-security` · `risk-second-line`
+
 **Companions:** plan §3 P4 and P5 · §7 open decision 1 · §4 WS1, WS4, WS5, WS6 ·
 `docs/notion-floor-threat-model.md` (identities, capability matrix, T-08, T-13, T-15, G-8) ·
 `docs/research/notion-software-factory-collaboration-2026-07.md` §2.3 and §4.1.
@@ -13,6 +14,21 @@ the floor (Notion) and the record (git) — `svc-floor-projector`, `svc-floor-fr
 human-assertion mechanism for D5.2 (plan §7.5, decided in the WS5 entry-gate review), and it
 creates no authority: hosting choices move credentials, logs and failure modes, never approval
 rights.
+
+
+## Scope of this acceptance
+
+Accepted **for the method**, on the same terms as ADR-0005: it settles what this repository — a
+method and a harness, not a bank — builds around, so the work below may proceed without the
+decision being reopened. It is deliberately **not** a substitute for two things it has no standing
+to grant.
+
+**An adopting institution's own sign-off.** The decider roles above stay unassigned here on
+purpose. Where a bank's services run is that bank's decision, made against its own hosting estate, its own egress policy and its own outsourcing rules. This repository hosts nothing.
+
+**Activation.** Nothing is deployed. The freezer, bridge and projector are module contracts in this harness; no runtime exists, and the capability probe that would make the projector's read-only posture **observed** rather than **declared** has never been run — `PJ-R20` is what says so out loud.
+
+A superseding ADR — not an edit to this one — changes the decision.
 
 ## Context
 
@@ -131,7 +147,10 @@ or it hosts the projector in the bank service as well and drops Workers from the
 plan states it; the stricter variant is the safer reading of D6.4 and costs little once the bank
 service exists.
 
-Status stays **proposed**. This is a recommendation to the deciders named above.
+**Accepted for the method** on 26 Jul 2026 (see *Scope of this acceptance*). Nothing is
+deployed, so this settles what the harness is built to expect: the freezer and bridge belong in a
+runtime whose logs, egress and change management the institution owns. An adopter decides its own
+hosting.
 
 ## Consequences
 

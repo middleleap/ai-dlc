@@ -259,19 +259,22 @@ runs **labelled non-authoritative**.
 6. Activate WS5 only after the independent second-line review and real negative tests.
 7. Add floor-keepers and MI last, with no access to authoritative decision fields.
 
-## 7 · Open decisions — all five drafted as ADRs; 0005 accepted, four awaiting deciders
+## 7 · The five decisions — all drafted as ADRs, and all now **accepted for the method**
 
 Each is written against `delivery/templates/adr.md`, the template this programme added to the
-harness — its first customers. Every one is **`proposed`**: a recommendation with its reasoning
-and its open blockers stated, not a decision taken.
+harness — its first customers. All five are now **`accepted` for the method** (0005 on 25 Jul, the
+rest on 26 Jul, by @michartmann as repository owner). Each carries a *Scope of this acceptance*
+section, and the scope is narrow on purpose: it settles what **this repository** — a method and a
+harness, not a bank — builds around. It grants no adopting institution's sign-off, and it activates
+nothing. The decider roles stay unassigned in every one, deliberately.
 
 | ADR | Decision | Recommendation |
 |---|---|---|
-| [0001](adrs/0001-api-compatibility.md) | Notion API version — pin `2025-09-03` or adopt current `2026-03-11` | Adopt current **now**, while the migration surface is a config value in an unwritten service; the pin then moves only by a superseding ADR |
-| [0002](adrs/0002-sync-service-hosting.md) | Where the sync services run | Bank-controlled service for freezer + bridge; Workers **projection-only** while beta |
-| [0003](adrs/0003-freeze-trigger-ux.md) | How a freeze is triggered | Explicit human freeze — a freeze is an intent, like the merge |
-| [0004](adrs/0004-projection-cadence.md) | How fresh the projection must be | On-merge push **plus** periodic reconcile — what makes G4's 10 minutes measurable rather than aspirational |
-| [0005](adrs/0005-human-assertion-mechanism.md) | How a human decision is proven independently of the bridge | **ACCEPTED** 25 Jul 2026 (@michartmann, for the method): Option A `oidc-step-up` + the nonce-binding hard condition, Option C the strategic direction. Answers finding F1. An adopter's own four-role sign-off, and the WS5 workstream review, are **not** granted by this |
+| [0001](adrs/0001-api-compatibility.md) | Notion API version — pin `2025-09-03` or adopt current `2026-03-11` | **ACCEPTED** — adopt `2026-03-11`. The blocking AWAITING was answered at primary source: the API enumerates its seven versions, `2025-09-03` and `2026-03-11` are **adjacent** (so Option C collapsed into A), and the export digest is byte-identical across every currently-relevant version. Carries a floor: the pin must be **`2022-06-28` or later**, because below that the exporter froze every block empty |
+| [0002](adrs/0002-sync-service-hosting.md) | Where the sync services run | **ACCEPTED** — bank-controlled service for freezer + bridge; Workers **projection-only** while beta. Nothing is deployed, and the projector's read-only posture is still *declared*, not observed |
+| [0003](adrs/0003-freeze-trigger-ux.md) | How a freeze is triggered | **ACCEPTED** — explicit human freeze; a freeze is an intent, like the merge. Implemented and gated, but no surface offers the action because WS1 is not deployed |
+| [0004](adrs/0004-projection-cadence.md) | How fresh the projection must be | **ACCEPTED** in *shape* — on-merge push **plus** periodic reconcile. The intervals stay provisional pending the rate-limit read, and the reconcile half has no implementation yet |
+| [0005](adrs/0005-human-assertion-mechanism.md) | How a human decision is proven independently of the bridge | **ACCEPTED** 25 Jul 2026 — Option A `oidc-step-up` + the nonce-binding hard condition, Option C the strategic direction. Answers finding F1. An adopter's own four-role sign-off, and the WS5 workstream review, are **not** granted by this |
 
 ## 8 · Risks
 

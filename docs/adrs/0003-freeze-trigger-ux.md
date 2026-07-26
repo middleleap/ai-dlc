@@ -1,8 +1,9 @@
 # ADR-0003 — How a freeze is triggered
 
-**Status:** proposed · **Date:** 2026-07-25 · **Deciders:** `product-owner` ·
-`solution-architect` · `risk-second-line` — **AWAITING:** assignment to named registry identities
-· **Programme:** Factory Floor (`docs/notion-floor-plan.md`)
+**Status:** **accepted** · **Date:** 2026-07-25 · **Accepted:** 2026-07-26 by **@michartmann**,
+repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
+acceptance** below · **Institutional deciders (per adopter, unassigned here):** `product-owner` · `solution-architect` · `risk-second-line`
+
 **Companions:** plan §7 open decision 2 · §4 WS4 (D4.1–D4.3) · §5 M3 ·
 `docs/research/notion-software-factory-collaboration-2026-07.md` §6 (the freeze lifecycle) and
 §6a step 2 · `plugins/middleleap-loom/skills/loom/references/governance.md` (HG-0013).
@@ -12,6 +13,21 @@ a governed candidate in git. It decides nothing about what a freeze *does*: the 
 exporter, its fail-closed behaviour, the sha stamp, and the drift rules are WS4 · D4.1–D4.3 and
 are unchanged by every option here. It decides nothing a gate reads; D1–D9 and the waist gate run
 on the exported file exactly as they do today, file-based and offline.
+
+
+## Scope of this acceptance
+
+Accepted **for the method**, on the same terms as ADR-0005: it settles what this repository — a
+method and a harness, not a bank — builds around, so the work below may proceed without the
+decision being reopened. It is deliberately **not** a substitute for two things it has no standing
+to grant.
+
+**An adopting institution's own sign-off.** The decider roles above stay unassigned here on
+purpose. Who may take the freeze action, and whether a facilitator role exists at all, is an adopter's operating-model decision.
+
+**Activation.** `core/floor-fetch.mjs` and `core/floor-export.mjs` implement the freeze, and `freeze-stamp-check` verifies it — but no surface offers the action to anybody, because WS1 has not been deployed. Option A is what the harness is built to expect, not something a person can do today.
+
+A superseding ADR — not an edit to this one — changes the decision.
 
 ## Context
 
@@ -135,7 +151,9 @@ state to freeze, fail-closed aborts per freeze, and re-freezes per merged artifa
 the thresholds at which the hybrid is adopted — owner, date. A threshold invented here would be a
 number with no evidence behind it.
 
-Status stays **proposed**. This is a recommendation to the deciders named above.
+**Accepted for the method** on 26 Jul 2026 (see *Scope of this acceptance*). The freeze itself
+is implemented and gated; what no adopter has yet is a surface offering the action, because WS1 is
+not deployed. Who may take it remains an adopter's operating-model decision.
 
 ## Consequences
 
