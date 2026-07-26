@@ -36,6 +36,9 @@ jobs:
           node scripts/template-parity-check.mjs      # the guided floor form cannot drift from the git template
           node scripts/identity-map-check.mjs         # P6 — the join from a signed subject to a registry identity
           node scripts/freeze-stamp-check.mjs         # D4.1 — no frozen artifact was edited in place
+          node scripts/drift-check.mjs                # D4.2 — no NEW claim against a page that has moved on
+          node scripts/floor-only-check.mjs           # D3.3 — a floor-only note must never reach the record
+          node scripts/projection-capability-check.mjs # WS1 — the projector is OBSERVED unable to write git
           node scripts/routine-change-check.mjs        # HG-0013 · normal-human-review — an unqualified routine CLAIM fails; ordinary work passes
 
       - name: Product-governance gates (envelope · PA1/PA2 · A1–A5 · identities)
