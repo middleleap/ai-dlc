@@ -502,6 +502,18 @@ jobs:
             echo "::error::comprehension gate passed a high-tier change with no understanding record"; exit 1
           fi
           mv /tmp/comp.json docs/governance/changes/CHG-2026-0042/comprehension.json
+          # 26 · rc.14 WS5 (F7) — the adoption-attestation gate. Unlike every other gate here it is
+          #      NOT run on the positive path: the dry-run repo is deliberately half-adopted (the
+          #      installer never fakes activation), so a signed adoption report MUST be impossible.
+          #      That makes the dry-run a natural home for F7's negative and a wrong one for its
+          #      positive, which lives in scripts/adoption-attest.test.mjs against a clean status.
+          #      The REASON is asserted: refusing because no attestation file exists would prove
+          #      nothing about the rule, which is that adopt-pending items forbid one being made.
+          if node scripts/adoption-attest.mjs 2>/tmp/aa.txt; then
+            echo "::error::a half-adopted repo produced a valid adoption attestation — F7 is back"; exit 1
+          fi
+          grep -q 'adoption is not complete' /tmp/aa.txt || {
+            echo "::error::the adoption gate refused, but not for being adopt-pending"; cat /tmp/aa.txt; exit 1; }
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — operations-signal adopter example stays green
