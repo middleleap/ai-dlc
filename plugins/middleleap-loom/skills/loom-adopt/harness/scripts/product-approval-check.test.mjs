@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate } from './product-approval-check.mjs';
+import { evaluate, pa1Roles } from './product-approval-check.mjs';
 
 import { existsSync } from 'node:fs';
 
@@ -76,5 +76,58 @@ test('ownership must resolve: product owner and accountable executive by role', 
 
 test('a plan with no PA1 gate compiles no product-approval requirements', () => {
   assert.deepEqual(evaluate(PASSPORT, { ...PLAN, required_gates: ['D', 'Q'] }, REGISTRY), []);
+});
+
+// --- the PA1 role gap (found by the Alpha Islamic Bank walkthrough) ----------------------------
+//
+// A compiled plan could name twelve approver roles while PA1 checked three, and the flat
+// `required_approver_roles` list gave a reader no way to tell which was which. Nine roles —
+// including every Shariah role — were unchecked at PA1, so an agent, a builder or an identity
+// that does not exist could occupy one of those slots under a green gate.
+
+test('a recorded approval is resolved even when this stage does not require that role', () => {
+  const plan = { ...PLAN, risk_tier: 'high' };
+  const notRequiredAtPa1 = plan.required_approver_roles.find((r) => !pa1Roles(plan).includes(r));
+  assert.ok(notRequiredAtPa1, 'the fixture must have a role PA1 does not demand');
+  for (const [who, re] of [
+    ['agent-loom-delivery', /is an AGENT/],
+    ['nobody-at-all', /is not in the registry/],
+  ]) {
+    const passport = {
+      ...PASSPORT,
+      pa1: { decision: 'approved', approvals: [...PASSPORT.pa1.approvals.filter((a) => a.role !== notRequiredAtPa1), { role: notRequiredAtPa1, by: who }] },
+    };
+    const f = evaluate(passport, plan, REGISTRY);
+    assert.ok(f.some((x) => new RegExp(notRequiredAtPa1).test(x) && re.test(x)),
+      `${who} in the ${notRequiredAtPa1} slot must be refused at PA1:\n${f.join('\n')}`);
+    assert.ok(f.some((x) => /recorded, not required at this stage/.test(x)),
+      'the finding must say the role was recorded rather than demanded');
+  }
+});
+
+test('pa1Roles is a floor plus what the plan declares, never more than the plan compiled', () => {
+  const base = { risk_tier: 'medium', required_approver_roles: ['product-owner', 'risk-second-line', 'compliance'] };
+  assert.deepEqual(pa1Roles(base), ['product-owner', 'risk-second-line']);
+  // a profile opts a role in…
+  assert.deepEqual(pa1Roles({ ...base, pa1_approver_roles: ['compliance'] }), ['compliance', 'product-owner', 'risk-second-line']);
+  // …but it can never bind a role the plan did not compile at all.
+  assert.deepEqual(pa1Roles({ ...base, pa1_approver_roles: ['shariah-committee'] }), ['product-owner', 'risk-second-line']);
+  // high tier adds the accountable executive, when compiled
+  assert.deepEqual(pa1Roles({ risk_tier: 'high', required_approver_roles: ['accountable-executive'] }), ['accountable-executive']);
+  assert.deepEqual(pa1Roles({ risk_tier: 'medium', required_approver_roles: ['accountable-executive'] }), []);
+});
+
+test('an islamic change binds the Shariah roles at PA1, not only at PA2', () => {
+  // The uae-bank and islamic-product profiles add Shariah approver roles AND Shariah PA1 sections.
+  // Requiring the analysis at PA1 while nobody with Shariah authority need approve it until PA2
+  // is incoherent, so those profiles now declare their roles pa1-binding.
+  const plan = {
+    risk_tier: 'high',
+    required_approver_roles: ['product-owner', 'risk-second-line', 'shariah-committee', 'shariah-board', 'shariah-compliance'],
+    pa1_approver_roles: ['shariah-committee', 'shariah-board', 'shariah-compliance'],
+  };
+  for (const r of ['shariah-committee', 'shariah-board', 'shariah-compliance']) {
+    assert.ok(pa1Roles(plan).includes(r), `${r} must bind at PA1`);
+  }
 });
 }
