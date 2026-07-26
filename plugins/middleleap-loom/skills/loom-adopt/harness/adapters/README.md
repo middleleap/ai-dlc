@@ -34,6 +34,52 @@ Archer, and the control catalog and gates do not change — only the adapter map
 is the whole point of the seam: the same Loom runs on a different platform stack because the
 adapter, not the core, speaks the vendor's dialect.
 
-Reference mappings live in `reference/` — copy one, point it at your system, and mount it.
-They are illustrative shapes, not turnkey integrations: the fetch-and-sign step that fills
-`activation_evidence` is the adopter's platform wiring.
+## Two directories, and the difference matters
+
+**`reference/`** holds mappings where the Loom ships **one worked example** of a system it expects
+most adopters to have in some form. Copy one, point it at your system, and mount it.
+
+| Reference mapping | System | Control | Closes |
+|---|---|---|---|
+| `github-branch-protection.json` | GitHub | `HG-0001` | Four-eyes is enforced by the forge, not by the agent |
+| `grc-control-register.json` | ServiceNow GRC | `OPS-READINESS` | The Loom's readiness declarations and the enterprise register do not drift |
+
+**`providers/`** holds roles where the institution genuinely **chooses**, and the alternatives sit
+side by side. This directory exists because `reference/` structurally could not hold a choice: it
+can carry at most **one** adapter per control (`AD-R05` refuses two on the same control, and CI
+mounts the whole directory), so a role with three plausible providers had nowhere to put the second
+and third. The layout encoded *the one true instance* while the canon claimed to name roles, not
+vendors — `HG-0008` honoured in the prose and broken in the filesystem.
+
+```
+providers/roles.json                          the roles, each naming its control + capability
+providers/sca/{snyk,trivy}.json               fills Q4-SUPPLY
+providers/hardened-runtime/{chainguard,internal-golden-images}.json   fills HG-0011
+```
+
+Nothing under `providers/` is mounted by default — **a catalog is an offer, not an installation.**
+The institution records its choice in `docs/governance/provider-selection.json` and copies the
+chosen file into `docs/governance/adapters/`. `scripts/provider-selection-check.mjs` enforces the
+join, including `PS-R06`: once a compiled plan requires a role's capability, having made *no*
+choice is a finding rather than a default.
+
+The base `regulated-bank` profile declares both capabilities at **high tier**, so on a high-tier
+change the choice is mandatory — the D6-register pattern, where the requirement comes from the
+profile and a pipeline edit cannot weaken it. `PS-R06` demands a recorded *decision*, not a live
+integration: an institution can honestly be mid-onboarding with a provider chosen and its probes
+not yet run, which is the `selected, not active` state.
+
+Adding a provider is the intended way to extend this: drop a file under `providers/<role>/`, keep
+the adapter contract, and state its `role_fit` honestly — every provider ships one line on what it
+is good at and one on where it is weak, so the choice is made with open eyes rather than sold.
+
+## One adapter, one control
+
+The supply-chain providers name `Q4-SUPPLY` and `HG-0011`, never both. That is `AD-R05`: two
+adapters sharing a control make their evidence interchangeable, so a probe of one mechanism appears
+to satisfy a claim it was never tested against. If two sources are genuinely needed for one control,
+make them one adapter with both negatives required. `PS-R03` is the same rule at selection time.
+
+Every supply-chain provider carries a **negative probe** (`tamper_probe`, `unsigned_image_probe`,
+`staleness_probe`). Fill it: an adapter whose activation evidence proves only that the API answered
+has not shown that the reconciliation bites. See `../loom/references/supply-chain-security.md` §1.

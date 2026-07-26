@@ -20,6 +20,16 @@ const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-cata
 
 const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
 
+/**
+ * Is an adapter's integration LIVE? Exported so provider-selection-check.mjs decides "active" by
+ * the same rule — two gates disagreeing about what activation means is how a seam gets reported
+ * green in one place and pending in another.
+ */
+export function isActive(adapter) {
+  const ae = adapter?.activation_evidence;
+  return Boolean(ae && Object.keys(ae).some((k) => !k.startsWith('_') && nonEmpty(ae[k]) && !/^ADOPT:/.test(ae[k])));
+}
+
 /** Findings and notices for one adapter. `controlIds` is the set of real catalog control ids. */
 export function evaluate(adapter, controlIds) {
   const findings = [];
@@ -36,9 +46,7 @@ export function evaluate(adapter, controlIds) {
   if (!Array.isArray(adapter?.evidence?.envelope_fields) || adapter.evidence.envelope_fields.length === 0) {
     findings.push(`${id}: evidence.envelope_fields must list the envelope's fields`);
   }
-  const ae = adapter?.activation_evidence;
-  const active = ae && Object.keys(ae).some((k) => !k.startsWith('_') && nonEmpty(ae[k]) && !/^ADOPT:/.test(ae[k]));
-  if (!active) notices.push(`${id}: declared, not active — no real activation_evidence yet (a wired seam, not a live control)`);
+  if (!isActive(adapter)) notices.push(`${id}: declared, not active — no real activation_evidence yet (a wired seam, not a live control)`);
   return { findings, notices };
 }
 

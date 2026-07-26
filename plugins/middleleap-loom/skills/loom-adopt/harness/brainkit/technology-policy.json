@@ -11,5 +11,21 @@
   ],
   "standards": [
     { "standard": "ADOPT: binding internal or external standard the institution adopts", "source": "ADOPT: source id" }
-  ]
+  ],
+  "registry": {
+    "_comment": "ADOPT: the enforcement seam for the lists above. In the Loom the AGENT picks the dependency, so the distinctive risk is not 'a package we chose has a CVE' but 'the agent chose a package nobody approved' — a hallucinated or slopsquatted name that resolves. SCA is structurally bad at this: it tells you a package is vulnerable, not that it should never have been selected. A curated registry closes it by construction — the resolver cannot fetch what the registry does not carry — which turns these lists from a document a reviewer checks into a boundary the build cannot cross. Chainguard Libraries is one instance of the role (Python/Java/JavaScript, built from source); an internal Artifactory/Nexus mirror with an allow-list is another. See ../../loom/references/supply-chain-security.md.",
+    "enforced": false,
+    "upstream": [
+      {
+        "ecosystem": "ADOPT: npm | pypi | maven | …",
+        "source": "ADOPT: the curated registry URL the resolver is pinned to",
+        "supplier": "ADOPT: the role instance (e.g. a hardened-libraries supplier, or your internal mirror)",
+        "fallback_to_public": "ADOPT: false — a fallback that silently reaches the public index is not a boundary"
+      }
+    ],
+    "resolver_config": [
+      "ADOPT: the file that pins the resolver, e.g. .npmrc / pip.conf / settings.xml — it belongs to CODEOWNERS, not to the agent"
+    ],
+    "attested_by": "ADOPT: the adapter that proves this is live — docs/governance/adapters/<id>.json, reconciled per adapters/README.md"
+  }
 }

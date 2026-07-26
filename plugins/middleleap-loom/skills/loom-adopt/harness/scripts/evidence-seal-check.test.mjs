@@ -173,7 +173,34 @@ test('a sealed dependency audit with a critical vulnerability fails', () => {
   const { dir } = realBundle();
   try {
     const m = resealed(dir, 'dependency-audit', { critical: 1, high: 0 });
-    assert.ok(evaluate(m, { baseDir: dir }).some((x) => /critical\/high vulnerabilities/.test(x)));
+    assert.ok(evaluate(m, { baseDir: dir }).some((x) => /sealed dependency audit: 1 critical/.test(x)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// The seal shares the Q4 gate's judgement rather than restating it. Before that, the seal held
+// its own critical===0 && high===0 rule, so a bundle calibrated by reachability cleared Q4 and
+// was then rejected here — two gates disagreeing about one artifact.
+test('a reachability-calibrated audit that clears Q4 also clears the seal', () => {
+  const { dir } = realBundle();
+  try {
+    const audit = {
+      critical: 0, high: 3,
+      reachability: { tool: 'demo-sca', method: 'transitive-call-graph', reachable: { critical: 0, high: 0 }, deferred_sla: '2099-01-01' },
+    };
+    const m = resealed(dir, 'dependency-audit', audit);
+    assert.deepEqual(evaluate(m, { baseDir: dir }).filter((x) => /dependency audit/.test(x)), []);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('an unreachable backlog past its SLA fails the seal too', () => {
+  const { dir } = realBundle();
+  try {
+    const audit = {
+      critical: 0, high: 3,
+      reachability: { tool: 'demo-sca', method: 'transitive-call-graph', reachable: { critical: 0, high: 0 }, deferred_sla: '2020-01-01' },
+    };
+    const m = resealed(dir, 'dependency-audit', audit);
+    assert.ok(evaluate(m, { baseDir: dir }).some((x) => /sealed dependency audit: the deferral SLA/.test(x)));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

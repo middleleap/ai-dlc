@@ -54,6 +54,7 @@ jobs:
           node scripts/adapter-evidence-check.mjs       # D5.3 — one adapter, one control; declared is not active
           node scripts/operational-readiness-check.mjs  # R1–R6 with freshness windows — stale drills block
           node scripts/adapter-check.mjs                 # enterprise adapters map to real catalog controls
+          node scripts/provider-selection-check.mjs     # one role, one chosen provider — mounted, and required-when-compiled
 
       - name: Runtime assurance gates (scheduled lane — also safe to run per PR)
         run: |
@@ -129,3 +130,25 @@ jobs:
           node-version: '22'
       - name: routine-qualified (exits 0 only for a qualifying routine claim)
         run: node scripts/routine-change-check.mjs --assert-routine --base origin/main
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DELIBERATELY NOT A JOB HERE: scripts/adoption-attest.mjs (rc.14 · WS5 · F7).
+#
+# It verifies the signed claim "this repository has adopted the Loom to stage N", and its central
+# rule is that no such claim may be produced while ANY mandatory item is still adopt-pending.
+#
+# That rule makes it the wrong shape for a per-PR gate on a FRESH adoption. A repo that has just run
+# adopt.mjs has ~23 adopt-pending items by design — the installer never fakes activation — so wiring
+# this in on day one gives every new adopter a permanently red build with no path to green except
+# completing the whole adoption. A gate that is red from the first commit is a gate that gets
+# deleted, and deleting it is worse than never adding it.
+#
+# Run it as a COMMAND while adopting (`node scripts/adoption-status.mjs` to see what is outstanding,
+# then `attest-adoption` once nothing is), and add it as a job here once your adoption is attested —
+# from that point it is exactly the right gate, because it fails if the adoption ever regresses.
+#
+#   - name: adoption attested (add once your adoption is complete)
+#     run: node scripts/adoption-attest.mjs
+#
+# The Loom's own CI asserts the NEGATIVE instead: its dry-run repo is half-adopted, so it proves a
+# signed report is impossible there. The positive path is covered by scripts/adoption-attest.test.mjs.
