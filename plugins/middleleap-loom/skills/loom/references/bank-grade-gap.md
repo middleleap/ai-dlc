@@ -88,6 +88,16 @@ measure against the shipping commit, so discovery → delivery → measurement c
 token-spend telemetry — a report, not a gate (cost is a signal for humans, never a merge
 control), the macro ring's first instrument).
 
+**The count moved from 57 to 68 at 2.0-rc.18, and not because eleven controls were built.** Ten
+Factory Floor gates had been running in CI with no catalog entry — enforced but unclaimed, and
+therefore invisible here *and* unreachable by the risk-proportionate gate runner, which selects
+only catalogued controls. Cataloguing them (plus the `ci-catalog-check` closure gate that now
+fails the build if a gate is ever added to CI without an entry) corrected the scorecard downward
+in honesty and upward in number. The floor's own cluster is graded in
+`factory-floor.md` §Honest state; the short version is that its git-side halves are mechanically
+validated, its decision-routing workstream is production-blocked pending an independent
+second-line review, and nothing is deployed.
+
 ## Six clusters, graded
 
 ### A · Control-plane enforcement (HG catalog)

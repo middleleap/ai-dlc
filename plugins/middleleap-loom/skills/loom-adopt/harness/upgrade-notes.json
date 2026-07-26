@@ -103,7 +103,8 @@
       "notes": [
         "Ten gates ran in CI with no control-catalog entry, so the risk-proportionate gate runner never selected them — including floor-only-check, which is what stops personal data crossing into the record. All are catalogued, and `ci-catalog-check` now fails the build if a gate is ever added to CI without one.",
         "`loom status` gained a --run flag: the Mechanism column is the catalog's grade, the Passing column is what your repository actually does. They are not the same thing and no longer look the same.",
-        "The installer writes .loom/adoption.json and no longer overwrites files you have edited. A customised gate or hook is preserved and reported, with the new upstream version dropped beside it as a .loom-new sidecar."
+        "The installer writes .loom/adoption.json and no longer overwrites files you have edited. A customised gate or hook is preserved and reported, with the new upstream version dropped beside it as a .loom-new sidecar.",
+        "The Factory Floor — the optional collaboration surface for people who never open a repository — is documented in the method canon for the first time (loom skill, references/factory-floor.md): the four planes, the three write classes, the freeze round trip, and an honest statement of what is and is not deployed. The machinery did not change; it was simply undocumented."
       ],
       "action_required": [
         "First upgrade onto a stamped adoption: files that differ from this bundle cannot be told apart from your edits, so ALL of them are preserved and reported as `unverifiable`. Reconcile the .loom-new sidecars, or re-run with --force if you know you never customised anything. Later upgrades know the difference and this will not recur."
