@@ -350,6 +350,144 @@
       "mechanism_ref": ".claude/hooks/test-tripwire.sh"
     },
     {
+      "control_id": "CI-CATALOG",
+      "objective": "Every gate the CI workflow runs has an entry in this catalog — the state of record cannot omit a control that is actually enforced, and the risk-proportionate gate runner cannot silently drop a gate the explicit workflow runs",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/ci-catalog-check.mjs",
+      "test_ref": "scripts/ci-catalog-check.test.mjs",
+      "lane": "pr",
+      "always": true,
+      "note": "The closure gate over the catalog itself. core/gate-runner.mjs selects ONLY catalogued controls, so an uncatalogued CI gate is a gate that vanishes the moment an adopter switches to the runner — this makes that divergence a build failure. Declared report-only tools (token-report) are exempted by an explicit, printed list, never silently"
+    },
+    {
+      "control_id": "FLOOR-ONLY",
+      "objective": "Catalog-C floor forms carry their write-class banner and the PII rule at the point of authoring, and a floor-only note never crosses into discovery/runs/ — the catalog where people write prose about people is the one nothing else ever reads",
+      "owner_role": "data-protection",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/floor-only-check.mjs",
+      "test_ref": "scripts/floor-only-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "floor/catalog-c/",
+        "discovery/runs/"
+      ],
+      "note": "Factory Floor WS3 · D3.3. Silent where no floor is adopted. The gate checks the template's banner and the boundary crossing — it cannot read meaning, so unstructured disclosure inside a floor note stays a human control (core/floor-project.mjs states the limit)"
+    },
+    {
+      "control_id": "FLOOR-KEEPER",
+      "objective": "Floor keepers hold no grant on the container where approval fields live (separation by grant, not by promise), and a paused or degraded floor is represented as paused rather than silently stale",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/floor-keeper-check.mjs",
+      "test_ref": "scripts/floor-keeper-check.test.mjs",
+      "lane": "pr",
+      "always": true,
+      "note": "Factory Floor WS6 · D6.3 + D6.4. `always` because both halves are FRESHNESS judgements — a stale keeper record and a missing degradation observation are failures a diff never touches. Silent where no floor is adopted"
+    },
+    {
+      "control_id": "APPROVAL-SURFACE",
+      "objective": "A floor approvals page matches the COMPILED control plan for its change — one section per compiled role, evidence in and out of the approver's reach, people resolving through the P6 map — and catalog-B decision-routed forms keep the section list of the git template they mirror",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/approval-surface-check.mjs",
+      "test_ref": "scripts/approval-surface-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "floor/approvals/",
+        "floor/catalog-b/",
+        "docs/governance/changes/",
+        "docs/governance/identity-map.json"
+      ],
+      "note": "Factory Floor WS5 · D5.1 + D5.4. The surface is where a human actually approves; a page that has drifted from the compiled plan collects the wrong signatures. Catalog B ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed"
+    },
+    {
+      "control_id": "PROJECTION-CAPABILITY",
+      "objective": "The floor projector's CREDENTIAL is observed — by a live negative probe, signed by an observer outside the subject's write authority — to be unable to write git; a declared read-only scope is documentation, a refused write is a control",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/projection-capability-check.mjs",
+      "test_ref": "scripts/projection-capability-check.test.mjs",
+      "lane": "pr",
+      "always": true,
+      "note": "Factory Floor WS1 acceptance. `always` because the probe's FRESHNESS is the control — an observation that has gone stale is exactly the privilege creep this gate exists to catch, and no diff announces it. The adapter-contract pattern, same shape as platform-activation-check"
+    },
+    {
+      "control_id": "FREEZE-STAMP",
+      "objective": "A discovery artifact frozen from a floor page still hashes to the digest its freeze stamp names — the frozen file a D-gate reads cannot be edited in place afterwards",
+      "owner_role": "engineering",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/freeze-stamp-check.mjs",
+      "test_ref": "scripts/freeze-stamp-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "discovery/runs/"
+      ],
+      "note": "Factory Floor WS4 · D4.1. Silent where no run carries stamps — an adopter who has not adopted the floor freezes nothing and their hand-authored runs are unaffected"
+    },
+    {
+      "control_id": "FLOOR-DRIFT",
+      "objective": "A floor page edited after its freeze cannot carry a NEW claim into the record — drift blocks claims dated at or after the instant it was observed, and never reaches back to a record already merged",
+      "owner_role": "engineering",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/drift-check.mjs",
+      "test_ref": "scripts/drift-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "discovery/runs/",
+        "docs/governance/floor-drift/"
+      ],
+      "note": "Factory Floor WS4 · D4.2, the other side of D4.1's seam. Drift ALONE does not fail the build — it is reported on every run including green ones; only a new claim against a drifted page fails"
+    },
+    {
+      "control_id": "TEMPLATE-PARITY",
+      "objective": "The guided floor form cannot drift from the git template it produces — each floor/templates/*.json is regenerated from its markdown source and any difference, including a stale source_digest, fails",
+      "owner_role": "engineering",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/template-parity-check.mjs",
+      "lane": "pr",
+      "paths": [
+        "floor/templates/",
+        "discovery/templates/",
+        "delivery/templates/"
+      ],
+      "note": "Factory Floor WS3 · D3.1. No test_ref: this gate's own regression suite is not yet written — the state is honest at mechanically-validated (the mechanism exists and blocks), but it is the one gate in this group with no negative test of its own. `--fix` regenerates"
+    },
+    {
+      "control_id": "IDENTITY-MAP",
+      "objective": "The P6 join — surface person id → IdP subject → registry identity — is sound and current: no service identities, no forbidden fields, unique both ways, and a fresh second-line reconciliation observation that the map still holds",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/identity-map-check.mjs",
+      "test_ref": "scripts/identity-map-check.test.mjs",
+      "lane": "pr",
+      "always": true,
+      "note": "Factory Floor P6 · D0.4. Closes approval-attestations' first stated residual: a compromised bridge holding a valid assertion for subject A could otherwise name registry identity B and every other check would pass. `always` because the reconciliation's freshness is the control. The RESOLUTION half runs per-approval inside product-approval-check"
+    },
+    {
+      "control_id": "ADAPTER-EVIDENCE",
+      "objective": "One adapter, one control: each evidence stream maps to exactly one catalog control, and a DECLARED adapter is never counted as an ACTIVE one",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/adapter-evidence-check.mjs",
+      "test_ref": "scripts/adapter-evidence-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/adapters/"
+      ],
+      "note": "Factory Floor WS5 · D5.3. The third of the three adapter-facing gates: adapter-check is well-formedness, platform-activation-check is the forge observation, this one is the arithmetic that keeps the streams separate"
+    },
+    {
       "control_id": "HG-0004",
       "objective": "Least-privilege agent identity, vaulted secrets, no shared credentials",
       "owner_role": "platform-admin",

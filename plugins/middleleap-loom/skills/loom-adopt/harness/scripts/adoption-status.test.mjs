@@ -5,7 +5,7 @@ import { generateKeyPairSync, sign } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { computeStatus, unresolvedMarkers } from './adoption-status.mjs';
+import { computeStatus, unresolvedMarkers, runMechanism } from './adoption-status.mjs';
 import { evaluate, attestationHash } from './adoption-attest.mjs';
 
 // A tiny adopted repo: a catalog + some governance files (optionally still carrying ADOPT markers).
@@ -39,6 +39,73 @@ test('computeStatus projects the five stages from the catalog; a validated code 
     assert.equal(a.platform, false);       // bundle ships 0 platform-enforced
     assert.equal(a.organisation, false);
     assert.equal(s.adoptPending, false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// --- the catalog grade is not a repository verdict (the `passing` column) ------------------
+//
+// The bug these cover: `validated` reads the CATALOG, so a fresh adoption with nine red gates
+// still printed a full column of "yes". Both facts are true and only one is a green board, so
+// `passing` must be a separate, EXECUTED answer that can never be inferred from the grade.
+
+const spawnStub = (byRef) => (_exec, [ref]) => ({ status: byRef[ref] ?? 0 });
+
+test('passing is undefined unless --run — the projection never implies it asked', () => {
+  const dir = repo({ controls: [{ control_id: 'A', state: 'mechanically-validated', mechanism_ref: 'scripts/a.mjs' }] });
+  try {
+    const a = computeStatus(dir).capabilities[0];
+    assert.equal(a.validated, true);
+    assert.equal(a.passing, undefined);
+    assert.equal(computeStatus(dir).ran, false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('--run reports a FAILING gate whose catalog grade is mechanically-validated', () => {
+  // The exact shape of the original defect, asserted: graded yes, passing NO, in one row.
+  const dir = repo({
+    controls: [{ control_id: 'A', state: 'mechanically-validated', mechanism_ref: 'scripts/a.mjs' }],
+    files: { 'scripts/a.mjs': '// present so it is runnable\n' },
+  });
+  try {
+    const s = computeStatus(dir, { run: true, spawn: spawnStub({ 'scripts/a.mjs': 1 }) });
+    const a = s.capabilities[0];
+    assert.equal(a.validated, true, 'the catalog still grades it validated');
+    assert.equal(a.passing, false, 'but it does NOT pass in this repository');
+    assert.deepEqual(s.failing, ['A']);
+    assert.equal(s.ran, true);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('--run reports a passing gate as passing', () => {
+  const dir = repo({
+    controls: [{ control_id: 'A', state: 'mechanically-validated', mechanism_ref: 'scripts/a.mjs' }],
+    files: { 'scripts/a.mjs': '\n' },
+  });
+  try {
+    const s = computeStatus(dir, { run: true, spawn: spawnStub({ 'scripts/a.mjs': 0 }) });
+    assert.equal(s.capabilities[0].passing, true);
+    assert.deepEqual(s.failing, []);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('nothing runnable to ask returns null, never true — "not asked" must not look like "passed"', () => {
+  const never = () => { throw new Error('must not spawn'); };
+  // A documented control (no mechanism), a shell hook, a mechanism file that is not present,
+  // and an execute:false control enforced via another gate: all null, none of them true.
+  assert.equal(runMechanism({ control_id: 'D', doc_ref: 'docs/x.md' }, '/nowhere', never), null);
+  assert.equal(runMechanism({ mechanism_ref: '.claude/hooks/pii-guard.sh' }, '/nowhere', never), null);
+  assert.equal(runMechanism({ mechanism_ref: 'scripts/absent.mjs' }, '/nowhere', never), null);
+  const dir = repo({ controls: [], files: { 'scripts/a.mjs': '\n' } });
+  try {
+    assert.equal(runMechanism({ mechanism_ref: 'scripts/a.mjs', execute: false }, dir, never), null);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a spawn that cannot run is null, not a pass — a crashed probe never reads as green', () => {
+  const dir = repo({ controls: [], files: { 'scripts/a.mjs': '\n' } });
+  try {
+    assert.equal(runMechanism({ mechanism_ref: 'scripts/a.mjs' }, dir, () => ({ error: new Error('ENOENT') })), null);
+    assert.equal(runMechanism({ mechanism_ref: 'scripts/a.mjs' }, dir, () => ({ status: null })), null);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

@@ -102,10 +102,11 @@ and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (
 - **Brand (D7):** edit `discovery/brand/design.md` — entity name, banner, and the token
   *values* (never the token *names*; everything downstream reads names). If the org's brand
   lives elsewhere (e.g. a design-system skill), transcribe its values into the tokens.
-- **Register (D6):** replace the example records in `docs/governance/data-risk-register/`
-  with the organisation's regulation → risk → control → residual chain, behind the same JSON
-  shape (documented in its README). Until then the example register keeps D6 green so the
-  pipeline is exercisable end to end.
+- **Register (D6):** the installer does **not** place a register — a register it wrote would
+  assert risks nobody accepted. Copy the worked example in first
+  (`cp -r harness/register-example/ docs/governance/data-risk-register/`) so the pipeline is
+  exercisable end to end, then replace its records with the organisation's own regulation → risk
+  → control → residual chain behind the same JSON shape (documented in its README).
 
 ## 3. Fill the ADOPT markers
 
@@ -127,14 +128,44 @@ has none yet, write the Commands / Conventions / Do-Not sections before running 
 
 ## 4. Verify the adoption — evidence, not vibes
 
+The bundled suites must pass exactly as copied. This is the one step with no "expected red":
+
 ```bash
-node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs   # bundled suites must pass as copied
-node scripts/discovery-link-check.mjs            # waist gate runs (green on an empty backlog)
-node scripts/control-plane-check.mjs             # control-plane gate (green once CODEOWNERS is filled)
-node scripts/model-provenance-check.mjs          # model-provenance gate (green on the demo manifest)
-node scripts/evidence-seal-check.mjs             # evidence-seal gate (green on the demo manifest)
-node scripts/data-lifecycle-check.mjs            # data-lifecycle gate (green on the demo manifest)
-node scripts/operations-signal-check.mjs         # Run→Discovery feedback gate (green on empty or the demo log)
+node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+```
+
+**A fresh adoption is deliberately not all-green, and the reds are the work list.** The gates
+fail closed: a control with nothing behind it yet fails rather than passing vacuously. Run them
+and read the output — each failing gate names the file it wants and why:
+
+```bash
+node scripts/ci-catalog-check.mjs                # GREEN — every CI gate is in the control catalog
+node scripts/control-catalog-check.mjs           # GREEN — the state of record is not overstated
+node scripts/data-lifecycle-check.mjs            # GREEN on the shipped demo lifecycle
+node scripts/operations-signal-check.mjs         # GREEN on an empty or demo signal log
+
+node scripts/discovery-link-check.mjs            # RED until you create docs/backlog.yaml (step 1
+                                                 #   lists it; `milestones: []` is valid and passes)
+node scripts/control-plane-check.mjs             # RED until CODEOWNERS names real teams (step 5)
+node scripts/model-provenance-check.mjs          # RED until you adapt harness/evidence-example/
+node scripts/evidence-seal-check.mjs             #   into docs/governance/evidence/ (see below)
+node scripts/operational-readiness-check.mjs     # RED until you run the drills and date them
+node scripts/product-eval-check.mjs              # RED until a release links its discovery hand-off
+node scripts/sast-check.mjs                      # RED until your SAST/SCA scanners write their
+node scripts/supply-chain-check.mjs              #   reports (supply-chain-security.md)
+```
+
+The four evidence-shaped gates want fixtures the installer does **not** copy, because a
+manifest the installer wrote would be evidence about nothing: adapt
+`harness/evidence-example/` into `docs/governance/evidence/` (it carries a complete sealed
+manifest, eval reports, SBOM, SARIF and provenance to model yours on), and the
+`operational-readiness` dates only become real when you have actually exercised the drills.
+
+To see the whole board at once, including what is adopter-side and cannot be closed here:
+
+```bash
+node scripts/adoption-status.mjs        # add --run to check what actually passes in THIS repo,
+                                        # not just what the catalog grades
 ```
 
 Then prove the pipeline end to end: run the `discovery` skill on a small real (or synthetic)
