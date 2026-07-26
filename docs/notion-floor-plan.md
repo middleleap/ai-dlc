@@ -160,8 +160,12 @@ and availability risk — what it carries **none of** is governance authority.
   **→ the git half SHIPPED** in loom `2.0.0-rc.13`: `core/floor-export.mjs` is the conversion as a
   pure function — no network call, no clock, no vendor SDK — and `scripts/freeze-stamp-check.mjs`
   is the gate that catches a frozen artifact edited in place. Both halves of the worked example
-  ship: a page that exports, and a page that must **abort**. What still needs a workspace is the
-  fetching and the PR-opening around it.
+  ship: a page that exports, and a page that must **abort**. `core/floor-fetch.mjs` adds the fetching half:
+  it walks a page the way the API actually serves it — paginated block lists, children behind a
+  separate call — and assembles the tree the exporter consumes. Still no network call in the
+  harness: `request` is injected, so the token lives in the caller's closure. Proved against
+  recorded response shapes; the digest a fetched page produces is **byte-identical** to the
+  hand-authored one. What still needs a workspace is the live call and the PR-opening.
 - **D4.2** **Drift, narrowed**: drift never retroactively invalidates the merged git record —
   but it **blocks new freeze and approval claims** against the out-of-sync page until
   re-frozen.
