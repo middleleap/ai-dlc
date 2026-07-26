@@ -30,6 +30,7 @@
     "product-owner",
     "risk-second-line"
   ],
+  "pa1_approver_roles": [],
   "required_evidence": [
     "control-plane",
     "dependency-audit",
@@ -102,8 +103,8 @@
       "profile": "uae-bank",
       "kind": "jurisdiction",
       "version": null,
-      "digest": "sha256:5f3cf839b9af6d4f7cfbbf20d7f8f3a053a9c2c316550c845f86e4dc4a631cbe"
+      "digest": "sha256:d9145e558c731bc6b2f703ae8da44e4a8453a8fec49d1bd2cdd65c88eb50c624"
     }
   ],
-  "plan_hash": "85f13191152a72831c75f6a24155fda4da86c43cdaf4b3dc73f209523d7b0074"
+  "plan_hash": "ca64b2e1bf1cac7c2020b255cb021a1b48efb29d79140c40af28ccd95ae86228"
 }
