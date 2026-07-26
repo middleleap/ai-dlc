@@ -33,31 +33,51 @@ data-governance.md does not match its freeze stamp
 — the record was edited after the freeze, so re-freeze it rather than editing in place
 ```
 
-## What is honestly simulated
+## The substituted link, and closing it
 
-**One link is substituted: the transport.** `core/floor-fetch.mjs` — the module that walks the
-vendor's REST API — **did not run**. `api.notion.com` is denied by this environment's egress
-policy, and the proxy's own documentation is explicit that such a denial is to be reported rather
-than routed around. So the live content arrived through the **MCP connector**, which is a
-sanctioned path but returns Notion-flavored *Markdown* rather than raw block JSON.
+The first run substituted the **transport**: `core/floor-fetch.mjs` could not run because
+`api.notion.com` was denied by the environment's egress policy, and such a denial is to be
+reported rather than routed around. Content arrived through the **MCP connector** — a sanctioned
+path, but one returning Notion-flavored *Markdown* rather than raw block JSON, which
+`nfm-bridge.mjs` converts back.
 
-`nfm-bridge.mjs` converts that back into the block tree the exporter consumes. It is **deliberately
-not part of the shipped harness**: its fidelity is lower than the API's by construction, and a
-digest produced through it is *not* the digest the shipped path would produce for the same page.
-Two adapters producing two digests for one page is a governance problem, not a convenience — so the
-bridge lives here, in a simulation directory, and nowhere else.
+**The policy was then changed and the real path ran.** `floor-fetch.mjs` walked the live REST API
+with an integration token: 36 blocks read, 26 top-level, exit 0.
 
-**Therefore still unproven:** pagination, the separate `has_children` fetch, error classification,
-and the `Notion-Version` pin — everything `floor-fetch.mjs` exists to do. Closing that needs
-`api.notion.com` allowed through the egress policy, or a local run:
-
-```bash
-NOTION_TOKEN=… node core/floor-fetch.mjs <page-id> <notion-version>
 ```
+digest via REST API   sha256:2755e0006a3665ee…
+digest via bridge     sha256:2755e0006a3665ee…
+4157 bytes · 66 lines · cmp reports no differences
+```
+
+**I had written here that the bridge would produce a different digest. It does not** — for this
+page the two paths are byte-identical, which is a stronger result than the one argued for. What it
+establishes: the vendor's Markdown serialization lost nothing the exporter reads for content of
+this shape. What it does **not** establish: that the paths agree in general. This page has no
+nested lists, no colours, no underline, no mentions and no equations, and NFM represents some of
+those differently or not at all.
+
+So the bridge still stays out of the shipped harness — but for the narrower and more honest reason
+that **nothing verifies the two paths agree**, rather than the claim that they disagree.
+
+**What the live run then found.** The first attempt failed with `403 error: the surface refused the
+request`, and that message was wrong: the 403 came from the egress proxy, not from Notion, because
+Node's built-in `fetch` ignores `HTTPS_PROXY` unless `NODE_USE_ENV_PROXY=1` is set. The module
+blamed the vendor for a firewall. `classify()` now distinguishes a response carrying no
+`{ object: "error", code }` body and names the proxy, the egress policy and the Node flag; two
+regression tests cover both directions.
+
+**Still unexercised:** pagination and the cursor guards — this page fits in one page of results —
+and every error branch except the two hit by accident. The `has_children` recursion *was*
+exercised: both tables are children fetched separately.
 
 **Everything downstream of the fetch is the shipped code, unmodified**: `floor-export.mjs`
 produced the markdown and the digest, `freezeStamp()` produced the stamp, and
 `scripts/freeze-stamp-check.mjs` — the same command CI runs — produced both verdicts.
+
+```bash
+NODE_USE_ENV_PROXY=1 NOTION_TOKEN=… node core/floor-fetch.mjs <page-id> 2022-06-28
+```
 
 ## Files
 

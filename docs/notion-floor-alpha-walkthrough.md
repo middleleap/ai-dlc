@@ -168,21 +168,54 @@ happened rather than asserted — full output in `simulations/notion-e2e/run-tra
 Frozen digest `sha256:2755e000…`, over 26 blocks — two tables of five rows, five headings, four
 to-dos, two callouts, a fenced code block, a divider, three list types, four paragraphs.
 
-**One link was substituted, and it is named rather than glossed.** `core/floor-fetch.mjs` did not
-run: `api.notion.com` is denied by the environment's egress policy, and that denial is to be
-reported, not routed around. The content came through the MCP connector, which returns
-Notion-flavored Markdown rather than raw block JSON, so a small bridge converts it back. That
-bridge is **not** in the shipped harness and must not be — its fidelity is lower than the API's,
-and two adapters producing two digests for one page is a governance problem. Everything downstream
-of the fetch is shipped code, unmodified.
+**Then the substituted link was closed.** The first run used a bridge, because `api.notion.com` was
+denied by the environment's egress policy. Once the policy was changed, `core/floor-fetch.mjs` ran
+against the live REST API with an integration token — **36 blocks read, 26 top-level**, exit 0.
+
+**I predicted the two digests would differ. They are byte-identical.**
+
+```
+digest via REST API  sha256:2755e0006a3665ee…
+digest via bridge    sha256:2755e0006a3665ee…
+4157 bytes, 66 lines, identical                cmp: no differences
+```
+
+That is a stronger result than the one I argued for, and it is worth being precise about what it
+does and does not establish. It says the vendor's Markdown serialization lost nothing the exporter
+reads **for this page** — quotes, headings, two tables with header rows, to-dos, a fenced code
+block, callouts with emoji icons, three list types, inline code and bold, and an escaped pipe
+inside a table cell. It does **not** say the two paths agree in general: this page exercises no
+nested lists, no colours, no underline, no mentions or equations, and NFM represents some of those
+differently or not at all. The bridge still stays out of the shipped harness, but the reason is now
+narrower and more honest — not *"it produces a different digest"*, which turned out to be false
+here, but *"nothing verifies that it won't"*.
+
+### The defect the first live call found
+
+The very first attempt failed with `403 error: the surface refused the request` — and that message
+was wrong. The 403 came from the **egress proxy**, not from Notion: Node's built-in `fetch` does
+not read `HTTPS_PROXY` unless `NODE_USE_ENV_PROXY=1` is set. The response carried no
+`{ object: "error", code }` body, and the module blamed the vendor anyway, which would send an
+operator to the integration-permissions screen to debug a firewall.
+
+`classify()` now tells the two shapes apart and names the proxy, the egress policy and the Node
+flag. Two regression tests cover it — one that a non-vendor body is not blamed on the vendor, one
+that a genuine `restricted_resource` still reads as a sharing problem.
 
 ## 7 · What is still unproven
 
 Stated plainly, because a walkthrough that oversells is worse than none:
 
-- **`floor-fetch.mjs` has never made a live API call.** Pagination, the separate `has_children`
-  fetch, and the digest end-to-end are all still only proven against recorded shapes. The MCP
-  connector returns Notion-flavored Markdown, not raw block JSON, so it cannot stand in.
+- **`floor-fetch.mjs` has now made live calls, but a narrow set of them.** One page, one workspace,
+  one API version, on a page small enough to fit in a single page of results — so the **pagination
+  path and the cursor guards are still unexercised**, and so is every error branch except the two
+  hit by accident (a proxy 403 and a genuine `object_not_found` from an unshared integration). The
+  `has_children` recursion *was* exercised: the two tables are children fetched separately, and
+  they render correctly.
+- **The token used held write capabilities.** The integration had *Insert content* and *Update
+  content* enabled. A freeze only ever reads, so a freezer's token holding a write path is
+  over-privileged (HG-0004) — noted in the module and not yet enforced anywhere, because nothing
+  in the harness can see what a token is allowed to do.
 - **No gate verifies P1's signatories** resolve to registry identities holding the named roles and
   outside `builders`. It is asserted in prose and checked by eye.
 - **The live record is still unsigned.** `notion-floor-residency-review.md` carries two `AWAITING`

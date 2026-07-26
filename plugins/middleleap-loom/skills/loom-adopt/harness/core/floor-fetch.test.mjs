@@ -161,6 +161,34 @@ test('each API error code is explained in the terms an operator needs', async ()
   }
 });
 
+// Found by the FIRST LIVE RUN, not by a fixture: an egress proxy answered 403 with its own body,
+// and the module reported "the surface refused the request" — blaming Notion for a local network
+// policy. An operator chasing integration permissions when the real fault is a firewall can lose an
+// afternoon to that sentence.
+test('a non-2xx that is not the vendor\'s error shape is not blamed on the vendor', async () => {
+  for (const body of [{ error: 'forbidden' }, 'Access Denied', { object: 'error', status: 403 }, {}]) {
+    const { page, findings } = await tryFetchPage('pg1', {
+      notionVersion: VERSION,
+      request: async () => ({ status: 403, body: typeof body === 'string' ? { html: body } : body }),
+    });
+    assert.equal(page, null);
+    assert.match(findings[0], /not the Notion API/, JSON.stringify(body));
+    assert.match(findings[0], /proxy, gateway or captive portal/);
+    assert.match(findings[0], /NODE_USE_ENV_PROXY=1/);
+    // and it must NOT send the operator to the permissions screen
+    assert.doesNotMatch(findings[0], /share the page with the integration/);
+  }
+});
+
+test('a real vendor error is still classified as one', async () => {
+  const { findings } = await tryFetchPage('pg1', {
+    notionVersion: VERSION,
+    request: async () => ({ status: 403, body: { object: 'error', status: 403, code: 'restricted_resource', message: 'x' } }),
+  });
+  assert.match(findings[0], /share the page with the integration/);
+  assert.doesNotMatch(findings[0], /not the Notion API/);
+});
+
 // A 403 and a 404 look the same from a status line and mean very different things about who did
 // what wrong — the most common real-world confusion when wiring an integration for the first time.
 test('restricted_resource and object_not_found do not read the same', async () => {

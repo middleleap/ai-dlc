@@ -47,6 +47,18 @@ const abort = (reason, at) => { throw new FetchError(reason, at); };
 function classify(res, at) {
   const code = res?.body?.code;
   const message = res?.body?.message || '';
+  // NOT EVERY NON-2XX COMES FROM THE VENDOR. A corporate egress proxy, a service mesh or a captive
+  // portal answers with its own status and its own body — and the first live run of this module hit
+  // exactly that: a 403 with no `code`, reported as "the surface refused the request", which blamed
+  // Notion for a local network policy. An operator chasing a permissions problem that is really a
+  // firewall problem can lose an afternoon, so the shapes are told apart before anything is claimed.
+  if (res?.body?.object !== 'error' || !code) {
+    abort(`${res?.status ?? '?'} from something that is not the Notion API — the response carries no `
+      + `\`{ object: "error", code }\` body, so it came from a proxy, gateway or captive portal in `
+      + `front of it, NOT from the surface. Check egress policy and proxy trust before touching `
+      + `integration permissions. Node's built-in fetch ignores HTTPS_PROXY unless you set `
+      + `NODE_USE_ENV_PROXY=1 (Node >= 22.21), which is the usual cause.`, at);
+  }
   const named = {
     unauthorized: 'the integration token was rejected — it is missing, wrong, or revoked',
     restricted_resource: 'the token is valid but the integration has no access to this page — share the page with the integration',
@@ -262,6 +274,14 @@ export async function tryFetchPage(pageId, ctx) {
  * A `request` implementation over global fetch — the ONE place a real network call is made, kept
  * out of `fetchPage` so the walk stays testable. The caller supplies the token; it is closed over
  * here and never passed to the walker.
+ *
+ * BEHIND A PROXY, SET `NODE_USE_ENV_PROXY=1`. Node's built-in fetch does not read `HTTPS_PROXY`
+ * on its own, so in a proxied network — which is most regulated institutions — every call here
+ * either hangs or comes back with the proxy's own refusal rather than the vendor's. That is not a
+ * hypothetical: it is how the first live run of this module failed, and `classify()` now names it.
+ * The token is also least-privilege by intent: a freeze only ever READS, so the integration behind
+ * this token should hold read content and nothing else — an insert/update capability on a freezer
+ * is a write path nobody asked for (HG-0004).
  */
 export function httpRequest({ token, baseUrl = 'https://api.notion.com' } = {}) {
   if (!token) throw new Error('httpRequest needs a Notion integration token');
