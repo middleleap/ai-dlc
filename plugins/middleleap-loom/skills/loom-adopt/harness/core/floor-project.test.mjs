@@ -177,7 +177,10 @@ test('separators cannot walk an identifier past the filter, and the other shapes
   assert.equal(scan('AE070331234567890123456').id, 'uae-iban');
   assert.equal(scan('AE070001234567890123456'), null, 'synthetic IBANs (bank code 000) are fine');
   assert.equal(scan('fatima@example.ae').id, 'email-address');
-  assert.equal(scan('-----BEGIN OPENSSH PRIVATE KEY-----').id, 'private-key');
+  // The PEM header only, with no key material after it — it is the input that proves the projection
+  // filter catches a private-key block, so the string has to appear literally. The marker below is
+  // line-scoped (it must sit ON the matching line) and exempts nothing else in this file.
+  assert.equal(scan('-----BEGIN OPENSSH PRIVATE KEY-----').id, 'private-key'); // loom-allow-secret
   assert.equal(scan('ghp_abcdefghijklmnopqrstuvwxyz01').id, 'bearer-token');
   assert.equal(scan('STORY-12 pending M1'), null);
 });
