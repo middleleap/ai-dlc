@@ -70,6 +70,9 @@ jobs:
           cp -r "$H/approval-surface-example" "$A/approval-surface-example"
           cp -r "$H/floor-keeper-example" "$A/floor-keeper-example"
           cp -r "$H/adapter-evidence-example" "$A/adapter-evidence-example"
+          # rc.18 WS0 · D0.1: staged HERE with every other example, because $H is repo-root-relative
+          # and everything below `cd "$A"` runs from the dry-run destination.
+          cp -r "$H/residency-example" "$A/residency-example"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
@@ -126,6 +129,36 @@ jobs:
           node scripts/control-plane-check.mjs
           node scripts/template-parity-check.mjs   # floor forms in step with the git templates
           node scripts/identity-map-check.mjs      # P6 — the map that says WHO a signed subject is
+          # rc.18 WS0 · D0.1/P1: the residency sign-off gate. The fixture was staged above, before
+          # the `cd "$A"` — paths here are destination-relative. Staged with a real fixture from the
+          # start rather than wired blind — a gate whose first CI run has nothing to read is the
+          # exact failure this PR series existed to close. BOTH directions asserted below.
+          mkdir -p docs/governance
+          cp residency-example/residency-review.md docs/governance/residency-review.md
+          node scripts/residency-check.mjs | tee /tmp/rs.txt
+          grep -q 'SIGNED' /tmp/rs.txt || {
+            echo "::error::the residency gate is not reading a signed record — it is passing on nothing"; exit 1; }
+          # 1 · unsigned while a floor is in use must FAIL — this is §11's blocking statement, and
+          #     it is the whole reason the gate exists.
+          cp residency-example/residency-review.unsigned.md docs/governance/residency-review.md
+          if node scripts/residency-check.mjs; then
+            echo "::error::a floor is in use with an UNSIGNED residency record and the gate passed"; exit 1; fi
+          # 2 · a builder signing must FAIL — §11 says builders may not sign. The REASON is asserted,
+          #     not just the exit code: a gate that fails for the wrong reason will pass for the
+          #     wrong reason later, and eng-omar also trips "does not hold the role".
+          cp residency-example/residency-review.builder-signed.md docs/governance/residency-review.md
+          if node scripts/residency-check.mjs 2>/tmp/rs-b.txt; then
+            echo "::error::a builder signed the residency record and the gate passed"; exit 1; fi
+          grep -q 'builders group' /tmp/rs-b.txt || {
+            echo "::error::the builder signature was refused, but not for being a builder"; cat /tmp/rs-b.txt; exit 1; }
+          # 3 · one person holding both roles must FAIL — four eyes, not one pair wearing two hats.
+          cp residency-example/residency-review.one-person.md docs/governance/residency-review.md
+          if node scripts/residency-check.mjs 2>/tmp/rs-o.txt; then
+            echo "::error::one identity signed both residency roles and the gate passed"; exit 1; fi
+          grep -q 'signed as both' /tmp/rs-o.txt || {
+            echo "::error::the double signature was refused, but not for being one person"; cat /tmp/rs-o.txt; exit 1; }
+          cp residency-example/residency-review.md docs/governance/residency-review.md
+          node scripts/residency-check.mjs > /dev/null   # green again after the restores
           node scripts/freeze-stamp-check.mjs      # D4.1 — a frozen artifact still matches its stamp
           # rc.15 WS4 · D4.2: the drift gate passed VACUOUSLY here — "nothing has been observed" —
           # which is the same hole freeze-stamp-check had before a real artifact was staged beside
