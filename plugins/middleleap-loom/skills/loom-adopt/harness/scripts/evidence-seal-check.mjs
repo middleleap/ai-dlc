@@ -21,6 +21,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { evaluate as evaluateSarif } from './sast-check.mjs';
+import { checkAudit } from './supply-chain-check.mjs';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 import { pathToFileURL } from 'node:url';
 
@@ -71,7 +72,9 @@ export const SEMANTICS = {
   lineage: (a) => (a.emits_lineage === true && a.insert_only === true) ? [] : ['sealed lineage evidence does not show insert-only stores emitting lineage'],
   sast: (a) => evaluateSarif(a).map((f) => `sealed SAST report: ${f}`),
   sbom: (a) => (a.bomFormat === 'CycloneDX' && Array.isArray(a.components) && a.components.length > 0) ? [] : ['sealed SBOM is empty or not CycloneDX'],
-  'dependency-audit': (a) => (a.critical === 0 && a.high === 0) ? [] : ['sealed dependency audit shows critical/high vulnerabilities'],
+  // Shares the Q4 gate's judgement rather than restating it: a bundle that cleared Q4 by
+  // reachability calibration must not then be rejected by the seal for the raw totals.
+  'dependency-audit': (a) => checkAudit(a).map((f) => `sealed dependency audit: ${f}`),
   provenance: (a) => (Array.isArray(a.subject) && a.subject.length > 0 && a.subject.every((s) => s?.digest?.sha256)
     && (a.predicate?.builder?.id || a.builder?.id)) ? [] : ['sealed provenance lacks subject digests or a builder'],
   // rc.8 hardening: a sealed brainkit-provenance record must NAME the BrainKit it claims (id,
