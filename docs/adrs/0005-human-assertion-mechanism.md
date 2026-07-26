@@ -244,6 +244,22 @@ it can mint an accepted issuer, and therefore mint approvers. It belongs under t
 second-line CODEOWNERS ownership in the tree, alongside `release-hold.json` — not with the sync
 service's configuration, and never within reach of any of the four seam identities.
 
+**This decision presumes the collaboration surface is joined to the institution's directory, and
+that presumption was unstated.** Every option above assumes an identity provider exists on the
+surface side: Option A authenticates against it, Option B observes assertions issued by it, and the
+P6 identity map exists to join a surface-side subject to a registry identity. On a workspace
+**without SAML SSO and SCIM** — which on the incumbent vendor means anything below the enterprise
+tier — none of that is available. There is no issuer, so `subject.assertion` has nothing to bind
+to, and the identity map has nothing on the surface side to join. Confirmed against a live
+workspace on 26 Jul 2026 (`notion-floor-alpha-walkthrough.md` §8), where the SSO/SCIM panel
+displays identifiers for a capability the plan cannot actually use.
+
+The consequence is a **procurement precondition, not an engineering one**: enterprise-tier SSO plus
+SCIM provisioning is a prerequisite of this ADR, and it belongs in P2 alongside the residency and
+outsourcing questions rather than being discovered during WS2. A pilot on a lower tier can exercise
+the *transcription* path, since that signs custody only — but it cannot produce a subject
+assertion, and any envelope it emits is a draft artifact by construction.
+
 **A defect in the D2.4 module that this decision surfaced — now FIXED (loom `2.0.0-rc.13`).**
 As first written, `verifySubjectAssertion` rejected an assertion whose
 `subject.assertion.expires_at` was earlier than the *verification* time. An OIDC ID token's

@@ -5,7 +5,10 @@
 approved. **WS5 (decision routing) is blocked for production** until the approval-identity and
 subject-binding corrections in §0 land and pass an independent second-line review.
 **Companions:** `docs/research/notion-software-factory-collaboration-2026-07.md` (governing
-rules §4.1, storage split §6, template catalog §6c) · `docs/loom-factory-floor.html`.
+rules §4.1, storage split §6, template catalog §6c) · `docs/loom-factory-floor.html` ·
+`docs/loom-notion-architecture.html` (how the three planes fit together) ·
+`docs/notion-floor-alpha-walkthrough.md` (a simulated feature walked end to end — it found a real
+PA1 defect, and §7 lists what it did **not** prove).
 
 The central intent:
 

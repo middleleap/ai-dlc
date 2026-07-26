@@ -52,6 +52,12 @@ jobs:
           # rc.13 WS4: the export example, so the deterministic exporter's positive AND abort
           # cases run in the adopted layout too (bundle demonstration data, not adopter machinery).
           cp -r "$H/floor-export-example" "$A/floor-export-example"
+          # rc.13 WS4 · D4.1: a real frozen artifact + its stamp, so freeze-stamp-check verifies an
+          # actual digest instead of passing vacuously on a layout that has frozen nothing. The
+          # gate is silent where no run carries stamps, which is exactly why one has to be staged.
+          mkdir -p "$A/discovery/runs/accounts-elsewhere/.freeze"
+          cp "$H/freeze-example/data-governance.md" "$A/discovery/runs/accounts-elsewhere/data-governance.md"
+          cp "$H/freeze-example/data-governance.freeze.json" "$A/discovery/runs/accounts-elsewhere/.freeze/data-governance.json"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
