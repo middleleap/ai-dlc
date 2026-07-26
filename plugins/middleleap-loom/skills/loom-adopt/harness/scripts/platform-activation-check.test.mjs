@@ -69,6 +69,14 @@ test('a tampered observation fails the signature — editing after signing break
   assert.ok(ev(r).some((f) => /does NOT verify/.test(f)));
 });
 
+test('an egress_proxy observation passes — HG-0011/HG-0012 can graduate', () => {
+  assert.deepEqual(ev(record({
+    platform: 'crabtrap', satisfies_control: 'HG-0011', mechanism: 'egress_proxy',
+    observation: { approval_mode: 'llm', judge_unavailable_fallback: 'deny', network_policy: 'default-deny egress; proxy is the sole exception' },
+    bypass_test: { attempted: 'outbound HTTPS from the agent runtime with proxy variables unset', result: 'rejected', tested_at: iso(3) },
+  })), []);
+});
+
 test('an unknown mechanism fails', () => {
   assert.ok(ev(record({ mechanism: 'vibes' })).some((f) => /mechanism must be one of/.test(f)));
 });

@@ -1,0 +1,27 @@
+{
+  "_comment": "REFERENCE SHAPE — an egress-proxy activation observation (the optional agent-egress-control component; see ../../../loom/references/agent-egress-control.md). CrabTrap is one instance of the role; the record shape is vendor-neutral. This example satisfies HG-0011: the bypass test proves the CHOKEPOINT, not the policy — an agent runtime with the proxy variables unset got no route out. HG-0012's egress allow-list needs its OWN record, whose bypass_test is a denied retrieval source during a build/eval run. observed_at / tested_at / signature are ADOPT placeholders: a real record is produced against your live gateway and signed by an observer identity outside the coding agent's write authority.",
+  "platform": "crabtrap",
+  "repository": "your-org/your-service",
+  "satisfies_control": "HG-0011",
+  "mechanism": "egress_proxy",
+  "observation": {
+    "deployment": "onshore, inside the institution boundary (NOT a managed PaaS — HG-0011 is a residency decision)",
+    "approval_mode": "llm",
+    "judge_unavailable_fallback": "deny",
+    "static_rules": { "deny": 14, "allow": 9, "precedence": "deny-over-allow, evaluated before the judge" },
+    "agent_identity": "agent-loom-delivery holds its own gateway token and policy",
+    "audit_sink": "postgres, append-only role; the agent identity has no write grant",
+    "network_policy": "default-deny egress on the agent's subnet; the proxy is the sole exception"
+  },
+  "bypass_test": {
+    "attempted": "outbound HTTPS from the agent runtime to an ALLOWED host with HTTP_PROXY/HTTPS_PROXY unset — the route-around, not the policy",
+    "result": "rejected",
+    "tested_at": "ADOPT-run-your-bypass-probe"
+  },
+  "observer_identity": "infosec-noor",
+  "observed_at": "ADOPT-observe-your-gateway",
+  "attestation": {
+    "issuer": "demo-platform-observer",
+    "signature": "ADOPT-signed-by-your-observer-key"
+  }
+}
