@@ -1,0 +1,17 @@
+{
+  "_comment": "D5.3 STREAM 4 of 4 — the seam's own liveness: the stream that vouches for the other streams' plumbing. It names FLOOR-SEAM, a control the harness deliberately does NOT ship, because a control id invented by the harness and owned by nobody is the mapping-to-nothing scripts/adapter-check.mjs refuses. So this declaration only mounts in a repository whose catalog carries FLOOR-SEAM — this example's own, and any adopter who has added and owns it. It ships DECLARED, NOT ACTIVE and stays that way: nobody has probed a seam, and a seam-liveness observation nobody made is the exact overstatement this gate exists to refuse.",
+  "adapter_id": "notion-activation",
+  "system": "notion",
+  "satisfies_control": "FLOOR-SEAM",
+  "capability": "The collaboration surface is reachable, is the workspace the repository thinks it is, and was observed refusing a bypass of the seam itself",
+  "mechanism": "seam_liveness",
+  "activation_source": "adapter-evidence",
+  "evidence": {
+    "kind": "seam-liveness",
+    "envelope_fields": ["surface", "workspace_id", "reachable_at", "latency_ms", "fetched_at"],
+    "max_age_days": 1,
+    "_max_age_days": "The tightest window in the example. A seam's freshness target is measured in minutes; a day is already generous, and the 7-day default would let a dead surface read as live for a sprint.",
+    "observes_identities": ["svc-floor-projector", "svc-floor-freezer", "svc-floor-bridge"],
+    "required_negatives": ["seam-bypass"]
+  }
+}

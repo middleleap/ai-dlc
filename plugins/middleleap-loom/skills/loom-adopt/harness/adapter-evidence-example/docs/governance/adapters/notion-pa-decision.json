@@ -1,0 +1,18 @@
+{
+  "_comment": "D5.3 STREAM 1 of 4 — the human-decision stream, verified by scripts/adapter-evidence-check.mjs itself (activation_source `adapter-evidence`). It carries ONE control and one mechanism, which is finding F4's correction made arithmetic: the release-hold refusal that used to stand in for 'a human authentically decided' cannot reach this claim, because a record naming HG-0002 is refused here as a borrow (AD-R13). No `activation_evidence` block: activation is observed, never declared, and a block filled in by hand with no verified observation behind it is AD-R09.",
+  "adapter_id": "notion-pa-decision",
+  "system": "notion",
+  "satisfies_control": "PA-GATES",
+  "capability": "An authenticated, subject-bound human decision taken on the collaboration surface arrives in the repository as a signed attestation, and the surface refuses the four things it must refuse",
+  "mechanism": "human_decision_assertion",
+  "activation_source": "adapter-evidence",
+  "evidence": {
+    "kind": "human-decision",
+    "envelope_fields": ["change_id", "stage", "role", "subject", "observed_at"],
+    "max_age_days": 3,
+    "_max_age_days": "TIGHTER than the 7-day seam default, which is the only direction an adapter may move it (AD-R06). A decision surface is re-pointed by whoever administers the workspace, and three days is how long this institution is willing to believe an unrepeated observation of it.",
+    "observes_identities": ["svc-floor-bridge"],
+    "_observes_identities": "The identities this stream makes a claim ABOUT — the bridge transcribes decisions, so an observation signed by it is self-attestation (AD-R19) and it is refused as an observer whatever the record credits.",
+    "required_negatives": ["agent-or-bot-approval", "unregistered-human", "replay", "post-decision-mutation"]
+  }
+}

@@ -1,8 +1,9 @@
 # ADR-0001 — Notion API version: pin 2025-09-03 or adopt 2026-03-11
 
-**Status:** proposed · **Date:** 2026-07-25 · **Deciders:** `solution-architect` ·
-`enterprise-architect` · `platform-admin` — **AWAITING:** assignment to named registry identities
-· **Programme:** Factory Floor (`docs/notion-floor-plan.md`)
+**Status:** **accepted** · **Date:** 2026-07-25 · **Accepted:** 2026-07-26 by **@michartmann**,
+repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
+acceptance** below · **Institutional deciders (per adopter, unassigned here):** `solution-architect` · `enterprise-architect` · `platform-admin`
+
 **Companions:** plan §3 P3 · §4 WS0 · D0.5 · §7 open decision 4 ·
 `docs/research/notion-software-factory-collaboration-2026-07.md` §2.2 and §8 ·
 `docs/notion-floor-threat-model.md` (the seam's identities and gaps).
@@ -12,6 +13,21 @@ against, and how that pin is permitted to change afterwards. It decides nothing 
 services run (ADR-0002), nothing about either MCP variant, and nothing a Loom gate reads — the
 harness core learns no vendor API, and every D-gate, the waist gate and both PA gates stay
 file-based and offline.
+
+
+## Scope of this acceptance
+
+Accepted **for the method**, on the same terms as ADR-0005: it settles what this repository — a
+method and a harness, not a bank — builds around, so the work below may proceed without the
+decision being reopened. It is deliberately **not** a substitute for two things it has no standing
+to grant.
+
+**An adopting institution's own sign-off.** The decider roles above stay unassigned here on
+purpose. A CBUAE-regulated adopter pins its own version against its own change management and its own vendor-notification obligations. Nothing here speaks for them.
+
+**Activation.** A pin is a build-time fact, not a control. It activates nothing. What this acceptance DOES carry is a floor with teeth: the pin must be **`2022-06-28` or later**, because below that the vendor's block payload key was `text` rather than `rich_text` and the exporter now aborts rather than freezing every block empty — the defect this ADR's own verification uncovered. The standing rule stands: the pin is reviewed at every dated release, and moving it requires a superseding upgrade ADR naming the migration surface and the re-proof owed.
+
+A superseding ADR — not an edit to this one — changes the decision.
 
 ## Context
 
@@ -88,9 +104,10 @@ failed build instead of a hollow record.
 **This raises the stakes of the decision below rather than settling it.** A pin is not merely a
 compatibility setting; it is an input to what a frozen artifact *contains*.
 
-A second gap is procedural. The deciding roles named above — `solution-architect` and
-`enterprise-architect` — **do not yet exist in `identities.template.json`**; WS2 · D2.3 adds them.
-Until they do, this ADR has no registry-resolvable decider, and that is a gap, not a formality.
+A second gap was procedural and is now **closed**: the deciding roles named above,
+`solution-architect` and `enterprise-architect`, did not exist in `identities.template.json` when
+this was written. WS2 · D2.3 shipped them, so an adopter's decision here can resolve to a registry
+identity holding the role — which is what makes a recorded decider more than a typed name.
 
 ## Options considered
 
@@ -194,9 +211,10 @@ evidence shows it produced the same bytes `2026-03-11` would have. That is luck,
 pin was set by whoever typed first, which is exactly what this ADR exists to stop. It is recorded
 here rather than tidied away.
 
-Status stays **proposed** — the recommendation is now unblocked and evidence-backed, but the
-deciders named at the top are still `AWAITING` assignment to registry identities, and a decision
-recorded without a decider is the thing this method refuses everywhere else.
+**Accepted for the method** on 26 Jul 2026 (see *Scope of this acceptance*): the blocking
+verification landed, the roles now resolve, and the recommendation is evidence-backed rather than
+argued. An adopting institution still records its own decision against its own change management —
+this settles what the harness is built to expect, not what a bank has agreed to.
 
 ## Consequences
 

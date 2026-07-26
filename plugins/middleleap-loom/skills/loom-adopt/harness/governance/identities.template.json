@@ -12,6 +12,7 @@
     { "id": "svc-floor-projector", "kind": "agent", "display": "Floor projector — git read → collaboration-surface write (delete if you run no external surface)", "roles": [], "groups": ["builders"] },
     { "id": "svc-floor-freezer", "kind": "agent", "display": "Floor freezer — exports a collaborative draft into a branch and opens the PR; never merges", "roles": [], "groups": ["builders"] },
     { "id": "svc-floor-bridge", "kind": "agent", "display": "Floor bridge — TRANSCRIBES an external decision into an approval attestation. Proves custody, never authority: it may not issue the human's assertion", "roles": [], "groups": ["builders"] },
+    { "id": "svc-floor-keeper", "kind": "agent", "roles": [], "groups": ["builders"], "note": "WS6 D6.3 floor-keeper: prefills the non-judgment fields, converses, routes. Holds NO role and NO grant on any container carrying an approval field — core/floor-keeper.mjs refuses both. core/floor-approval-surface.mjs fixes this id as KEEPER_IDENTITY, so an adopter who renames it must change that constant too." },
     { "id": "eng-omar", "kind": "human", "display": "Omar (Engineering Manager · acting Enterprise Architect)", "roles": ["engineering", "enterprise-architect"], "groups": ["builders"] },
     { "id": "arch-tariq", "kind": "human", "display": "Tariq (Solution Architect)", "roles": ["solution-architect"], "groups": ["builders"] },
     { "id": "po-fatima", "kind": "human", "display": "Fatima (Product)", "roles": ["product-owner"], "groups": [] },

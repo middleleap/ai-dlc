@@ -1,8 +1,9 @@
 # ADR-0004 — How fresh the projection must be
 
-**Status:** proposed · **Date:** 2026-07-25 · **Deciders:** `solution-architect` ·
-`platform-admin` · `operations` — **AWAITING:** assignment to named registry identities ·
-**Programme:** Factory Floor (`docs/notion-floor-plan.md`)
+**Status:** **accepted** · **Date:** 2026-07-25 · **Accepted:** 2026-07-26 by **@michartmann**,
+repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
+acceptance** below · **Institutional deciders (per adopter, unassigned here):** `solution-architect` · `platform-admin` · `operations`
+
 **Companions:** plan §7 open decision 3 · §1 G4 and G6 · §4 WS1 (D1.1–D1.3) · §4 WS6 · D6.4 ·
 §8 (stale-data risk) · `docs/research/notion-software-factory-collaboration-2026-07.md` §4.2 ·
 `docs/adrs/0001-api-compatibility.md` (the pinned REST version this cadence runs against).
@@ -12,6 +13,21 @@ Notion mirror is written, checked, and corrected, and what the floor is required
 own freshness. It decides nothing about what is projected (the P1 residency record governs that),
 nothing about the freeze direction (WS4), and nothing a gate reads: no gate consults the
 projection, and none may be made to.
+
+
+## Scope of this acceptance
+
+Accepted **for the method**, on the same terms as ADR-0005: it settles what this repository — a
+method and a harness, not a bank — builds around, so the work below may proceed without the
+decision being reopened. It is deliberately **not** a substitute for two things it has no standing
+to grant.
+
+**An adopting institution's own sign-off.** The decider roles above stay unassigned here on
+purpose. Cadence is an operational commitment with a cost and an owner, and an adopter sets both.
+
+**Activation.** No projector runs, so nothing is projected on any cadence. The reconcile half — the part that detects a failed push, a revoked token or a hand-edited field — is the half with no implementation at all yet; `core/floor-project.mjs` derives the payload and stops there.
+
+A superseding ADR — not an edit to this one — changes the decision.
 
 ## Context
 
@@ -146,7 +162,11 @@ restatement of G4's measure, for the deciders:** *median push-to-visible latency
 and maximum undetected divergence ≤ the sweep interval.* Two numbers, both measurable, neither
 overstating what the design provides.
 
-Status stays **proposed**, and the intervals stay provisional until the rate-limit read lands.
+**Accepted for the method** on 26 Jul 2026 (see *Scope of this acceptance*) — the *shape* is
+settled: push for speed, reconcile for truth. **The intervals stay provisional** until the
+rate-limit read lands, and that AWAITING is unaffected by this acceptance. The reconcile half has
+no implementation at all yet, which is the honest gap: `core/floor-project.mjs` derives the payload
+and stops.
 
 ## Consequences
 

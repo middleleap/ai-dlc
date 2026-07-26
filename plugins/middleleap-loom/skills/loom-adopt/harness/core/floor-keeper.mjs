@@ -109,8 +109,47 @@ export const FORBIDDEN_GRANT_FIELDS = ['property', 'properties', 'field', 'field
  * keeper a convenience, under-broad costs the method the one promise it makes loudest. An adopter
  * who hits a genuine false positive renames the property — which is a smaller act than widening the
  * list, and unlike widening it, it leaves the separation intact.
+ *
+ * AND IT WAS UNDER-BROAD IN THE DIRECTION THAT COSTS THE PROMISE. This was `AUTHORITY_FIELDS`
+ * outright, which answers a DIFFERENT question: *"would this field, projected onto a read-only
+ * mirror, read as governance authority?"* — attestation, signature, plan_hash, nonce, token. That is
+ * not the same as *"does this container carry an approval?"*, and the gap was exactly the words a
+ * human uses. `Sign-off`, `Signed off by`, `Approver` and `Decision` all matched **nothing**.
+ *
+ * So an approvals database titled the way people actually title one read as carrying no approval
+ * field at all: a keeper grant on it raised nothing, and `FK-R11`'s vacuity check was satisfied by
+ * any *other* container that happened to match. D6.3's whole promise — approval fields live where
+ * the keeper holds no grant — cannot hold when the gate cannot see an approval field. Found while
+ * building the worked example, because choosing property names for a realistic approvals database
+ * is the first act that puts the vocabulary under pressure.
+ *
+ * The union below keeps every authority term (nothing previously detected stops being detected) and
+ * adds the approval vocabulary — but only words that RECORD an approval. Two were tried and
+ * deliberately excluded:
+ *
+ *   `outcome` — too generic, and the suite already rejected it before this fix was written.
+ *   `decision` — the interesting one, because including it put **D5.1 and D6.3 into direct
+ *     conflict**. D5.1 requires a floor-keeper to assemble the evidence an approver reads, and that
+ *     evidence sits in its own container precisely so the keeper CAN write it while holding no grant
+ *     where the approval lives. An evidence pack summarising a decision naturally carries a
+ *     `Decision` property — so treating `decision` as approval-carrying makes the very container the
+ *     keeper MUST write into one the keeper may NOT touch. The worked example failed on exactly that
+ *     (`FK-R08`), which is how the conflict surfaced rather than shipping. A decision-log mirror has
+ *     the same shape.
+ *
+ * So the line is: a field recording WHO approved, or WHETHER they did, is an approval field; a field
+ * describing WHAT WAS DECIDED is not. `Approver`, `Sign-off`, `Signed off by`, `Verdict`,
+ * `Countersigned by`, `Ratified by` record. `Decision` and `Outcome` describe.
  */
-export const APPROVAL_FIELDS = AUTHORITY_FIELDS;
+export const APPROVAL_VOCABULARY = new Set([
+  'approver', 'approvers', 'approve', 'approves', 'approved', 'approval', 'approvals',
+  'sign_off', 'signoff', 'signed_off', 'signed_off_by', 'countersigned', 'countersigned_by',
+  'verdict',
+  'ratified', 'ratified_by', 'endorsed', 'endorsed_by',
+  'authorised', 'authorised_by', 'authorized', 'authorized_by',
+]);
+
+export const APPROVAL_FIELDS = new Set([...AUTHORITY_FIELDS, ...APPROVAL_VOCABULARY]);
 
 /** How old a grant audit may be before separation is asserted rather than audited (adopters tighten). */
 export const GRANT_AUDIT_MAX_AGE_DAYS = 30;

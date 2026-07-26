@@ -63,6 +63,15 @@ export const LIMITS = Object.freeze([
  * Detector classes. Ordered: an earlier detector's match claims its span, so a phone number is not
  * also reported as a long digit run and an IBAN is not also reported as a phone number. Reordering
  * this list changes which code a value is reported under — which is why it is a list, not a map.
+ *
+ * OVERLAPS `floor-project.mjs`'s `PROHIBITED`, deliberately and with different regexes. That module
+ * BLOCKS git → floor and is tuned for low false positives, because a hit withholds a whole record.
+ * This one ADVISES over floor-authored prose and is tuned for high recall, because a hit only asks a
+ * human to look. One shared table would force one of the two to adopt the wrong tolerance, so they
+ * stay separate and the relationship between them is asserted as a test instead: the advisory net
+ * must never be narrower than the blocking one for personal-data shapes. Credentials — private keys,
+ * bearer tokens — are intentionally NOT detected here: they are not personal data, and the Q4
+ * secrets gate owns them.
  */
 export const DETECTORS = Object.freeze([
   {

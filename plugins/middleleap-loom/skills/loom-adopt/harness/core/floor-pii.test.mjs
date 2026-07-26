@@ -226,3 +226,47 @@ test('every detector declares a code, an id, a label and a reason', () => {
   }
   assert.deepEqual(scanText('').detectors_run, DETECTORS.map((d) => d.code));
 });
+
+// --- the relationship to the BLOCKING filter -----------------------------------------------
+// floor-project.mjs blocks git → floor and is tuned for low false positives; this module advises
+// over floor prose and is tuned for high recall. They keep separate tables on purpose (see both
+// module headers). What must hold between them is asserted here, so "separate" never quietly
+// becomes "divergent": the advisory net is never narrower than the blocking one for personal data,
+// and the credential shapes are excluded by decision rather than by omission.
+
+test('every personal-data shape the egress filter BLOCKS is also caught here', async () => {
+  const { PROHIBITED, scan } = await import('./floor-project.mjs');
+
+  // Synthetic, shape-valid samples — one per blocking rule. Fabricated for this file.
+  const SAMPLES = {
+    'emirates-id': '784123456789012',
+    'uae-iban': 'AE070331234567890123456',
+    'email-address': 'someone@example.co',
+    'private-key': '-----BEGIN RSA PRIVATE KEY-----', // loom-allow-secret — a header, no key material
+    'bearer-token': 'ghp_abcdefghijklmnop123', // loom-allow-secret — fabricated, matches no real token
+  };
+  // Credentials are not personal data. The Q4 secrets gate owns them, and this module deliberately
+  // does not look for them — recorded here so the absence stays a decision.
+  const NOT_PERSONAL_DATA = new Set(['private-key', 'bearer-token']);
+
+  assert.deepEqual(
+    PROHIBITED.map((p) => p.id).sort(), Object.keys(SAMPLES).sort(),
+    'a blocking rule was added or renamed — give it a sample here and decide which side it falls on',
+  );
+
+  for (const rule of PROHIBITED) {
+    const sample = SAMPLES[rule.id];
+    assert.ok(scan(sample), `${rule.id}: the sample must actually trip the blocking filter`);
+
+    const caught = liveFindings(scanText(sample)).length > 0;
+    if (NOT_PERSONAL_DATA.has(rule.id)) {
+      assert.equal(caught, false,
+        `${rule.id} is a credential, not personal data — if this module started flagging it, the `
+        + 'boundary with the Q4 secrets gate has blurred and one of the two should own it, not both');
+    } else {
+      assert.ok(caught,
+        `${rule.id} is blocked on egress but invisible to the smell test — the advisory net is `
+        + 'narrower than the blocking one, which is the wrong way round');
+    }
+  }
+});

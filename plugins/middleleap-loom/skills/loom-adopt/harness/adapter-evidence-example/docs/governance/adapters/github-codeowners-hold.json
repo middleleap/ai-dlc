@@ -1,0 +1,15 @@
+{
+  "_comment": "D5.3 STREAM 3 of 4 — the other FORGE stream, and the one finding F4 was actually about. A refused write to release-hold.json proves PLATFORM PROTECTION and nothing else; it used to be filed as evidence that a human had authentically approved something. Here it satisfies HG-0002 alone, and PA-GATES is claimed by a different adapter with its own negatives. This stream stays DECLARED, NOT ACTIVE in every layout the bundle can reach: no codeowners observation exists, and one must not be manufactured — the dry-run's negative test #18 depends on HG-0002 having no verified activation record.",
+  "adapter_id": "github-codeowners-hold",
+  "system": "github",
+  "satisfies_control": "HG-0002",
+  "capability": "Neither the floor freezer nor the floor bridge can alter release-hold.json — the CODEOWNERS-protected path that carries the second-line hold",
+  "mechanism": "codeowners",
+  "activation_source": "platform-activation",
+  "evidence": {
+    "kind": "codeowners-protection",
+    "envelope_fields": ["path", "owners", "fetched_at"],
+    "observes_identities": ["svc-floor-freezer", "svc-floor-bridge"],
+    "required_negatives": ["seam-identity-writes-release-hold"]
+  }
+}

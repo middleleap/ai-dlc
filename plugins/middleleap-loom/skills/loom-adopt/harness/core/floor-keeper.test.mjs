@@ -100,6 +100,42 @@ const containerMap = (...cs) => new Map(cs.map((c) => [c.id, c]));
 
 // ── the clean case, which must stay clean ─────────────────────────────────────────────────────────
 
+// Found while building floor-keeper-example/, not by a fixture: APPROVAL_FIELDS was AUTHORITY_FIELDS
+// outright, and those answer different questions. The authority set is about what would LEAK onto a
+// read-only mirror (attestation, signature, plan_hash, nonce); this one is about what CARRIES an
+// approval. The gap was the words a human uses, so an approvals database titled the ordinary way
+// read as carrying no approval field: a keeper grant on it raised nothing, and FK-R11's vacuity
+// check was satisfied by any other container that happened to match.
+test('the words a human actually titles an approvals database with are DETECTED', () => {
+  for (const name of ['Sign-off', 'Signed off by', 'Approver', 'Approvers', 'Verdict',
+    'Countersigned by', 'Authorised by', 'Ratified by', 'Endorsed by']) {
+    assert.equal(isApprovalField(name), true, `${name} must be visible — D6.3 cannot protect what it cannot see`);
+  }
+});
+
+test('widening the vocabulary lost nothing the authority set already caught', () => {
+  for (const name of AUTHORITY_FIELDS) assert.equal(isApprovalField(name), true, name);
+  for (const name of ['Approved by', 'Attestation', 'Signature', 'Plan hash', 'Assertion nonce', 'Release hold']) {
+    assert.equal(isApprovalField(name), true, name);
+  }
+});
+
+test('a field that DESCRIBES a decision is not a field that RECORDS one', () => {
+  // `Decision` and `Outcome` stay out on purpose. D5.1 makes a floor-keeper assemble the evidence an
+  // approver reads, in its own container so the keeper CAN write it; an evidence pack naturally has a
+  // `Decision` summary. Treating that as approval-carrying makes the container the keeper must write
+  // the one it may not touch — D5.1 against D6.3. The worked example failed on precisely that.
+  for (const name of ['Decision', 'Decisions', 'Outcome', 'Decision log']) {
+    assert.equal(isApprovalField(name), false, `${name} describes; it does not record`);
+  }
+});
+
+test('ordinary floor prose is still not an approval field', () => {
+  for (const name of ['Owner', 'Stage', 'Status', 'Notes', 'Run', 'Summary', 'Created']) {
+    assert.equal(isApprovalField(name), false, `${name} must not cost a keeper a grant`);
+  }
+});
+
 test('a register whose keepers hold nothing on the approval container passes', () => {
   assert.deepEqual(check(), []);
 });
@@ -190,9 +226,19 @@ test('a container whose approval property is titled in prose still refuses the g
 });
 
 test('the approval-field list is the projection module\'s, not a copy', () => {
-  // Two lists would drift, and the drift would be silent. This asserts the identity, not the
-  // contents — see the note on APPROVAL_FIELDS for why the set is deliberately over-broad.
-  assert.equal(APPROVAL_FIELDS, AUTHORITY_FIELDS);
+  // Two lists would drift, and the drift would be silent — so this asserts DERIVATION, not contents.
+  //
+  // It used to assert `APPROVAL_FIELDS === AUTHORITY_FIELDS`, and that identity was itself the
+  // defect. The authority set answers "would this field LEAK onto a read-only mirror" — attestation,
+  // signature, plan_hash, nonce. It does not answer "does this container CARRY an approval", and the
+  // difference turned out to be every word a human titles an approvals database with: `Approver`,
+  // `Sign-off`, `Signed off by`, `Decision` all matched nothing. The test's real intent survives:
+  // the approval set is built FROM the authority set rather than transcribed beside it.
+  for (const name of AUTHORITY_FIELDS) {
+    assert.ok(APPROVAL_FIELDS.has(name), `${name}: every authority field is still an approval field`);
+  }
+  assert.ok(APPROVAL_FIELDS.size > AUTHORITY_FIELDS.size, 'and the approval vocabulary is added on top');
+  assert.notEqual(APPROVAL_FIELDS, AUTHORITY_FIELDS, 'a derived superset, not the same object');
 });
 
 test('checkGrants needs no register: it is a pure function over a container map', () => {

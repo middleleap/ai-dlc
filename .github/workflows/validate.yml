@@ -64,6 +64,12 @@ jobs:
           # …and the observer that watches it, so the D4.2 gate below has something real to compare.
           cp -r "$H/freeze-example" "$A/freeze-example"
           cp -r "$H/drift-example" "$A/drift-example"
+          # rc.16 WS5/WS6: the three worked examples that stop approval-surface, floor-keeper and
+          # adapter-evidence from passing vacuously. Each is bundle demonstration data, so the
+          # installer does not ship it and the dry-run stages it here.
+          cp -r "$H/approval-surface-example" "$A/approval-surface-example"
+          cp -r "$H/floor-keeper-example" "$A/floor-keeper-example"
+          cp -r "$H/adapter-evidence-example" "$A/adapter-evidence-example"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
@@ -107,6 +113,12 @@ jobs:
             reg.issuers.push({id:"demo-platform-observer",mechanism:"ed25519",verify:{public_key:publicKey.export({type:"spki",format:"pem"}).toString()}});
             fs.writeFileSync("docs/governance/attestation-issuers.json",JSON.stringify(reg,null,2));
           '
+          # rc.16 D5.3: stage the adapter declarations and generate their signed observations BEFORE
+          # the base commit, so they are tracked and survive the `git checkout --` restores the
+          # negative-bypass step below performs. Same reason the platform-activation record is
+          # generated here rather than committed: the keys are fresh per run and only public halves
+          # are ever written, so the bundle never ships usable trust material.
+          node adapter-evidence-example/observe.mjs --dest .
           # Q1b + the secrets history scan diff against git — give the adopted layout a history.
           git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
           git add -A && git commit -qm base
@@ -134,9 +146,54 @@ jobs:
           node scripts/drift-check.mjs             # D4.2 — no NEW claim against a page that has moved on
           node scripts/floor-only-check.mjs        # D3.3 — a floor-only note must never reach the record
           node scripts/projection-capability-check.mjs  # WS1 — the projector is OBSERVED unable to write git
-          node scripts/approval-surface-check.mjs  # D5.1/D5.4 — the approvals page matches the COMPILED roles
-          node scripts/floor-keeper-check.mjs      # D6.3/D6.4 — no keeper grant where approvals live
-          node scripts/adapter-evidence-check.mjs  # D5.3 — one adapter, one control; declared is not active
+          # rc.16 · D5.1/D5.4 — these three gates all reported a confident OK about NOTHING, which is
+          # the vacuum freeze-stamp and drift both had. Each now gets a worked example and, as with
+          # D4.2, BOTH directions are asserted: the count must be real, and the mutation must fail.
+          # A count assertion matters as much as a failure assertion here — the bug was never a wrong
+          # answer, it was a right answer about an empty set.
+          mkdir -p floor/approvals
+          node approval-surface-example/derive.mjs PA1 > floor/approvals/CHG-2026-0042-PA1.json
+          node approval-surface-example/derive.mjs PA2 > floor/approvals/CHG-2026-0042-PA2.json
+          node scripts/approval-surface-check.mjs | tee /tmp/as.txt
+          grep -q '2 approval surfaces' /tmp/as.txt || {
+            echo "::error::the approval-surface gate is back to counting zero"; exit 1; }
+          node approval-surface-example/derive.mjs PA2 --break drop-section > floor/approvals/CHG-2026-0042-PA2.json
+          if node scripts/approval-surface-check.mjs; then
+            echo "::error::a surface missing a compiled role passed the gate"; exit 1; fi
+          node approval-surface-example/derive.mjs PA2 > floor/approvals/CHG-2026-0042-PA2.json
+
+          # D6.3/D6.4 — a keeper holding no grant where approvals live, and a floor that says it is
+          # degraded. A truthfully-degraded floor must PASS: failing it would make the honest record
+          # the expensive one.
+          mkdir -p docs/governance/floor-degradation
+          node floor-keeper-example/generate.mjs --register > docs/governance/floor-keepers.json
+          node floor-keeper-example/generate.mjs --observation > docs/governance/floor-degradation/floor.json
+          node scripts/floor-keeper-check.mjs | tee /tmp/fk.txt
+          grep -q 'no grant on any approval-carrying container' /tmp/fk.txt || {
+            echo "::error::the floor gate is no longer checking keeper separation"; exit 1; }
+          node floor-keeper-example/generate.mjs --register --mutate keeper-grant > docs/governance/floor-keepers.json
+          if node scripts/floor-keeper-check.mjs; then
+            echo "::error::a keeper grant on the approvals container passed FK-R03"; exit 1; fi
+          node floor-keeper-example/generate.mjs --register > docs/governance/floor-keepers.json
+          node floor-keeper-example/generate.mjs --observation --mutate paused-but-live > docs/governance/floor-degradation/floor.json
+          if node scripts/floor-keeper-check.mjs; then
+            echo "::error::a paused floor reported as live passed DG-R02"; exit 1; fi
+          node floor-keeper-example/generate.mjs --observation > docs/governance/floor-degradation/floor.json
+
+          # D5.3 — one adapter, one control. The declarations and signed observations were staged
+          # before the base commit (above) so they are tracked. `--borrow` offers one stream's
+          # evidence for another stream's control, which is finding F4 itself and must never verify.
+          node scripts/adapter-evidence-check.mjs | tee /tmp/ae.txt
+          # `[1-9] active`, not bare `active` — "DECLARED, NOT ACTIVE" would satisfy a loose match and
+          # the assertion would pass on precisely the state it exists to catch.
+          grep -qE '[1-9][0-9]* active' /tmp/ae.txt || {
+            echo "::error::the adapter-evidence gate reports no ACTIVE stream — it is verifying declarations only"; exit 1; }
+          node adapter-evidence-example/observe.mjs --dest . --borrow
+          if node scripts/adapter-evidence-check.mjs; then
+            echo "::error::one stream's evidence satisfied another stream's control — finding F4 is back"; exit 1; fi
+          git checkout -- docs/governance/adapters docs/governance/attestation-issuers.json 2>/dev/null || true
+          rm -rf docs/governance/adapter-evidence
+          node adapter-evidence-example/observe.mjs --dest .
           node scripts/control-catalog-check.mjs
           node scripts/identity-registry-check.mjs
           node scripts/change-envelope-check.mjs

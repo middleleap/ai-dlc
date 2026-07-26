@@ -1,0 +1,16 @@
+{
+  "_comment": "A faithful SUBSET of governance/identities.template.json — the six identities the four streams name, copied verbatim so this fixture cannot teach a shape the real registry does not have. It exists so the observer-independence rules actually bite here: checkObserver() is lenient when no registry is present (`if (registry && !entry)`), so an example with no identities.json would exercise the signature path and skip AD-R19/AD-R20 entirely, which is the kind of half-check this directory exists to close.",
+  "groups": {
+    "builders": "first-line identities that author changes (humans and agents)",
+    "second-line": "independent risk / compliance / validation identities — MUST be disjoint from builders",
+    "platform-admins": "control-plane owners"
+  },
+  "identities": [
+    { "id": "agent-loom-delivery", "kind": "agent", "display": "Loom delivery loop (service identity)", "roles": [], "groups": ["builders"] },
+    { "id": "svc-floor-projector", "kind": "agent", "display": "Floor projector — git read → collaboration-surface write", "roles": [], "groups": ["builders"] },
+    { "id": "svc-floor-freezer", "kind": "agent", "display": "Floor freezer — exports a collaborative draft into a branch and opens the PR; never merges", "roles": [], "groups": ["builders"] },
+    { "id": "svc-floor-bridge", "kind": "agent", "display": "Floor bridge — TRANSCRIBES an external decision into an approval attestation. Proves custody, never authority", "roles": [], "groups": ["builders"] },
+    { "id": "infosec-noor", "kind": "human", "display": "Noor (Information Security)", "roles": ["information-security"], "groups": [] },
+    { "id": "padmin-zoe", "kind": "human", "display": "Zoe (Platform Admin)", "roles": ["platform-admin"], "groups": ["platform-admins"] }
+  ]
+}
