@@ -96,6 +96,13 @@ produces counts as governed evidence.
   so) · [vendor questionnaire](notion-floor-p1-vendor-questionnaire.md). The drafting side is done;
   what remains is two signatures by two people holding the named registry roles, and builders may
   not sign.
+  → **and now ENFORCED** (rc.18): `scripts/residency-check.mjs` reads the sign-off rows, resolves
+  both signatories against the registry, and refuses an agent, a builder, one person holding both
+  roles, an unresolvable identity, an undated signature, and a half-signed record. It fails the
+  build when live floor artifacts exist against an unsigned record — §11's blocking statement, which
+  until now was prose no gate read. D0.1 was the last control in this method that was *declared, not
+  observed*; a drafted-but-unrouted record still passes cleanly, because the statement blocks
+  workspace construction and floor content, not drafting.
 - **D0.2** Registry + issuer entries for the **four split identities** (P4).
   → **bundle-side shipped** in loom `2.0.0-rc.13`: `svc-floor-projector`, `svc-floor-freezer`
   and `svc-floor-bridge` ship in `identities.template.json` holding **no** approval role; the
