@@ -26,7 +26,9 @@ stage: floor
 > here: the **consent wording** the participant is given, the **lawful basis** for recording and
 > retaining the note in an external service, and a decided home for the **consent record itself**
 > — which is personal data too. Until all three are written down, use this template for internal,
-> illustrative or `[synthetic]` sessions only. See `docs/notion-floor-residency-review.md` §7.2.
+> illustrative or `[synthetic]` sessions only. They belong in your residency review record
+> (`docs/governance/residency-review.md` §7.2), signed by data-protection + risk-second-line under
+> HG-0011 — and `scripts/residency-check.mjs` refuses a floor whose record is still unsigned.
 >
 > A frozen artifact may **cite** this page by its id. This page may never **become** one: copying
 > it into `discovery/runs/` is the single move this write class forbids, and

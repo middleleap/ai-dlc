@@ -1,6 +1,7 @@
 // The `loom` adoption CLI (Loom 2.0-rc.14 · WS5) — a thin dispatcher over the adoption state
 // machine. Adoption is five stages; each subcommand advances or reports one:
 //
+//   loom version                   which Loom this repository is running, and what it has customised
 //   loom adopt                     install the machinery (adopt.mjs, idempotent)
 //   loom configure                 list what is still adopt-pending (unresolved markers to fill)
 //   loom verify                    run the bundled gates → mechanically-validated
@@ -10,14 +11,60 @@
 //
 // Run from the adopted repo root: `node scripts/loom.mjs <command> [args]`.
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { STAMP_PATH } from '../core/adoption-stamp.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const node = (script, args = []) => spawnSync(process.execPath, [resolve(HERE, script), ...args], { stdio: 'inherit' }).status ?? 1;
 
+/**
+ * Which Loom is installed here, and which managed files the adopter has since made their own.
+ * Read-only, and it answers from the stamp rather than from any file's contents — the version
+ * question ("what am I running?") had no answer at all before rc.18.
+ */
+export function versionReport(cwd = process.cwd(), out = process.stdout) {
+  const path = resolve(cwd, STAMP_PATH);
+  if (!existsSync(path)) {
+    out.write(`\nNo adoption stamp at ${STAMP_PATH}.\n\nEither this repository has not adopted the Loom, or it adopted before stamping existed\n(2.0.0-rc.18). Re-run the installer from the bundle to stamp it:\n  node <plugin>/skills/loom-adopt/harness/adopt.mjs --dest .\n\n`);
+    return 1;
+  }
+  let stamp;
+  try { stamp = JSON.parse(readFileSync(path, 'utf8')); } catch (err) {
+    out.write(`\n${STAMP_PATH} is not valid JSON: ${err.message}\n\n`);
+    return 1;
+  }
+  const files = stamp.files || {};
+  const customised = Object.keys(files).filter((rel) => {
+    const abs = resolve(cwd, rel);
+    if (!existsSync(abs) || !statSync(abs).isFile()) return false;
+    return createHash('sha256').update(readFileSync(abs)).digest('hex') !== files[rel];
+  }).sort();
+
+  out.write(`\nLoom ${stamp.bundle_version || '(unknown)'}\n`);
+  out.write(`  first adopted   ${stamp.first_adopted_at || '—'}\n`);
+  out.write(`  last installed  ${stamp.updated_at || '—'}\n`);
+  out.write(`  managed files   ${Object.keys(files).length}\n`);
+  if (customised.length) {
+    out.write(`\n${customised.length} managed file(s) you have edited (an upgrade preserves these):\n`);
+    for (const f of customised) out.write(`  · ${f}\n`);
+  } else {
+    out.write('\nNo managed file has been edited since it was installed.\n');
+  }
+  const history = stamp.history || [];
+  if (history.length > 1) {
+    out.write('\nUpgrade history:\n');
+    for (const h of history) out.write(`  ${h.version.padEnd(14)} ${h.at}\n`);
+  }
+  out.write('\n');
+  return 0;
+}
+
 export const COMMANDS = {
+  version: () => versionReport(),
   adopt: (args) => node('adopt.mjs', args),
   status: (args) => node('adoption-status.mjs', args),
   'attest-adoption': (args) => node('adoption-attest.mjs', args),

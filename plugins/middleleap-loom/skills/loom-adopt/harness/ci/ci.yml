@@ -32,6 +32,7 @@ jobs:
         run: |
           node scripts/control-plane-check.mjs        # HG-0002 — control-plane owned in CODEOWNERS
           node scripts/control-catalog-check.mjs       # control state of record cannot overstate itself
+          node scripts/ci-catalog-check.mjs            # …and cannot OMIT a gate this workflow runs (the runner only selects catalogued controls)
           node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
           node scripts/template-parity-check.mjs      # the guided floor form cannot drift from the git template
           node scripts/identity-map-check.mjs         # P6 — the join from a signed subject to a registry identity

@@ -22,9 +22,10 @@ Read the method first if you haven't: the `loom` skill (sibling in this plugin),
 
 The one-command way: **`node harness/adopt.mjs --dest <repo-root>`** — the idempotent installer
 reads `harness/copy-manifest.json` (the single source of truth) and lays every file below into
-place, emitting an adoption report (source → destination → status). Re-running is safe. A
-`*.template` file is copied but never auto-filled — templates land `adopt-pending` and you fill
-their ADOPT markers in step 3.
+place, emitting an adoption report (source → destination → status). Re-running is safe: it stamps
+what it installed in `.loom/adoption.json` and never overwrites a file you have since edited
+(step 7). A `*.template` file is copied but never auto-filled — templates land `adopt-pending`
+and you fill their ADOPT markers in step 3.
 
 The table below is **generated from that same manifest** (a doc-integrity gate fails the build if
 it drifts), so it can never lag the machinery. Sources are relative to `harness/`; destinations
@@ -104,10 +105,11 @@ and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (
 - **Brand (D7):** edit `discovery/brand/design.md` — entity name, banner, and the token
   *values* (never the token *names*; everything downstream reads names). If the org's brand
   lives elsewhere (e.g. a design-system skill), transcribe its values into the tokens.
-- **Register (D6):** replace the example records in `docs/governance/data-risk-register/`
-  with the organisation's regulation → risk → control → residual chain, behind the same JSON
-  shape (documented in its README). Until then the example register keeps D6 green so the
-  pipeline is exercisable end to end.
+- **Register (D6):** the installer does **not** place a register — a register it wrote would
+  assert risks nobody accepted. Copy the worked example in first
+  (`cp -r harness/register-example/ docs/governance/data-risk-register/`) so the pipeline is
+  exercisable end to end, then replace its records with the organisation's own regulation → risk
+  → control → residual chain behind the same JSON shape (documented in its README).
 
 ## 3. Fill the ADOPT markers
 
@@ -129,14 +131,44 @@ has none yet, write the Commands / Conventions / Do-Not sections before running 
 
 ## 4. Verify the adoption — evidence, not vibes
 
+The bundled suites must pass exactly as copied. This is the one step with no "expected red":
+
 ```bash
-node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs   # bundled suites must pass as copied
-node scripts/discovery-link-check.mjs            # waist gate runs (green on an empty backlog)
-node scripts/control-plane-check.mjs             # control-plane gate (green once CODEOWNERS is filled)
-node scripts/model-provenance-check.mjs          # model-provenance gate (green on the demo manifest)
-node scripts/evidence-seal-check.mjs             # evidence-seal gate (green on the demo manifest)
-node scripts/data-lifecycle-check.mjs            # data-lifecycle gate (green on the demo manifest)
-node scripts/operations-signal-check.mjs         # Run→Discovery feedback gate (green on empty or the demo log)
+node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+```
+
+**A fresh adoption is deliberately not all-green, and the reds are the work list.** The gates
+fail closed: a control with nothing behind it yet fails rather than passing vacuously. Run them
+and read the output — each failing gate names the file it wants and why:
+
+```bash
+node scripts/ci-catalog-check.mjs                # GREEN — every CI gate is in the control catalog
+node scripts/control-catalog-check.mjs           # GREEN — the state of record is not overstated
+node scripts/data-lifecycle-check.mjs            # GREEN on the shipped demo lifecycle
+node scripts/operations-signal-check.mjs         # GREEN on an empty or demo signal log
+
+node scripts/discovery-link-check.mjs            # RED until you create docs/backlog.yaml (step 1
+                                                 #   lists it; `milestones: []` is valid and passes)
+node scripts/control-plane-check.mjs             # RED until CODEOWNERS names real teams (step 5)
+node scripts/model-provenance-check.mjs          # RED until you adapt harness/evidence-example/
+node scripts/evidence-seal-check.mjs             #   into docs/governance/evidence/ (see below)
+node scripts/operational-readiness-check.mjs     # RED until you run the drills and date them
+node scripts/product-eval-check.mjs              # RED until a release links its discovery hand-off
+node scripts/sast-check.mjs                      # RED until your SAST/SCA scanners write their
+node scripts/supply-chain-check.mjs              #   reports (supply-chain-security.md)
+```
+
+The four evidence-shaped gates want fixtures the installer does **not** copy, because a
+manifest the installer wrote would be evidence about nothing: adapt
+`harness/evidence-example/` into `docs/governance/evidence/` (it carries a complete sealed
+manifest, eval reports, SBOM, SARIF and provenance to model yours on), and the
+`operational-readiness` dates only become real when you have actually exercised the drills.
+
+To see the whole board at once, including what is adopter-side and cannot be closed here:
+
+```bash
+node scripts/adoption-status.mjs        # add --run to check what actually passes in THIS repo,
+                                        # not just what the catalog grades
 ```
 
 Then prove the pipeline end to end: run the `discovery` skill on a small real (or synthetic)
@@ -186,6 +218,43 @@ repo's `AGENTS.md`/`CLAUDE.md`/`.cursorrules` as a **reference** — propose a c
 an existing instruction file only after the user confirms; never overwrite it. A change to
 `institution/` is never routine and always requires the context owner's review. See
 `../loom/references/brainkit.md`.
+
+## 7. Upgrading to a newer Loom
+
+The installer stamps every adoption in `.loom/adoption.json` — the bundle version, when it was
+first adopted, and the digest of every file it installed. Two things follow.
+
+**You can ask what you are running.** From the adopted repo:
+
+```bash
+node scripts/loom.mjs version     # version, upgrade history, and which managed files you have edited
+```
+
+**Upgrading is re-running the installer from the newer bundle.** There is no separate command:
+
+```bash
+node <plugin>/skills/loom-adopt/harness/adopt.mjs --dest .
+```
+
+It reports `UPGRADE <from> → <to>`, then prints the migration notes for every version in between
+— including the `ACTION:` lines naming the templates you now have to fill. Add `--dry-run` to see
+all of it without writing anything.
+
+**Your edits are safe.** Step 3 tells you to edit `scripts/discovery-link-check.mjs`,
+`.claude/hooks/pii-guard.sh` and others; the stamp is what lets the installer tell your changes
+from its own. A file you have edited is **preserved**, and the new upstream version is written
+beside it as `<file>.loom-new` for you to diff. It stays flagged as yours until your content and
+ours converge — `loom version` lists them. Siblings in the same directory still update normally,
+so one customised gate does not freeze the other forty.
+
+Two edge cases, both stated by the installer when they happen:
+
+- **A repository adopted before 2.0.0-rc.18** has no stamp, so an edit of yours and an older copy
+  of ours are indistinguishable. Everything that differs is preserved and reported as
+  `unverifiable`. Reconcile the sidecars, or re-run with `--force` if you know you never
+  customised anything. It happens once — the stamp written on that run means later upgrades know.
+- **`--force`** overwrites edited files. It is the documented escape hatch and it is destructive;
+  the report says what it stepped on.
 
 ## What adoption deliberately does NOT do
 

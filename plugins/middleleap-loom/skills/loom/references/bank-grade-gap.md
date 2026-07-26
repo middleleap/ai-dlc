@@ -54,9 +54,9 @@ bundle's reach, is in one place.
 <!-- LOOM:SCORECARD:START -->
 | Mechanically validated | Defined | Absent | Platform enforced | Organisationally enforced |
 |---|---|---|---|---|
-| 44 | 7 | 7 | 0 | 0 |
+| 55 | 7 | 7 | 0 | 0 |
 
-_Generated from the control catalog (58 controls; 13 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
+_Generated from the control catalog (69 controls; 13 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
 <!-- LOOM:SCORECARD:END -->
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
@@ -87,6 +87,16 @@ product-eval gate — a release links its discovery hand-off and scores every D1
 measure against the shipping commit, so discovery → delivery → measurement closes; 2.0-rc.5:
 token-spend telemetry — a report, not a gate (cost is a signal for humans, never a merge
 control), the macro ring's first instrument).
+
+**The count moved from 57 to 68 at 2.0-rc.18, and not because eleven controls were built.** Ten
+Factory Floor gates had been running in CI with no catalog entry — enforced but unclaimed, and
+therefore invisible here *and* unreachable by the risk-proportionate gate runner, which selects
+only catalogued controls. Cataloguing them (plus the `ci-catalog-check` closure gate that now
+fails the build if a gate is ever added to CI without an entry) corrected the scorecard downward
+in honesty and upward in number. The floor's own cluster is graded in
+`factory-floor.md` §Honest state; the short version is that its git-side halves are mechanically
+validated, its decision-routing workstream is production-blocked pending an independent
+second-line review, and nothing is deployed.
 
 ## Six clusters, graded
 

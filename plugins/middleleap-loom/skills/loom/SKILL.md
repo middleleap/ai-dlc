@@ -1,6 +1,6 @@
 ---
 name: loom
-description: The Loom — MiddleLeap's method for how a regulated entity builds software with AI. Two harnesses (discovery finds the right problem, delivery ships it under control) running across a frame of always-on controls, weaving to the institution's own context. Use when explaining the Loom, assessing whether a project follows it, answering questions about its harnesses, gates (D1–D9, Q1–Q5), governance model (HG catalog), or the double diamond — or when someone asks "how do we build with AI in a regulated environment". For setting the Loom up in a repository, use the loom-adopt skill instead.
+description: The Loom — MiddleLeap's method for how a regulated entity builds software with AI. Two harnesses (discovery finds the right problem, delivery ships it under control) running across a frame of always-on controls, weaving to the institution's own context, with an optional Factory Floor surface for the people who never open a repository. Use when explaining the Loom, assessing whether a project follows it, answering questions about its harnesses, gates (D1–D9, Q1–Q5), governance model (HG catalog), the double diamond, or the Factory Floor (write classes, the freeze round trip, projection, floor-keepers) — or when someone asks "how do we build with AI in a regulated environment". For setting the Loom up in a repository, use the loom-adopt skill instead.
 ---
 
 # The Loom — a way for a regulated entity to build with AI
@@ -23,6 +23,7 @@ Open Finance was the first cloth off the loom. **The Loom is the deliverable.**
 | **Shuttle** | The AI agents the harness pulls in to weave continuously |
 | **Pattern** | The institution's own context — its brain |
 | **Cloth** | Shipped, audit-ready software |
+| **Factory floor** | Where the people stand — the optional collaboration surface for everyone who never opens a repository. It holds no governance authority (`references/factory-floor.md`) |
 
 ## The double diamond
 
@@ -60,6 +61,10 @@ Full canon for each half:
 - `references/operations.md` — the third arc: how **Run/Operations** feeds signals back into
   Discovery to close the loop, the routing triage, and the `operations-signal` seam that keeps
   the feedback wire triaged and traceable.
+- `references/factory-floor.md` — the **optional** collaboration surface for the people who never
+  open a repository: the four planes and the one path that must bypass the seam, the three write
+  classes, the freeze round trip, the four non-approving seam identities, and the ten gates that
+  keep enforcement identical whether the floor is there or not.
 - `references/enterprise-rings.md` — the fractal framing: the Loom as the micro ring (one
   change) plus the shipped half of the meso ring (one product), and an honest naming of the
   macro ring (the enterprise operating model) as adopter- and advisory-side, not bundled.

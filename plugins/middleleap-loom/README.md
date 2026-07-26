@@ -20,11 +20,14 @@ method in two forms: agents read the skill; people read the page.
 
 | Type | Name | What it does |
 |---|---|---|
-| Skill | `loom` | The method canon — the metaphor, the double diamond, the context brain, plus full references for the discovery harness (D1–D9 gates), the delivery harness (the autonomous loop, Q-gates, merge policy), the governance catalog (HG-0001…HG-0013), the agent's own runtime (`references/agent-egress-control.md` for the network half, `references/agent-credential-brokering.md` for the credential half), and the Institutional BrainKit (`references/brainkit.md`) |
-| Skill | `loom-adopt` | Stands the harness up in a repository — carries the machinery and walks the copy map (manifest-driven), seam mounting, ADOPT markers, BrainKit routing, and verification |
+| Skill | `loom` | The method canon — the metaphor, the double diamond, the context brain, plus full references for the discovery harness (D1–D9 gates), the delivery harness (the autonomous loop, Q-gates, merge policy), the governance catalog (HG-0001…HG-0013), the agent's own runtime (`references/agent-egress-control.md` for the network half, `references/agent-credential-brokering.md` for the credential half), the Institutional BrainKit (`references/brainkit.md`), and the optional Factory Floor (`references/factory-floor.md`) |
+| Skill | `loom-adopt` | Stands the harness up in a repository — carries the machinery and walks the copy map (manifest-driven), seam mounting, ADOPT markers, BrainKit routing, verification, and the stamped upgrade path (`loom version`; re-running the installer preserves files you have edited) |
 | Skill | `brainkit-init` | Drafts an Institutional BrainKit + institution profile from an institution's approved sources — records provenance, seals digests, produces a gap register; never invents policy or approves |
 | Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line (D4) and prototype fidelity (D8) on a discovery run |
 | Agent | `data-governance-reviewer` | Judges control coverage and residual-risk soundness on a run's `data-governance.md`, beyond what the mechanical D6 gate can check |
+| Agent | `change-watch` | Continuous assurance ① Watch — the horizon scanner: new or amended regulation, a certificate inside its warning window, a CVE in a shipped dependency. Flags and routes; never assesses or fixes |
+| Agent | `risk-reviewer` | Continuous assurance ② Assess — impact against the mounted data-risk register, routing what needs a human decision. Assessment only; never authors controls or merges |
+| Agent | `model-risk-reviewer` | Independent challenge on a model/prompt change before it ships (HG-0006) — pinned, tiered, evaluated against its own pin, independently validated |
 
 The `loom-adopt` bundle (inside the skill, copied into adopting repos) carries:
 
@@ -42,8 +45,11 @@ The `loom-adopt` bundle (inside the skill, copied into adopting repos) carries:
   (checklists are domain content; you fill in yours)
 - **Three guardrail hooks** — `pii-guard`, `spec-tripwire`, `test-tripwire`, plus the
   settings snippet that wires them
-- **A minimal data-risk register** — one complete regulation → risk → control → residual
-  chain, so gate D6 passes end to end before you mount the real register
+- **A minimal data-risk register**, as a worked example (`harness/register-example/`) — one
+  complete regulation → risk → control → residual chain. Copy it to
+  `docs/governance/data-risk-register/` to exercise gate D6 end to end before you mount the real
+  register; the installer deliberately leaves it out, because a register the installer wrote
+  would assert risks nobody accepted
 
 ## The shape of the method
 
@@ -71,5 +77,5 @@ generic form: the machinery is identical, the domain mounts through the seams.
 
 ## Install nothing by accident
 
-Installing the plugin adds two skills and two agents — nothing always-on. The hooks and the
+Installing the plugin adds three skills and five agents — nothing always-on. The hooks and the
 build loop activate only when a repository adopts them explicitly via `loom-adopt`.
