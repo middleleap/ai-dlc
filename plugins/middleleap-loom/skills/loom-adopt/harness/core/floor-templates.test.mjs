@@ -16,6 +16,7 @@ import {
   parseTemplate,
   sha256,
   toFloorDefinition,
+  WRITE_CLASSES,
 } from './floor-templates.mjs';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -96,6 +97,30 @@ test('a born-on-the-floor definition carries the freeze/drift block; a routed on
   assert.equal(born.schema, SCHEMA_ID);
 });
 
+test('the `frozen` status is offered only where a freeze can actually happen', () => {
+  const parsed = parseTemplate(TEMPLATE, { source: 'x/demo.md' });
+  const statusOf = (wc) => toFloorDefinition(parsed, { writeClass: wc })
+    .properties.find((p) => p.name === 'Status').options;
+
+  // Only born-on-the-floor content is exported and stamped by the freeze round-trip.
+  assert.ok(statusOf('born-on-the-floor').includes('frozen'));
+
+  // Everywhere else `frozen` is a status nothing writes and no gate reads — an author selecting it
+  // would mark the page with a claim the harness cannot contradict. It must not be on the menu.
+  for (const wc of ['decision-routed', 'lives-on-the-floor', 'read-only-mirror', 'never-writable']) {
+    assert.ok(!statusOf(wc).includes('frozen'), `${wc} must not offer a status it can never reach`);
+    assert.deepEqual(statusOf(wc), ['draft', 'in review', 'gate-green']);
+  }
+
+  // The option and the block that gives it meaning travel together, in both directions.
+  for (const wc of [...WRITE_CLASSES]) {
+    const d = toFloorDefinition(parsed, { writeClass: wc });
+    const offersFrozen = d.properties.find((p) => p.name === 'Status').options.includes('frozen');
+    const hasBlock = d.properties.some((p) => p.name === 'Frozen at');
+    assert.equal(offersFrozen, hasBlock, `${wc}: the frozen status and the freeze block disagree`);
+  }
+});
+
 test('the freeze block is read-only — an author never writes the record own state', () => {
   const d = toFloorDefinition(parseTemplate(TEMPLATE), { writeClass: 'born-on-the-floor' });
   for (const name of ['Frozen at', 'Version', 'Drift']) {
@@ -137,6 +162,32 @@ test('a gate added to the template reaches the definition', () => {
   const stored = toFloorDefinition(parseTemplate(TEMPLATE, { source: 'x/demo.md' }));
   const fresh = toFloorDefinition(parseTemplate(TEMPLATE.replace('and D6.', 'and D6, and now D9.'), { source: 'x/demo.md' }));
   assert.ok(diff(stored, fresh).some((x) => /gates differ/.test(x)));
+});
+
+test('a properties drift is caught — sections alone were never the whole definition', () => {
+  const parsed = parseTemplate(TEMPLATE, { source: 'x/demo.md' });
+  const fresh = toFloorDefinition(parsed, { writeClass: 'decision-routed' });
+
+  // The exact state two shipped decision-routed definitions were in: identical sections, identical
+  // gates, identical write_class — and a Status select offering a `frozen` nothing can write. The
+  // gate compared sections only, so it called the pair "in step".
+  const stored = JSON.parse(JSON.stringify(fresh));
+  stored.properties.find((p) => p.name === 'Status').options.push('frozen');
+  assert.ok(diff(stored, fresh).some((x) => /properties differ/.test(x)),
+    'a status the write class cannot reach must not pass as in-step');
+
+  // The other direction: losing the freeze block from a born-on-the-floor definition is a silent
+  // removal of the only thing that tells a reader whether they hold the record or a draft.
+  const born = toFloorDefinition(parsed, { writeClass: 'born-on-the-floor' });
+  const stripped = JSON.parse(JSON.stringify(born));
+  stripped.properties = stripped.properties.filter((p) => p.name !== 'Frozen at');
+  assert.ok(diff(stripped, born).some((x) => /properties differ/.test(x)));
+
+  // And a read_only flag flipped: an author who can write the record's own state is the defect
+  // the read-only flags exist to prevent, and it is invisible at section granularity.
+  const unlocked = JSON.parse(JSON.stringify(born));
+  unlocked.properties.find((p) => p.name === 'Drift').read_only = false;
+  assert.ok(diff(unlocked, born).some((x) => /properties differ/.test(x)));
 });
 
 test('identical definitions produce no findings — the gate is not noisy', () => {

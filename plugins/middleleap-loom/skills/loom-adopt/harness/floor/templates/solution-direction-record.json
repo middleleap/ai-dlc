@@ -26,8 +26,7 @@
       "options": [
         "draft",
         "in review",
-        "gate-green",
-        "frozen"
+        "gate-green"
       ]
     }
   ],

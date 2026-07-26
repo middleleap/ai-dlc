@@ -134,6 +134,13 @@ export function parseTemplate(md, { source = '' } = {}) {
  */
 export function toFloorDefinition(parsed, { writeClass = 'born-on-the-floor', sourceDigest = null } = {}) {
   if (!WRITE_CLASSES.has(writeClass)) throw new Error(`unknown write class ${JSON.stringify(writeClass)}`);
+  // Only `born-on-the-floor` content is ever frozen: the freeze round-trip exports a floor page
+  // into git and stamps it. Every other class either lives in git already, is routed elsewhere for
+  // decision, or is a mirror — none of them has a freeze to record. So `frozen` is not merely an
+  // unused option on those forms, it is a status nothing can write and nothing reads. An author who
+  // selects it has marked their page with a lie the harness cannot detect, because no gate reads a
+  // status the freeze round-trip never sets. The option and the block that gives it meaning are
+  // therefore gated together, on purpose.
   const frozen = writeClass === 'born-on-the-floor';
   return {
     _comment: 'GENERATED from the git template named in `source` — do not hand-edit. Regenerate with `node scripts/template-parity-check.mjs --fix`; the gate fails when this file and its source disagree, so the guided form on the floor cannot drift from the artifact the gates read.',
@@ -148,7 +155,7 @@ export function toFloorDefinition(parsed, { writeClass = 'born-on-the-floor', so
     guidance: parsed.guidance,
     properties: [
       { name: 'Run', type: 'title', required: true, help: 'The discovery run this artifact belongs to.' },
-      { name: 'Status', type: 'select', required: true, options: ['draft', 'in review', 'gate-green', 'frozen'] },
+      { name: 'Status', type: 'select', required: true, options: frozen ? ['draft', 'in review', 'gate-green', 'frozen'] : ['draft', 'in review', 'gate-green'] },
       ...(frozen ? [
         // The freeze/drift block (§6c · D-suite). Display-only on the floor: it is written by the
         // freeze round-trip, never by an author, and it is how a reader knows whether what they
@@ -182,6 +189,14 @@ export function diff(stored, fresh, label = 'definition') {
   }
   if (JSON.stringify(a.gates) !== JSON.stringify(b.gates)) {
     findings.push(`${label}: gates differ (stored ${JSON.stringify(a.gates)}, source says ${JSON.stringify(b.gates)})`);
+  }
+  // Properties, not just sections. The freeze/drift block, the Status options and their read-only
+  // flags all live here, and they are derived from `write_class` — so leaving them out meant a
+  // definition could offer a status nothing writes, or lose the freeze block entirely, and this
+  // gate would still report the pair "in step". Two shipped decision-routed definitions were in
+  // exactly that state when this comparison was added.
+  if (JSON.stringify(a.properties) !== JSON.stringify(b.properties)) {
+    findings.push(`${label}: properties differ — the page properties are derived from write_class, so a mismatch means the form offers or omits something the write class does not support\n      stored: ${JSON.stringify(a.properties)}\n      source: ${JSON.stringify(b.properties)}`);
   }
   const names = (d) => (d.sections || []).map((s) => s.name);
   if (JSON.stringify(names(a)) !== JSON.stringify(names(b))) {

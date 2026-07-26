@@ -180,6 +180,25 @@ export const DRIFT_STATES = new Set(['none', 'draft ahead of record']);
  * prohibits far more than any pattern can see: case narratives, supervisory correspondence, staff
  * conduct, unredacted incident detail. Nothing automated stands behind those.
  */
+// WHY THIS OVERLAPS `floor-pii.mjs` AND MUST NOT BE MERGED WITH IT.
+//
+// Three shapes appear in both tables — email address, IBAN, Emirates ID — and the regexes differ.
+// That is deliberate, and collapsing them into one shared table would break whichever module lost
+// its own tolerance:
+//
+//   - THIS table BLOCKS, in the git → floor direction. A hit withholds the whole record. So it is
+//     tuned for LOW FALSE POSITIVES: `784\d{12}` on normalized text, an IBAN that excludes the
+//     synthetic 000 bank code. A false positive here silences a legitimate record.
+//   - `floor-pii` ADVISES, over floor-authored prose. A hit asks a human to look and can never
+//     certify a text clean. So it is tuned for HIGH RECALL: a loose 3-4-7-1 digit grouping that
+//     matches plenty of things that are not Emirates IDs. A false negative there is a missed
+//     disclosure; a false positive costs one person one glance.
+//
+// One table cannot hold both tolerances. What IS asserted, in floor-pii.test.mjs, is the invariant
+// between them: every PERSONAL-DATA shape blocked here must also be caught there, so the advisory
+// net is never narrower than the blocking one. The two credential shapes below are intentionally
+// outside floor-pii's remit — a private key is not personal data, and secrets are the Q4 gate's
+// job. That exclusion is asserted too, so it stays a decision rather than drifting into a gap.
 export const PROHIBITED = [
   { id: 'emirates-id', normalized: true, re: /784\d{12}/, why: 'an Emirates-ID-shaped literal' },
   { id: 'uae-iban', normalized: true, re: /AE\d{2}(?!000)\d{19}/, why: 'a real-shaped UAE IBAN (synthetic ones carry bank code 000)' },

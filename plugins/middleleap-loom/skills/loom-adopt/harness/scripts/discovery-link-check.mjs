@@ -101,7 +101,17 @@ function fsResolveRun(slug) {
 }
 
 export function check() {
-  if (!existsSync(BACKLOG)) return [`${BACKLOG} not found`];
+  // The installer deliberately does not ship a backlog — it is the adopter's own content, not a
+  // template — so a freshly adopted repo meets this gate before the file exists. That is still a
+  // failure and not a no-op: an absent backlog means the waist is unwired, and passing here would
+  // make "no backlog" indistinguishable from "every item traces to a green hand-off". But the
+  // finding has to say what to DO, because the reader is an adopter on their first CI run who has
+  // not done anything wrong.
+  if (!existsSync(BACKLOG)) {
+    return [`${BACKLOG} not found — the installer does not ship one because a backlog is your `
+      + `content, not a template. Create it (the loom-adopt SKILL lists it under "Also create if `
+      + `missing"); an empty \`milestones: []\` is valid and passes this gate.`];
+  }
   return checkItems(readFileSync(BACKLOG, 'utf8'), fsResolveRun);
 }
 
