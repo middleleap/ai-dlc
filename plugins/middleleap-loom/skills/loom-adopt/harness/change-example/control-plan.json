@@ -84,6 +84,12 @@
     "model_risk": {
       "required": true,
       "minimum_tier": "medium"
+    },
+    "sca": {
+      "required": true
+    },
+    "hardened_runtime": {
+      "required": true
     }
   },
   "profile_bindings": [
@@ -97,7 +103,7 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:a5b32bd35e791e86945333448386a87c46cbea521bf1aad7ad2d88f352da8d79"
+      "digest": "sha256:117a30fc6c551582cdc868f13a8e5dc9c3b03d96c8d5485b148722bbb0417a3d"
     },
     {
       "profile": "uae-bank",
@@ -106,5 +112,5 @@
       "digest": "sha256:d9145e558c731bc6b2f703ae8da44e4a8453a8fec49d1bd2cdd65c88eb50c624"
     }
   ],
-  "plan_hash": "ca64b2e1bf1cac7c2020b255cb021a1b48efb29d79140c40af28ccd95ae86228"
+  "plan_hash": "dfac91a2da0c21da741e8cd469f82fe27b78aee94c5889c86193a54e98f1b061"
 }

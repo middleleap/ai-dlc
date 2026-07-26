@@ -53,6 +53,7 @@ jobs:
           node scripts/adapter-evidence-check.mjs       # D5.3 — one adapter, one control; declared is not active
           node scripts/operational-readiness-check.mjs  # R1–R6 with freshness windows — stale drills block
           node scripts/adapter-check.mjs                 # enterprise adapters map to real catalog controls
+          node scripts/provider-selection-check.mjs     # one role, one chosen provider — mounted, and required-when-compiled
 
       - name: Runtime assurance gates (scheduled lane — also safe to run per PR)
         run: |
