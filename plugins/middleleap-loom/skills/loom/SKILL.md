@@ -75,6 +75,10 @@ Full canon for each half:
 - `references/agent-egress-control.md` — an **optional** component: the agent egress gateway that
   fills HG-0011's block half and HG-0012's allow-list, the `egress_proxy` activation mechanism
   that lets those rows graduate, and why the judge inside it is itself a model to govern.
+- `references/agent-credential-brokering.md` — its sibling on the **credential** side: the broker
+  that holds the secret so the agent never does, filling the vault half of HG-0004 that a gateway
+  leaves open. Why a placeholder beats a short-lived secret for a process that reads untrusted
+  input, and the deny → proposal → human-approval property worth requiring of any instance.
 - `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
   eval-before-release, and independent validation, with the model-provenance gate that enforces
   the repo-side half.

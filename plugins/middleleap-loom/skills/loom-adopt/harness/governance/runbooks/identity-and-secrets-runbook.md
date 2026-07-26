@@ -87,6 +87,8 @@ The acceptance evidence is blunt: **a filesystem and image scan of a running bui
 3. The agent authenticates to the vault **via its workload identity from step 4**, not via a stored vault token. The vault's **per-identity access policy** — not the agent — decides which secrets it may lease; the agent cannot list the vault or reach another identity's secrets.
 4. Secrets are **held in memory only**, never written unencrypted to disk, never echoed into logs (the audit trail records *that* a secret was leased and its lease id, never its value).
 
+> **A stronger shape where it fits: brokering instead of leasing.** Steps 4–5 still leave a real, short-lived secret in the agent's memory. A coding agent is an **untrusted-input processor by construction** — it reads issues, PR comments, dependency READMEs, web pages, tool output — so the process holding the secret is the same process an attacker gets to write prompts for. The stronger option is a **credential-brokering egress proxy**: it holds the credential itself, hands the agent only a placeholder, and substitutes the real value server-side on the way to the upstream. The agent then has nothing to leak, and step 4's filesystem-and-image test passes by construction rather than by discipline. It does not replace steps 1–3, it does not remove the need for a vault (the broker needs one), and it brings costs of its own — TLS interception, and a new high-value target holding every credential. See `../loom/references/agent-credential-brokering.md`.
+
 ## 6. Rotate — on a schedule and on events
 
 1. **Scheduled rotation** for the vault-auth root, any residual bootstrap secret, and the signing material behind workload attestation. Dynamic secrets rotate themselves by construction; what remains is the small set of roots that bootstrap them.
@@ -149,4 +151,5 @@ Only when every box is checked is HG-0004 **enforced for this adoption**, not me
 
 - **HG catalog** (`../loom/references/governance.md`): HG-0004 (this runbook); composes with HG-0001, HG-0002; deployer duty → HG-0005; accountable owner → HG-0010; agent-as-model → HG-0006 (`../loom/references/model-risk.md`).
 - **Bank-grade gap** (`../loom/references/bank-grade-gap.md`): cluster **A**, where HG-0004 is **Named-only** — real IAM/PAM, HSM-backed vault, short-lived tokens, and rotation flip it to Enforced. Adjacent: cluster **C** (the WORM audit store).
+- **Agent credential brokering** (`../loom/references/agent-credential-brokering.md`): the shape that satisfies the "secrets on disk" half of this runbook by construction, the peer instances, and the substitution failure that looks green. Its network sibling is `../loom/references/agent-egress-control.md` (the chokepoint and the per-agent network identity).
 - **Loom machinery it complements (does not replace):** `activation-runbook.md` step 3; `control-plane-check.mjs` + branch protection (HG-0001/0002); `change-watch`; the sealed evidence bundle (HG-0003).

@@ -233,6 +233,10 @@ infrastructure the agent's traffic is forced through and cannot route around.
   names the neutral role, a recommended instance (CrabTrap), the two bypass probes, and the
   `egress_proxy` activation mechanism that lets HG-0011/HG-0012 graduate once the gateway is real.
   It also states the half a gateway of that shape does **not** close: it blocks, it does not redact.
+- **The credential half, while you are at the chokepoint:** some instances also *substitute*
+  credentials in transit, so the agent holds a placeholder and never the secret —
+  `../../../loom/references/agent-credential-brokering.md`. That is HG-0004's territory rather than
+  HG-0011's, but it is the same box and the same deployment, so decide both at once.
 
 ## 10. FAPI 2.0 / mTLS conformance (Open Finance)
 

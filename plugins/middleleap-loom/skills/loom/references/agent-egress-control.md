@@ -33,7 +33,7 @@ how that step gets taken; it does not change the grade until it is taken.
 |---|---|---|
 | **HG-0011** onshore gateway · pre-egress DLP (`governance.md`) | The inline chokepoint; **block** on policy — regulated data, secrets, source, unapproved destinations | **Redaction / tokenisation**. Blocking a request is not the same as scrubbing a field out of one |
 | **HG-0012** controlled build/eval runtime | The **egress allow-list** the decision names verbatim — deny the hosts the agent would reach green *by retrieval* (the upstream repo, the issue thread, the answer) | The derivation-vs-retrieval **audit** itself |
-| **HG-0004** least-privilege identity (`identities.json`) | A per-agent **network** identity with its own policy — least privilege at the route, not only the credential | The vault half |
+| **HG-0004** least-privilege identity (`identities.json`) | A per-agent **network** identity with its own policy — least privilege at the route, not only the credential | The vault half — see `agent-credential-brokering.md`, which fills it by holding the secret so the agent never does |
 | **HG-0010** cease-use switch | Revoking the agent's gateway identity halts its reach in one action, outside the repo | The named accountable officer |
 | **Run / operations-signal** (`operations.md`) | Every deny is a dated, attributable event with a payload reason — a signal source that needs no new schema | Detection of everything the gateway cannot see |
 | **Continuous assurance** (`continuous-assurance.md`) | Deny-rate and destination drift as ① Watch inputs; the deny log as ② Assess evidence | — |
@@ -123,6 +123,9 @@ inside the boundary, on infrastructure the third-party register already covers.
 - `governance.md` — HG-0011, HG-0012, HG-0004, HG-0010 and the enforcement-of-record rule.
 - `bank-grade-gap.md` — **cluster E**, where pre-egress DLP is graded, and the five-state model
   this component moves a row along.
+- `agent-credential-brokering.md` — the credential half of the same runtime: the broker that holds
+  the secret so the agent holds only a placeholder, filling the vault half of HG-0004 this file
+  leaves open.
 - `supply-chain-security.md` — the sibling pattern: concrete tooling filling named slots.
 - `operations.md` — the signal types and the routing triage a deny lands in.
 - `model-risk.md` — HG-0006 and the model manifest the judge belongs in.
