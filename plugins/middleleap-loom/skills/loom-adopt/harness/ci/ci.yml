@@ -35,6 +35,7 @@ jobs:
           node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
           node scripts/template-parity-check.mjs      # the guided floor form cannot drift from the git template
           node scripts/identity-map-check.mjs         # P6 — the join from a signed subject to a registry identity
+          node scripts/residency-check.mjs            # D0.1/P1 — a floor may not run against an unsigned residency record
           node scripts/freeze-stamp-check.mjs         # D4.1 — no frozen artifact was edited in place
           node scripts/drift-check.mjs                # D4.2 — no NEW claim against a page that has moved on
           node scripts/floor-only-check.mjs           # D3.3 — a floor-only note must never reach the record
