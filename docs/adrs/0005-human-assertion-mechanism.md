@@ -244,21 +244,38 @@ it can mint an accepted issuer, and therefore mint approvers. It belongs under t
 second-line CODEOWNERS ownership in the tree, alongside `release-hold.json` — not with the sync
 service's configuration, and never within reach of any of the four seam identities.
 
-**This decision presumes the collaboration surface is joined to the institution's directory, and
-that presumption was unstated.** Every option above assumes an identity provider exists on the
-surface side: Option A authenticates against it, Option B observes assertions issued by it, and the
-P6 identity map exists to join a surface-side subject to a registry identity. On a workspace
-**without SAML SSO and SCIM** — which on the incumbent vendor means anything below the enterprise
-tier — none of that is available. There is no issuer, so `subject.assertion` has nothing to bind
-to, and the identity map has nothing on the surface side to join. Confirmed against a live
-workspace on 26 Jul 2026 (`notion-floor-alpha-walkthrough.md` §8), where the SSO/SCIM panel
-displays identifiers for a capability the plan cannot actually use.
+**This decision presumes the floor account and the IdP principal are the same person, and that
+presumption was unstated.** The assertion itself is issued by the **institution's** directory, not
+by the collaboration vendor — Option A re-authenticates against the bank's own IdP at a
+bank-controlled endpoint, and nothing in the signing path touches the surface. What the surface
+must supply is narrower and easier to miss: that the human who acted **on the floor** is provably
+the same principal the IdP later asserts. Federated sign-on is what supplies it. Without it, the
+floor account and the IdP subject are two unrelated accounts joined only by a line someone typed
+into `identity-map.json`, and P6 degrades from a cryptographic join to an honour system.
 
-The consequence is a **procurement precondition, not an engineering one**: enterprise-tier SSO plus
-SCIM provisioning is a prerequisite of this ADR, and it belongs in P2 alongside the residency and
-outsourcing questions rather than being discovered during WS2. A pilot on a lower tier can exercise
-the *transcription* path, since that signs custody only — but it cannot produce a subject
-assertion, and any envelope it emits is a draft artifact by construction.
+Confirmed against a live workspace on 26 Jul 2026 (`notion-floor-alpha-walkthrough.md` §8), where
+the SSO/SCIM settings panel displays identifiers for capabilities the workspace's plan cannot use.
+
+**The tiers do not split where it would be convenient.** On the incumbent vendor at the date of
+writing, SAML SSO is available one tier below the top, but SCIM provisioning, the audit-log API and
+**data-residency selection** are all top-tier only. So a mid-tier purchase buys the P6 join and
+none of the rest:
+
+| What the programme needs | Supplied by federated sign-on alone | Needs the top tier |
+|---|---|---|
+| The floor↔IdP join P6 verifies (`IM-R11`) | ✅ | |
+| Deprovisioning inside the reconciliation window | manual, and drifts | ✅ SCIM |
+| P1 residency (HG-0011) — where content physically sits | ❌ | ✅ residency selection |
+| Adapter evidence that is *observed, not declared* | ❌ | ✅ audit-log API |
+
+The consequence is a **procurement precondition, not an engineering one**, and it belongs in P2
+alongside the residency and outsourcing questions rather than being discovered during WS2. Note
+particularly that **P1 cannot be satisfied by a mid-tier purchase**: a residency review whose
+subject is a workspace that cannot select a region is a review of a control that does not exist.
+
+A pilot below the required tier can still exercise the *transcription* path, since that signs
+custody only — but it cannot produce a subject assertion whose principal is verifiable, and any
+envelope it emits is a draft artifact by construction.
 
 **A defect in the D2.4 module that this decision surfaced — now FIXED (loom `2.0.0-rc.13`).**
 As first written, `verifySubjectAssertion` rejected an assertion whose
