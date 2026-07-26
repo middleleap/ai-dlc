@@ -131,6 +131,9 @@ jobs:
           node scripts/drift-check.mjs             # D4.2 — no NEW claim against a page that has moved on
           node scripts/floor-only-check.mjs        # D3.3 — a floor-only note must never reach the record
           node scripts/projection-capability-check.mjs  # WS1 — the projector is OBSERVED unable to write git
+          node scripts/approval-surface-check.mjs  # D5.1/D5.4 — the approvals page matches the COMPILED roles
+          node scripts/floor-keeper-check.mjs      # D6.3/D6.4 — no keeper grant where approvals live
+          node scripts/adapter-evidence-check.mjs  # D5.3 — one adapter, one control; declared is not active
           node scripts/control-catalog-check.mjs
           node scripts/identity-registry-check.mjs
           node scripts/change-envelope-check.mjs
