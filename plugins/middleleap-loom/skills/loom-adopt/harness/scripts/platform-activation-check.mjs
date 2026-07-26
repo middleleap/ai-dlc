@@ -35,7 +35,11 @@ import { pathToFileURL } from 'node:url';
 export const ACTIVATION_DIR = ['docs/governance/platform-activation', 'platform-activation'];
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
 const IDENTITY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
-export const MECHANISMS = new Set(['branch_protection', 'rulesets', 'required_reviews', 'codeowners', 'workflow_permissions', 'environment_protection', 'oidc_subjects']);
+// Mechanisms are git-forge controls plus `egress_proxy` — the network chokepoint an agent's
+// outbound traffic is forced through (HG-0011/HG-0012). It is here because the graduation rule
+// below made those two controls unreachable by construction: an adopter could wire the gateway
+// the runbook tells them to wire and still have no mechanism to name in the record.
+export const MECHANISMS = new Set(['branch_protection', 'rulesets', 'required_reviews', 'codeowners', 'workflow_permissions', 'environment_protection', 'oidc_subjects', 'egress_proxy']);
 const DEFAULT_MAX_AGE_DAYS = 365;
 const DAY = 86_400_000;
 
