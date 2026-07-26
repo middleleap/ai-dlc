@@ -1,5 +1,7 @@
 {
-  "_comment": "REFERENCE MAPPING — an SCA/SAST platform (Snyk is one instance of the role) → the Q4 supply-chain control. This adapter exists to close a specific hole: scripts/supply-chain-check.mjs reads dependency-audit.json from a path the coding agent can write, so an agent that writes {\"critical\":0,\"high\":0} goes green without a scan. That is the HG-0002 failure mode. The adapter makes the counts an envelope the SCANNER ORG asserts, signed by an issuer outside the agent's write scope (see governance/attestation-issuers.template.json), and reconciled against the file the gate reads. Copy to docs/governance/adapters/, point at your org, and wire the fetch that fills activation_evidence. Swap Snyk for any SCA platform and only this file changes.",
+  "_comment": "PROVIDER PLUG-IN for the `sca` role — one of several; the institution chooses. This one closes a specific hole: scripts/supply-chain-check.mjs reads dependency-audit.json from a path the coding agent can write, so an agent that writes {\"critical\":0,\"high\":0} goes green without a scan. That is the HG-0002 failure mode. The provider makes the counts an envelope the SCANNER ORG asserts, signed by an issuer outside the agent's write scope (governance/attestation-issuers.template.json), and reconciled against the file the gate reads. To adopt: record the choice in docs/governance/provider-selection.json, copy this file to docs/governance/adapters/, point it at your org, and wire the fetch that fills activation_evidence.",
+  "role": "sca",
+  "provider": "snyk",
   "adapter_id": "snyk-sca",
   "system": "snyk",
   "satisfies_control": "Q4-SUPPLY",

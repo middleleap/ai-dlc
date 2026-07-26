@@ -1,0 +1,25 @@
+{
+  "_comment": "The provider ROLE catalog. HG-0008 says the harness names roles, never vendors — but until now the only place a vendor could be named was adapters/reference/, which holds at most ONE adapter per control (AD-R05 refuses two on the same control, and CI mounts that whole directory). So a role with three plausible providers had nowhere to put the second and third: the directory encoded 'the one true instance', not 'pick one'. This catalog is the fix. Each role states the control it fills and the capability name a profile uses to REQUIRE it; providers/<role>/ holds the alternatives; docs/governance/provider-selection.json records which one this institution chose. Nothing here is mounted by default — a catalog is an offer, not an installation.",
+  "roles": [
+    {
+      "role": "sca",
+      "control": "Q4-SUPPLY",
+      "capability": "sca",
+      "purpose": "Assert the dependency-audit severity counts from outside the repository under test, so the Q4 gate cannot be satisfied by an agent writing its own verdict",
+      "must_provide": [
+        "severity counts (and any reachability verdict) asserted by the scanning platform, not by the scanned repo",
+        "a tamper probe: editing the local report away from the platform's counts must fail the build"
+      ]
+    },
+    {
+      "role": "hardened-runtime",
+      "control": "HG-0011",
+      "capability": "hardened_runtime",
+      "purpose": "Make the runtime the coding agent executes in a digest-pinned, attestation-verified image, so HG-0011's attested-execution limb rests on evidence rather than on a base image nobody can account for",
+      "must_provide": [
+        "a digest (never a tag) plus a verification result for the image's SBOM and provenance",
+        "a negative probe: an image without a valid attestation must fail admission"
+      ]
+    }
+  ]
+}

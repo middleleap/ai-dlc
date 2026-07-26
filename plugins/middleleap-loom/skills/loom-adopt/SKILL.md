@@ -68,6 +68,8 @@ are repo-root-relative.
 | `governance/assurance-sla.template.json` | `docs/governance/assurance-sla.json` | Service-level expectations for continuous-assurance cases (rc.14 WS6) |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | Token-spend ledger (a report, never a merge gate) |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | The neutral adapter contract |
+| `adapters/providers` | `docs/governance/adapters/providers` | The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it |
+| `governance/provider-selection.template.json` | `docs/governance/provider-selection.json` | Which provider this institution chose per role (the choice is recorded, never defaulted) |
 | `guardrails` | `guardrails` | Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks) |
 | `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
 | `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | BrainKit institutional identity + design language (the D7 projection source) |

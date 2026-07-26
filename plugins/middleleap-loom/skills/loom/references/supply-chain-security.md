@@ -45,22 +45,45 @@ The harness already has the mechanism: the **adapter contract** (`adapters/READM
 external system's state into a signed envelope tied to a catalog control, and `adapter-check.mjs`
 fails any adapter naming a control that does not exist. Two reference mappings ship for this:
 
-| Adapter | Control | Emits | What it binds |
+| Role | Control | Emits | What it binds |
 |---|---|---|---|
-| `snyk-sca.json` | `Q4-SUPPLY` | `dependency-audit` envelope | The **scanner org's own** counts + reachability verdict, reconciled against the file the gate reads on `scanned_commit` and every count |
-| `chainguard-runtime.json` | `HG-0011` | `runtime-attestation` envelope | The digest, SBOM digest, SLSA level and *verification result* for the runtime the agent executes in — §2 |
+| `sca` | `Q4-SUPPLY` | `dependency-audit` envelope | The **scanning platform's own** counts + reachability verdict, reconciled against the file the gate reads on `scanned_commit` and every count |
+| `hardened-runtime` | `HG-0011` | `runtime-attestation` envelope | The digest, SBOM digest, SLSA level and *verification result* for the runtime the agent executes in — §2 |
 
-Both carry a **negative probe** in `activation_evidence`, and the probe is the decisive field:
-`tamper_probe` for Snyk (editing the local counts away from the platform's must fail the build),
-`unsigned_image_probe` for Chainguard (an image without a valid attestation must fail admission).
-An adapter with no real `activation_evidence` is reported as *declared, not active* — a wired seam,
-never a green control. That honesty is the point: it distinguishes "we bought Snyk" from
-"the Snyk verdict is the one the gate cannot route around."
+Each provider carries a **negative probe** in `activation_evidence`, and the probe is the decisive
+field: `tamper_probe` (editing the local counts away from the platform's must fail the build),
+`unsigned_image_probe` (an image without a valid attestation must fail admission). An adapter with
+no real `activation_evidence` is reported as *declared, not active* — a wired seam, never a green
+control. That honesty is the point: it distinguishes "we bought Snyk" from "the Snyk verdict is the
+one the gate cannot route around."
 
-They deliberately name **different** controls. `AD-R05` is one adapter, one control: two adapters
-sharing a control make their evidence interchangeable, so a probe of one mechanism appears to
-satisfy a claim it was never tested against. The release-side base image needs no second adapter
-anyway — its SBOM and provenance are already the Q4 artifacts `supply-chain-check.mjs` gates.
+The roles name **different** controls. `AD-R05` is one adapter, one control: two adapters sharing a
+control make their evidence interchangeable, so a probe of one mechanism appears to satisfy a claim
+it was never tested against. The release-side base image needs no second adapter anyway — its SBOM
+and provenance are already the Q4 artifacts `supply-chain-check.mjs` gates.
+
+### These are roles, and the choice is the institution's
+
+Snyk and Chainguard are **instances**, and the harness has to make that structurally true rather
+than merely say it. Until `2.0.0-rc.19` it only said it: adapters lived in a directory that holds
+at most one mapping per control, so naming Snyk left nowhere to put Trivy. `HG-0008` was honoured
+in the prose and broken in the filesystem.
+
+The catalog is `adapters/providers/<role>/<provider>.json` — alternatives side by side, none
+mounted by default. The institution records what it picked in
+`docs/governance/provider-selection.json`, and `provider-selection-check.mjs` enforces the join:
+one provider per role (`PS-R03`), the provider must exist and fill the role's control
+(`PS-R02`/`PS-R04`), and its adapter must actually be mounted, because selecting is not installing
+(`PS-R05`). `PS-R06` makes it mandatory-when-compiled: an institution that has not reached this
+decision is not failing it, but one whose plan *requires* the capability and never made the choice
+is. Each provider states its `role_fit` — one line on its strength, one on where it is weak — so
+the choice is made with open eyes rather than sold.
+
+The shipped alternatives are deliberately not two commercial vendors: `trivy` (self-hosted,
+open-source) and `internal-golden-images` (the institution's own pipeline) exist to prove the role
+can be filled without buying anything. Both inherit the same demand — a self-hosted scanner earns
+the same evidence only when the identity that runs it, and the store it writes to, are outside the
+coding agent's reach. Building it yourself changes who signs, not whether a signature is checked.
 
 ## 2. Chainguard belongs on the *agent's* runtime, not only the product's
 
