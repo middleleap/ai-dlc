@@ -2,29 +2,38 @@
 //
 // The gate's whole value is one assertion, so the tests are mostly about not weakening it:
 //
-//   1. THE REAL BUNDLE CLOSES. Not a fixture — the shipped ci/ci.yml against the shipped catalog.
-//      This is the regression that matters: it is the exact check that was missing when nine
-//      Factory Floor gates ran in CI with no catalog entry and the gate runner silently dropped
-//      every one of them.
+//   1. THE REAL WORKFLOW CLOSES — not a fixture, but whichever workflow/catalog pair this layout
+//      actually has (see the resolution below: the bundle's, or an adopted repo's). This is the
+//      regression that matters: it is the exact check that was missing when nine Factory Floor
+//      gates ran in CI with no catalog entry and the gate runner silently dropped every one.
 //   2. AGREEMENT WITH THE RUNNER. gate-runner selects on mechanism_ref; this gate closes on
 //      mechanism_ref. Asserted against core/gate-runner.mjs's own selection rather than restated,
 //      so the two cannot drift apart into a gate that passes while the runner still skips.
 //   3. THE EXEMPTION CANNOT GO QUIET. A report-only carve-out must be named AND printed.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluate, gatesInWorkflow, main, REPORT_ONLY, CI_LOCATIONS, CATALOG_LOCATIONS } from './ci-catalog-check.mjs';
 import { select } from '../core/gate-runner.mjs';
 
+// These tests run in BOTH layouts — the bundle (where the reference workflow is `ci/ci.yml` and
+// the catalog is a `.template.json`) and an adopted repo (where CI's adoption dry-run re-runs
+// this whole suite against `.github/workflows/ci.yml` + `docs/governance/control-catalog.json`).
+// Resolving the pair rather than hard-coding the bundle's is not a convenience: the adopted
+// layout is where closure actually protects someone, so the assertions should hold there too.
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const BUNDLE_CI = resolve(HARNESS, 'ci/ci.yml');
-const BUNDLE_CATALOG = resolve(HARNESS, 'governance/control-catalog.template.json');
-const readCatalog = () => JSON.parse(readFileSync(BUNDLE_CATALOG, 'utf8'));
+const pick = (...candidates) => candidates.find((p) => existsSync(p)) || null;
+const CI = pick(resolve(HARNESS, 'ci/ci.yml'), resolve(process.cwd(), '.github/workflows/ci.yml'));
+const CATALOG = pick(
+  resolve(HARNESS, 'governance/control-catalog.template.json'),
+  resolve(process.cwd(), 'docs/governance/control-catalog.json'),
+);
+const readCatalog = () => JSON.parse(readFileSync(CATALOG, 'utf8'));
 
 test('the shipped workflow closes over the shipped catalog', () => {
-  const findings = evaluate(readFileSync(BUNDLE_CI, 'utf8'), readCatalog());
+  const findings = evaluate(readFileSync(CI, 'utf8'), readCatalog());
   assert.deepEqual(findings, [], `uncatalogued CI gates:\n${findings.join('\n')}`);
 });
 
@@ -36,7 +45,7 @@ test('every gate the workflow runs is runner-reachable, or exempted with a state
   // third case: catalogued, never selected, and nothing saying so — which reads as covered.
   const catalog = readCatalog();
   const byMechanism = new Map(catalog.controls.filter((c) => c.mechanism_ref).map((c) => [c.mechanism_ref, c]));
-  const gates = gatesInWorkflow(readFileSync(BUNDLE_CI, 'utf8'))
+  const gates = gatesInWorkflow(readFileSync(CI, 'utf8'))
     .filter((g) => g.startsWith('scripts/') && !REPORT_ONLY.has(g));
   const reachable = new Set();
   for (const lane of ['pr', 'build', 'release', 'deploy', 'scheduled']) {
@@ -89,7 +98,7 @@ test('the exemption list is PRINTED, so a carve-out cannot go quiet', async () =
   const write = process.stdout.write.bind(process.stdout);
   process.stdout.write = (s) => { chunks.push(s); return true; };
   try {
-    main(['--ci', BUNDLE_CI]);
+    main(['--ci', CI]);
   } finally {
     process.stdout.write = write;
   }
