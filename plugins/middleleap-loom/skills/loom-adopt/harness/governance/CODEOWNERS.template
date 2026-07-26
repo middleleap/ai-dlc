@@ -25,6 +25,9 @@
 /profiles/                              @your-org/platform-admins
 /guardrails/                            @your-org/platform-admins
 /docs/governance/                       @your-org/platform-admins
+# The adoption stamp: which Loom this repo runs and which managed files you have customised.
+# A record, not a control — but an edit to it changes what the next upgrade will overwrite.
+/.loom/                                 @your-org/platform-admins
 
 # Classification, approvals and the identity registry are owned by the SECOND LINE, not the
 # builders — this is what makes "the agent cannot lower the risk tier" a mechanism.

@@ -1,0 +1,113 @@
+{
+  "_comment": "Migration notes per Loom version, read by adopt.mjs. On an upgrade the installer prints every entry between the stamped version and this bundle's, so an adopter is told what changed and what they must do — rather than discovering it when a gate they have never heard of fails. `action_required` is the half that needs a human: a new template to fill, a new gate that only stays green once something is declared. Keep entries factual and short; the canon is the reference docs, not this file. A version with no adopter-visible change needs no entry.",
+  "versions": [
+    {
+      "version": "2.0.0-rc.3",
+      "headline": "The routine-change lane (HG-0013) — graduated autonomy behind an absolute control-plane floor",
+      "notes": [
+        "A narrow, pre-named class of low-risk changes may auto-merge inside a second-line-owned, expiring envelope. Approval moves from per-change to per-envelope; it never disappears."
+      ],
+      "action_required": [
+        "Fill docs/governance/routine-envelope.json (second-line owned) if you want the lane at all — leaving it unadopted simply means every change takes the human-merge lane.",
+        "Branch protection: mark `gates` required; do NOT mark `routine-qualified` required. Point the merge queue at `routine-qualified` alone."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.4",
+      "headline": "The product-eval gate — a release scores its discovery success measures",
+      "notes": [
+        "A release links its discovery hand-off and scores every D1 success measure against the shipping commit; a regression blocks."
+      ],
+      "action_required": [
+        "Fill docs/governance/product-evals.json. The eval rig itself is yours to build — the gate checks that the result is sealed and bound to the shipping commit."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.5",
+      "headline": "Token-spend telemetry",
+      "notes": [
+        "docs/governance/token-ledger.json records per-iteration spend. It is a report and never a merge gate — cost is a signal for humans."
+      ],
+      "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.7",
+      "headline": "The policy compiler commands execution, and the Institutional BrainKit arrives",
+      "notes": [
+        "Required gates are compiled from the change envelope's profiles rather than listed by hand, so a control cannot be talked off the route by editing CI.",
+        "institution/brainkit/ ships as adopt-pending templates; the installer never invents or approves institutional content."
+      ],
+      "action_required": [
+        "If your institution owns a BrainKit, run the `brainkit-init` skill to draft one from approved sources, then have its owners approve it. Until then it stays dormant and no change pins it."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.11",
+      "headline": "The release-evidence plane rebuilt on the artifact",
+      "notes": [
+        "Source, artifact, evals and anchor must all bind to ONE digest. Release-evidence checks stopped masquerading as PR-source checks: the gate runner's lanes now cover build and deploy as well as pr, release and scheduled."
+      ],
+      "action_required": [
+        "If you pinned CI to the `pr` lane only, add the `build`, `release` and `deploy` lane invocations — release-evidence gates no longer run on the PR lane."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.12",
+      "headline": "Platform enforcement made real (WS2)",
+      "notes": [
+        "A control graduates to platform-enforced only on a live observation that was bypass-tested, independently signed and fresh — a declared activation no longer counts.",
+        "Live control-plane config is reconciled against an approved baseline; drift suspends routine auto-merge."
+      ],
+      "action_required": [
+        "Fill docs/governance/config-baseline.json with your approved control-plane configuration, and produce the live observation with `loom activate`.",
+        "docs/governance/routine-controller.yml is a reference auto-merge controller — it needs a bot identity separated from the coding agent before it means anything."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.13",
+      "headline": "The approval-attestation contract, and runtime-neutral guardrails",
+      "notes": [
+        "Human approval assertions are verified against identity-provider material kept separate from service keys.",
+        "The P6 identity map joins a signed subject to a registry identity — second-line owned, never written by a service.",
+        "guardrails/ declares what the runtime actually enforces, so the Loom never implies coverage a runtime lacks.",
+        "The data-risk register became mandatory-when-compiled: if a change's compiled plan requires it, a missing register fails D6 with no flag to turn it off."
+      ],
+      "action_required": [
+        "Fill docs/governance/assertion-issuers.json and docs/governance/identity-map.json (both second-line owned).",
+        "Regulated adopters: mount a real data-risk register at docs/governance/data-risk-register/ — --require-register can now only tighten, never weaken."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.14",
+      "headline": "Continuous-assurance cases, and the adoption state machine",
+      "notes": [
+        "Signal-triggered assurance cases must be handled within an SLA, mapped, contained and decided by the second line.",
+        "`loom status` projects adoption as five stages with an unresolved-marker inventory."
+      ],
+      "action_required": [
+        "Fill docs/governance/assurance-sla.json with the service-level expectations you can actually meet."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.15",
+      "headline": "The BrainKit estate registry and the comprehension record",
+      "notes": [
+        "No repository may run a revoked BrainKit release.",
+        "High-tier changes carry a human understanding record — the first mechanical push against comprehension debt."
+      ],
+      "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.18",
+      "headline": "The catalog closes over CI, the status board tells the truth, and upgrades stop destroying your edits",
+      "notes": [
+        "Ten gates ran in CI with no control-catalog entry, so the risk-proportionate gate runner never selected them — including floor-only-check, which is what stops personal data crossing into the record. All are catalogued, and `ci-catalog-check` now fails the build if a gate is ever added to CI without one.",
+        "`loom status` gained a --run flag: the Mechanism column is the catalog's grade, the Passing column is what your repository actually does. They are not the same thing and no longer look the same.",
+        "The installer writes .loom/adoption.json and no longer overwrites files you have edited. A customised gate or hook is preserved and reported, with the new upstream version dropped beside it as a .loom-new sidecar."
+      ],
+      "action_required": [
+        "First upgrade onto a stamped adoption: files that differ from this bundle cannot be told apart from your edits, so ALL of them are preserved and reported as `unverifiable`. Reconcile the .loom-new sidecars, or re-run with --force if you know you never customised anything. Later upgrades know the difference and this will not recur."
+      ]
+    }
+  ]
+}
