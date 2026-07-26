@@ -1,0 +1,69 @@
+
+──────────────────────────────────────────────────────────────────────────────
+1 · LIVE FLOOR  — fetched from the Notion workspace "Middleleap" via the MCP connector
+──────────────────────────────────────────────────────────────────────────────
+  page      : Data-governance feasibility — accounts-elsewhere
+  bytes     : 4532
+  blocks    : 26  →  quote×1  heading_2×5  table×2  bulleted_list_item×3  paragraph×4  divider×1  to_do×4  code×1  callout×2  numbered_list_item×3
+  table rows: 5, 5
+
+──────────────────────────────────────────────────────────────────────────────
+2 · EXPORT  — core/floor-export.mjs, the shipped module, no arguments bent for this run
+──────────────────────────────────────────────────────────────────────────────
+  markdown  : 4157 bytes, 66 lines
+  digest    : sha256:2755e0006a3665eec8c586205ae1915b631120cca503dad57d9aa32e7d254dbe
+  re-export : IDENTICAL — deterministic
+
+──────────────────────────────────────────────────────────────────────────────
+3 · FREEZE  — the artifact and the stamp that vouches for exactly these bytes
+──────────────────────────────────────────────────────────────────────────────
+  wrote     : discovery/runs/accounts-elsewhere-live/data-governance.md
+  stamp     : source=notion:page/3a980b86-f190-81ca-8611-e73e46293060
+              digest=sha256:2755e0006a3665eec8c586205ae1915b631120cca503dad57d9aa32e7d254dbe
+
+──────────────────────────────────────────────────────────────────────────────
+4 · GATE  — scripts/freeze-stamp-check.mjs, the same command CI runs
+──────────────────────────────────────────────────────────────────────────────
+  exit      : 0 — PASS
+  Freeze-stamp gate (D4.1) — OK (1 frozen artifact across 1 run)
+
+──────────────────────────────────────────────────────────────────────────────
+5 · TAMPER  — the quiet edit: downgrade the residual rating in the frozen file
+──────────────────────────────────────────────────────────────────────────────
+  edit      : "Medium" → "Low" on line 31, 1 word, 3 bytes
+
+Freeze-stamp gate (D4.1) — FAIL
+
+  - accounts-elsewhere-live · data-governance.json: data-governance.md does not match its freeze stamp (stamped sha256:2755e0006a3665ee…, actual sha256:55bd679f9f1001d6…) — the record was edited after the freeze, so re-freeze it rather than editing in place
+
+A frozen artifact is what the D-gates read. If it needs to change, change it
+on the floor and re-freeze — editing the frozen file in place changes what a
+gate saw without going back through the surface that produced it.
+  exit      : non-zero — REFUSED
+  Freeze-stamp gate (D4.1) — FAIL
+  
+    - accounts-elsewhere-live · data-governance.json: data-governance.md does not match its freeze stamp (stamped sha256:2755e0006a3665ee…, actual sha256:55bd679f9f1001d6…) — the record was edited after the freeze, so re-freeze it rather than editing in place
+  
+  A frozen artifact is what the D-gates read. If it needs to change, change it
+  on the floor and re-freeze — editing the frozen file in place changes what a
+
+──────────────────────────────────────────────────────────────────────────────
+6 · REFUSAL  — the second live page, which carries a synced block and a child page
+──────────────────────────────────────────────────────────────────────────────
+  exported  : no — refused, nothing written
+  reason    : scratch › block[2]: block type `synced_block` is refused — a synced block is a view of content that lives elsewhere — freezing it …
+
+──────────────────────────────────────────────────────────────────────────────
+RESULT — derived from what actually happened above, not asserted
+──────────────────────────────────────────────────────────────────────────────
+  PASS  export is deterministic
+  PASS  gate passes on the frozen bytes
+  PASS  gate REFUSES the one-word tamper
+  PASS  un-freezable page is refused
+
+  ALL GREEN
+  frozen digest: sha256:2755e0006a3665eec8c586205ae1915b631120cca503dad57d9aa32e7d254dbe
+
+  The one substituted link: transport. core/floor-fetch.mjs (the REST walker) could not run —
+  api.notion.com is denied by this environment's egress policy. Everything downstream of the
+  fetch is the shipped code, unmodified, running on content authored in a real workspace.

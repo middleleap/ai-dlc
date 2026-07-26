@@ -10,10 +10,27 @@
 //   each approval names a registry identity that is HUMAN, holds the role, and — for
 //   second-line roles — is not a builder. A text field with a name does not count.
 //
+// MANDATORY-WHEN-COMPILED (Factory Floor WS2 · D2.5). When the compiled plan requires the
+// `approval_attestation` capability — because the decision is made somewhere other than this
+// repository — a resolvable name is no longer sufficient either. Each approval must carry an
+// attestation that binds the HUMAN (an identity-provider assertion, not the carrying service's
+// key) to the EXACT subject approved (plan hash, content digest, source or artifact), verified
+// by `core/approval-attestations.mjs`. This path tightens the gate; it never loosens it, and a
+// plan that does not compile the capability behaves exactly as before.
+//
 // Run from the repo root: `node scripts/product-approval-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf, resolveApprover } from './identity-registry-check.mjs';
+import { loadIssuers } from '../core/attestations.mjs';
+import { loadIdentityMap, mapRequired } from '../core/identity-map.mjs';
+import {
+  attestationRequired,
+  loadApprovals,
+  loadAssertionIssuers,
+  passportDigest,
+  verifyApprovalAttestation,
+} from '../core/approval-attestations.mjs';
 import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
@@ -46,13 +63,33 @@ export function pa1Roles(plan) {
   return [...new Set(wanted)].filter((r) => required.includes(r)).sort();
 }
 
-function checkApprovals(approvals, requiredRoles, registry, label) {
+function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
   const findings = [];
   const byRole = new Map((approvals || []).map((a) => [a.role, a]));
   for (const role of requiredRoles) {
     const a = byRole.get(role);
     if (!a) { findings.push(`${label}: no approval for required role ${role}`); continue; }
     findings.push(...checkOne(a, role, registry, label));
+    if (att?.required) {
+      const rec = (att.records || []).find((r) => r?.stage === stage && r?.role === role);
+      findings.push(...verifyApprovalAttestation(rec, {
+        stage,
+        role,
+        by: a.by,
+        plan: att.plan,
+        passportDigest: att.passportDigest,
+        registry,
+        issuers: att.issuers,
+        assertionIssuers: att.assertionIssuers,
+        resolveApprover,
+        identityOf,
+        seen: att.seen,
+        site: att.site,
+        now: att.now,
+        map: att.map,
+        mapRequired: att.mapRequired,
+      }, `${label} · ${role}`));
+    }
   }
   // Every approval the passport RECORDS is resolved, not only the ones this stage demands. Without
   // this, a role the stage does not require could name an agent, a builder, or an identity that
@@ -81,13 +118,31 @@ function checkOne(a, role, registry, label) {
 
 const hasSubstance = (s) => s && typeof s === 'object' && Object.keys(s).length > 0;
 
-/** Findings for one passport against its compiled plan. */
-export function evaluate(passport, plan, registry) {
+/**
+ * Findings for one passport against its compiled plan.
+ * `att` carries the attestation material when the plan compiles the capability:
+ * { records, issuers, assertionIssuers, passportDigest, seen, now }.
+ */
+export function evaluate(passport, plan, registry, att = {}) {
   const findings = [];
   const id = plan?.change_id || '(no id)';
   if (!passport) return [`${id}: product passport missing — a product change without a passport is blocked`];
   const gates = new Set(plan?.required_gates || []);
-  if (!gates.has('PA1')) return []; // the plan compiled no product-approval route
+  // Either PA gate is a product-approval route, and each is evaluated on its OWN presence below.
+  // Testing PA1 alone here meant a plan compiling PA2 without PA1 — which the compiler can emit,
+  // since a conditional profile may add PA2 to a lower-tier change — returned early and skipped
+  // EVERYTHING: ownership, the PA2 section set, the approver roles and every attestation on the
+  // one gate that grants permission to launch.
+  if (!gates.has('PA1') && !gates.has('PA2')) {
+    // No product-approval route compiled at all. If the plan nonetheless requires attestation-backed
+    // approvals, say so rather than exiting quietly: a requirement with nowhere to apply reads as
+    // satisfied, and a silently inert control is the failure this whole contract exists to avoid.
+    return attestationRequired(plan)
+      ? [`${id}: the plan requires the ${'approval_attestation'} capability but compiles neither PA1 nor PA2 (gates: ${(plan?.required_gates || []).join(', ') || 'none'}) — the requirement has nothing to apply to, which is a plan defect, not a pass`]
+      : [];
+  }
+  // Mandatory-when-compiled: the attestation path activates from the plan, never from a flag.
+  const attCtx = { ...att, required: attestationRequired(plan), plan, seen: att.seen || new Map() };
 
   // Ownership is named and resolvable, always.
   const own = passport.sections?.ownership;
@@ -97,15 +152,17 @@ export function evaluate(passport, plan, registry) {
 
   // PA1 — permission to develop.
   const pa1Required = pa1Roles(plan);
-  if (passport.pa1?.decision === 'approved') {
-    for (const section of plan.pa1_sections || []) {
-      if (!hasSubstance(passport.sections?.[section])) {
-        findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
+  if (gates.has('PA1')) {
+    if (passport.pa1?.decision === 'approved') {
+      for (const section of plan.pa1_sections || []) {
+        if (!hasSubstance(passport.sections?.[section])) {
+          findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
+        }
       }
+      findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`, 'PA1', attCtx));
+    } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
+      findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
     }
-    findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`));
-  } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
-    findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
   }
 
   // PA2 — permission to launch: the full section set, every compiled control function.
@@ -115,7 +172,7 @@ export function evaluate(passport, plan, registry) {
         findings.push(`${id} · PA2: required section ${section} is missing or empty`);
       }
     }
-    findings.push(...checkApprovals(passport.pa2.approvals, plan.required_approver_roles || [], registry, `${id} · PA2`));
+    findings.push(...checkApprovals(passport.pa2.approvals, plan.required_approver_roles || [], registry, `${id} · PA2`, 'PA2', attCtx));
   }
   return findings;
 }
@@ -126,6 +183,12 @@ export function run(cwd = process.cwd()) {
   const dir = `${cwd}/${CHANGES_DIR}`;
   if (!existsSync(dir)) return { findings: [], count: 0 };
   const registry = loadRegistry(cwd);
+  // Attestation material is loaded once; `seen` spans every change, so a decision nonce
+  // replayed across changes is caught, not just one replayed within a change.
+  const issuers = loadIssuers(cwd);
+  const identityMap = loadIdentityMap(cwd);
+  const assertionIssuers = loadAssertionIssuers(cwd);
+  const seen = new Map();
   const findings = [];
   let count = 0;
   for (const name of readdirSync(dir)) {
@@ -134,9 +197,26 @@ export function run(cwd = process.cwd()) {
     if (!envelope) continue; // the envelope gate reports this
     const plan = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
     if (!plan) continue; // ditto
-    if (!(plan.required_gates || []).includes('PA1')) continue;
+    // A plan that requires attestation but compiles no PA gate is still reported (evaluate says
+    // so) — skipping it here would restore exactly the silent pass that check exists to close.
+    // Either PA gate brings a change into scope: a PA2-only plan is a launch approval to check,
+    // not a change to walk past.
+    const compiled = plan.required_gates || [];
+    if (!compiled.includes('PA1') && !compiled.includes('PA2') && !attestationRequired(plan)) continue;
     count++;
-    findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry));
+    const att = {
+      records: loadApprovals(base).map((a) => a.record),
+      issuers,
+      assertionIssuers,
+      passportDigest: passportDigest(base),
+      seen,
+      site: name, // the change DIRECTORY — two directories may carry one change_id
+      // The P6 join. Loaded once, applied per approval: the map says who a signed subject IS,
+      // and the record's own registry_id is only a claim until the two agree.
+      map: identityMap,
+      mapRequired: mapRequired(plan),
+    };
+    findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry, att));
   }
   return { findings, count };
 }

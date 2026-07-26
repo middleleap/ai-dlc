@@ -69,7 +69,8 @@ The judge returns a ranking with one-line rationale per direction and a recommen
 
 ## 3. Converge — the Solution Direction Record (SDR)
 
-Write `docs/develop/<slug>.md`. It records: the chosen direction; **why** (judge rationale); the
+Write `docs/develop/<slug>.md` from `delivery/templates/solution-direction-record.md`. It
+records: the chosen direction; **why** (judge rationale); the
 runner-up ideas grafted in; how it satisfies each success measure + each inherited D6 condition +
 the hard-stops; what it reuses vs introduces; the resolution of the hand-off's open questions; and
 the **backlog item(s)** it spawns. The SDR is the right-diamond analogue of the hand-off: a

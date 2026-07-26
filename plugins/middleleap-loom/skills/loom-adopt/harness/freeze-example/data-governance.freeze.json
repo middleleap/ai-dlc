@@ -1,0 +1,10 @@
+{
+  "_comment": "Written by the freeze round-trip. `digest` is over the exported markdown exactly as committed — scripts/freeze-stamp-check.mjs re-derives it, so an edit to the frozen file after the freeze is a finding, not a silent change.",
+  "schema": "loom.freeze-stamp/v1",
+  "slug": "accounts-elsewhere",
+  "file": "data-governance.md",
+  "digest": "sha256:7063b9c32873c2de62f22ddcc187e8ab8f596f62c2d954b3b6bf7228f0ba4769",
+  "source": "notion:page/alpha-accounts-elsewhere-datagov",
+  "exported_at": "2026-07-25T11:20:04Z",
+  "exported_by": "svc-floor-freezer"
+}
