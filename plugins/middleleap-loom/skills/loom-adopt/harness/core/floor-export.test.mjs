@@ -93,6 +93,32 @@ test('the digest is over the markdown exactly as written, and the tail is stable
 
 // --- fails closed: the property that matters ----------------------------------------------------
 
+// Found against the LIVE API, not a fixture. The vendor renamed this payload key from `text` to
+// `rich_text` at the 2022-06-28 version. Under an older pin every block still arrives — right type,
+// right count, right order — and only the key differs. `richText()` used to answer '' for a missing
+// field, so the page exported cleanly and produced a stable digest over almost nothing: 1619 bytes
+// where the same page yields 4157. A version pin is set once and never looked at again, which is
+// precisely what made this dangerous.
+test('a block whose rich_text is ABSENT aborts — absent is not empty', () => {
+  const wrongKey = { type: 'paragraph', paragraph: { text: rt('content the old API put under `text`'), color: 'default' } };
+  const { markdown, findings } = tryExport(page([wrongKey]), { slug: 's' });
+  assert.equal(markdown, null, 'a page of empty blocks must never export');
+  assert.match(findings[0], /Absent is not empty/);
+  assert.match(findings[0], /2022-06-28/, 'the message must name the likely cause');
+});
+
+test('an EMPTY rich_text array is still fine — an empty paragraph is a real thing to write', () => {
+  const { markdown, findings } = tryExport(page([{ type: 'paragraph', paragraph: { rich_text: [] } }, p('after')]), { slug: 's' });
+  assert.deepEqual(findings, []);
+  assert.match(markdown, /after/);
+});
+
+test('a code block with an absent rich_text aborts too, not just prose blocks', () => {
+  const { markdown, findings } = tryExport(page([{ type: 'code', code: { text: rt('x'), language: 'bash' } }]), { slug: 's' });
+  assert.equal(markdown, null);
+  assert.match(findings[0], /code block carries no `rich_text`/);
+});
+
 test('an unknown block type ABORTS the export — it is never dropped', () => {
   const { markdown, findings } = tryExport(page([p('kept'), { type: 'invented_block', invented_block: {} }]));
   assert.equal(markdown, null, 'nothing is written when any block cannot be rendered');

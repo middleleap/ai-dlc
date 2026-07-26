@@ -39,13 +39,54 @@ surface of a version change is at its floor today and rises monotonically with e
 | After **WS4** (freeze live) | + the exporter's block handling and the Notion-flavored Markdown it emits | a changed export digest for *unchanged* content — freeze stamps stop reproducing and D4.1's determinism claim needs re-proving |
 | After **WS5** (decisions routed) | + the workspace / page / data-source ids bound into every D2.4 envelope | envelopes bound to addressing that no longer resolves |
 
-One honesty note belongs in the context, not the footnotes: **the content of the `2026-03-11`
-release has not been read at primary source for this record.** The research's own caveats say the
-Notion specifics rest on dated releases confirmed through search summaries and secondary press, and
-instruct a re-verification before building. **AWAITING:** a verified read of the Notion API
-changelog covering every dated version between `2025-09-03` and `2026-03-11` — owner, date. This
-ADR should not be decided before that read lands; if the read discloses a breaking change beyond
-data sources, the options below stand but their costs move.
+### The blocking AWAITING is now answered, at primary source
+
+This record previously said the release list between `2025-09-03` and `2026-03-11` had not been
+verified, and should not be decided until it was. **It has been, on 26 Jul 2026, by asking the live
+API rather than reading about it.** A request carrying a deliberately invalid version is rejected
+with the complete accepted set enumerated in the error:
+
+```
+Notion-Version header failed validation: Notion-Version header should be
+"2021-05-11", "2021-05-13", "2021-08-16", "2022-02-22", "2022-06-28",
+"2025-09-03", or "2026-03-11"
+```
+
+Three facts follow, and each moves an option:
+
+**There is no release between `2025-09-03` and `2026-03-11`. They are adjacent.** So
+"current-minus-one" resolves unambiguously to `2025-09-03` — Option C *is* Option A with a policy
+attached, exactly as suspected below but could not be confirmed.
+
+**Seven versions exist and every one is still accepted, including `2021-05-11`.** Five years of
+dated versions, none withdrawn. "Old but supported" was called an assumption in this record; it is
+now an observation. That materially lowers Option A's stated risk — but see the next fact, which
+raises a different one.
+
+**The export digest is stable across every currently-relevant version.** The same live page,
+fetched and exported under `2022-06-28`, `2025-09-03` and `2026-03-11`, yields
+`sha256:2755e000…` in all three — byte-identical, 4157 bytes. The migration hazard this record
+worried about most, *"a changed export digest for unchanged content"*, **does not materialise
+anywhere in the range a decision could reasonably land**. Freeze stamps reproduce across the pin.
+
+### And a defect the verification found
+
+The two 2021 versions do **not** produce that digest — they produced a different one, over 1619
+bytes instead of 4157, with the same 36 blocks in the same order.
+
+The cause is a rename: the block payload key was **`text`** before `2022-06-28` and **`rich_text`**
+from it. The exporter reads `rich_text`, and `richText()` answered `''` for an absent field — so
+under an older pin every block arrived intact and exported **empty**, the page exported *cleanly*,
+nothing aborted, and the freeze recorded a stable digest over almost no content.
+
+That is the failure mode this programme exists to prevent, reached by a configuration value rather
+than an attack. `richText()` and `plain()` now **abort when the field is absent** and name the
+version rename as the likely cause; an empty *array* still exports fine, because an empty paragraph
+is a real thing an author can write. Three regression tests cover it. A misconfigured pin is now a
+failed build instead of a hollow record.
+
+**This raises the stakes of the decision below rather than settling it.** A pin is not merely a
+compatibility setting; it is an input to what a frozen artifact *contains*.
 
 A second gap is procedural. The deciding roles named above — `solution-architect` and
 `enterprise-architect` — **do not yet exist in `identities.template.json`**; WS2 · D2.3 adds them.
@@ -126,8 +167,36 @@ headless**, which disqualifies it for the projector, freezer and bridge; the **s
 carries sunset risk** that the research flags directly. If either later becomes a dependency, that
 is a separate ADR, not an amendment to this one.
 
-Status stays **proposed**. This is a recommendation to the deciders named above, and it is blocked
-behind the changelog verification recorded in the context.
+### What the verification changed about this recommendation
+
+**The recommendation stands, and is now stronger and cheaper than when it was written.** The
+verification removed the reason this record was blocked, and removed the cost that made Option B
+feel like a gamble:
+
+- The unknown-content risk named under Option B is **largely discharged for our purposes**: the
+  export digest is identical under `2022-06-28`, `2025-09-03` and `2026-03-11`, so adopting the
+  current version costs no re-proof of D4.1's determinism claim. That was the sharpest cost in the
+  table above and it is now measured at zero for this range.
+- **Option C is eliminated,** not on judgement but on definition: with the two versions adjacent,
+  current-minus-one is `2025-09-03` and Option C collapses into Option A.
+- Option A's *risk* is lower than stated — nothing has ever been withdrawn — but its *benefit* is
+  also now visibly nil. It buys ecosystem maturity the digest evidence shows we do not need, in
+  exchange for starting one version behind.
+
+**A floor comes with it.** Whatever is pinned, it must be **`2022-06-28` or later**. Below that the
+`text`/`rich_text` rename means the exporter aborts — correctly, now — so the older versions are not
+a conservative choice but a broken one. That floor should be asserted by the same startup check that
+asserts the pin.
+
+**One correction to the record's own history:** every live call made during the Alpha walkthrough
+used `2022-06-28`, chosen at a command line before this ADR was decided. It worked, and the digest
+evidence shows it produced the same bytes `2026-03-11` would have. That is luck, not process — a
+pin was set by whoever typed first, which is exactly what this ADR exists to stop. It is recorded
+here rather than tidied away.
+
+Status stays **proposed** — the recommendation is now unblocked and evidence-backed, but the
+deciders named at the top are still `AWAITING` assignment to registry identities, and a decision
+recorded without a decider is the thing this method refuses everywhere else.
 
 ## Consequences
 

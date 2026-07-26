@@ -68,7 +68,20 @@ const abort = (reason, at) => { throw new ExportError(reason, at); };
  * key order must produce identical bytes.
  */
 export function richText(rt, at = 'rich_text') {
-  if (rt === undefined || rt === null) return '';
+  // ABSENT IS NOT EMPTY, and treating it as empty is how a freeze silently loses a whole page.
+  // Found against the live API: the vendor renamed this field from `text` to `rich_text` at the
+  // 2022-06-28 version. Under an older pin every block still arrives, with the right type and the
+  // right count — only the payload key differs. This function used to answer `''` for a missing
+  // field, so the page exported cleanly, aborted nothing, and produced a stable digest over almost
+  // no content: 1619 bytes where the same page yields 4157. A misconfigured version pin is exactly
+  // the kind of thing that is set once and never looked at again, which is what made it dangerous.
+  // An empty ARRAY is still fine — an empty paragraph is a real thing an author can write.
+  if (rt === undefined || rt === null) {
+    abort('a block carries no `rich_text` at all. Absent is not empty, so this aborts rather than '
+      + 'exporting a block with no content. The usual cause is an API version older than the one '
+      + 'that renamed `text` to `rich_text` (2022-06-28) — check the pinned version before looking '
+      + 'anywhere else', at);
+  }
   if (!Array.isArray(rt)) abort('rich_text is not an array', at);
   return rt.map((t, i) => {
     if (!t || typeof t !== 'object') abort(`rich_text[${i}] is not an object`, at);
@@ -97,7 +110,15 @@ export function richText(rt, at = 'rich_text') {
  */
 const escapeInline = (s) => String(s).replace(/([\\`*_[\]<>])/g, '\\$1');
 
-const plain = (rt) => (Array.isArray(rt) ? rt.map((t) => (typeof t?.plain_text === 'string' ? t.plain_text : t?.text?.content ?? '')).join('') : '');
+/** Code blocks take their text verbatim — and, like richText(), refuse an absent field. */
+const plain = (rt, at = 'code') => {
+  if (rt === undefined || rt === null) {
+    abort('a code block carries no `rich_text` — absent is not empty (see richText: the field was '
+      + '`text` before the 2022-06-28 API version)', at);
+  }
+  if (!Array.isArray(rt)) abort('code rich_text is not an array', at);
+  return rt.map((t) => (typeof t?.plain_text === 'string' ? t.plain_text : t?.text?.content ?? '')).join('');
+};
 
 /**
  * One block → its markdown lines. `depth` indents nested list items. Children are rendered
@@ -130,7 +151,7 @@ function renderBlock(block, depth, at) {
       // Code is taken PLAIN — annotations inside a code block are display, and rendering them
       // would change the bytes an author sees against the bytes a gate reads.
       const lang = typeof body.language === 'string' ? body.language : '';
-      lines.push(`\`\`\`${lang === 'plain text' ? '' : lang}`, plain(body.rich_text), '```');
+      lines.push(`\`\`\`${lang === 'plain text' ? '' : lang}`, plain(body.rich_text, at), '```');
       break;
     }
     case 'callout': {
