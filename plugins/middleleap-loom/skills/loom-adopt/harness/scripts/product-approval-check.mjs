@@ -19,9 +19,32 @@ import { pathToFileURL } from 'node:url';
 export const CHANGES_DIR = 'docs/governance/changes';
 // Roles whose approvals demand organisational independence from the builders.
 export const SECOND_LINE_ROLES = new Set(['risk-second-line', 'compliance', 'model-validator', 'credit-risk', 'data-protection']);
-// PA1 needs the owning + challenging functions; PA2 needs every role the plan compiled.
+// PA1 needs the owning + challenging functions as a FLOOR; PA2 needs every role the plan compiled.
 export const PA1_CORE_ROLES = ['product-owner', 'risk-second-line'];
 export const PA1_HIGH_ROLES = ['accountable-executive'];
+
+/**
+ * Which roles must have signed by PA1 — permission to develop.
+ *
+ * The core set is a floor, never a ceiling. It used to be the whole answer, and that was a defect
+ * with a very specific shape: a compiled plan could name twelve approver roles while PA1 checked
+ * three, and the flat `required_approver_roles` list gave a reader — or an auditor — no way to
+ * tell which was which. A profile that adds `shariah-committee` AND a `shariah-applicability`
+ * PA1 section plainly means the Shariah function to be involved at PA1; the gate ignored it.
+ *
+ * So a profile now declares `pa1_approver_roles` for the roles it wants bound at PA1, the compiler
+ * unions them into the plan, and the plan says out loud which roles bind where. Roles compiled
+ * into `required_approver_roles` but not into this set bind at PA2 — deliberately, and visibly.
+ */
+export function pa1Roles(plan) {
+  const required = plan?.required_approver_roles || [];
+  const wanted = [
+    ...PA1_CORE_ROLES,
+    ...(['high', 'critical'].includes(plan?.risk_tier) ? PA1_HIGH_ROLES : []),
+    ...(plan?.pa1_approver_roles || []),
+  ];
+  return [...new Set(wanted)].filter((r) => required.includes(r)).sort();
+}
 
 function checkApprovals(approvals, requiredRoles, registry, label) {
   const findings = [];
@@ -29,12 +52,28 @@ function checkApprovals(approvals, requiredRoles, registry, label) {
   for (const role of requiredRoles) {
     const a = byRole.get(role);
     if (!a) { findings.push(`${label}: no approval for required role ${role}`); continue; }
-    findings.push(...resolveApprover(registry, a.by, role, `${label} · ${role}`));
-    if (registry && SECOND_LINE_ROLES.has(role)) {
-      const who = identityOf(registry, a.by);
-      if (who && (who.groups || []).includes('builders')) {
-        findings.push(`${label} · ${role}: ${a.by} is in the builders group — a builder cannot issue second-line approval`);
-      }
+    findings.push(...checkOne(a, role, registry, label));
+  }
+  // Every approval the passport RECORDS is resolved, not only the ones this stage demands. Without
+  // this, a role the stage does not require could name an agent, a builder, or an identity that
+  // does not exist, and the gate would say OK — which at PA1 was nine of twelve compiled roles,
+  // including every Shariah role. A recorded approval is a claim the record makes about a person.
+  // "Agents approve nothing" is the method's loudest promise, and an agent's name sitting in an
+  // approval slot under a green gate contradicts it whether or not this stage asked for it.
+  for (const [role, a] of byRole) {
+    if (requiredRoles.includes(role)) continue; // checked above
+    findings.push(...checkOne(a, role, registry, `${label} (recorded, not required at this stage)`));
+  }
+  return findings;
+}
+
+/** One recorded approval: resolves to a human holding the role, and second line ∩ builders = ∅. */
+function checkOne(a, role, registry, label) {
+  const findings = [...resolveApprover(registry, a.by, role, `${label} · ${role}`)];
+  if (registry && SECOND_LINE_ROLES.has(role)) {
+    const who = identityOf(registry, a.by);
+    if (who && (who.groups || []).includes('builders')) {
+      findings.push(`${label} · ${role}: ${a.by} is in the builders group — a builder cannot issue second-line approval`);
     }
   }
   return findings;
@@ -57,17 +96,14 @@ export function evaluate(passport, plan, registry) {
   }
 
   // PA1 — permission to develop.
-  const pa1Roles = [
-    ...PA1_CORE_ROLES,
-    ...(['high', 'critical'].includes(plan.risk_tier) ? PA1_HIGH_ROLES : []),
-  ].filter((r) => (plan.required_approver_roles || []).includes(r));
+  const pa1Required = pa1Roles(plan);
   if (passport.pa1?.decision === 'approved') {
     for (const section of plan.pa1_sections || []) {
       if (!hasSubstance(passport.sections?.[section])) {
         findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
       }
     }
-    findings.push(...checkApprovals(passport.pa1.approvals, pa1Roles, registry, `${id} · PA1`));
+    findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`));
   } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
     findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
   }

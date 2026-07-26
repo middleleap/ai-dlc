@@ -28,6 +28,10 @@ export const PRODUCT_CHANGE_TYPES = new Set(['new-product', 'material-product-ch
 const FIELD_MAP = {
   required_gates: 'gates',
   required_approver_roles: 'approver_roles',
+  // Which of those roles must have signed by PA1 (permission to develop). A profile that adds an
+  // approver role AND a PA1 section plainly wants that function involved at PA1; without this
+  // field the plan published one flat role list and the gate silently bound only its own core set.
+  pa1_approver_roles: 'pa1_approver_roles',
   required_evidence: 'evidence',
   pa1_sections: 'pa1_sections',
   pa2_sections: 'pa2_sections',
