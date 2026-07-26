@@ -90,6 +90,12 @@ produces counts as governed evidence.
 - **D0.1** Residency review record (P1) — in git, signed.
   → **drafted:** [`notion-floor-residency-review.md`](notion-floor-residency-review.md) ·
   *awaiting data-protection + risk-second-line sign-off, which gates WS1 onward*
+  → **routing packet complete** — [reviewer brief](notion-floor-p1-reviewer-brief.md) (what is and
+  is not being signed) · [decision worksheet](notion-floor-p1-decision-worksheet.md) (the twelve
+  open items, each with a proposal to accept/amend/reject; four have no defensible default and say
+  so) · [vendor questionnaire](notion-floor-p1-vendor-questionnaire.md). The drafting side is done;
+  what remains is two signatures by two people holding the named registry roles, and builders may
+  not sign.
 - **D0.2** Registry + issuer entries for the **four split identities** (P4).
   → **bundle-side shipped** in loom `2.0.0-rc.13`: `svc-floor-projector`, `svc-floor-freezer`
   and `svc-floor-bridge` ship in `identities.template.json` holding **no** approval role; the

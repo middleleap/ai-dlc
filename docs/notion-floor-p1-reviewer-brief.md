@@ -9,6 +9,13 @@ adversarial — not to persuade you. Everything below that reads like a recommen
 drafter's proposal and carries no authority; the ratings, the acceptances and the conditions are
 yours.
 
+**Two companions.** [`notion-floor-p1-decision-worksheet.md`](notion-floor-p1-decision-worksheet.md)
+takes the record's twelve open `AWAITING` items and gives each one a proposal to react to — with
+four marked as having no defensible default, and why. Working through it turns twelve blank pages
+into twelve accept/amend/reject calls; it decides nothing and it is not a substitute for §11.
+[`notion-floor-p1-vendor-questionnaire.md`](notion-floor-p1-vendor-questionnaire.md) is §8's vendor
+questions in sendable form.
+
 ---
 
 ## 1 · What you are actually signing
