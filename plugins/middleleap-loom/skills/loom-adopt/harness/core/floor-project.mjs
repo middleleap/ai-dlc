@@ -31,14 +31,14 @@
 // WHOLE and shown as `withheld — filter hit`, never dropped: silence must never be mistaken for
 // coverage, and a half-projected record reads as complete.
 //
-// WHERE THE CEILING'S AUTHORITY COMES FROM, and why it is not in this repository. The table
-// encoded below is a DEFAULT. The record that makes it binding is a residency review (the "P1"
-// record) naming, class by class, what may leave git for a SaaS workspace at what fidelity —
-// and that record is the adopting institution's to write and sign, under HG-0011, by
-// data-protection plus risk-second-line. `docs/governance/runbooks/data-protection-runbook.md`
-// (shipped) states that obligation; MiddleLeap's own drafted, unsigned instance lives in the
-// origin repository as the worked example. Until an adopter's equivalent is signed, this module
-// encodes an intent, not a permission — which is exactly what the last bullet below says.
+// WHERE THE CEILING'S AUTHORITY COMES FROM, and why it is not in this file. The table encoded
+// below is a DEFAULT. What makes it binding is the residency review (the "P1" record) at
+// `docs/governance/residency-review.md`, naming class by class what may leave git for a SaaS
+// workspace at what fidelity — the adopting institution's to write and sign under HG-0011, by
+// data-protection plus risk-second-line. That record is no longer prose nobody reads:
+// `scripts/residency-check.mjs` refuses a floor that exists while §11 is unsigned. See
+// `residency-example/` for a worked instance and the runbook for the obligation. Until your
+// record is signed, this module encodes an intent, not a permission — the last bullet below.
 //
 // What this does NOT protect against, said out loud because the placement of a filter flatters it:
 //
