@@ -74,10 +74,22 @@ mounted by default. The institution records what it picked in
 `docs/governance/provider-selection.json`, and `provider-selection-check.mjs` enforces the join:
 one provider per role (`PS-R03`), the provider must exist and fill the role's control
 (`PS-R02`/`PS-R04`), and its adapter must actually be mounted, because selecting is not installing
-(`PS-R05`). `PS-R06` makes it mandatory-when-compiled: an institution that has not reached this
-decision is not failing it, but one whose plan *requires* the capability and never made the choice
-is. Each provider states its `role_fit` — one line on its strength, one on where it is weak — so
-the choice is made with open eyes rather than sold.
+(`PS-R05`). Each provider states its `role_fit` — one line on its strength, one on where it is
+weak — so the choice is made with open eyes rather than sold.
+
+**The choice is required, not merely offered.** The base `regulated-bank` profile declares both
+capabilities at **high tier**, so `PS-R06` fires on a high-tier change that never chose:
+
+| Role | Capability | Required at | Because |
+|---|---|---|---|
+| `sca` | `sca` | high | High tier already mandates `dependency-audit` evidence — a tier that must produce the audit should have said who asserts it |
+| `hardened-runtime` | `hardened_runtime` | high | A high-tier change whose agent runtime is unaccounted for has not met `HG-0011`'s attested-execution limb |
+
+This is the D6-register pattern: the requirement comes from the **profile**, never from a CI flag,
+so a pipeline edit cannot weaken it. The distinction `PS-R06` draws is between *choosing* and
+*activating* — it demands a recorded decision, not a live integration, because an institution can
+honestly be mid-onboarding with a provider chosen and its probes not yet run. And it stays silent
+for low- and medium-tier work: an institution that has not reached this decision is not failing it.
 
 The shipped alternatives are deliberately not two commercial vendors: `trivy` (self-hosted,
 open-source) and `internal-golden-images` (the institution's own pipeline) exist to prove the role

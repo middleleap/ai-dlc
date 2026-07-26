@@ -63,6 +63,12 @@ chosen file into `docs/governance/adapters/`. `scripts/provider-selection-check.
 join, including `PS-R06`: once a compiled plan requires a role's capability, having made *no*
 choice is a finding rather than a default.
 
+The base `regulated-bank` profile declares both capabilities at **high tier**, so on a high-tier
+change the choice is mandatory — the D6-register pattern, where the requirement comes from the
+profile and a pipeline edit cannot weaken it. `PS-R06` demands a recorded *decision*, not a live
+integration: an institution can honestly be mid-onboarding with a provider chosen and its probes
+not yet run, which is the `selected, not active` state.
+
 Adding a provider is the intended way to extend this: drop a file under `providers/<role>/`, keep
 the adapter contract, and state its `role_fit` honestly — every provider ships one line on what it
 is good at and one on where it is weak, so the choice is made with open eyes rather than sold.

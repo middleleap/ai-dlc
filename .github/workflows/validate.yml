@@ -215,30 +215,32 @@ jobs:
           node scripts/decision-log-check.mjs
           node scripts/adapter-check.mjs
           # Provider choice (HG-0008): the harness names ROLES, the institution picks who fills them.
-          # Three properties, and the first is as important as the other two — a gate that failed an
-          # institution for not yet having chosen would be red on every fresh adoption, and a gate
-          # that is always red is one nobody reads.
-          #   ① the shipped template reads as NO choice and must PASS
+          # rc.20 — the base profile now declares `sca` and `hardened_runtime` at high tier, and the
+          # change-example compiles high, so this is MANDATORY-WHEN-COMPILED exactly like the D6
+          # register: the requirement comes from the profile, not from a CI flag. Four properties:
+          #   ① a compiled plan requiring the capability with the template untouched must FAIL —
+          #      "we never chose" is not a pass once the plan demands a choice
           #   ② a real selection is COUNTED (the empty-set bug the other examples exist to catch)
-          #   ③ a bad selection must FAIL — both the duplicate-role and unknown-provider directions
-          node scripts/provider-selection-check.mjs | tee /tmp/ps0.txt
-          grep -q 'none required' /tmp/ps0.txt || {
-            echo "::error::the untouched provider-selection template should read as no choice made"; exit 1; }
+          #   ③ mounted-but-unactivated is reported as selected-not-active, never as a live control
+          #   ④ a bad selection must FAIL — both the duplicate-role and unknown-provider directions
+          if node scripts/provider-selection-check.mjs; then
+            echo "::error::a compiled plan requires a provider capability, yet the untouched template passed"; exit 1; fi
           # The ADOPT step: choose a provider per role and mount its adapter, as an adopter would.
           cp docs/governance/adapters/providers/sca/snyk.json docs/governance/adapters/
           cp docs/governance/adapters/providers/hardened-runtime/chainguard.json docs/governance/adapters/
           node -e '
             const fs=require("fs"), sel=(role,provider,adapter_id)=>({role,provider,adapter_id,
               decided_by:"infosec-noor",decided_at:new Date().toISOString().slice(0,10),source:"mt-tech-2026"});
-            fs.writeFileSync("docs/governance/provider-selection.json",JSON.stringify({selections:[
+            fs.writeFileSync("/tmp/provider-selection.json",JSON.stringify({selections:[
               sel("sca","snyk","snyk-sca"), sel("hardened-runtime","chainguard","chainguard-runtime")]},null,2));
           '
+          cp /tmp/provider-selection.json docs/governance/provider-selection.json
           node scripts/provider-selection-check.mjs | tee /tmp/ps1.txt
           grep -q '2 roles selected' /tmp/ps1.txt || {
             echo "::error::the provider-selection gate is not counting the real selections"; exit 1; }
           grep -q 'selected, not active' /tmp/ps1.txt || {
             echo "::error::a mounted-but-unactivated provider must be reported as selected, not active"; exit 1; }
-          # ③a — two providers for one role: AD-R05 re-entered at selection time.
+          # ④a — two providers for one role: AD-R05 re-entered at selection time.
           node -e '
             const fs=require("fs"), p="docs/governance/provider-selection.json", s=JSON.parse(fs.readFileSync(p));
             s.selections.push({role:"sca",provider:"trivy",adapter_id:"trivy-sca",decided_by:"x",decided_at:"2026-07-26",source:"y"});
@@ -246,7 +248,7 @@ jobs:
           '
           if node scripts/provider-selection-check.mjs; then
             echo "::error::two providers selected for one role passed the gate"; exit 1; fi
-          # ③b — a provider the catalog does not offer.
+          # ④b — a provider the catalog does not offer.
           node -e '
             const fs=require("fs"), p="docs/governance/provider-selection.json";
             fs.writeFileSync(p,JSON.stringify({selections:[{role:"sca",provider:"acme-scanner",
@@ -254,8 +256,10 @@ jobs:
           '
           if node scripts/provider-selection-check.mjs; then
             echo "::error::a selection naming a provider outside the catalog passed the gate"; exit 1; fi
-          git checkout -- docs/governance/provider-selection.json
-          rm -f docs/governance/adapters/snyk.json docs/governance/adapters/chainguard.json
+          # Restore the ADOPTED selection, not the template: the compiled plan requires a choice, so
+          # every later gate run in this job must see a repo that has made one.
+          cp /tmp/provider-selection.json docs/governance/provider-selection.json
+          node scripts/provider-selection-check.mjs
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
           node scripts/brainkit-registry-check.mjs     # rc.15 WS7 — estate registry consistent; no repo runs a revoked release
           node scripts/comprehension-check.mjs         # rc.15 WS8 — the high-tier change carries a human understanding record

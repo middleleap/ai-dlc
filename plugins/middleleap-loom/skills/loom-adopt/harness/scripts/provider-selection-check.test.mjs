@@ -1,7 +1,7 @@
 // Tests for the provider-selection gate. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluate, loadCatalog, isPlaceholder } from './provider-selection-check.mjs';
@@ -160,4 +160,29 @@ test('bundled provider adapter_ids are unique across the whole catalog', () => {
   const catalog = loadCatalog(HARNESS);
   const ids = [...catalog.values()].map((p) => p.adapter_id);
   assert.equal(new Set(ids).size, ids.length, 'two providers share an adapter_id — mounting both would collide');
+});
+
+test('every role capability is actually declared by a shipped profile — PS-R06 must be able to fire', () => {
+  const rolesPath = `${HARNESS}/adapters/providers/roles.json`;
+  if (!existsSync(rolesPath)) return;
+  const roles = JSON.parse(readFileSync(rolesPath, 'utf8')).roles;
+  // Scan every shipped profile, not just the base: a residency-driven role may legitimately be
+  // required by a jurisdiction profile instead. What must never happen is a role whose capability
+  // NO profile requires — PS-R06 would then be armed and unable to fire, and the whole mechanism
+  // would be decorative: a catalog nobody is ever obliged to choose from.
+  const declared = new Set();
+  for (const dir of ['profiles', 'profiles/jurisdictions', 'profiles/products', 'profiles/institutions']) {
+    const d = `${HARNESS}/${dir}`;
+    if (!existsSync(d)) continue;
+    for (const name of readdirSync(d).filter((n) => n.endsWith('.json'))) {
+      const profile = JSON.parse(readFileSync(`${d}/${name}`, 'utf8'));
+      for (const tier of Object.values(profile.requirements || {})) {
+        for (const cap of Object.keys(tier.capabilities || {})) declared.add(cap);
+      }
+    }
+  }
+  for (const role of roles) {
+    assert.ok(declared.has(role.capability),
+      `role ${role.role} names capability ${JSON.stringify(role.capability)}, which no shipped profile requires — the role can never become mandatory`);
+  }
 });
