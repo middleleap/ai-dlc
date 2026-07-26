@@ -14,7 +14,7 @@ test('the shipped canon is in sync — every generated block matches its generat
   assert.deepEqual(await run(false), []);
 });
 
-test('the targets cover the copy table and the scorecard', () => {
+test('the targets cover the copy table, the scorecard and the guardrail matrix', () => {
   const blocks = TARGETS.map((t) => t.block).sort();
-  assert.deepEqual(blocks, ['COPY-TABLE', 'SCORECARD']);
+  assert.deepEqual(blocks, ['COPY-TABLE', 'GUARDRAIL-MATRIX', 'SCORECARD']);
 });
