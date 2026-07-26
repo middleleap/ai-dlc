@@ -5,311 +5,361 @@
       "source": "../../loom/references/discovery-harness.md",
       "dest": "discovery/DISCOVERY.md",
       "kind": "file",
-      "seam": "The discovery canon (single source — do not fork the text)"
+      "seam": "The discovery canon (single source — do not fork the text)",
+      "tier": "core"
     },
     {
       "source": "discovery/gates",
       "dest": "discovery/gates",
       "kind": "dir",
-      "seam": "Pure-Node D1–D9 validator + its tests"
+      "seam": "Pure-Node D1–D9 validator + its tests",
+      "tier": "core"
     },
     {
       "source": "discovery/render",
       "dest": "discovery/render",
       "kind": "dir",
-      "seam": "Zero-dep branded renderer (HTML + OOXML) + tests"
+      "seam": "Zero-dep branded renderer (HTML + OOXML) + tests",
+      "tier": "core"
     },
     {
       "source": "discovery/templates",
       "dest": "discovery/templates",
       "kind": "dir",
-      "seam": "One template per discovery artifact"
+      "seam": "One template per discovery artifact",
+      "tier": "core"
     },
     {
       "source": "discovery/brand/design.md",
       "dest": "discovery/brand/design.md",
       "kind": "file",
-      "seam": "Brand seam (neutral demo instance)"
+      "seam": "Brand seam (neutral demo instance)",
+      "tier": "core"
     },
     {
       "source": "discovery/brand/examples",
       "dest": "discovery/brand/examples",
       "kind": "dir",
-      "seam": "A second brand proving the seam swap"
+      "seam": "A second brand proving the seam swap",
+      "tier": "core",
+      "tier_note": "core: zero ADOPT burden, and it is the proof the D7 brand seam swaps — the renderer suite asserts against it"
     },
     {
       "source": "delivery/templates",
       "dest": "delivery/templates",
       "kind": "dir",
-      "seam": "One template per delivery decision artifact (ADR · Solution Direction Record)"
+      "seam": "One template per delivery decision artifact (ADR · Solution Direction Record)",
+      "tier": "core"
     },
     {
       "source": "floor/templates",
       "dest": "floor/templates",
       "kind": "dir",
-      "seam": "Guided collaboration-surface forms, GENERATED from the git templates (parity-gated)"
+      "seam": "Guided collaboration-surface forms, GENERATED from the git templates (parity-gated)",
+      "tier": "full"
     },
     {
       "source": "floor/catalog-b",
       "dest": "floor/catalog-b",
       "kind": "dir",
-      "seam": "Decision-routed floor forms (WS5 · D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed"
+      "seam": "Decision-routed floor forms (WS5 · D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed",
+      "tier": "full"
     },
     {
       "source": "floor/catalog-c",
       "dest": "floor/catalog-c",
       "kind": "dir",
-      "seam": "Floor-only forms (WS3 · D3.3) — write class `lives-on-the-floor`, NEVER frozen. The catalog where personal data actually turns up, because it is where people write prose about people: each form carries its write-class banner and asks for roles rather than names, and scripts/floor-only-check.mjs refuses one that has crossed into discovery/runs/"
+      "seam": "Floor-only forms (WS3 · D3.3) — write class `lives-on-the-floor`, NEVER frozen. The catalog where personal data actually turns up, because it is where people write prose about people: each form carries its write-class banner and asks for roles rather than names, and scripts/floor-only-check.mjs refuses one that has crossed into discovery/runs/",
+      "tier": "full"
     },
     {
       "source": "scripts",
       "dest": "scripts",
       "kind": "glob",
       "glob": "*.mjs",
-      "seam": "Every gate + its tests (globbed — a per-file list silently drops new gates)"
+      "seam": "Every gate + its tests (globbed — a per-file list silently drops new gates)",
+      "tier": "core"
     },
     {
       "source": "core",
       "dest": "core",
       "kind": "dir",
-      "seam": "Policy compiler, gate runner, attestations, compiled-requirements (control plane)"
+      "seam": "Policy compiler, gate runner, attestations, compiled-requirements (control plane)",
+      "tier": "core"
     },
     {
       "source": "profiles",
       "dest": "profiles",
       "kind": "dir",
-      "seam": "Profiles as data: base + jurisdiction + product-type"
+      "seam": "Profiles as data: base + jurisdiction + product-type",
+      "tier": "core"
     },
     {
       "source": "hooks",
       "dest": ".claude/hooks",
       "kind": "glob",
       "glob": "*.sh",
-      "seam": "Pre-write guardrail hooks (pii-guard, spec/test tripwires)"
+      "seam": "Pre-write guardrail hooks (pii-guard, spec/test tripwires)",
+      "tier": "core"
     },
     {
       "source": "hooks/settings.hooks.json",
       "dest": ".claude/settings.json",
       "kind": "file",
       "adopt": "merge",
-      "seam": "Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand)"
+      "seam": "Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand)",
+      "tier": "core"
     },
     {
       "source": "governance/runbooks",
       "dest": "docs/governance/runbooks",
       "kind": "glob",
       "glob": "*.md",
-      "seam": "Seven adoption runbooks + the supervised-pilot playbook"
+      "seam": "Seven adoption runbooks + the supervised-pilot playbook",
+      "tier": "core"
     },
     {
       "source": "governance/activation-runbook.md",
       "dest": "docs/governance/activation-runbook.md",
       "kind": "file",
-      "seam": "How to activate branch protection, IAM, the routine lane"
+      "seam": "How to activate branch protection, IAM, the routine lane",
+      "tier": "core"
     },
     {
       "source": "governance/routine-controller.yml",
       "dest": "docs/governance/routine-controller.yml",
       "kind": "file",
-      "seam": "Reference routine auto-merge controller — separated bot identity, gated on routine-qualified + config-reconciliation (rc.12 WS2.3)"
+      "seam": "Reference routine auto-merge controller — separated bot identity, gated on routine-qualified + config-reconciliation (rc.12 WS2.3)",
+      "tier": "core",
+      "tier_note": "core because the control catalog cites it as ROUTINE-CONTROLLER.doc_ref, and the catalog may not cite a ghost"
     },
     {
       "source": "governance/CODEOWNERS.template",
       "dest": "CODEOWNERS",
       "kind": "file",
       "adopt": "template",
-      "seam": "The control-plane ownership map (replace @your-org/… — the gate fails until you do)"
+      "seam": "The control-plane ownership map (replace @your-org/… — the gate fails until you do)",
+      "tier": "core"
     },
     {
       "source": "governance/control-catalog.template.json",
       "dest": "docs/governance/control-catalog.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "The machine-readable control state of record"
+      "seam": "The machine-readable control state of record",
+      "tier": "core"
     },
     {
       "source": "governance/identities.template.json",
       "dest": "docs/governance/identities.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "The identity registry (approvals resolve against it)"
+      "seam": "The identity registry (approvals resolve against it)",
+      "tier": "core"
     },
     {
       "source": "governance/attestation-issuers.template.json",
       "dest": "docs/governance/attestation-issuers.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Allowed-issuers registry for ed25519 attestations"
+      "seam": "Allowed-issuers registry for ed25519 attestations",
+      "tier": "governed"
     },
     {
       "source": "governance/assertion-issuers.template.json",
       "dest": "docs/governance/assertion-issuers.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Identity-provider material for human approval assertions (kept separate from service keys)"
+      "seam": "Identity-provider material for human approval assertions (kept separate from service keys)",
+      "tier": "governed"
     },
     {
       "source": "governance/identity-map.template.json",
       "dest": "docs/governance/identity-map.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "The P6 join: surface person id → IdP subject → registry identity. Second-line owned; never written by a service"
+      "seam": "The P6 join: surface person id → IdP subject → registry identity. Second-line owned; never written by a service",
+      "tier": "governed"
     },
     {
       "source": "governance/identity-map-reconciliation.template.json",
       "dest": "docs/governance/identity-map-reconciliation.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "The observer's signed observation that the map is still current (observed, not declared)"
+      "seam": "The observer's signed observation that the map is still current (observed, not declared)",
+      "tier": "governed"
     },
     {
       "source": "governance/model-manifest.template.json",
       "dest": "docs/governance/model-manifest.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Model inventory (pinned, tiered, evaluated, runtime-governed)"
+      "seam": "Model inventory (pinned, tiered, evaluated, runtime-governed)",
+      "tier": "core"
     },
     {
       "source": "governance/data-lifecycle.template.json",
       "dest": "docs/governance/data-lifecycle.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Data classification, retention, erasure, residency"
+      "seam": "Data classification, retention, erasure, residency",
+      "tier": "core"
     },
     {
       "source": "governance/operations-signal.template.json",
       "dest": "docs/governance/operations-signal.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "The Run→Discovery feedback log"
+      "seam": "The Run→Discovery feedback log",
+      "tier": "governed"
     },
     {
       "source": "governance/service-readiness.template.json",
       "dest": "docs/governance/services/example-service.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills)"
+      "seam": "Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills)",
+      "tier": "governed"
     },
     {
       "source": "governance/product-evals.template.json",
       "dest": "docs/governance/product-evals.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Product-outcome evals (discovery-linked, measures scored, commit-bound)"
+      "seam": "Product-outcome evals (discovery-linked, measures scored, commit-bound)",
+      "tier": "governed"
     },
     {
       "source": "governance/routine-envelope.template.json",
       "dest": "docs/governance/routine-envelope.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "The second-line-owned routine-change envelope (HG-0013)"
+      "seam": "The second-line-owned routine-change envelope (HG-0013)",
+      "tier": "governed"
     },
     {
       "source": "governance/config-baseline.template.json",
       "dest": "docs/governance/config-baseline.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "The approved control-plane configuration reconciled against live observations (rc.12 WS2.4)"
+      "seam": "The approved control-plane configuration reconciled against live observations (rc.12 WS2.4)",
+      "tier": "full"
     },
     {
       "source": "governance/assurance-sla.template.json",
       "dest": "docs/governance/assurance-sla.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Service-level expectations for continuous-assurance cases (rc.14 WS6)"
+      "seam": "Service-level expectations for continuous-assurance cases (rc.14 WS6)",
+      "tier": "full"
     },
     {
       "source": "governance/token-ledger.template.json",
       "dest": "docs/governance/token-ledger.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Token-spend ledger (a report, never a merge gate)"
+      "seam": "Token-spend ledger (a report, never a merge gate)",
+      "tier": "full"
     },
     {
       "source": "adapters/README.md",
       "dest": "docs/governance/adapters/README.md",
       "kind": "file",
-      "seam": "The neutral adapter contract"
+      "seam": "The neutral adapter contract",
+      "tier": "full"
     },
     {
       "source": "adapters/providers",
       "dest": "docs/governance/adapters/providers",
       "kind": "dir",
-      "seam": "The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it"
+      "seam": "The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it",
+      "tier": "full"
     },
     {
       "source": "governance/provider-selection.template.json",
       "dest": "docs/governance/provider-selection.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Which provider this institution chose per role (the choice is recorded, never defaulted)"
+      "seam": "Which provider this institution chose per role (the choice is recorded, never defaulted)",
+      "tier": "full"
     },
     {
       "source": "guardrails",
       "dest": "guardrails",
       "kind": "dir",
-      "seam": "Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks)"
+      "seam": "Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks)",
+      "tier": "governed"
     },
     {
       "source": "brainkit/manifest.template.json",
       "dest": "institution/brainkit/manifest.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve)"
+      "seam": "BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve)",
+      "tier": "full"
     },
     {
       "source": "brainkit/identity/design.md",
       "dest": "institution/brainkit/identity/design.md",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit institutional identity + design language (the D7 projection source)"
+      "seam": "BrainKit institutional identity + design language (the D7 projection source)",
+      "tier": "full"
     },
     {
       "source": "brainkit/terminology.md",
       "dest": "institution/brainkit/terminology.md",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit binding vocabulary"
+      "seam": "BrainKit binding vocabulary",
+      "tier": "full"
     },
     {
       "source": "brainkit/architecture.md",
       "dest": "institution/brainkit/architecture.md",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit architecture principles and constraints"
+      "seam": "BrainKit architecture principles and constraints",
+      "tier": "full"
     },
     {
       "source": "brainkit/technology-policy.json",
       "dest": "institution/brainkit/technology-policy.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit technology policy (allowed / consult / forbidden)"
+      "seam": "BrainKit technology policy (allowed / consult / forbidden)",
+      "tier": "full"
     },
     {
       "source": "brainkit/governance.md",
       "dest": "institution/brainkit/governance.md",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit decision rights"
+      "seam": "BrainKit decision rights",
+      "tier": "full"
     },
     {
       "source": "brainkit/source-register.json",
       "dest": "institution/brainkit/source-register.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit approved source register (every section grounds in it)"
+      "seam": "BrainKit approved source register (every section grounds in it)",
+      "tier": "full"
     },
     {
       "source": "brainkit/repository-instructions.md",
       "dest": "institution/brainkit/repository-instructions.md",
       "kind": "file",
-      "seam": "Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them"
+      "seam": "Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them",
+      "tier": "full"
     },
     {
       "source": "ci/ci.yml",
       "dest": ".github/workflows/ci.yml",
       "kind": "file",
-      "seam": "The reference CI workflow that runs every gate"
+      "seam": "The reference CI workflow that runs every gate",
+      "tier": "core"
     }
-  ]
+  ],
+  "_tiers": "Adoption tiers (adopt.mjs --tier). core = the warp: all machinery plus the governance data whose gate FAILS CLOSED when it is absent, so a core adoption is safe rather than merely small. governed = the product-governance plane. full = estate, floor and institution. MACHINERY IS ALWAYS INSTALLED at every tier — only what an adopter must FILL IN is tiered, because the burden was never the gates (a gate whose input is absent is silent) but the ADOPT markers. Which entries may be deferred was determined by TEST, not by taste: every deferred entry was removed from a real adoption and its gates confirmed silent."
 }

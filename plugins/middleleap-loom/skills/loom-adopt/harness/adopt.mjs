@@ -18,7 +18,23 @@
 // diverged is preserved with the new upstream version dropped beside it as a `.loom-new` sidecar.
 // The reasoning is in core/adoption-stamp.mjs; --force is the documented way to overwrite anyway.
 //
-//   node adopt.mjs [--dest <repo-root>] [--report json] [--print-table] [--dry-run] [--force]
+// ADOPTION TIERS (rc.24). A full adoption lands 200+ ADOPT markers across 70+ files on day one,
+// which is a cliff, not an on-ramp — and it grows every release. `--tier core|governed|full`
+// stages it. Two rules keep the split honest:
+//
+//   MACHINERY IS ALWAYS INSTALLED, at every tier. Only what an adopter must FILL IN is tiered.
+//   The burden was never the gates — a gate whose input file is absent is silent — and tiering
+//   the `scripts/*.mjs` glob would reintroduce exactly the failure its comment warns about: a
+//   per-file list that silently drops new gates. So every tier gets every gate.
+//
+//   WHAT MAY BE DEFERRED WAS DETERMINED BY TEST, NOT BY TASTE. Each deferred entry was removed
+//   from a real adoption and its gates confirmed silent. Two are NOT deferrable and sit in core
+//   however inconvenient: `data-lifecycle.json` and `model-manifest.json` fail CLOSED when
+//   absent. That is correct — in this method the agent is a model and data has a lifecycle —
+//   so core is the smallest adoption that is safe, not the smallest that installs.
+//
+//   node adopt.mjs [--dest <repo-root>] [--tier core|governed|full] [--report json]
+//                  [--print-table] [--dry-run] [--force]
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, cpSync } from 'node:fs';
 import { dirname, join, resolve, relative } from 'node:path';
@@ -39,6 +55,13 @@ const isTemplatePending = (p) => { try { return PLACEHOLDER.test(readFileSync(p,
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 
 export function loadManifest() { return JSON.parse(readFileSync(MANIFEST, 'utf8')); }
+
+// Cumulative: adopting `governed` means core + governed. An entry with no tier is core, so a
+// manifest entry added without one lands in every adoption rather than silently in none.
+export const TIERS = ['core', 'governed', 'full'];
+export const tierIncludes = (adopted, entryTier) =>
+  TIERS.indexOf(entryTier ?? 'core') <= TIERS.indexOf(adopted);
+export const entriesForTier = (manifest, tier) => manifest.entries.filter((e) => tierIncludes(tier, e.tier));
 
 /** This bundle's version, from the plugin manifest — never hard-coded, so it cannot drift. */
 export function bundleVersion() { return readJson(PLUGIN_JSON)?.version ?? null; }
@@ -72,9 +95,9 @@ export function copyTable(manifest = loadManifest()) {
   const rows = manifest.entries.map((e) => {
     const src = e.kind === 'glob' ? `${e.source}/${e.glob}` : e.source;
     const dst = e.kind === 'glob' ? `${e.dest}/` : e.dest;
-    return `| \`${src}\` | \`${dst}\` | ${e.seam} |`;
+    return `| \`${src}\` | \`${dst}\` | ${e.tier ?? 'core'} | ${e.seam} |`;
   });
-  return ['| Bundle source | Destination | What it is |', '|---|---|---|', ...rows].join('\n');
+  return ['| Bundle source | Destination | Tier | What it is |', '|---|---|---|---|', ...rows].join('\n');
 }
 
 /** Every file under `root`, as paths relative to it (recursive). */
@@ -159,26 +182,33 @@ function matchGlob(glob, name) {
  * `force` overwrites files the adopter has edited — destructive by definition, so it is never
  * the default and the report says what it stepped on.
  */
-export function install(destRoot, { dryRun = false, manifest = loadManifest(), force = false, stamp = null, version = undefined, now = new Date().toISOString() } = {}) {
+export function install(destRoot, { dryRun = false, manifest = loadManifest(), force = false, stamp = null, version = undefined, tier = undefined, now = new Date().toISOString() } = {}) {
   const previous = stamp ?? readStamp(destRoot) ?? emptyStamp();
+  // A re-run keeps the tier already adopted unless one is named — an upgrade must never silently
+  // demote a repository to core and start reporting its governed templates as missing.
+  const adoptedTier = tier ?? previous.tier ?? 'full';
+  if (!TIERS.includes(adoptedTier)) throw new Error(`unknown tier ${adoptedTier} — expected ${TIERS.join('|')}`);
   const ctx = { stamp: previous, force, dryRun };
-  const report = manifest.entries.map((e) => copyEntry(e, destRoot, ctx));
+  const report = entriesForTier(manifest, adoptedTier).map((e) => copyEntry(e, destRoot, ctx));
 
   const installedDigests = Object.assign({}, ...report.map((r) => r.stamped || {}));
   const resolvedVersion = version === undefined ? bundleVersion() : version;
-  const written = nextStamp({
-    previous,
-    version: resolvedVersion,
-    installed: installedDigests,
-    manifestDigest: existsSync(MANIFEST) ? sha(MANIFEST) : null,
-    now,
-  });
+  const written = {
+    ...nextStamp({
+      previous,
+      version: resolvedVersion,
+      installed: installedDigests,
+      manifestDigest: existsSync(MANIFEST) ? sha(MANIFEST) : null,
+      now,
+    }),
+    tier: adoptedTier,
+  };
   if (!dryRun) {
     const stampPath = resolve(destRoot, STAMP_PATH);
     mkdirSync(dirname(stampPath), { recursive: true });
     writeFileSync(stampPath, JSON.stringify(written, null, 2) + '\n');
   }
-  return Object.assign(report, { stamp: written, previousVersion: previous.bundle_version });
+  return Object.assign(report, { stamp: written, previousVersion: previous.bundle_version, tier: adoptedTier });
 }
 
 // CLI.
@@ -189,14 +219,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const destRoot = resolve(arg('--dest') || process.cwd());
   const dryRun = argv.includes('--dry-run');
   const force = argv.includes('--force');
-  const from = readStamp(destRoot)?.bundle_version ?? null;
+  const previousStamp = readStamp(destRoot);
+  const from = previousStamp?.bundle_version ?? null;
   const to = bundleVersion();
-  const report = install(destRoot, { dryRun, force });
+  const tier = arg('--tier');
+  if (tier && !TIERS.includes(tier)) {
+    process.stderr.write(`unknown --tier ${tier} — expected ${TIERS.join(' | ')}\n`);
+    process.exit(2);
+  }
+  const report = install(destRoot, { dryRun, force, tier });
   const missing = report.filter((r) => r.status === 'source-missing');
-  if (arg('--report') === 'json') { process.stdout.write(JSON.stringify({ report: [...report], stamp: report.stamp, from, to }, null, 2) + '\n'); }
+  if (arg('--report') === 'json') { process.stdout.write(JSON.stringify({ report: [...report], stamp: report.stamp, from, to, tier: report.tier }, null, 2) + '\n'); }
   else {
     const move = from === null ? `first adoption of ${to}` : from === to ? `re-run of ${to}` : `UPGRADE ${from} → ${to}`;
-    process.stdout.write(`\nLoom adoption report — ${dryRun ? 'DRY RUN, ' : ''}${move}, ${report.length} entries → ${destRoot}\n\n`);
+    const tierMove = previousStamp?.tier && previousStamp.tier !== report.tier ? `tier ${previousStamp.tier} → ${report.tier}` : `tier ${report.tier}`;
+    process.stdout.write(`\nLoom adoption report — ${dryRun ? 'DRY RUN, ' : ''}${move}, ${tierMove}, ${report.length} entries → ${destRoot}\n\n`);
     for (const r of report) process.stdout.write(`  ${r.status.padEnd(24)} ${r.dest}  · ${r.seam}\n`);
 
     const pending = report.filter((r) => r.status === 'adopt-pending');
@@ -221,6 +258,18 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         'indistinguishable. Everything differing was preserved with a `.loom-new` sidecar. Reconcile\n' +
         'them, or re-run with --force if you know you never customised anything. This happens once:\n' +
         'the stamp written just now means later upgrades can tell the difference.\n',
+      );
+    }
+
+    // What the next tier would add, so a staged adoption is a visible on-ramp rather than a
+    // thing an adopter has to know exists. Counted from the manifest, never hard-coded.
+    const nextTier = TIERS[TIERS.indexOf(report.tier) + 1];
+    if (nextTier) {
+      const manifest = loadManifest();
+      const pending = entriesForTier(manifest, nextTier).length - entriesForTier(manifest, report.tier).length;
+      process.stdout.write(
+        `\nYou are on tier ${report.tier}. \`--tier ${nextTier}\` adds ${pending} more entr(ies) to fill in.\n` +
+        'Every gate is already installed and running; the deferred ones are silent until their file exists.\n',
       );
     }
 

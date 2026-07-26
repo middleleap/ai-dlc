@@ -18,7 +18,7 @@
 // Every fixture value is synthetic and fabricated for this file.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -119,17 +119,23 @@ const codes = (findings) => findings.map((f) => f.slice(0, 6));
 const form = (text = FORM, mirror = MIRROR) => [{ name: 'fixture-card.md', text, mirror }];
 const surfaceFor = (stage = 'PA1', plan = PLAN) => deriveApprovalSurface(plan, { stage }).surface;
 
+
+// TIER-AWARE (rc.24): this asserts properties of content that a `core` or `governed` adoption
+// deliberately does not install. Absent content is not a failing test — it is a tier boundary — so
+// these skip cleanly, the same "inert where absent" pattern the doc-integrity gate uses.
+const CATALOG_B_PRESENT = existsSync(resolve(dirname(fileURLToPath(import.meta.url)), '..', 'floor/catalog-b'));
+
 // ---------------------------------------------------------------------------------------------
 // The suite as shipped.
 // ---------------------------------------------------------------------------------------------
 
-test('the catalog-B suite that ships in this bundle passes its own gate', () => {
+test('the catalog-B suite that ships in this bundle passes its own gate', { skip: !CATALOG_B_PRESENT && 'floor/catalog-b not installed at this tier' }, () => {
   const r = run(HARNESS);
   assert.deepEqual(r.findings, []);
   assert.ok(r.forms >= 2, `expected the shipped ADR inbox card and SDR flow, saw ${r.forms} forms`);
 });
 
-test('every shipped catalog-B form mirrors a template that exists, and says so in its banner', () => {
+test('every shipped catalog-B form mirrors a template that exists, and says so in its banner', { skip: !CATALOG_B_PRESENT && 'floor/catalog-b not installed at this tier' }, () => {
   for (const name of readdirSync(join(HARNESS, CATALOG_DIR)).filter((n) => n.endsWith('.md'))) {
     const text = readFileSync(join(HARNESS, CATALOG_DIR, name), 'utf8');
     const fm = frontmatterOf(text);
@@ -141,7 +147,7 @@ test('every shipped catalog-B form mirrors a template that exists, and says so i
   }
 });
 
-test('the shipped forms cover both of D5.4\'s artifacts — the ADR inbox card and the SDR flow', () => {
+test('the shipped forms cover both of D5.4\'s artifacts — the ADR inbox card and the SDR flow', { skip: !CATALOG_B_PRESENT && 'floor/catalog-b not installed at this tier' }, () => {
   const mirrored = readdirSync(join(HARNESS, CATALOG_DIR))
     .filter((n) => n.endsWith('.md'))
     .map((n) => frontmatterOf(readFileSync(join(HARNESS, CATALOG_DIR, n), 'utf8')).mirrors);

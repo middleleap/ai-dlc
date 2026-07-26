@@ -9,6 +9,11 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluate } from './guardrail-policy-check.mjs';
 
+// TIER-AWARE (rc.24): this asserts properties of content that a `core` or `governed` adoption
+// deliberately does not install. Absent content is not a failing test — it is a tier boundary — so
+// these skip cleanly, the same "inert where absent" pattern the doc-integrity gate uses.
+const GUARDRAILS_PRESENT = existsSync(resolve(dirname(fileURLToPath(import.meta.url)), '..', 'guardrails'));
+
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const allExist = () => true;
 // The hooks live at hooks/ in the bundle and .claude/hooks/ in an adopted repo — resolve either.
@@ -54,7 +59,7 @@ test('a runtime with no coverage stated fails — every runtime must be declared
 
 // The SHIPPED policy must be well-formed and honest, resolving mechanisms in the bundle layout
 // (.claude/hooks/foo.sh → hooks/foo.sh).
-test('the shipped guardrail policy is honest — every claimed mechanism exists', () => {
+test('the shipped guardrail policy is honest — every claimed mechanism exists', { skip: !GUARDRAILS_PRESENT && 'guardrails/ not installed at this tier' }, () => {
   const p = JSON.parse(readFileSync(join(HARNESS, 'guardrails/guardrail-policy.json'), 'utf8'));
   assert.deepEqual(evaluate(p, mechExists), []);
 });
@@ -86,7 +91,7 @@ test('hostile: a test-weakening edit is DENIED by the claude-code test-tripwire 
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
 
-test('the ci-backstop mechanism for every guardrail exists (the enforcement of record is real)', () => {
+test('the ci-backstop mechanism for every guardrail exists (the enforcement of record is real)', { skip: !GUARDRAILS_PRESENT && 'guardrails/ not installed at this tier' }, () => {
   const p = JSON.parse(readFileSync(join(HARNESS, 'guardrails/guardrail-policy.json'), 'utf8'));
   for (const g of p.guardrails) {
     for (const [rt, c] of Object.entries(g.coverage)) {

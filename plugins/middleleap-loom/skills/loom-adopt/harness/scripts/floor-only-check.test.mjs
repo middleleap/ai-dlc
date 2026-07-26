@@ -12,11 +12,16 @@
 // Every fixture value is synthetic and fabricated for this file.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CATALOG_DIR, WRITE_CLASS, bannerBlockOf, checkTemplate, evaluate, identifyCatalogC, run } from './floor-only-check.mjs';
+
+// TIER-AWARE (rc.24): this asserts properties of content that a `core` or `governed` adoption
+// deliberately does not install. Absent content is not a failing test — it is a tier boundary — so
+// these skip cleanly, the same "inert where absent" pattern the doc-integrity gate uses.
+const CATALOG_C_PRESENT = existsSync(resolve(dirname(fileURLToPath(import.meta.url)), '..', 'floor/catalog-c'));
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -59,14 +64,14 @@ const codes = (findings) => findings.map((f) => f.slice(0, 6));
 // The suite as shipped.
 // ---------------------------------------------------------------------------------------------
 
-test('the catalog-C suite that ships in this bundle passes its own gate', () => {
+test('the catalog-C suite that ships in this bundle passes its own gate', { skip: !CATALOG_C_PRESENT && 'floor/catalog-c not installed at this tier' }, () => {
   const r = run(HARNESS);
   assert.deepEqual(r.findings, []);
   assert.ok(r.templates >= 4, `expected the shipped floor-only suite, saw ${r.templates} templates`);
   assert.equal(r.crossings, 0);
 });
 
-test('every shipped catalog-C template declares the write class and carries the banner', () => {
+test('every shipped catalog-C template declares the write class and carries the banner', { skip: !CATALOG_C_PRESENT && 'floor/catalog-c not installed at this tier' }, () => {
   for (const name of readdirSync(join(HARNESS, CATALOG_DIR)).filter((n) => n.endsWith('.md'))) {
     const text = readFileSync(join(HARNESS, CATALOG_DIR, name), 'utf8');
     assert.deepEqual(checkTemplate(name, text), [], name);
