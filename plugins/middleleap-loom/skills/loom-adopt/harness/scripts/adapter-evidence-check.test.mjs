@@ -10,7 +10,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { SCHEMA_ID, STREAMS, SEAM_MECHANISMS, evidenceHash } from '../core/floor-adapters.mjs';
 import { evaluate as evaluateAdapter } from './adapter-check.mjs';
@@ -379,14 +379,19 @@ test('all four streams active satisfies a compiled requirement', () => {
   });
 });
 
-test('the SHIPPED reference adapters pass untouched — the adoption dry-run stays green', () => {
+test('the SHIPPED reference adapters pass untouched — the adoption dry-run stays green', (t) => {
   // This is the case that decides whether the gate can be wired into CI at all: the dry-run copies
   // `adapters/reference/*.json` into an adopted layout, and neither declares a mechanism because
   // neither could have. A finding here would be an outage for every existing adopter, so it is
   // asserted against the real files rather than against a fixture that resembles them.
-  const dir = new URL('../adapters/reference/', import.meta.url);
-  const refs = ['github-branch-protection.json', 'grc-control-register.json']
-    .map((n) => JSON.parse(readFileSync(new URL(n, dir), 'utf8')));
+  // Bundle-only: `adapters/reference/` is not installed by copy-manifest — the dry-run stages the
+  // same files at the governed path. Look in both, and skip where neither exists rather than
+  // failing an adopter's suite over a fixture they were never given.
+  const names = ['github-branch-protection.json', 'grc-control-register.json'];
+  const base = [new URL('../adapters/reference/', import.meta.url), new URL('../docs/governance/adapters/', import.meta.url)]
+    .find((d) => names.every((n) => existsSync(new URL(n, d))));
+  if (!base) { t.skip('the reference adapters are absent in this layout'); return; }
+  const refs = names.map((n) => JSON.parse(readFileSync(new URL(n, base), 'utf8')));
   withRepo({ adapters: refs }, (d) => {
     const r = run(d, { now: NOW });
     assert.deepEqual(r.findings, []);

@@ -18,7 +18,7 @@
 // Every fixture value is synthetic and fabricated for this file.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -418,8 +418,18 @@ test('a surface that is not an object, and a section that is not one', () => {
 // Against the plan that actually ships in this bundle.
 // ---------------------------------------------------------------------------------------------
 
-test('the bundled change-example plan derives a surface that verifies, at both stages', () => {
-  const plan = JSON.parse(readFileSync(`${HARNESS}/change-example/control-plan.json`, 'utf8'));
+test('the bundled change-example plan derives a surface that verifies, at both stages', (t) => {
+  // The compiled plan is BUNDLE demonstration data — `copy-manifest.json` deliberately does not
+  // install it, and the adoption dry-run stages it at the governed path instead. So look in both
+  // places and skip where neither exists, rather than failing an adopter's suite for the absence of
+  // a fixture they were never given. This is the same FIND-or-skip shape used by
+  // scripts/product-approval-check.test.mjs and core/floor-export.test.mjs.
+  const src = [
+    'change-example/control-plan.json',
+    'docs/governance/changes/CHG-2026-0042/control-plan.json',
+  ].map((c) => `${HARNESS}/${c}`).find(existsSync);
+  if (!src) { t.skip('the bundled change-example is absent in this layout'); return; }
+  const plan = JSON.parse(readFileSync(src, 'utf8'));
   for (const stage of STAGES) {
     const { surface, findings } = deriveApprovalSurface(plan, { stage });
     assert.deepEqual(findings, [], `${stage}: ${findings.join(' · ')}`);
