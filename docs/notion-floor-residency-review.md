@@ -13,6 +13,11 @@
 > `docs/notion-floor-p1-vendor-questionnaire.md` (§8's vendor questions in sendable form, with
 > the two institution-specific ones separated out so they are not sent by mistake). Answers come
 > back **into this record**, which is the thing that gets signed.
+>
+> **To see what "signed" looks like:** `docs/notion-floor-residency-review-example.md` is a
+> **specimen** — a filled-in P1 with fictional signatories, showing ratings a signatory *changed*,
+> a risk left honestly unrated, and the conditions an approval normally carries. It approves
+> nothing and does not unblock WS1. **This** record is the gate, and its §11 is still `AWAITING`.
 
 This record states, class by class, what content of a governed Loom repository may be projected
 into or authored on a SaaS workspace ("the floor"), at what fidelity, and what must never leave
