@@ -8,7 +8,9 @@ subject-binding corrections in §0 land and pass an independent second-line revi
 rules §4.1, storage split §6, template catalog §6c) · `docs/loom-factory-floor.html` ·
 `docs/loom-notion-architecture.html` (how the three planes fit together) ·
 `docs/notion-floor-alpha-walkthrough.md` (a simulated feature walked end to end — it found a real
-PA1 defect, and §7 lists what it did **not** prove).
+PA1 defect, and §7 lists what it did **not** prove) ·
+`docs/notion-floor-sso-runbook.md` (federating the floor to a directory, and why the directory that
+signs people in may not be the issuer that can sign their approvals).
 
 The central intent:
 

@@ -277,6 +277,37 @@ A pilot below the required tier can still exercise the *transcription* path, sin
 custody only — but it cannot produce a subject assertion whose principal is verifiable, and any
 envelope it emits is a draft artifact by construction.
 
+**Not every directory can issue the assertion this ADR selected, and the obvious one cannot.**
+Option A pins an accepted `acr` and compares it — findings #8 and #13 of the WS2 review were
+exactly that `acr` was carried and never enforced, so the comparison is not decoration. Checked
+against Google's published OIDC discovery document on 26 Jul 2026:
+
+| Advertised | Present? |
+|---|---|
+| `acr_values_supported` | **absent** |
+| `acr` in `claims_supported` | **absent** |
+| `amr` in `claims_supported` | **absent** |
+| `auth_time` in `claims_supported` | **absent** |
+
+`claims_supported` is `aud, email, email_verified, exp, family_name, given_name, iat, iss, name,
+picture, sub` — so an approval endpoint federated to Google Workspace alone **cannot prove the
+human re-authenticated at the moment of decision**, and cannot fall back on `max_age` either,
+because there is no `auth_time` to verify the result against. A step-up requirement against an
+issuer that cannot express one is a control that reads as enforced and is not.
+
+This separates two jobs that are easy to conflate. A directory can be entirely adequate as **the
+federated sign-on for the floor** — which is what the P6 join needs, and which Google Workspace
+supplies — while being inadequate as **the issuer of approval assertions**. The resolution is to
+put a step-up-capable OIDC issuer in front of the *decision endpoint* and let it trust the
+directory for identity; `assertion-issuers.json` then pins that issuer, and the identity map's
+`idp.issuer` must name the same one, since a mapping against a different provider resolves nothing.
+`docs/notion-floor-sso-runbook.md` §3 sets out the alternatives and their costs.
+
+**AWAITING:** `risk-second-line` confirmation of the required `acr` level (already open above) now
+carries a second question — whether the chosen issuer can *express* that level at all. The two must
+be answered together, because an `acr` requirement no available issuer can meet is a decision to
+change the mechanism, not a parameter to fill in.
+
 **A defect in the D2.4 module that this decision surfaced — now FIXED (loom `2.0.0-rc.13`).**
 As first written, `verifySubjectAssertion` rejected an assertion whose
 `subject.assertion.expires_at` was earlier than the *verification* time. An OIDC ID token's
