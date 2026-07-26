@@ -1,0 +1,16 @@
+{
+  "_comment": "D5.3 STREAM 2 of 4 — a FORGE stream. Verification is delegated wholesale to scripts/platform-activation-check.mjs, the verifier of record for every forge mechanism; re-verifying it in the adapter-evidence gate would fork the verifier and let an adopter route a weak observation to whichever is more forgiving (AD-R08). This is the D5.3 upgrade of adapters/reference/github-branch-protection.json — same adapter_id, same control, plus the two fields that opt it into the stream contract — and it is the migration every existing adopter will make. observe.mjs will NOT perform that upgrade behind an operator's back: where the pre-D5.3 file is already mounted this declaration is skipped with its reason, because scripts/adapter-evidence-check.test.mjs asserts the shipped reference adapters still read as pre-D5.3 from that same directory.",
+  "adapter_id": "github-branch-protection",
+  "system": "github",
+  "satisfies_control": "HG-0001",
+  "capability": "Required CODEOWNERS review and no direct pushes to main, enforced by the forge rather than by the agent that would bypass it",
+  "mechanism": "branch_protection",
+  "activation_source": "platform-activation",
+  "evidence": {
+    "kind": "branch-protection",
+    "envelope_fields": ["repository", "branch", "required_reviews", "require_code_owner_reviews", "enforce_admins", "allow_force_pushes", "fetched_at"],
+    "observes_identities": ["agent-loom-delivery", "svc-floor-projector"],
+    "required_negatives": ["sync-identity-merge"],
+    "_no_max_age_days": "Deliberately absent. The freshness bound for a delegated stream is the forge gate's (365 days, correct for a setting that changes only when someone changes it), not this module's 7-day seam window. Declaring a window here would suggest something reads it; nothing does."
+  }
+}

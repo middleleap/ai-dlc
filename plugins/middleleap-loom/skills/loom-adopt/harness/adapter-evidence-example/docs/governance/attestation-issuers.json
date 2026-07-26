@@ -1,0 +1,4 @@
+{
+  "_comment": "DELIBERATELY EMPTY. The observer's ed25519 key pair is generated in memory by observe.mjs on every run; only the public half is ever written, and only into the staging root it was told to write to. Nothing in this directory is trust material. That is stricter than approval-attestation-example/, which commits public halves marked `\"demo\": true` — it can, because core/approval-attestations.mjs refuses a demo anchor and the example is still worth reading. Here a demo anchor is AD-R17 and would keep the stream declared, so the key has to be real; a real key that ships is a live root of trust in every adopting repository, which this bundle shipped once and removed. The way out of that trap is not to ship one.",
+  "issuers": []
+}

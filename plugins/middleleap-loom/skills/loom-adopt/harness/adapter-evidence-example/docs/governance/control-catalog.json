@@ -1,0 +1,45 @@
+{
+  "_comment": "A FOUR-CONTROL EXTRACT, not a control catalog. The three shipped entries are copied from governance/control-catalog.template.json so scripts/adapter-check.mjs can resolve this example's declarations to real control ids; their `mechanism_ref` / `test_ref` paths resolve from an adopted repository root, not from this directory, so do not run scripts/control-catalog-check.mjs here — it would correctly report ghosts. FLOOR-SEAM is the fourth, and it is the adopting institution's own: the harness does not ship it and must not.",
+  "controls": [
+    {
+      "control_id": "PA-GATES",
+      "objective": "PA1/PA2: a product cannot enter Develop or reach launch without the compiled sections and resolvable control-function approvals",
+      "owner_role": "product-owner",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/product-approval-check.mjs",
+      "test_ref": "scripts/product-approval-check.test.mjs",
+      "lane": "pr",
+      "gate_family": "PA1"
+    },
+    {
+      "control_id": "HG-0001",
+      "objective": "Four-eyes on every merge: no direct pushes to main, CODEOWNERS review required",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/control-plane-check.mjs",
+      "lane": "pr"
+    },
+    {
+      "control_id": "HG-0002",
+      "objective": "Immutable control plane: guardrails cannot be changed without Code Owner review; placeholder owners rejected",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/control-plane-check.mjs",
+      "lane": "pr"
+    },
+    {
+      "_comment": "THE INSTITUTION'S OWN CONTROL. core/floor-adapters.mjs names FLOOR-SEAM in its STREAMS table and says plainly that it does not exist in the shipped catalog: the seam's own liveness is a control an adopting institution must add and own. This example plays that institution. Do not add this entry to governance/control-catalog.template.json — a harness-invented control owned by nobody is the mapping-to-nothing adapter-check refuses.",
+      "control_id": "FLOOR-SEAM",
+      "objective": "The collaboration surface is live and was observed refusing a bypass of the seam itself — the stream that vouches for the other streams' plumbing",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/adapter-evidence-check.mjs",
+      "lane": "pr",
+      "paths": ["docs/governance/adapters/", "docs/governance/adapter-evidence/"]
+    }
+  ]
+}
