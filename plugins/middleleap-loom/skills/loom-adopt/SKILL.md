@@ -12,6 +12,28 @@ through two seams (brand profile, data-risk register) and the `ADOPT:` markers y
 Read the method first if you haven't: the `loom` skill (sibling in this plugin), especially
 `references/discovery-harness.md` — that file becomes this repo's `discovery/DISCOVERY.md`.
 
+## 0a. Already have a codebase? Assess it first
+
+Adoption does not assume a greenfield repository. Point the assessment at an existing one and it
+reports where you stand and what adopting would cost:
+
+```bash
+node harness/assess.mjs --dest <repo-root>     # add --json for the machine-readable form
+```
+
+It separates three kinds of statement and never lets them blur — **observed** (a file is there),
+**inferred** (this looks regulated — a guess, labelled as one), and **what it cannot see**, which
+it prints on every run including the most flattering. Branch protection, whether your CODEOWNERS
+teams are real people who review, whether your tests assert anything: none of that is visible from
+a checkout, and a report that listed only what it could see would read as if that were everything.
+
+The cost figures come from a real `--dry-run` install per tier, so "12 files land, 2 preserved" is
+measured rather than estimated. Files you already have are **preserved**, never overwritten.
+
+Nothing it prints says a control is operating. A file is not a control; a gate that has never run
+is not evidence. It recommends a starting tier — usually `core`, because raising one later is a
+single flag and the deferred gates are already installed and silent.
+
 ## 0. Preconditions
 
 - A git repository. Node ≥ 18 available (`node --test` is used by the bundled test suites).

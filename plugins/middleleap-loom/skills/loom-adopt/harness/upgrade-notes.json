@@ -145,6 +145,16 @@
         "If you copied the old ci.yml, take the new one: it is behaviourally equivalent (same gates, same fail-closed results) but sourced from the catalog. Keep your own Q-gate additions.",
         "Non-regulated adopters: name `standard` in a governed change's required_profiles instead of `regulated-bank`. Regulated adopters change nothing."
       ]
+    },
+    {
+      "version": "2.0.0-rc.27",
+      "headline": "Brownfield assessment — point it at an existing repository",
+      "notes": [
+        "`node assess.mjs --dest <repo>` reports where an existing codebase stands and what adopting would cost, per tier, from a real dry-run install. The last entry point that assumed a greenfield repo.",
+        "It separates observed facts from inferences, and prints what it CANNOT see — branch protection, whether CODEOWNERS teams are real reviewers, whether the tests assert anything — on every run. Nothing it prints says a control is operating.",
+        "It recommends a starting tier (usually core) and a base profile chosen from the profiles this bundle actually ships, never one you do not have."
+      ],
+      "action_required": []
     }
   ]
 }
