@@ -21,7 +21,9 @@ jobs:
 
       - name: Loom doc-integrity — generated docs match their source of truth (rc.7 W4/W6)
         working-directory: plugins/middleleap-loom/skills/loom-adopt/harness
-        run: node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
+        run: |
+          node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
+          node scripts/self-claims-check.mjs     # rc.26 — the bundle is held to its own claims
 
       - name: Loom bundle — adoption dry-run (manifest-driven install via adopt.mjs — rc.8 WS1)
         run: |

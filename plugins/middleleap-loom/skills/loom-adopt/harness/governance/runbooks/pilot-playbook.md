@@ -43,7 +43,7 @@ the platform/organisational half in the pilot.
 | Agent claims the routine lane for an out-of-envelope diff (control-plane path, oversized diff, expired or agent-owned envelope) | `routine-change-check` (HG-0013): absolute floor + second-line-owned expiring envelope; a non-fit re-evaluates to human merge | **CI-proven** (floor / expiry / agent-owner / oversize negative tests); auto-merge-only-on-green **live** (merge-queue activation evidence) |
 | Agent modifies a gate | `control-plane-check` (control plane owned, non-builder CODEOWNERS) | **CI-proven** (placeholder-owner negative test) |
 | Placeholder / fake control-function approval | `product-approval-check` + identity registry (approvals resolve to real humans) | **CI-proven** (agent-as-approver negative test) |
-| Builder impersonates second line | Disjoint builders ∩ second-line; release hold is second-line-owned | **CI-proven** (held-release negative test) |
+| Builder impersonates second line | Disjoint builders ∩ second-line; release hold is second-line-owned (`change-envelope-check`) | **CI-proven** (held-release negative test) |
 | Stale model evaluation | `model-provenance-check` (eval pinned to the shipping model/prompt) | **CI-proven** (superseded-pin negative test) |
 | Missing / fabricated evaluation artifact | `model-provenance-check` (report cited by ref + sha256, re-hashed) | **CI-proven** (altered-report negative test) |
 | Tampered evidence bundle | `evidence-seal-check` (semantic + hash-chain) | **CI-proven** (tampered-tests negative test) |
@@ -60,7 +60,7 @@ the platform/organisational half in the pilot.
 | Rollback failure | R3 rollback drill (freshness-windowed) | freshness **CI-proven**; the drill itself **live** |
 | Model-provider outage | HG-0006 runtime.fallback declaration | declared **CI-proven**; live failover **live** |
 | Critical complaint / vulnerable-customer harm | PA2 vulnerable-customer + complaints readiness; operations-signal | declared **CI-proven**; live remediation **live** |
-| Regulatory change mid-delivery | operations-signal (regulatory route → discovery) | **CI-proven**; live routing **live** |
+| Regulatory change mid-delivery | operations-signal regulatory route → discovery (`operations-signal-check`) | **CI-proven** (untriaged-signal negative test); live routing **live** |
 
 ## Exit criteria
 

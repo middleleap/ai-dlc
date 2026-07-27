@@ -471,7 +471,8 @@
         "discovery/templates/",
         "delivery/templates/"
       ],
-      "note": "Factory Floor WS3 · D3.1. No test_ref: this gate's own regression suite is not yet written — the state is honest at mechanically-validated (the mechanism exists and blocks), but it is the one gate in this group with no negative test of its own. `--fix` regenerates"
+      "note": "Factory Floor WS3 · D3.1. rc.26: the regression suite this entry previously had to admit was missing now exists — renamed section, stale source_digest, hand-edited definition, missing source, and determinism of the generator itself. `--fix` regenerates.",
+      "test_ref": "scripts/template-parity-check.test.mjs"
     },
     {
       "control_id": "IDENTITY-MAP",
@@ -855,6 +856,18 @@
       "state": "absent",
       "adopter_side": true,
       "note": "The harness is synthetic-only by design; the real-data surface is the adopter's (data-protection-runbook.md)"
+    },
+    {
+      "control_id": "SELF-CLAIMS",
+      "objective": "The bundle is held to the claims it makes about itself: prose may not cite a gate that does not exist, and a CI-proven claim must name the negative test that backs it or scope itself to the part it covers",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/self-claims-check.mjs",
+      "test_ref": "scripts/self-claims-check.test.mjs",
+      "lane": "pr",
+      "always": true,
+      "note": "rc.26. Every defect the rc.18–rc.25 review found was one shape — a claim and its evidence drifting apart, in both directions — and each was fixed by hand after a human noticed. This makes the class mechanical, in the method's own idiom: observed, not declared. Bundle-only (it reads this repository's workflow and layout) and inert in an adopted tree. Uncredited inversions are REPORTED, never failed: the checklist enumerates attacks, not gates, so forcing one row per inversion would manufacture rows nobody meant to write"
     }
   ]
 }
