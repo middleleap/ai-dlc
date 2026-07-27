@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**MiddleLeap AI DLC** — a Claude Code plugin marketplace: skills, agents, and workflows for AI-enabled development, published for public installation. This is a knowledge-base / artifact library, not an application: no build system, no package manager, no test framework. The only executable is the manifest validator.
+**MiddleLeap AI DLC** — a Claude Code plugin marketplace: skills, agents, and workflows for AI-enabled development, published for public installation. This is a knowledge-base / artifact library, not an application: no build system, no package manager, no dependencies. The only executable is the manifest validator, which has a `node:test` suite of its own (`scripts/validate-marketplace.test.mjs`) — the Loom harness bundle carries its own separate suite.
 
 ## Repository Structure
 
@@ -49,8 +49,16 @@ scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 
 ```bash
 node scripts/validate-marketplace.mjs   # manifests, sources, versions, skill/agent layout
+node --test scripts/validate-marketplace.test.mjs   # the validator's own suite — run it if you change the validator
 node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs   # WCAG AA gate
 ```
+
+The validator reads the **git tree**, not the filesystem: only tracked files can reach a
+user, and CI validates a clean checkout. Untracked strays are ignored (this is why a macOS
+`.DS_Store` no longer fails it), but untracked content that looks real — a
+`skills/<name>/SKILL.md`, an `agents/*.md` — is reported as a warning rather than skipped
+silently. File *contents* still come from disk, so uncommitted edits are validated before
+you commit them.
 
 To confirm it actually loads, from inside Claude Code: `/plugin marketplace add ./`
 

@@ -183,6 +183,21 @@
     },
     {
       "version": "2.0.0-rc.30",
+      "headline": "Three authoring skills — release, re-perform, govern",
+      "notes": [
+        "`release` walks delivery ⑦/⑧: re-run the gates at the released commit, assemble and seal the evidence bundle, then STOP. It never authorizes production and never writes activation evidence — it assembles the case a human authorizes.",
+        "`re-perform` gives the third line a read-only path: it re-runs a gate independently and writes a re-performance report. It changes nothing — a discrepancy is a finding, not a task.",
+        "`govern` guides authoring of a governed artifact behind an ADOPT/mount seam. The agent formats; the accountable human supplies the judgement.",
+        "The delivery-harness canon ⑧ was corrected: it listed five evidence items where evidence-seal-check's REQUIRED_TYPES is nine and different. The token-spend ledger seals alongside them but is deliberately not required — cost is telemetry, never a merge input."
+      ],
+      "action_required": [
+        "These three, like the other five, are hand-copied: harness/skills/*/SKILL.md → .claude/skills/<name>/SKILL.md. adopt.mjs does not install them.",
+        "release/SKILL.md carries five ADOPT markers — the pre-production promotion command and environment, the smoke command and its URL, the decision-log capture wiring, the eval-rig command, and the production promotion path together with who is entitled to run it.",
+        "re-perform/SKILL.md carries one — the audit repository or store the re-performance report is written to. It does not belong on the release branch."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.31",
       "headline": "The discovery-sync ledger can actually be reconciled — rc.29 documented a flag it never implemented",
       "notes": [
         "`--reconcile` was described in the gate's header, its catalog note and its release notes, and did not exist. Passing it printed the comparison and silently changed nothing, while the operator believed a sync point had been stamped. That is the precise defect class the rc.26 self-claims gate was built for — a claim with no evidence behind it — shipped inside the gate written to prevent it.",

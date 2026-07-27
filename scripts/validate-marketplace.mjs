@@ -2,7 +2,8 @@
 // Validates the marketplace against what Claude Code actually loads.
 // Run: node scripts/validate-marketplace.mjs
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
-import { join, dirname, resolve } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { join, dirname, basename, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -12,7 +13,70 @@ const fail = (m) => errors.push(m)
 const warn = (m) => warnings.push(m)
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/
-const isDir = (p) => existsSync(p) && statSync(p).isDirectory()
+
+// What counts as "in the repository" is the GIT TREE, not the filesystem.
+// Only tracked files reach a user, and CI validates a clean checkout — so walking
+// the filesystem made local runs fail on strays CI never sees. The recurring one
+// is macOS dropping a .DS_Store beside a skill, reported as the flat contradiction
+// "skills/.DS_Store is a file — a skill must be a directory".
+// File CONTENTS still come from disk, so uncommitted edits to a tracked file are
+// validated before you commit them. Untracked content that looks real — a
+// skills/<name>/SKILL.md, an agents/*.md — warns rather than being ignored: it is
+// invisible to CI and will not ship. Outside a git checkout (a tarball, a vendored
+// copy) this falls back to the filesystem, minus dotfiles.
+const gitTree = (() => {
+  let out
+  try {
+    out = execFileSync('git', ['-C', root, 'ls-files', '-z'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+  } catch {
+    return null
+  }
+  const paths = out.split('\0').filter(Boolean)
+  if (!paths.length) return null
+  const dirs = new Set()
+  const children = new Map()
+  for (const p of paths) {
+    const parts = p.split('/')
+    for (let i = 0; i < parts.length; i++) {
+      const parent = parts.slice(0, i).join('/')
+      if (!children.has(parent)) children.set(parent, new Set())
+      children.get(parent).add(parts[i])
+      if (i < parts.length - 1) dirs.add(parts.slice(0, i + 1).join('/'))
+    }
+  }
+  return { dirs, children }
+})()
+
+const rel = (p) => relative(root, p).split(sep).join('/')
+const onDiskDir = (p) => existsSync(p) && statSync(p).isDirectory()
+const isTracked = (p) => (gitTree.children.get(rel(dirname(p))) ?? new Set()).has(basename(p))
+const isDir = (p) => (gitTree ? gitTree.dirs.has(rel(p)) : onDiskDir(p))
+
+// Immediate children as the repository knows them. `looksReal` decides which
+// untracked strays are worth a warning — everything else is dropped in silence.
+const listDir = (abs, looksReal) => {
+  if (!gitTree) return readdirSync(abs).filter((n) => !n.startsWith('.'))
+  const tracked = gitTree.children.get(rel(abs)) ?? new Set()
+  for (const name of existsSync(abs) ? readdirSync(abs) : []) {
+    if (!tracked.has(name) && looksReal(join(abs, name))) {
+      warn(`${rel(join(abs, name))} is untracked — CI validates a clean checkout, so it will not ship until committed.`)
+    }
+  }
+  return [...tracked].sort()
+}
+
+// A file the repository will actually ship. Present-but-untracked is not an error —
+// you may simply not have committed yet — but it is never left invisible.
+const shipped = (abs, what) => {
+  const onDisk = existsSync(abs)
+  if (!gitTree) return onDisk
+  if (isTracked(abs)) return true
+  if (onDisk) warn(`${rel(abs)} is untracked — CI validates a clean checkout, so ${what} will not ship until committed.`)
+  return onDisk
+}
+
+const looksLikeSkill = (p) => onDiskDir(p) && existsSync(join(p, 'SKILL.md'))
+const looksLikeAgent = (p) => onDiskDir(p) || p.endsWith('.md')
 
 const readJson = (p) => {
   try {
@@ -38,7 +102,7 @@ const frontmatter = (file) => {
 }
 
 const marketplacePath = join(root, '.claude-plugin', 'marketplace.json')
-if (!existsSync(marketplacePath)) {
+if (!shipped(marketplacePath, 'the marketplace')) {
   fail('.claude-plugin/marketplace.json is missing — Claude Code cannot add this marketplace.')
 } else {
   const mkt = readJson(marketplacePath)
@@ -79,7 +143,7 @@ if (!existsSync(marketplacePath)) {
       }
 
       const manifestPath = join(dir, '.claude-plugin', 'plugin.json')
-      if (!existsSync(manifestPath)) {
+      if (!shipped(manifestPath, 'the plugin')) {
         fail(`${label}: missing .claude-plugin/plugin.json.`)
         continue
       }
@@ -98,7 +162,7 @@ if (!existsSync(marketplacePath)) {
       // Skills: a DIRECTORY containing SKILL.md.
       const skillsDir = join(dir, 'skills')
       if (isDir(skillsDir)) {
-        for (const name of readdirSync(skillsDir)) {
+        for (const name of listDir(skillsDir, looksLikeSkill)) {
           const skillDir = join(skillsDir, name)
           if (!isDir(skillDir)) {
             fail(`${label}: skills/${name} is a file — a skill must be a directory containing SKILL.md.`)
@@ -106,7 +170,7 @@ if (!existsSync(marketplacePath)) {
           }
           if (!KEBAB.test(name)) fail(`${label}: skill folder "${name}" must be kebab-case.`)
           const skillFile = join(skillDir, 'SKILL.md')
-          if (!existsSync(skillFile)) {
+          if (!shipped(skillFile, 'the skill')) {
             fail(`${label}: skills/${name}/SKILL.md is missing.`)
             continue
           }
@@ -125,7 +189,7 @@ if (!existsSync(marketplacePath)) {
       // Agents: FLAT .md files. The directory form is the classic mistake.
       const agentsDir = join(dir, 'agents')
       if (isDir(agentsDir)) {
-        for (const name of readdirSync(agentsDir)) {
+        for (const name of listDir(agentsDir, looksLikeAgent)) {
           const agentPath = join(agentsDir, name)
           if (isDir(agentPath)) {
             fail(`${label}: agents/${name}/ is a directory — an agent must be a flat file, agents/${name}.md.`)
@@ -150,6 +214,8 @@ for (const stray of ['skills', 'agents', 'tools', 'mcp-servers']) {
     fail(`Top-level ${stray}/ exists — content there is not installable. It belongs in plugins/<plugin>/${stray}/.`)
   }
 }
+// A stray here is worth flagging whether or not it is committed — it is the wrong
+// path either way, so this one deliberately looks at the filesystem.
 if (existsSync(join(root, 'marketplace.json'))) {
   fail('A root marketplace.json exists — Claude Code reads .claude-plugin/marketplace.json. Remove the stray file.')
 }

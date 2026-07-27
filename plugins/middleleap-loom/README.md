@@ -39,8 +39,10 @@ The `loom-adopt` bundle (inside the skill, copied into adopting repos) carries:
   brand proving the swap)
 - **`scripts/discovery-link-check.mjs`** — the waist gate: no feature enters delivery without
   a gate-green discovery hand-off
-- **Five project skills** — `discovery`, `develop`, `next-story`, `implement-story`,
-  `spec-change`: the operational encoding of both diamonds
+- **Eight project skills** — `discovery`, `develop`, `next-story`, `implement-story`,
+  `spec-change`: the operational encoding of both diamonds; plus `release` (⑦/⑧ — assemble
+  and seal, then stop for the human authorization), `re-perform` (read-only third-line
+  support), and `govern` (author a governed artifact without supplying its judgement)
 - **Two reviewer templates** — `hard-stop-reviewer`, `contract-conformance-reviewer`
   (checklists are domain content; you fill in yours)
 - **Three guardrail hooks** — `pii-guard`, `spec-tripwire`, `test-tripwire`, plus the
