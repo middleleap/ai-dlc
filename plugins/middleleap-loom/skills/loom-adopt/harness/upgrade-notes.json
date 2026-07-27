@@ -122,6 +122,15 @@
       "action_required": [
         "Nothing, if you are already adopted: an existing adoption has no recorded tier and is treated as full, which is what it is. Pass --tier explicitly only if you want to change it."
       ]
+    },
+    {
+      "version": "2.0.0-rc.25",
+      "headline": "Three adversarial-checklist rows now meet the standard the playbook sets for them",
+      "notes": [
+        "The pilot playbook defines CI-proven as \"a negative bypass test in .github/workflows/validate.yml demonstrates the rejection\". Three rows — stale model evaluation, fabricated evaluation artifact, vulnerable dependency — carried that grade with only positive gate runs behind them in CI.",
+        "The rejections were already unit-tested in scripts/*.test.mjs; what was missing was the adoption-level bypass test the playbook's own definition demands. All three now exist, and each row names its test the way every other proven row does."
+      ],
+      "action_required": []
     }
   ]
 }
