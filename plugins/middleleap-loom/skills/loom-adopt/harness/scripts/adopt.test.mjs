@@ -101,11 +101,11 @@ test('AN ADOPTER EDIT SURVIVES A RE-RUN, with the upstream version beside it', (
 test('one customised file does not freeze its neighbours in the same entry', () => {
   withTempDest((dest) => {
     install(dest);
-    appendFileSync(join(dest, 'scripts/discovery-link-check.mjs'), '\n// mine\n');
+    appendFileSync(join(dest, 'scripts/discovery-link-check.mjs'), '\n// LOOM-TEST-LOCAL-EDIT\n');
     rmSync(join(dest, 'scripts/sast-check.mjs'));
     install(dest);
     assert.ok(existsSync(join(dest, 'scripts/sast-check.mjs')), 'a sibling in the same glob should still be installed');
-    assert.match(readFileSync(join(dest, 'scripts/discovery-link-check.mjs'), 'utf8'), /mine/);
+    assert.match(readFileSync(join(dest, 'scripts/discovery-link-check.mjs'), 'utf8'), /LOOM-TEST-LOCAL-EDIT/);
   });
 });
 
@@ -113,9 +113,9 @@ test('a preserved file stays preserved across MANY runs (the stamp is not overwr
   withTempDest((dest) => {
     install(dest);
     const edited = join(dest, 'scripts/discovery-link-check.mjs');
-    appendFileSync(edited, '\n// mine\n');
+    appendFileSync(edited, '\n// LOOM-TEST-LOCAL-EDIT\n');
     install(dest); install(dest); install(dest);
-    assert.match(readFileSync(edited, 'utf8'), /mine/, 'a later run clobbered it — the stamp recorded the wrong digest');
+    assert.match(readFileSync(edited, 'utf8'), /LOOM-TEST-LOCAL-EDIT/, 'a later run clobbered it — the stamp recorded the wrong digest');
   });
 });
 
@@ -123,9 +123,9 @@ test('--force overwrites an edit, and is the ONLY way to', () => {
   withTempDest((dest) => {
     install(dest);
     const edited = join(dest, 'scripts/discovery-link-check.mjs');
-    appendFileSync(edited, '\n// mine\n');
+    appendFileSync(edited, '\n// LOOM-TEST-LOCAL-EDIT\n');
     install(dest, { force: true });
-    assert.doesNotMatch(readFileSync(edited, 'utf8'), /mine/, '--force should overwrite');
+    assert.doesNotMatch(readFileSync(edited, 'utf8'), /LOOM-TEST-LOCAL-EDIT/, '--force should overwrite');
   });
 });
 
@@ -134,9 +134,9 @@ test('a pre-stamp adoption preserves rather than guesses', () => {
     install(dest);
     rmSync(join(dest, '.loom'), { recursive: true, force: true }); // adopted before stamping existed
     const edited = join(dest, 'scripts/sast-check.mjs');
-    appendFileSync(edited, '\n// theirs\n');
+    appendFileSync(edited, '\n// LOOM-TEST-FOREIGN-EDIT\n');
     const report = install(dest);
-    assert.match(readFileSync(edited, 'utf8'), /theirs/, 'unknown provenance must not be overwritten');
+    assert.match(readFileSync(edited, 'utf8'), /LOOM-TEST-FOREIGN-EDIT/, 'unknown provenance must not be overwritten');
     assert.ok(report.some((r) => r.status === 'unverifiable-preserved'), 'and it must be reported as unverifiable, not as a clean update');
   });
 });

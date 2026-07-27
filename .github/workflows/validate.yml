@@ -128,6 +128,52 @@ jobs:
           git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
           git add -A && git commit -qm base
           node scripts/discovery-link-check.mjs
+          # ── HG-0007 coverage + nesting (rc.28) ────────────────────────────────────────────
+          # The waist gate is the one gate where an inert PASS is worse than an absent gate:
+          # nobody goes looking at a green light. The run above passes on `milestones: []`, which
+          # proves nothing about coverage — so prove it on a backlog the gate genuinely covers,
+          # then invert the three ways it used to go quiet. All paths are destination-relative
+          # (we are inside "$A"); the empty backlog is restored at the end.
+          cat > docs/backlog.yaml <<'YAML'
+          milestones:
+            - id: M1
+              name: milestone keyed by id — the nesting style that used to swallow its items
+              items:
+                - id: STORY-1
+                  status: pending
+                  discovery_exempt: true
+                  reason: dry-run fixture — no discovery run exists in an adopted skeleton
+                - id: INFRA-1
+                  status: pending
+          YAML
+          node scripts/discovery-link-check.mjs | tee /tmp/wg.txt
+          grep -q '1 of 3 backlog item(s) waist-gated' /tmp/wg.txt || {
+            echo "::error::waist gate passed without stating its coverage, or covered the wrong number of items"; exit 1; }
+          #   ① The silent miss itself — a milestone keyed by `id` looks exactly like an item
+          #      start. It used to absorb every item beneath it, so an UNGATED pending feature
+          #      went unexamined and the gate reported OK.
+          cat > docs/backlog.yaml <<'YAML'
+          milestones:
+            - id: M1
+              items:
+                - id: STORY-1
+                  status: pending
+          YAML
+          if node scripts/discovery-link-check.mjs; then
+            echo "::error::a pending feature nested under an id-keyed milestone passed the waist gate — the swallow is back"; exit 1; fi
+          #   ② Content the parser cannot read. A mapping-shaped backlog is real work and zero
+          #      recognised items; printing OK would claim every feature traces to a hand-off on
+          #      the strength of having examined nothing.
+          printf 'items:\n  STORY-1:\n    status: pending\n' > docs/backlog.yaml
+          if node scripts/discovery-link-check.mjs; then
+            echo "::error::waist gate reported OK over a backlog in which it recognised no items"; exit 1; fi
+          #   ③ An unedited ADOPT marker. Every brownfield repo has ids like FEAT-102, which the
+          #      shipped ^STORY-\d+$ default matches never — the gate reads everything, gates
+          #      nothing, and says OK.
+          printf -- '- id: FEAT-102\n  status: pending\n- id: PAY-88\n  status: pending\n' > docs/backlog.yaml
+          if node scripts/discovery-link-check.mjs; then
+            echo "::error::waist gate passed with its FEATURE marker still on the shipped default and matching no item"; exit 1; fi
+          printf 'milestones: []\n' > docs/backlog.yaml
           node scripts/control-plane-check.mjs
           node scripts/template-parity-check.mjs   # floor forms in step with the git templates
           node scripts/identity-map-check.mjs      # P6 — the map that says WHO a signed subject is
