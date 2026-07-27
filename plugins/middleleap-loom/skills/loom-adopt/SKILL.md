@@ -1,6 +1,6 @@
 ---
 name: loom-adopt
-description: Stand the Loom harness up in a repository — copies the discovery machinery (D1–D9 gate validator, zero-dep branded renderer, artifact templates, brand seam, register seam), the delivery-loop skills (discovery, develop, next-story, implement-story, spec-change), the reviewer-agent templates, and the guardrail hooks into the current project, then walks the seam-mounting and verification steps. Use when a project wants to adopt the Loom way of building, set up the discovery harness, install the build-loop guardrails, or bootstrap an AI-SDLC for a regulated build.
+description: Stand the Loom harness up in a repository — copies the discovery machinery (D1–D9 gate validator, zero-dep branded renderer, artifact templates, brand seam, register seam), the delivery-loop skills (discovery, develop, next-story, implement-story, spec-change, release, re-perform, govern), the reviewer-agent templates, and the guardrail hooks into the current project, then walks the seam-mounting and verification steps. Use when a project wants to adopt the Loom way of building, set up the discovery harness, install the build-loop guardrails, or bootstrap an AI-SDLC for a regulated build.
 ---
 
 # Adopt the Loom in this repository
@@ -193,6 +193,11 @@ all: `grep -rn "ADOPT" .claude/ discovery/ scripts/`. As of this bundle:
 - `scripts/discovery-link-check.mjs` — set `FEATURE` to the project's story-id convention.
 - `.claude/skills/next-story/SKILL.md` and `implement-story/SKILL.md` — name the project's
   verify commands and binding test cases.
+- `.claude/skills/release/SKILL.md` — name the pre-production promotion command and
+  environment, the smoke command and its URL, the decision-log capture wiring, the eval-rig
+  command, and the production promotion path together with who is entitled to run it.
+- `.claude/skills/re-perform/SKILL.md` — name the audit repository or store the
+  re-performance report is written to (it does not belong on the release branch).
 
 `CLAUDE.md` must state the binding conventions those reviewers and skills cite — if the repo
 has none yet, write the Commands / Conventions / Do-Not sections before running the loop.

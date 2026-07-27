@@ -37,10 +37,15 @@ only the merge is human.
 ⑦ DEPLOY    auto-deploy on merge to a live demo; a smoke suite runs against the
             LIVE url and fails the deploy if broken
 ⑧ EVIDENCE  on release: re-run the gates at the released commit and seal the
-            evidence bundle (test results, reviewer verdicts, lineage proof,
-            agent build-provenance, the token-spend ledger) into the repository
-            — as a hash-chained evidence manifest the evidence-seal gate
-            (HG-0003) verifies is complete and tamper-evident
+            evidence bundle into the repository — the nine required types
+            (tests · reviews · lineage · model-provenance · control-plane ·
+            sast · sbom · dependency-audit · provenance), plus the token-spend
+            ledger, which seals alongside them but is deliberately NOT a
+            required type: cost is telemetry, never a pass/fail input. The
+            evidence-seal gate (HG-0003) verifies the hash-chained manifest is
+            complete, semantically sound, and bound to the released commit.
+            The `release` skill performs ⑦ and ⑧ — it assembles the case for
+            production authorization and stops; a human authorizes
 ```
 
 Mid-iteration, the loop never asks the user anything: a decision a human must make becomes a
