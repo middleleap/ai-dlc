@@ -52,6 +52,14 @@
       "tier": "core"
     },
     {
+      "source": "backlog-example/backlog.yaml",
+      "dest": "docs/backlog.example.yaml",
+      "kind": "file",
+      "seam": "The backlog SHAPE the delivery loop and the waist gate read — an example beside where yours goes",
+      "tier": "core",
+      "tier_note": "core: zero ADOPT burden, and the shape is what HG-0007 depends on. The installer still does not ship docs/backlog.yaml — a backlog is your content, not a template — so this is the thing to copy from, and the waist gate names it when it cannot read yours"
+    },
+    {
       "source": "floor/templates",
       "dest": "floor/templates",
       "kind": "dir",

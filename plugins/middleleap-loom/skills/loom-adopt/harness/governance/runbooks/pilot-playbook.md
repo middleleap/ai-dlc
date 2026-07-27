@@ -61,6 +61,8 @@ the platform/organisational half in the pilot.
 | Model-provider outage | HG-0006 runtime.fallback declaration | declared **CI-proven**; live failover **live** |
 | Critical complaint / vulnerable-customer harm | PA2 vulnerable-customer + complaints readiness; operations-signal | declared **CI-proven**; live remediation **live** |
 | Regulatory change mid-delivery | operations-signal regulatory route → discovery (`operations-signal-check`) | **CI-proven** (untriaged-signal negative test); live routing **live** |
+| Feature hidden from the waist gate by backlog nesting | `discovery-link-check` (HG-0007): every item is its own block, whichever key its milestone uses | **CI-proven** (id-keyed-milestone negative test) |
+| Waist gate quietly inert — a backlog it cannot parse, or an `ADOPT:` marker never set to the adopter's ids | `discovery-link-check` (HG-0007) coverage: it must have examined something before it may print OK, and it states how much | **CI-proven** (unparsed-backlog and unedited-marker negative tests) |
 
 ## Exit criteria
 

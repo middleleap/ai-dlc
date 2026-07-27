@@ -155,6 +155,20 @@
         "It recommends a starting tier (usually core) and a base profile chosen from the profiles this bundle actually ships, never one you do not have."
       ],
       "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.28",
+      "headline": "The waist gate stops going quiet — nesting fixed, coverage stated, and a backlog example that cannot drift",
+      "notes": [
+        "HG-0007 could be defeated by an entirely ordinary backlog. A milestone keyed by `id` looks exactly like a backlog item, so under the old block boundary it swallowed every item beneath it: the id resolved to the MILESTONE's, that matched no feature pattern, and the gate reported OK over a backlog it had not examined. Milestones keyed by `name` were never affected, which is why it went unseen. Items now end at the next item start at any indent, so both nesting styles and flat files are read the same way.",
+        "The gate now has to have examined something before it may print OK, and says how much: `OK (1 of 3 backlog item(s) waist-gated)`. A backlog with content but no recognised item FAILS rather than passing quietly — a mapping-shaped file, or any shape the parser does not understand.",
+        "An `ADOPT:` marker still on the shipped `^STORY-\\d+$` while no item matches it now FAILS too. Every brownfield repo has ids like FEAT-102 or PAY-88, and until the marker was set the waist of the double diamond read the whole backlog and gated none of it, in green. A marker you DID set that matches nothing today is an ordinary state of a backlog and is only reported.",
+        "docs/backlog.example.yaml is installed beside where your backlog goes — both milestone styles, a feature item, an infra item, an exemption, the inline flow form. The test suite parses it and asserts the exact items, so the documented shape cannot drift from the shape the gate understands. That drift is what made the shape ambiguous in the first place: nothing ever shipped an example."
+      ],
+      "action_required": [
+        "Set FEATURE in scripts/discovery-link-check.mjs (the 'ADOPT:' line) to your own feature-item id convention. If you left it on the default and your ids look nothing like STORY-<n>, this upgrade turns a false green into a red — the gate was never gating anything.",
+        "If your backlog nests items under milestones keyed by `id`, items that were silently skipped will now be examined. Expect findings on pending features with no discovery hand-off: link them, or set 'discovery_exempt: true' with a reason."
+      ]
     }
   ]
 }
