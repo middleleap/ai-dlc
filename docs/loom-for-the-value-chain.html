@@ -1,0 +1,1742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Loom in one picture · MiddleLeap</title>
+<meta name="description" content="How a regulated institution builds software with AI — one diagram, explained for every participant in the value chain: executive sponsor, product, engineering, risk and compliance, internal audit, operations, security.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='3' y='11' width='16' height='16' fill='%232A2925'/%3E%3Crect x='23' y='12' width='13' height='13' transform='rotate(45 29.5 18.5)' fill='%23CE451B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF9F5; --surface:#FFFFFF; --surface-2:#F4F2EC;
+  --head:#14130F; --ink:#2A2925; --muted:#6E6A60;
+  --line:#E7E4DC; --line-strong:#D6D2C8;
+  --ember:#CE451B; --ember-cta:#E65C2D; --ember-dim:rgba(206,69,27,.10);
+  --pos:#2F7048; --caution:#8F6614; --crit:#B23434; --info:#3A6E86;
+  --shadow:0 1px 2px rgba(20,19,15,.05),0 8px 24px rgba(20,19,15,.07);
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'DM Sans',system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+h1,h2,h3,h4{margin:0;color:var(--head);text-wrap:balance}
+h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:0}
+h1 em,h2 em,.lede em{font-style:italic;color:var(--ember)}
+p{margin:0}
+.mono{font-family:var(--mono)}
+.eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+/* ── header ─────────────────────────────────────────── */
+header{padding:56px 0 8px}
+.brandbar{display:flex;align-items:center;gap:11px;margin-bottom:30px}
+.mark{display:inline-flex;align-items:center;gap:7px}
+.mark .sq{width:15px;height:15px;background:#2A2925;border-radius:2.4px}
+.mark .dia{width:12px;height:12px;background:var(--ember);transform:rotate(45deg);border-radius:1.9px}
+.wordmark{font-weight:600;font-size:1.02rem;letter-spacing:-.01em}
+.wm-mid{color:var(--head)} .wm-leap{color:var(--ember)}
+h1{font-size:clamp(2.2rem,5vw,3.5rem);line-height:1.04;margin-top:12px;max-width:20ch}
+.lede{max-width:70ch;margin-top:20px;font-size:1.075rem;color:var(--muted)}
+.lede b{color:var(--head);font-weight:600}
+
+section{padding:34px 0}
+.sec-h{margin-bottom:6px}
+.sec-h h2{font-size:1.62rem;margin-top:6px}
+.sec-sub{color:var(--muted);max-width:76ch;margin:8px 0 22px;font-size:.98rem}
+hr.rule{border:0;border-top:1px solid var(--line);margin:0}
+
+/* ── role chips ─────────────────────────────────────── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+.chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;
+  padding:9px 13px;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);
+  border-radius:2px;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.chip:hover{border-color:var(--ember);color:var(--head)}
+.chip[aria-pressed="true"]{background:var(--ember-cta);border-color:var(--ember-cta);color:#110D0A;font-weight:500}
+.chip:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+
+/* ── tabs ───────────────────────────────────────────── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-top:38px;flex-wrap:wrap}
+.tab{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:14px 22px;border:0;background:none;color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--head)}
+.tab[aria-selected="true"]{color:var(--head);border-bottom-color:var(--ember)}
+.tab:focus-visible{outline:2px solid var(--ember);outline-offset:-4px}
+.view[hidden]{display:none}
+
+/* ── journey ────────────────────────────────────────── */
+.jkey{display:flex;flex-wrap:wrap;gap:20px;margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+.jkey div{display:flex;align-items:center;gap:9px;font-size:.8rem;color:var(--muted)}
+.jkey i{flex:none;display:block;width:12px;height:12px}
+.k-human{background:var(--ember);transform:rotate(45deg)}
+.k-agent{border:1.6px solid var(--ember);transform:rotate(45deg)}
+.k-record{background:#2A2925}
+.k-gate{border:1.6px solid var(--ember);background:var(--surface-2)}
+.k-view{border:1.4px dashed #9A968C}
+.notes{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.notes > div{background:var(--surface);padding:22px 22px 24px}
+.notes .k{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);margin-bottom:9px}
+.notes h4{font-family:var(--serif);font-weight:400;font-size:1.24rem;margin-bottom:9px}
+.notes p{font-size:.885rem;color:var(--muted);line-height:1.58}
+.notes p b{color:var(--head);font-weight:600}
+@media (max-width:980px){ .notes{grid-template-columns:1fr} }
+
+/* ── adversarial table ──────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:26px}
+.stats > div{background:var(--surface);padding:20px 22px 22px}
+.stats .n{font-family:var(--serif);font-size:2.5rem;line-height:1;color:var(--head)}
+.stats .n.pos{color:var(--pos)} .stats .n.cau{color:var(--caution)}
+.stats .l{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+.warnbar{border:1px solid var(--line-strong);background:var(--surface-2);padding:16px 20px;margin-bottom:26px;font-size:.9rem;color:var(--ink)}
+.warnbar b{color:var(--head)}
+.grouph{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:38px 0 4px}
+.grouph h3{font-family:var(--serif);font-weight:400;font-size:1.44rem}
+.grouph .cnt{font-family:var(--mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.groupsub{color:var(--muted);font-size:.93rem;max-width:80ch;margin:6px 0 16px}
+table.atk{width:100%;border-collapse:collapse;border:1px solid var(--line);background:var(--surface);table-layout:fixed}
+table.atk th{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:12px 16px;border-bottom:1px solid var(--line-strong);font-weight:500;background:var(--surface-2)}
+table.atk td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.885rem}
+table.atk tr:last-child td{border-bottom:0}
+table.atk .c1{width:36%} table.atk .c2{width:32%} table.atk .c3{width:32%}
+.atk-say{font-family:var(--serif);font-size:1.08rem;font-style:italic;color:var(--head);line-height:1.4}
+.atk-ctl{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:var(--ember);display:block;margin-bottom:6px}
+.atk-txt{color:var(--muted);line-height:1.5;font-size:.855rem}
+.atk-proof{color:var(--ink);line-height:1.5;font-size:.855rem}
+.pill{display:inline-block;font-family:var(--mono);font-size:.56rem;letter-spacing:.13em;text-transform:uppercase;
+  padding:4px 8px;border-radius:2px;margin-bottom:8px;white-space:nowrap}
+.pill-pos{background:rgba(47,112,72,.12);color:var(--pos)}
+.pill-cau{background:rgba(143,102,20,.07);color:var(--caution)}
+.exit{border:1px solid var(--line-strong);background:var(--surface-2);padding:24px 26px 26px;margin-top:34px}
+.exit h4{font-family:var(--serif);font-weight:400;font-size:1.34rem;margin-bottom:6px}
+.exit .sub{color:var(--muted);font-size:.9rem;margin-bottom:14px}
+.exit ol{margin:0;padding-left:20px}
+.exit li{margin-bottom:9px;font-size:.885rem;color:var(--ink)}
+.exit li:last-child{margin-bottom:0}
+.exit .close{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-strong);font-size:.9rem;color:var(--head)}
+@media (max-width:980px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  table.atk,table.atk tbody,table.atk tr,table.atk td{display:block;width:100%}
+  table.atk thead{display:none}
+  table.atk tr{border-bottom:1px solid var(--line-strong);padding:6px 0}
+  table.atk td{border-bottom:0;padding:8px 16px}
+}
+
+/* ── readiness ladder ───────────────────────────────── */
+.ladder{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.rung{background:var(--surface);padding:24px 24px 26px;position:relative}
+.rung .step{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.rung h4{font-family:var(--serif);font-weight:400;font-size:1.34rem;margin:9px 0 4px}
+.rung .when{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ember);margin-bottom:14px}
+.rung dl{margin:0}
+.rung dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+.rung dd{margin:5px 0 0;font-size:.865rem;color:var(--ink);line-height:1.55}
+.rung.now{border-top:3px solid var(--pos)} .rung.soon{border-top:3px solid var(--caution)} .rung.later{border-top:3px solid var(--line-strong)}
+.always{border:1px solid var(--line-strong);background:var(--surface-2);padding:20px 22px;margin-top:1px}
+.always .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.always p{font-size:.865rem;color:var(--ink);line-height:1.6}
+
+/* ── decision view ──────────────────────────────────── */
+.ask{border:1px solid var(--head);background:var(--surface);padding:28px 30px 30px;margin-bottom:34px}
+.ask .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);margin-bottom:12px}
+.ask h3{font-family:var(--serif);font-weight:400;font-size:1.66rem;margin-bottom:12px}
+.ask p{font-size:.98rem;color:var(--ink);line-height:1.62;max-width:82ch}
+.ask ul{margin:16px 0 0;padding-left:0;list-style:none;display:grid;grid-template-columns:repeat(2,1fr);gap:10px 26px}
+.ask li{position:relative;padding-left:19px;font-size:.885rem;color:var(--ink)}
+.ask li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;background:var(--ember);transform:rotate(45deg)}
+.ask .not{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:.9rem;color:var(--muted)}
+.seq{border-left:2px solid var(--line-strong);margin-left:8px;padding-left:0}
+.seq li{list-style:none;position:relative;padding:0 0 26px 28px}
+.seq li::before{content:"";position:absolute;left:-7px;top:5px;width:12px;height:12px;background:var(--ember);transform:rotate(45deg)}
+.seq li:last-child{padding-bottom:0}
+.seq .w{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ember)}
+.seq h4{font-family:var(--serif);font-weight:400;font-size:1.24rem;margin:5px 0 6px}
+.seq p{font-size:.885rem;color:var(--muted);line-height:1.56;max-width:70ch}
+.seq p b{color:var(--head);font-weight:600}
+.calc{border:1px solid var(--line);background:var(--surface);padding:24px 26px 26px}
+.calc-in{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:18px 0 22px}
+.calc-in label{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.calc-in input{width:100%;font-family:var(--mono);font-size:1rem;padding:10px 12px;border:1px solid var(--line-strong);border-radius:0;background:var(--bg);color:var(--head)}
+.calc-in input:focus{outline:2px solid var(--ember);outline-offset:-1px}
+.calc-out{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.calc-out > div{background:var(--surface-2);padding:18px 20px 20px}
+.calc-out .n{font-family:var(--serif);font-size:2.1rem;line-height:1;color:var(--head)}
+.calc-out .l{font-family:var(--mono);font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:9px}
+.instr{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.instr > div{background:var(--surface);padding:20px 20px 22px}
+.instr .st{font-family:var(--mono);font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;border-radius:2px;display:inline-block;margin-bottom:11px}
+.instr h5{font-family:var(--serif);font-weight:400;font-size:1.16rem;margin-bottom:7px;color:var(--head)}
+.instr p{font-size:.83rem;color:var(--muted);line-height:1.52}
+table.cmp{width:100%;border-collapse:collapse;border:1px solid var(--line);background:var(--surface);table-layout:fixed}
+table.cmp th{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;text-align:left;
+  padding:14px 16px;border-bottom:1px solid var(--line-strong);background:var(--surface-2);font-weight:500;color:var(--head)}
+table.cmp th:first-child{color:var(--muted)}
+table.cmp th.us{color:var(--ember)}
+table.cmp td{padding:14px 16px;border-bottom:1px solid var(--line);font-size:.855rem;color:var(--muted);vertical-align:top}
+table.cmp td:first-child{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--head)}
+table.cmp td.us{color:var(--ink)}
+table.cmp tr:last-child td{border-bottom:0}
+table.chain{width:100%;border-collapse:collapse;border:1px solid var(--line);background:var(--surface)}
+table.chain th{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;text-align:left;
+  padding:13px 16px;border-bottom:1px solid var(--line-strong);background:var(--surface-2);font-weight:500}
+table.chain td{padding:14px 16px;border-bottom:1px solid var(--line);font-size:.865rem;vertical-align:top}
+table.chain td:first-child{font-weight:600;color:var(--head);white-space:nowrap}
+table.chain td:nth-child(2){color:var(--muted)}
+table.chain .never{color:var(--crit);font-weight:600}
+table.chain tr:last-child td{border-bottom:0}
+@media (max-width:980px){
+  .ladder,.calc-in,.calc-out,.instr{grid-template-columns:1fr}
+  .ask ul{grid-template-columns:1fr}
+  table.cmp,table.cmp tbody,table.cmp tr,table.cmp td{display:block;width:100%}
+  table.cmp thead{display:none}
+  table.cmp tr{border-bottom:1px solid var(--line-strong);padding:6px 0}
+  table.cmp td{border-bottom:0;padding:7px 16px}
+  table.chain,table.chain tbody,table.chain tr,table.chain td{display:block;width:100%}
+  table.chain thead{display:none}
+  table.chain tr{border-bottom:1px solid var(--line-strong);padding:6px 0}
+  table.chain td{border-bottom:0;padding:7px 16px;white-space:normal}
+  table.chain td:first-child{white-space:normal;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase}
+  .tab{padding:12px 14px;font-size:.62rem}
+}
+
+/* ── toolkit inventory ──────────────────────────────── */
+.kitstats{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:26px}
+.kitstats > div{background:var(--surface);padding:16px 14px 18px}
+.kitstats .n{font-family:var(--serif);font-size:1.9rem;line-height:1;color:var(--head)}
+.kitstats .l{font-family:var(--mono);font-size:.53rem;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.kitgrp{margin-top:34px}
+.kitgrp-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line-strong);padding-bottom:9px;margin-bottom:0}
+.kitgrp-h h3{font-family:var(--serif);font-weight:400;font-size:1.34rem}
+.kitgrp-h .c{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.kitgrp-h .w{font-size:.86rem;color:var(--muted);margin-left:auto;max-width:52ch;text-align:right}
+.kititems{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-top:0}
+.kititem{background:var(--surface);padding:15px 16px 17px;display:flex;flex-direction:column;gap:6px}
+.kititem .top{display:flex;align-items:flex-start;gap:8px;justify-content:space-between}
+.kititem .nm{font-family:var(--mono);font-size:.7rem;letter-spacing:.02em;color:var(--head);font-weight:500;line-height:1.35}
+.kititem .d{font-size:.815rem;color:var(--muted);line-height:1.5}
+.kititem .tags{margin-top:auto;padding-top:5px;font-family:var(--mono);font-size:.53rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kind{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;padding:3px 6px;border-radius:2px;white-space:nowrap;flex:none}
+.kind-runs{background:rgba(47,112,72,.10);color:var(--pos)}
+.kind-mount{background:rgba(206,69,27,.09);color:var(--ember)}
+.kind-yours{background:rgba(143,102,20,.07);color:var(--caution)}
+.kitempty{background:var(--surface);border:1px solid var(--line);padding:26px;color:var(--muted);font-size:.9rem}
+.thin{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.thin > div{background:var(--surface);padding:20px 22px 22px}
+.thin h5{font-family:var(--serif);font-weight:400;font-size:1.16rem;margin-bottom:7px}
+.thin p{font-size:.855rem;color:var(--muted);line-height:1.55}
+@media (max-width:1100px){ .kitstats{grid-template-columns:repeat(4,1fr)} .kititems{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:760px){ .kitstats{grid-template-columns:repeat(2,1fr)} .kititems,.thin{grid-template-columns:1fr} .kitgrp-h .w{display:none} }
+
+/* ── diagram ────────────────────────────────────────── */
+.figure{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);padding:22px 22px 14px}
+svg.loom{width:100%;height:auto;display:block}
+svg.loom text{font-family:var(--sans)}
+.lbl{font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase}
+.lbl-sm{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase}
+.ttl{font-family:var(--serif);font-size:20px}
+.body{font-size:12.5px}
+.hl{transition:opacity .22s ease}
+svg.loom.filtered .hl{opacity:.16}
+svg.loom.filtered .hl.on{opacity:1}
+.figcap{display:flex;gap:14px;align-items:flex-start;border-top:1px solid var(--line);margin-top:12px;padding-top:13px}
+.figcap .k{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding-top:3px}
+.figcap .v{font-size:.93rem;color:var(--ink)}
+
+/* ── parts grid ─────────────────────────────────────── */
+.grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.g5{grid-template-columns:repeat(5,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.cell{background:var(--surface);padding:18px 17px 19px}
+.cell .n{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:var(--ember);text-transform:uppercase}
+.cell h4{font-family:var(--serif);font-weight:400;font-size:1.22rem;margin:7px 0 8px}
+.cell p{font-size:.875rem;color:var(--muted);line-height:1.55}
+
+/* ── role panel ─────────────────────────────────────── */
+.panel{border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.panel-h{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.panel-h .dia{width:11px;height:11px;background:var(--ember);transform:rotate(45deg);flex:none}
+.panel-h h3{font-family:var(--serif);font-weight:400;font-size:1.5rem}
+.panel-h .who{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-left:auto;text-align:right}
+.panel-b{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+.panel-b > div{background:var(--surface);padding:22px 24px 24px}
+.panel-b .k{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);margin-bottom:9px}
+.panel-b p{font-size:.925rem;color:var(--ink);line-height:1.6}
+.panel-f{border-top:1px solid var(--line);padding:16px 24px;display:flex;gap:12px;align-items:baseline;background:var(--surface-2)}
+.panel-f .k{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.panel-f q{font-size:.95rem;color:var(--head);font-weight:500;font-style:italic;font-family:var(--serif);font-size:1.1rem}
+
+/* ── three sentences ────────────────────────────────── */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.three > div{background:var(--surface);padding:26px 24px 28px}
+.three .n{font-family:var(--serif);font-size:2.3rem;color:var(--ember);line-height:1}
+.three h4{font-family:var(--serif);font-weight:400;font-size:1.3rem;margin:10px 0 9px}
+.three p{font-size:.9rem;color:var(--muted)}
+
+/* ── legend + limits ────────────────────────────────── */
+.two{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:start}
+table.gates{width:100%;border-collapse:collapse;border:1px solid var(--line);background:var(--surface)}
+table.gates th,table.gates td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);font-size:.875rem;vertical-align:top}
+table.gates tr:last-child td{border-bottom:0}
+table.gates th{font-family:var(--mono);font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:var(--head);white-space:nowrap;width:1%;font-weight:500}
+table.gates td{color:var(--muted)}
+.limits{border:1px solid var(--line-strong);background:var(--surface-2);padding:22px 24px 24px}
+.limits h4{font-family:var(--serif);font-weight:400;font-size:1.28rem;margin-bottom:12px}
+.limits ul{margin:0;padding-left:0;list-style:none}
+.limits li{position:relative;padding-left:20px;margin-bottom:11px;font-size:.885rem;color:var(--ink)}
+.limits li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;background:var(--ember);transform:rotate(45deg)}
+.limits li:last-child{margin-bottom:0}
+.limits b{font-weight:600;color:var(--head)}
+
+footer{border-top:1px solid var(--line);margin-top:20px;padding:26px 0 56px;color:var(--muted);font-size:.83rem;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer .mono{font-size:.66rem;letter-spacing:.13em;text-transform:uppercase}
+
+@media (max-width:980px){
+  .g5,.g4{grid-template-columns:repeat(2,1fr)}
+  .panel-b,.three{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr;gap:26px}
+  .panel-h .who{display:none}
+}
+@media (max-width:620px){ .g5,.g4{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} html{scroll-behavior:auto} }
+@media print{
+  body{background:#fff} .chips{display:none} .figure,.panel{box-shadow:none}
+  svg.loom.filtered .hl{opacity:1}
+  section{padding:18px 0;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brandbar">
+      <span class="mark"><span class="sq"></span><span class="dia"></span></span>
+      <span class="wordmark"><span class="wm-mid">Middle</span><span class="wm-leap">Leap</span></span>
+    </div>
+    <p class="eyebrow">The Loom · what came off it</p>
+    <h1>Agents built the back office. <em>A human merged every line of it.</em></h1>
+    <p class="lede">A UAE Open Finance back office: <b>134 of roughly 139 backlog stories carried to done</b>
+      under quality gates, with four-eyes on every merge — on synthetic data, in a permanently non-production
+      system. The Loom is the machine that made that safe to do: two harnesses, a frame of always-on controls,
+      and evidence sealed to the version that shipped. Set it up once, weave any solution on it.</p>
+    <p class="lede" style="margin-top:14px"><b>What you are being asked to decide</b> is on the last tab —
+      a 90-day, non-customer-facing evaluation. Not a deployment, not a procurement.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" id="tab-machine" role="tab" aria-selected="true"  aria-controls="view-machine">The machine</button>
+    <button class="tab" id="tab-journey" role="tab" aria-selected="false" aria-controls="view-journey">Follow one idea</button>
+    <button class="tab" id="tab-attack"  role="tab" aria-selected="false" aria-controls="view-attack">Try to break it</button>
+    <button class="tab" id="tab-kit"     role="tab" aria-selected="false" aria-controls="view-kit">The toolkit</button>
+    <button class="tab" id="tab-decide"  role="tab" aria-selected="false" aria-controls="view-decide">The decision</button>
+  </div>
+</div>
+
+<div class="view" id="view-machine" role="tabpanel" aria-labelledby="tab-machine">
+
+<!-- ══ THE PICTURE ══════════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Start here</p>
+      <h2>One picture. Pick where you sit — the machine stays the same, <em>your part lights up</em>.</h2>
+    </div>
+
+    <div class="chips" role="group" aria-label="Select your role">
+      <button class="chip" data-role="exec" aria-pressed="false">Executive sponsor</button>
+      <button class="chip" data-role="product" aria-pressed="false">Product / business</button>
+      <button class="chip" data-role="eng" aria-pressed="false">Engineering</button>
+      <button class="chip" data-role="risk" aria-pressed="false">Risk &amp; compliance</button>
+      <button class="chip" data-role="audit" aria-pressed="false">Internal audit</button>
+      <button class="chip" data-role="ops" aria-pressed="false">Operations / run</button>
+      <button class="chip" data-role="sec" aria-pressed="false">Security</button>
+    </div>
+
+    <div class="figure">
+      <svg class="loom" id="loom" viewBox="0 78 1200 606" role="img"
+           aria-label="The Loom: an idea enters the discovery harness, crosses a hand-off gate into the delivery harness, is woven by AI agents across five always-on control threads against the institution's own pattern, and comes off as working software with sealed evidence; what production learns feeds back to the start.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#6E6A60"/>
+          </marker>
+          <marker id="ar-e" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#CE451B"/>
+          </marker>
+        </defs>
+
+        <!-- ░░ INPUT ░░ -->
+        <g class="hl" data-h="idea">
+          <rect x="20" y="96" width="168" height="104" fill="#F4F2EC" stroke="#D6D2C8"/>
+          <text class="lbl-sm" x="36" y="122" fill="#6E6A60">The raw thread</text>
+          <text class="ttl" x="36" y="152" fill="#14130F">An idea.</text>
+          <text class="ttl" x="36" y="176" fill="#14130F">A mandate.</text>
+          <text class="lbl-sm" x="36" y="194" fill="#CE451B">A rule change.</text>
+          <line x1="188" y1="148" x2="216" y2="148" stroke="#6E6A60" stroke-width="1.4" marker-end="url(#ar)"/>
+        </g>
+
+        <!-- ░░ HARNESS 1 — DISCOVERY ░░ -->
+        <g class="hl" data-h="discovery">
+          <rect x="220" y="96" width="336" height="104" fill="#FFFFFF" stroke="#14130F" stroke-width="1.4"/>
+          <text class="lbl-sm" x="238" y="122" fill="#CE451B">Harness one</text>
+          <text class="ttl" x="238" y="152" fill="#14130F">Are we building</text>
+          <text class="ttl" x="238" y="176" fill="#14130F">the right thing?</text>
+          <text class="lbl-sm" x="238" y="194" fill="#6E6A60">Evidence · framing · a prototype people react to</text>
+          <line x1="290" y1="200" x2="290" y2="240" stroke="#D6D2C8" stroke-width="1.2" stroke-dasharray="3 4"/>
+          <line x1="486" y1="200" x2="486" y2="240" stroke="#D6D2C8" stroke-width="1.2" stroke-dasharray="3 4"/>
+        </g>
+
+        <!-- ░░ THE WAIST — HAND-OFF ░░ -->
+        <g class="hl" data-h="handoff">
+          <rect x="576" y="124" width="48" height="48" transform="rotate(45 600 148)" fill="#CE451B"/>
+          <text class="lbl-sm" x="600" y="152" fill="#FFFFFF" text-anchor="middle">Hand</text>
+          <text class="lbl-sm" x="600" y="164" fill="#FFFFFF" text-anchor="middle">-off</text>
+          <text class="lbl-sm" x="600" y="226" fill="#CE451B" text-anchor="middle">No feature starts without it</text>
+        </g>
+
+        <!-- ░░ HARNESS 2 — DELIVERY ░░ -->
+        <g class="hl" data-h="delivery">
+          <rect x="644" y="96" width="366" height="104" fill="#FFFFFF" stroke="#14130F" stroke-width="1.4"/>
+          <text class="lbl-sm" x="662" y="122" fill="#CE451B">Harness two</text>
+          <text class="ttl" x="662" y="152" fill="#14130F">Are we building</text>
+          <text class="ttl" x="662" y="176" fill="#14130F">it right?</text>
+          <text class="lbl-sm" x="662" y="194" fill="#6E6A60">Spec first · gated · one change at a time</text>
+          <line x1="720" y1="200" x2="720" y2="240" stroke="#D6D2C8" stroke-width="1.2" stroke-dasharray="3 4"/>
+          <line x1="936" y1="200" x2="936" y2="240" stroke="#D6D2C8" stroke-width="1.2" stroke-dasharray="3 4"/>
+        </g>
+
+        <!-- ░░ THE WARP — ALWAYS-ON CONTROLS ░░ -->
+        <text class="lbl hl" data-h="warp warp-approval warp-audit warp-lineage warp-quality warp-residency"
+              x="28" y="232" fill="#14130F">The warp — always on</text>
+
+        <g class="hl" data-h="warp warp-approval">
+          <text class="lbl-sm" x="28" y="270" fill="#2A2925">Four-eyes approval</text>
+          <line x1="218" y1="266" x2="1024" y2="266" stroke="#D6D2C8" stroke-width="2.2"/>
+        </g>
+        <g class="hl" data-h="warp warp-audit">
+          <text class="lbl-sm" x="28" y="306" fill="#2A2925">Audit trail — add only</text>
+          <line x1="218" y1="302" x2="1024" y2="302" stroke="#D6D2C8" stroke-width="2.2"/>
+        </g>
+        <g class="hl" data-h="warp warp-lineage">
+          <text class="lbl-sm" x="28" y="342" fill="#2A2925">Data lineage</text>
+          <line x1="218" y1="338" x2="1024" y2="338" stroke="#D6D2C8" stroke-width="2.2"/>
+        </g>
+        <g class="hl" data-h="warp warp-quality">
+          <text class="lbl-sm" x="28" y="378" fill="#2A2925">Quality &amp; security gates</text>
+          <line x1="218" y1="374" x2="1024" y2="374" stroke="#D6D2C8" stroke-width="2.2"/>
+        </g>
+        <g class="hl" data-h="warp warp-residency">
+          <text class="lbl-sm" x="28" y="414" fill="#2A2925">Data residency</text>
+          <line x1="218" y1="410" x2="1024" y2="410" stroke="#D6D2C8" stroke-width="2.2"/>
+        </g>
+
+        <!-- ░░ THE SHUTTLE ░░ -->
+        <g class="hl" data-h="shuttle">
+          <line x1="240" y1="452" x2="1000" y2="452" stroke="#CE451B" stroke-width="1.2" stroke-dasharray="5 5"
+                marker-start="url(#ar-e)" marker-end="url(#ar-e)"/>
+          <rect x="604" y="440" width="24" height="24" transform="rotate(45 616 452)" fill="#FAF9F5" stroke="#CE451B" stroke-width="1.6"/>
+          <text class="lbl-sm" x="616" y="484" fill="#CE451B" text-anchor="middle">The shuttle — AI agents make the passes</text>
+          <text class="lbl-sm" x="616" y="500" fill="#6E6A60" text-anchor="middle">They never decide when the cloth comes off</text>
+        </g>
+
+        <!-- ░░ THE PATTERN ░░ -->
+        <g class="hl" data-h="pattern">
+          <rect x="28" y="522" width="996" height="62" fill="#F4F2EC" stroke="#D6D2C8"/>
+          <text class="lbl-sm" x="46" y="546" fill="#CE451B">The pattern — what the weave is set to</text>
+          <text class="body" x="46" y="568" fill="#2A2925">Your institution's own context: its rules, its approved patterns, its past decisions, its language. This is why the machine produces your software and not generic software.</text>
+        </g>
+
+        <!-- ░░ THE HUMAN GO-LIVE GATE ░░ -->
+        <g class="hl" data-h="gate">
+          <line x1="1042" y1="228" x2="1042" y2="424" stroke="#CE451B" stroke-width="1.4" stroke-dasharray="4 4"/>
+          <rect x="1030" y="314" width="24" height="24" transform="rotate(45 1042 326)" fill="#CE451B"/>
+          <text class="lbl-sm" x="1042" y="206" fill="#CE451B" text-anchor="middle">Human</text>
+          <text class="lbl-sm" x="1042" y="220" fill="#CE451B" text-anchor="middle">go-live</text>
+        </g>
+
+        <!-- ░░ THE CLOTH ░░ -->
+        <g class="hl" data-h="cloth">
+          <rect x="1064" y="228" width="120" height="196" fill="#FFFFFF" stroke="#14130F" stroke-width="1.4"/>
+          <text class="lbl-sm" x="1080" y="256" fill="#CE451B">The cloth</text>
+          <text class="ttl" x="1080" y="286" fill="#14130F">Working</text>
+          <text class="ttl" x="1080" y="310" fill="#14130F">software</text>
+          <line x1="1080" y1="330" x2="1168" y2="330" stroke="#E7E4DC"/>
+          <text class="lbl-sm" x="1080" y="354" fill="#2A2925">In use —</text>
+          <text class="lbl-sm" x="1080" y="370" fill="#2A2925">with its</text>
+          <text class="lbl-sm" x="1080" y="386" fill="#2A2925">evidence</text>
+          <text class="lbl-sm" x="1080" y="402" fill="#2A2925">sealed to it</text>
+        </g>
+
+        <!-- ░░ FEEDBACK EDGE ░░ -->
+        <g class="hl" data-h="feedback">
+          <path d="M1124 424 L1124 656 L10 656 L10 148 L14 148" fill="none" stroke="#CE451B" stroke-width="1.4"
+                stroke-dasharray="6 5" marker-end="url(#ar-e)"/>
+          <rect x="452" y="642" width="300" height="28" fill="#FAF9F5"/>
+          <text class="lbl-sm" x="602" y="661" fill="#CE451B" text-anchor="middle">What production learns comes back in</text>
+        </g>
+      </svg>
+
+      <div class="figcap">
+        <span class="k" id="cap-k">Reading it</span>
+        <span class="v" id="cap-v">An idea enters on the left and leaves on the right as software that is already in use. Nothing crosses the middle without a hand-off, nothing comes off the loom without a person saying so, and the five threads underneath are on for every single pass.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ROLE PANEL ═══════════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Where you sit in the value chain</p>
+      <h2>Same loom. <em>Seven</em> different jobs.</h2>
+      <p class="sec-sub">Use the buttons above to move through the value chain — the diagram highlights the part
+        of the machine each role touches.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">
+        <span class="dia" aria-hidden="true"></span>
+        <h3 id="r-title">Everyone</h3>
+        <span class="who" id="r-who">Select a role above</span>
+      </div>
+      <div class="panel-b">
+        <div><p class="k">What you own</p><p id="r-own">Pick a role above and this panel fills in with what that role owns, what it gets out of the method, and the one control it holds.</p></div>
+        <div><p class="k">What you get</p><p id="r-get">The picture does not change per role. Only the part you are accountable for is highlighted, so a room full of different functions can look at one diagram and each see themselves in it.</p></div>
+        <div><p class="k">Your one control</p><p id="r-ctl">Every role in this chain holds exactly one thing the machine cannot do for itself. That is the design.</p></div>
+      </div>
+      <div class="panel-f">
+        <span class="k">Ask in the room</span>
+        <q id="r-q">Which part of this can the AI change by itself?</q>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ THE FIVE PARTS ═══════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">The metaphor, spelled out once</p>
+      <h2>Five parts. That is the <em>whole</em> vocabulary.</h2>
+      <p class="sec-sub">A loom holds threads under tension, lifts them in a set order, and passes a shuttle
+        through the gap. Change the pattern and you weave something else on the same machine. That is the claim:
+        one way of building, many solutions.</p>
+    </div>
+    <div class="grid g5">
+      <div class="cell">
+        <p class="n">01 · The warp</p>
+        <h4>The controls that never switch off</h4>
+        <p>Four-eyes approval, an audit trail that can only be added to, data lineage, quality and security gates,
+          data residency. The tamper-evident core runs on every pass; the rest are scoped to the risk of the change, and every skip is recorded with its reason.</p>
+      </div>
+      <div class="cell">
+        <p class="n">02 · The harnesses</p>
+        <h4>Two questions, asked in order</h4>
+        <p>Discovery asks whether this is the right problem and makes it tangible. Delivery builds it under
+          control. Between them sits a hand-off no feature can go around.</p>
+      </div>
+      <div class="cell">
+        <p class="n">03 · The shuttle</p>
+        <h4>The AI agents</h4>
+        <p>They do the passes — the research, the drafting, the code, the tests, and the first two steps of the
+          recurring compliance cycle. They propose. They never dispose.</p>
+      </div>
+      <div class="cell">
+        <p class="n">04 · The pattern</p>
+        <h4>Your institution's context</h4>
+        <p>Its rules, approved patterns, past decisions, terminology and tone — now a real object with a lifecycle:
+          versioned, owner-approved, revocable, and grounded in an approved source register. Copy the code and you
+          still have not copied this.</p>
+      </div>
+      <div class="cell">
+        <p class="n">05 · The cloth</p>
+        <h4>Software, plus its proof</h4>
+        <p>What comes off the loom is running software with a sealed, tamper-evident record of how it was made
+          bound to the exact version that shipped.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ THREE SENTENCES ══════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">If a director remembers nothing else</p>
+      <h2>Three sentences.</h2>
+    </div>
+    <div class="three">
+      <div>
+        <p class="n">1</p>
+        <h4>Speed comes from the machine. Safety comes from the frame.</h4>
+        <p>Both are on at the same time. There is no stage of the work where the controls are stood down to go
+          faster, because the controls are what the work runs on.</p>
+      </div>
+      <div>
+        <p class="n">2</p>
+        <h4>The agent proposes. A human disposes.</h4>
+        <p>Nothing reaches production without a named person approving it. The harness ships the rule, the reviewer
+          agents that honour it, and the runbook — <b>activating branch protection so the agent cannot go around it is
+          one step your platform admin performs</b>. Until that step, the control is written down, not enforced.</p>
+      </div>
+      <div>
+        <p class="n">3</p>
+        <h4>Evidence is a by-product, not a project.</h4>
+        <p>Every release seals a tamper-evident bundle bound to the code that actually shipped. The audit answer
+          is retrieved, not reconstructed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ LEGEND + LIMITS ══════════════════════════════════ -->
+<section>
+  <div class="wrap two">
+    <div>
+      <div class="sec-h">
+        <p class="eyebrow">If someone shows you a gate reference</p>
+        <h2>The main families.</h2>
+        <p class="sec-sub">You do not need to know the individual gates — there are more than these. You need to
+          know which question each family answers, so you can tell whether the right one was asked.</p>
+      </div>
+      <table class="gates">
+        <tbody>
+          <tr><th>D1 – D9</th><td>Discovery. Is this the right problem, is it evidenced, and did anyone react to it?</td></tr>
+          <tr><th>Q1 – Q5</th><td>Quality. Does it build, pass its own tests, honour its contract, survive security scanning — and has a human approved production?</td></tr>
+          <tr><th>R1 – R6</th><td>Readiness to run. Rollback, kill switch, capacity, continuity — attested as rehearsed, and not out of date.</td></tr>
+          <tr><th>A1 – A5</th><td>Architecture assurance. Threat, to control, to test — traceable, including for the AI harness itself.</td></tr>
+          <tr><th>PA1 · PA2</th><td>Product approval. Cleared to develop; cleared to launch. Set by the second line, not by the builder.</td></tr>
+          <tr><th>HG catalog</th><td>The governance decisions that make an autonomous build loop acceptable in the first place — separation of duties, model risk, kill switch, residency.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="sec-h">
+        <p class="eyebrow">Stated plainly, because it earns the rest</p>
+        <h2>True at <em>every</em> rung.</h2>
+      </div>
+      <div class="limits">
+        <h4>Four things that do not change</h4>
+        <ul>
+          <li><b>The cost case is directional.</b> Output-token spend per iteration and per milestone is
+            instrumented. Value is not — so treat any ROI number as a hypothesis until you have run one yourself.</li>
+          <li><b>The agent is itself a model.</b> It needs ongoing validation, monitoring and independent
+            challenge. That governance is started, not finished.</li>
+          <li><b>One greenfield domain.</b> Legacy integration, real customer data and organisational change are
+            where the cost actually sits, and none of it is in the curve yet.</li>
+          <li><b>Comprehension debt is the standing risk — now partly instrumented.</b> A high or critical change
+            cannot proceed without a comprehension record: a human-authored summary, a named non-agent owner who can
+            explain it, challenge questions, failure modes, and reported metrics including review time and share of
+            agent-generated code. Reported, never gated on — the objective is understanding, not throttling output.
+            Low and medium changes carry none, so the gap is narrowed rather than closed.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Not "is it ready" — "ready for what"</p>
+      <h2>Three rungs. You are <em>already standing on the first</em>.</h2>
+      <p class="sec-sub">Maturity here is graded on five states, and no control in the bundle is platform-enforced
+        as shipped — every gate validates a declaration or a file. That is not a reason to wait; it is a reason to
+        know which rung you are on, and what the next one costs.</p>
+    </div>
+
+    <div class="ladder">
+      <div class="rung now">
+        <p class="step">Rung one</p>
+        <h4>Before you change anything</h4>
+        <p class="when">Available now · adoption, not activation</p>
+        <dl>
+          <dt>What you can run</dt>
+          <dd>Internal tooling and non-customer-facing systems, on synthetic data, with no financial execution.
+            The tamper-evident core runs on every commit; the rest are risk-scoped, with every skip recorded.</dd>
+          <dt>What holds it together</dt>
+          <dd>The harness's own discipline — hooks, reviewer agents, gates. Real, and mechanically checked.</dd>
+          <dt>What is still off the table</dt>
+          <dd>Anything where the control of record has to be the platform rather than the pipeline. The agent's
+            restraint is not yet backed by the forge.</dd>
+        </dl>
+      </div>
+      <div class="rung soon">
+        <p class="step">Rung two</p>
+        <h4>After the activation runbook</h4>
+        <p class="when">A platform-admin job, not a programme</p>
+        <dl>
+          <dt>What it takes</dt>
+          <dd>Real CODEOWNERS teams, branch protection with no bypass, a least-privilege agent identity, vaulted
+            secrets — then a direct-push probe that is <b>rejected</b>, recorded as evidence.</dd>
+          <dt>What it buys</dt>
+          <dd>The fastest credibility available: the decisions are already made, only the enforcement of record is
+            missing. It unlocks the first two pilot stages — synthetic rehearsal, then controlled internal users on
+            real identities. Customer exposure waits for the supervised pilot.</dd>
+          <dt>What is still off the table</dt>
+          <dd>Autonomous posting to core. Real customer data — that control surface is unbuilt.</dd>
+        </dl>
+      </div>
+      <div class="rung later">
+        <p class="step">Rung three</p>
+        <h4>After the supervised pilot</h4>
+        <p class="when">Where "release candidate" comes off</p>
+        <dl>
+          <dt>What it takes</dt>
+          <dd>The real-PII control surface and the full register; an organisationally independent second line and
+            model-risk function; external WORM evidence; an independent pilot report; internal-audit
+            re-performance.</dd>
+          <dt>What it buys</dt>
+          <dd>Normal operation, and a trail you can put in front of an examiner.</dd>
+          <dt>What is still off the table</dt>
+          <dd>Nothing the method can hand you. This rung is your people and your regulator, not a bundle.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="always">
+      <p class="k">The order matters</p>
+      <p>Rung two before rung one at scale. Running a high-throughput loop on an un-activated control plane is the
+        exact failure that produced this method's governance catalog in the first place: an agent identity merged to
+        <span class="mono">main</span> because branch protection was configured but never switched on.</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- /view-machine -->
+
+<!-- ══════════════ VIEW 2 — FOLLOW ONE IDEA ══════════════ -->
+<div class="view" id="view-journey" role="tabpanel" aria-labelledby="tab-journey" hidden>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">One idea, nine stops</p>
+      <h2>Where the idea goes, and <em>what it leaves behind</em> at each stop.</h2>
+      <p class="sec-sub">Read down the left for the story. Read across for the system it touches. The single ember
+        line is the idea itself — watch it hop from where people talk, to where the agent works, to where the gate
+        decides, and back.</p>
+    </div>
+
+    <div class="figure">
+      <svg class="loom" viewBox="0 0 1080 920" role="img"
+           aria-label="A nine-stop journey of one idea across six systems: Notion, Claude Code, the repository, CI and branch protection, Slack, and the cloud runtime. The idea is captured in Notion, researched and framed by agents into repository files, cleared by the hand-off gate, developed and built on a branch, reviewed and merged by a human, approved, deployed and sealed with evidence, then run — where operational signals re-enter as evidence.">
+        <defs><marker id="j-ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#CE451B"/></marker></defs>
+        <g>
+          <text class="lbl-sm" x="380" y="60" fill="#CE451B" text-anchor="middle">Notion</text>
+          <text class="lbl-sm" x="380" y="74" fill="#6E6A60" text-anchor="middle" font-size="8.6">people look</text>
+          <text class="lbl-sm" x="508" y="60" fill="#CE451B" text-anchor="middle">Claude Code</text>
+          <text class="lbl-sm" x="508" y="74" fill="#6E6A60" text-anchor="middle" font-size="8.6">agents work</text>
+          <text class="lbl-sm" x="636" y="60" fill="#CE451B" text-anchor="middle">The repo</text>
+          <text class="lbl-sm" x="636" y="74" fill="#6E6A60" text-anchor="middle" font-size="8.6">system of record</text>
+          <text class="lbl-sm" x="764" y="60" fill="#CE451B" text-anchor="middle">CI + protection</text>
+          <text class="lbl-sm" x="764" y="74" fill="#6E6A60" text-anchor="middle" font-size="8.6">gates run</text>
+          <text class="lbl-sm" x="892" y="60" fill="#CE451B" text-anchor="middle">Slack</text>
+          <text class="lbl-sm" x="892" y="74" fill="#6E6A60" text-anchor="middle" font-size="8.6">it escalates</text>
+          <text class="lbl-sm" x="1020" y="60" fill="#CE451B" text-anchor="middle">Cloud + o11y</text>
+          <text class="lbl-sm" x="1020" y="74" fill="#6E6A60" text-anchor="middle" font-size="8.6">it runs</text>
+          <line x1="20" y1="88" x2="1060" y2="88" stroke="#D6D2C8"/>
+        </g>
+        <g stroke="#E7E4DC" stroke-width="1">
+          <line x1="380" y1="96" x2="380" y2="842"/>
+          <line x1="508" y1="96" x2="508" y2="842"/>
+          <line x1="636" y1="96" x2="636" y2="842"/>
+          <line x1="764" y1="96" x2="764" y2="842"/>
+          <line x1="892" y1="96" x2="892" y2="842"/>
+          <line x1="1020" y1="96" x2="1020" y2="842"/>
+        </g>
+        <path fill="none" stroke="#CE451B" stroke-width="1.8" d="M380 150 V178 H508 V206 M508 234 V290 M508 318 V346 H764 V374 M764 402 V430 H508 V458 M508 486 V542 M508 570 V598 H636 V626 M636 654 V682 H764 V710 M764 738 V766 H1020 V794"/>
+        <text class="lbl-sm" x="20" y="141" fill="#CE451B">01</text>
+        <text class="ttl" x="52" y="130" fill="#14130F" font-size="16">Captured</text>
+        <text class="lbl-sm" x="52" y="146" fill="#6E6A60">Someone writes it down</text>
+        <text class="lbl-sm" x="52" y="160" fill="#2A2925">A Notion page</text>
+        <rect x="371" y="127" width="18" height="18" transform="rotate(45 380 136)" fill="#CE451B"/>
+        <text class="lbl-sm" x="20" y="225" fill="#CE451B">02</text>
+        <text class="ttl" x="52" y="214" fill="#14130F" font-size="16">Discover</text>
+        <text class="lbl-sm" x="52" y="230" fill="#6E6A60">The agent hunts for evidence</text>
+        <text class="lbl-sm" x="52" y="244" fill="#2A2925">research-log.md + evidence/</text>
+        <rect x="374" y="214" width="12" height="12" fill="none" stroke="#9A968C" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <rect x="500" y="212" width="16" height="16" transform="rotate(45 508 220)" fill="none" stroke="#CE451B" stroke-width="1.7"/>
+        <rect x="630" y="214" width="12" height="12" fill="#2A2925"/>
+        <text class="lbl-sm" x="20" y="309" fill="#CE451B">03</text>
+        <text class="ttl" x="52" y="298" fill="#14130F" font-size="16">Define &amp; make tangible</text>
+        <text class="lbl-sm" x="52" y="314" fill="#6E6A60">One problem framed. Data classified.</text>
+        <text class="lbl-sm" x="52" y="328" fill="#2A2925">prototype · stakeholder-reaction</text>
+        <rect x="371" y="295" width="18" height="18" transform="rotate(45 380 304)" fill="#CE451B"/>
+        <rect x="500" y="296" width="16" height="16" transform="rotate(45 508 304)" fill="none" stroke="#CE451B" stroke-width="1.7"/>
+        <rect x="630" y="298" width="12" height="12" fill="#2A2925"/>
+        <text class="lbl-sm" x="20" y="393" fill="#CE451B">04</text>
+        <text class="ttl" x="52" y="382" fill="#14130F" font-size="16">Hand-off — the waist gate</text>
+        <text class="lbl-sm" x="52" y="398" fill="#6E6A60">D1–D9 green, or nothing moves</text>
+        <text class="lbl-sm" x="52" y="412" fill="#2A2925">handoff.md · failing here is a win</text>
+        <rect x="630" y="382" width="12" height="12" fill="#2A2925"/>
+        <rect x="756" y="380" width="16" height="16" fill="#F4F2EC" stroke="#CE451B" stroke-width="1.8"/>
+        <text class="lbl-sm" x="20" y="477" fill="#CE451B">05</text>
+        <text class="ttl" x="52" y="466" fill="#14130F" font-size="16">Develop</text>
+        <text class="lbl-sm" x="52" y="482" fill="#6E6A60">Several directions, one chosen</text>
+        <text class="lbl-sm" x="52" y="496" fill="#2A2925">docs/develop/&lt;slug&gt;.md</text>
+        <rect x="500" y="464" width="16" height="16" transform="rotate(45 508 472)" fill="none" stroke="#CE451B" stroke-width="1.7"/>
+        <rect x="630" y="466" width="12" height="12" fill="#2A2925"/>
+        <text class="lbl-sm" x="20" y="561" fill="#CE451B">06</text>
+        <text class="ttl" x="52" y="550" fill="#14130F" font-size="16">Build</text>
+        <text class="lbl-sm" x="52" y="566" fill="#6E6A60">One story, one branch</text>
+        <text class="lbl-sm" x="52" y="580" fill="#2A2925">spec first · tests red first</text>
+        <rect x="500" y="548" width="16" height="16" transform="rotate(45 508 556)" fill="none" stroke="#CE451B" stroke-width="1.7"/>
+        <rect x="630" y="550" width="12" height="12" fill="#2A2925"/>
+        <text class="lbl-sm" x="20" y="645" fill="#CE451B">07</text>
+        <text class="ttl" x="52" y="634" fill="#14130F" font-size="16">Review, then merge</text>
+        <text class="lbl-sm" x="52" y="650" fill="#6E6A60">Agents give a verdict. Gates run.</text>
+        <text class="lbl-sm" x="52" y="664" fill="#2A2925">A person merges. Every time.</text>
+        <rect x="500" y="632" width="16" height="16" transform="rotate(45 508 640)" fill="none" stroke="#CE451B" stroke-width="1.7"/>
+        <rect x="627" y="631" width="18" height="18" transform="rotate(45 636 640)" fill="#CE451B"/>
+        <rect x="756" y="632" width="16" height="16" fill="#F4F2EC" stroke="#CE451B" stroke-width="1.8"/>
+        <rect x="886" y="634" width="12" height="12" fill="none" stroke="#9A968C" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <text class="lbl-sm" x="20" y="729" fill="#CE451B">08</text>
+        <text class="ttl" x="52" y="718" fill="#14130F" font-size="16">Approve, deploy, seal</text>
+        <text class="lbl-sm" x="52" y="734" fill="#6E6A60">A human approves production</text>
+        <text class="lbl-sm" x="52" y="748" fill="#2A2925">evidence sealed to the commit</text>
+        <rect x="630" y="718" width="12" height="12" fill="#2A2925"/>
+        <rect x="755" y="715" width="18" height="18" transform="rotate(45 764 724)" fill="#CE451B"/>
+        <rect x="886" y="718" width="12" height="12" fill="none" stroke="#9A968C" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <rect x="1014" y="718" width="12" height="12" fill="#2A2925"/>
+        <text class="lbl-sm" x="20" y="813" fill="#CE451B">09</text>
+        <text class="ttl" x="52" y="802" fill="#14130F" font-size="16">Run</text>
+        <text class="lbl-sm" x="52" y="818" fill="#6E6A60">Every signal gets a route</text>
+        <text class="lbl-sm" x="52" y="832" fill="#2A2925">operations-signal.json</text>
+        <rect x="374" y="802" width="12" height="12" fill="none" stroke="#9A968C" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <rect x="630" y="802" width="12" height="12" fill="#2A2925"/>
+        <rect x="1014" y="802" width="12" height="12" fill="#2A2925"/>
+        <path d="M1020 822 V874 H10 V104 H380 V116" fill="none" stroke="#CE451B" stroke-width="1.4" stroke-dasharray="6 5" marker-end="url(#j-ar)"/>
+        <rect x="258" y="860" width="524" height="28" fill="#FFFFFF"/>
+        <text class="lbl-sm" x="520" y="879" fill="#CE451B" text-anchor="middle">An incident is a signal that started in production — it re-enters as evidence</text>
+      </svg>
+
+      <div class="jkey">
+        <div><i class="k-human"></i>A person acts</div>
+        <div><i class="k-agent"></i>An agent acts</div>
+        <div><i class="k-record"></i>A record changes — a file written, a version live</div>
+        <div><i class="k-gate"></i>A gate must pass</div>
+        <div><i class="k-view"></i>A human-facing view — never what a gate reads</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Three things the picture is telling you</p>
+      <h2>What to notice.</h2>
+    </div>
+    <div class="notes">
+      <div>
+        <p class="k">Notice one</p>
+        <h4>Only the middle column is authoritative</h4>
+        <p>Every gate reads a <b>file in the repository</b> — not a Notion page, not a ticket, not a slide.
+          Notion is where people look and Slack is where they get told; neither is what the gate looks at.
+          When the two disagree, the repository wins, and that is deliberate: a control that reads a wiki
+          is a control anyone can edit. Both dashed lanes are wiring you add — no Notion or Slack integration
+          ships in the bundle.</p>
+      </div>
+      <div>
+        <p class="k">Notice two</p>
+        <h4>External systems attach through one seam</h4>
+        <p>An <b>adapter</b> maps a system's state into a signed envelope tied to a control — GitHub branch
+          protection and a GRC control register are the two reference mappings that ship. Swap GitHub for
+          GitLab or ServiceNow for Archer and only the adapter changes. An adapter with no activation evidence
+          reports as <b>declared, not active</b> — a wired seam, never a green control.</p>
+      </div>
+      <div>
+        <p class="k">Notice three</p>
+        <h4>Three moments need a person</h4>
+        <p>Someone reacts to the prototype at stop 3, someone merges at stop 7, someone approves production at
+          stop 8. Everything between those is the agent — and it <b>stops at the pull request every time</b>.
+          Off this path there are more: a human classifies the change's risk tier, and the second line releases
+          the hold. No agent holds any of those roles.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /view-journey -->
+
+<!-- ══════════════ VIEW 3 — TRY TO BREAK IT ══════════════ -->
+<div class="view" id="view-attack" role="tabpanel" aria-labelledby="tab-attack" hidden>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">The adversarial checklist</p>
+      <h2>Thirty-one ways to cheat this system, and <em>what happens when you try</em>.</h2>
+      <p class="sec-sub">A control you have never seen refuse anything is a claim, not a control. So this is not a
+        description of the safeguards — it is a list of attacks, in the attacker's own words, with what stops each
+        one and whether that refusal is actually demonstrated. The second half is the honest half: the attacks the
+        harness cannot prove for you.</p>
+    </div>
+
+    <div class="stats">
+      <div><p class="n">1,425</p><p class="l">Tests in the pipeline</p></div>
+      <div><p class="n">46</p><p class="l">Gates</p></div>
+      <div><p class="n pos">21</p><p class="l">Attacks refused on every commit</p></div>
+      <div><p class="n cau">10</p><p class="l">Attacks you must exercise yourself</p></div>
+    </div>
+
+    <div class="warnbar">
+      <b>Read this first.</b> &ldquo;Refused on every commit&rdquo; means a negative test in the pipeline performs
+      the attack and fails the build if the gate lets it through — on
+      <b>synthetic data, in a permanently non-production repository</b>. It proves the mechanism rejects the attack.
+      It does not prove your production platform is configured, and it is not a substitute for regulatory approval.
+    </div>
+
+    <div class="grouph">
+      <h3>Refused on every commit</h3>
+      <span class="cnt">The pipeline performs the attack and fails if it succeeds</span>
+    </div>
+    <p class="groupsub">Twenty of these are numbered steps in <span class="mono">validate.yml</span> — the build
+      breaks the control on purpose, runs the gate, and errors out if the gate says green. The twenty-first, the
+      routine lane, is a unit suite the same workflow runs on the same commit. There are twenty-nine numbered
+      negative tests in total; these are the ones an executive audience can follow.</p>
+    <table class="atk" id="tbl-proven">
+      <thead><tr><th class="c1">What the attacker tries</th><th class="c2">What refuses it</th><th class="c3">How that is proved</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="grouph">
+      <h3>Yours to prove</h3>
+      <span class="cnt">The harness ships the repo-side half — the rest is your platform and your people</span>
+    </div>
+    <p class="groupsub">These are the attacks a bundle structurally cannot refuse on your behalf. Naming them is the
+      point: a method that claimed these would be committing the exact overreach the honest-limits discipline exists
+      to prevent.</p>
+    <table class="atk" id="tbl-live">
+      <thead><tr><th class="c1">What the attacker tries</th><th class="c2">What is meant to refuse it</th><th class="c3">What you must do</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="exit">
+      <h4>What would let you drop the words &ldquo;release candidate&rdquo;</h4>
+      <p class="sub">Not more gates. Evidence from outside the repository — all five, in order.</p>
+      <ol>
+        <li>An <b>independent pilot report, authored outside the build team</b>, covering a supervised run end to end on a real, bounded, reversible scope — with second line watching directly rather than reading a report afterwards.</li>
+        <li>Every row in the second table above exercised at least once, with its evidence retained.</li>
+        <li>All material findings resolved, or formally risk-accepted by the accountable executive.</li>
+        <li>Second line confirms the control set <b>operated</b> — not that the templates exist.</li>
+        <li>Internal audit independently re-performs the evidence assessment for at least one release.</li>
+      </ol>
+      <p class="close">Until all five exist, the honest status is <b>release candidate, not certified</b> — and
+        adopting the Loom is not, and does not substitute for, regulatory approval.</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- /view-attack -->
+
+<!-- ══════════════ VIEW 5 — THE TOOLKIT ══════════════ -->
+<div class="view" id="view-kit" role="tabpanel" aria-labelledby="tab-kit" hidden>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Everything that exists, and who it is for</p>
+      <h2>What actually ships — and <em>which of it is yours to fill in</em>.</h2>
+      <p class="sec-sub">Skills tell the agent how to work. Agents review. Hooks block at the moment of writing.
+        Gates block the merge. Seams are where your institution plugs in. Runbooks name the work no bundle can do.
+        Pick a role to see only what serves it.</p>
+    </div>
+
+    <div class="kitstats" id="kitstats"></div>
+
+    <div class="chips" role="group" aria-label="Filter by role">
+      <button class="chip kchip" data-krole="exec"    aria-pressed="false">Executive sponsor</button>
+      <button class="chip kchip" data-krole="product" aria-pressed="false">Product / business</button>
+      <button class="chip kchip" data-krole="eng"     aria-pressed="false">Engineering</button>
+      <button class="chip kchip" data-krole="risk"    aria-pressed="false">Risk &amp; compliance</button>
+      <button class="chip kchip" data-krole="audit"   aria-pressed="false">Internal audit</button>
+      <button class="chip kchip" data-krole="ops"     aria-pressed="false">Operations / run</button>
+      <button class="chip kchip" data-krole="sec"     aria-pressed="false">Security</button>
+    </div>
+
+    <div class="jkey" style="border-top:0;padding-top:0;margin-bottom:22px">
+      <div><span class="kind kind-runs">Runs</span>&nbsp;Ships and executes as delivered</div>
+      <div><span class="kind kind-mount">Mount</span>&nbsp;A seam or template you fill with your own content</div>
+      <div><span class="kind kind-yours">Yours</span>&nbsp;Names work a bundle structurally cannot do</div>
+    </div>
+
+    <div id="kitbody"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Read the gaps as carefully as the inventory</p>
+      <h2>Where each role is <em>thin</em>.</h2>
+      <p class="sec-sub">An inventory that only lists what exists is marketing. These are the four places where a
+        persona's support is mostly runbook rather than machinery — stated so nobody discovers it in month three.</p>
+    </div>
+    <div class="thin">
+      <div>
+        <h5>Executive sponsor — little here runs for you personally</h5>
+        <p>Five gates carry your name — production approval, readiness, the change envelope, the eval, the catalog —
+          but they run on the engineers' pull requests, not on your desk. The instruments you hold directly are a
+          runbook, a spend ledger, and a control catalog that cannot overstate itself. That is the honest shape of
+          it: a bundle cannot appoint an accountable officer, convene a board, or obtain a regulator's
+          non-objection. What it can do is make the evidence you answer with tamper-evident.</p>
+      </div>
+      <div>
+        <h5>Internal audit — no place to look</h5>
+        <p>You get a sealed bundle and gates you can re-run at the released commit. You do not get a read-only
+          evidence portal — that is graded absent, and standing one up is the independent-assurance runbook's work,
+          along with the external WORM store that makes self-assurance into examinable assurance.</p>
+      </div>
+      <div>
+        <h5>Operations — the bundle does not run your pager</h5>
+        <p>No SRE, observability, incident detection or on-call ships, by design. The operations-signal gate reads a
+          JSON log; producing the signal in the first place is entirely yours. What you get is the guarantee that a
+          signal, once logged, cannot fall on the floor untriaged — and that the log cannot stay <em>empty</em> once
+          anything is in production.</p>
+      </div>
+      <div>
+        <h5>Security — every scanner is a slot, not a fill</h5>
+        <p>The gates validate scanner <em>output</em> semantically — an error-level finding blocks. You bring the SAST,
+          SCA and image hardening; the frame gives each a named place in the line. Secret detection is the one
+          exception: that scanner does ship, and it reads git history, so a deleted secret is still caught.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /view-kit -->
+
+<!-- ══════════════ VIEW 4 — THE DECISION ══════════════ -->
+<div class="view" id="view-decide" role="tabpanel" aria-labelledby="tab-decide" hidden>
+
+<section>
+  <div class="wrap">
+    <div class="ask">
+      <p class="k">The ask</p>
+      <h3>A 90-day, non-customer-facing evaluation on one bounded scope.</h3>
+      <p>Not a production deployment. Not a procurement. The output is an evidenced answer to a single question:
+        does this clear your bar — and you get that answer from your own auditors, not from us.</p>
+      <ul>
+        <li>A platform admin to activate branch protection, CODEOWNERS and a least-privilege agent identity — plus whatever your IAM and vault standards require</li>
+        <li>One bounded, reversible, non-customer-facing scope</li>
+        <li>A second-line observer, embedded — watching, not reading a report afterwards</li>
+        <li>One internal-audit re-performance of a sealed release at the end</li>
+      </ul>
+      <p class="not">What you are <b>not</b> being asked for: customer data, core-banking integration, a production
+        change, a regulator conversation, or a headcount commitment beyond the above.</p>
+    </div>
+
+    <div class="sec-h">
+      <p class="eyebrow">A 90-day evaluation — not the full adoption order</p>
+      <h2>Ninety days.</h2>
+    </div>
+    <ol class="seq">
+      <li>
+        <p class="w">Days 1–14 · the fastest win available</p>
+        <h4>Activate the control plane</h4>
+        <p>Real CODEOWNERS teams; branch protection with required code-owner review and <b>no bypass for anyone,
+          including admins</b>; a least-privilege agent identity that can push to <span class="mono">feature/*</span>
+          and open pull requests but cannot merge, cannot touch settings, and holds no admin rights. Then prove it:
+          have the agent identity attempt a direct push to <span class="mono">main</span> and record the rejection.
+          <b>This is the step that moves controls from written to enforced</b>, and it is a platform-admin job — not
+          the build team's, and structurally not the agent's.</p>
+      </li>
+      <li>
+        <p class="w">Days 15–30</p>
+        <h4>Mount your seams, run one discovery</h4>
+        <p>Your brand profile and your data-risk register replace the demo instances; your identity registry names
+          who may approve what, with builders and second line disjoint. Then take one real but bounded problem
+          through discovery end to end, to a green hand-off. <b>A discovery that fails here is a successful
+          discovery</b> — it means you stopped the wrong problem for the price of a fortnight.</p>
+      </li>
+      <li>
+        <p class="w">Days 31–60</p>
+        <h4>Run the loop, and instrument it from the first commit</h4>
+        <p>Internal, non-customer-facing scope, synthetic data. Record elapsed time, people involved, human review
+          hours and token spend from day one — see below for why. Second line embedded and watching directly.</p>
+      </li>
+      <li>
+        <p class="w">Days 61–90 · the exercise that actually decides it</p>
+        <h4>Seal a release, then have audit re-perform it</h4>
+        <p>Re-run every gate at the released commit and check the sealed bundle independently. If your internal
+          audit function can reconstruct the release without asking the build team a single question, you have your
+          answer. <b>If they cannot, you also have your answer</b> — for the price of one quarter and no customer
+          exposure.</p>
+      </li>
+      <li>
+        <p class="w">Only then</p>
+        <h4>The supervised pilot</h4>
+        <p>Six staged cohorts, from synthetic rehearsal to normal operation, with an independent pilot report
+          authored outside the build team. Two workstreams run alongside it and are not in the 90 days above:
+          <b>standing up model-risk management</b> — the gap most specific to an AI harness — and an
+          <b>organisationally independent second line with external WORM evidence</b>. That is the gate for
+          dropping the words "release candidate", and it is months, not weeks.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">The number your board will ask for</p>
+      <h2>"How much faster?" — and what is <em>honestly</em> measurable today.</h2>
+      <p class="sec-sub">A count is not a rate. "134 of 139 stories" says nothing about speed until it has a
+        denominator, and this method does not currently record one. Here is what exists and what does not — so your
+        pilot produces the number instead of repeating the claim.</p>
+    </div>
+    <div class="instr">
+      <div>
+        <span class="st pill-pos">Instrumented</span>
+        <h5>Token spend</h5>
+        <p>An append-only ledger, one entry per iteration, aggregating per iteration and per milestone. It seals
+          into the release evidence bundle — a release's cost is part of its record. Deliberately telemetry, never
+          a merge gate.</p>
+      </div>
+      <div>
+        <span class="st pill-cau">Not captured</span>
+        <h5>Elapsed time</h5>
+        <p>The decision log carries per-entry timestamps, but capture is adopter wiring and nothing aggregates them
+          per story or per milestone. Without that, throughput is a count and not a rate.</p>
+      </div>
+      <div>
+        <span class="st pill-cau">Not captured</span>
+        <h5>People involved</h5>
+        <p>No headcount denominator exists. "134 stories" with two engineers and with twelve are entirely different
+          claims, and the record cannot currently tell them apart.</p>
+      </div>
+      <div>
+        <span class="st pill-pos">Partly instrumented</span>
+        <h5>Human review hours</h5>
+        <p>The comprehension record now reports review time, complexity and reviewer familiarity — but only for
+          high and critical changes, and the values are reported rather than gated. Low and medium changes, which
+          are most of them, still go uncounted.</p>
+      </div>
+    </div>
+    <div class="always">
+      <p class="k">The honest position</p>
+      <p>One and a half of four. Until the rest are recorded on a real run, <b>"faster" is a claim and
+        not a finding</b> — and this page says so rather than filling the gap with a benchmark. Elapsed time and
+        token spend are a few lines in the build loop; headcount and review hours need someone to record them, which
+        is a process decision. Make it on day one — it is what turns a pilot into evidence.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">The resource that does not scale</p>
+      <h2>How many reviewers does this actually need?</h2>
+      <p class="sec-sub">The merge is the human moment that absorbs everything the machine produces. Classification,
+        PA1/PA2 and the second-line release hold also require named humans, but they do not scale with throughput the
+        way review does — the merge is what breaks first. This is arithmetic, not a benchmark: no measured reviewer
+        ratio ships with the method. Put your own numbers in.</p>
+    </div>
+    <div class="calc">
+      <div class="calc-in">
+        <div>
+          <label for="ci-pr">Pull requests merged per week <span style="color:var(--caution)">· placeholder</span></label>
+          <input type="number" id="ci-pr" value="40" min="1" max="2000" step="1">
+        </div>
+        <div>
+          <label for="ci-min">Minutes of genuine review per PR <span style="color:var(--caution)">· placeholder</span></label>
+          <input type="number" id="ci-min" value="25" min="1" max="480" step="1">
+        </div>
+        <div>
+          <label for="ci-cap">Hours of real review capacity, per reviewer per week <span style="color:var(--caution)">· placeholder</span></label>
+          <input type="number" id="ci-cap" value="12" min="1" max="40" step="1">
+        </div>
+      </div>
+      <div class="calc-out">
+        <div><p class="n" id="co-hrs">—</p><p class="l">Review hours per week</p></div>
+        <div><p class="n" id="co-fte">—</p><p class="l">Reviewers needed, full-time equivalent</p></div>
+        <div><p class="n" id="co-min">—</p><p class="l">Minutes per PR one reviewer can afford</p></div>
+      </div>
+      <p class="atk-txt" id="co-note" style="margin-top:16px;font-size:.9rem"></p>
+    </div>
+    <div class="always">
+      <p class="k">The tripwire</p>
+      <p>Track minutes of review per pull request month over month. <b>When throughput climbs while that number
+        falls, four-eyes is decaying into ceremony</b> — every gate stays green and the gap widens between the code
+        that exists and the code a human still understands. That is the method's own named standing risk, and this
+        is the one instrument that would catch it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Your CTO will ask this in the first five minutes</p>
+      <h2>Compared to what?</h2>
+      <p class="sec-sub">The realistic alternatives, judged on the things that matter to a regulated institution
+        rather than on developer experience.</p>
+    </div>
+    <table class="cmp">
+      <thead>
+        <tr><th></th><th>AI coding assistants in the IDE</th><th>A systems integrator</th><th class="us">The Loom</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Who is accountable for the merge</td>
+          <td>Your engineer, per change, under whatever branch protection you already run. Nothing ties the assistant's identity to a non-approver role.</td>
+          <td>The vendor's process, contractually. Their controls, on their word.</td>
+          <td class="us">A named human, structurally — the agent identity sits outside the approver group and cannot change that, once activated.</td>
+        </tr>
+        <tr>
+          <td>What exists at audit</td>
+          <td>Commit history, plus whatever you reconstruct afterwards.</td>
+          <td>The vendor's report, on the vendor's schedule.</td>
+          <td class="us">A sealed, hash-chained bundle bound to the released commit — tests, verdicts, lineage, scans, spend. Edit one entry and the chain breaks.</td>
+        </tr>
+        <tr>
+          <td>Where the problem gets framed</td>
+          <td>Nowhere. The ticket is the input, and the ticket may be wrong.</td>
+          <td>In the vendor's discovery, to the vendor's incentive.</td>
+          <td class="us">A gated discovery run: evidence, framing, a prototype real people reacted to — and permission to fail cheaply.</td>
+        </tr>
+        <tr>
+          <td>Switching cost</td>
+          <td>Low, and so is the lock-in — but so is the control.</td>
+          <td>Re-contracting, and the knowledge leaves with them.</td>
+          <td class="us">An adapter mapping per external system; the core stays vendor-neutral. Swap GitHub for GitLab and the gates do not change.</td>
+        </tr>
+        <tr>
+          <td>What you own at the end</td>
+          <td>Code.</td>
+          <td>Code, plus a dependency.</td>
+          <td class="us">The way of building — and the accumulated, governed context that makes it produce <em>your</em> software.</td>
+        </tr>
+        <tr>
+          <td>Honest disadvantage</td>
+          <td>Nothing to stand up. Works today.</td>
+          <td>Someone else carries delivery risk, and their scale is real.</td>
+          <td class="us">Nothing is platform-enforced until you activate it. It is unproven on real data, ships no legacy or core-banking integration patterns — the integration cost the demo never paid — and its own status is release candidate, not certified.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">
+      <p class="eyebrow">Under a senior-manager regime, this is the page that matters</p>
+      <h2>Who signs, and what they are signing.</h2>
+      <p class="sec-sub">A name on an org chart is not accountability. The harness fences the loop and seals the
+        evidence; it does not make the accountability exist. This is the chain, and what the machinery does and does
+        not contribute to each link.</p>
+    </div>
+    <table class="chain">
+      <thead><tr><th>Layer</th><th>What they own</th><th>What the harness contributes</th></tr></thead>
+      <tbody>
+        <tr><td>The build agent</td><td>Proposes change; runs its reviewer agents and its gates.</td>
+          <td>The four-eyes rule and the reviewer agents that honour it — the fence itself is branch protection, yours to activate. <span class="never">Never an approver</span>, never an accountable officer, never the holder of the kill switch.</td></tr>
+        <tr><td>Platform admin</td><td>Activates and holds the control plane. Must not be the agent's identity.</td>
+          <td>The activation runbook and the control-plane gate that fails the build if an owner is lost.</td></tr>
+        <tr><td>Accountable senior manager</td><td>The loop's safe operation, its controls, its cease-use, and the evidence it produces. One person — accountability that is shared is accountability that is absent.</td>
+          <td>The sealed evidence they answer with. <span class="never">Nothing that appoints them</span> — that is a registered responsibility under your regime, and it is the single most important thing on this page.</td></tr>
+        <tr><td>Board risk committee</td><td>Oversight, scope approval, standing management information.</td>
+          <td>The sealed bundle and the signed assurance-cycle record as inputs. <span class="never">Never the quorum or the minute.</span></td></tr>
+        <tr><td>The regulator</td><td>Supervision and, eventually, non-objection.</td>
+          <td>A sealed trail, which becomes examinable once you add external WORM storage, timestamping and auditor access. <span class="never">Never the opinion</span> — adopting this is not, and does not substitute for, regulatory approval.</td></tr>
+      </tbody>
+    </table>
+    <div class="always">
+      <p class="k">The decisive property</p>
+      <p>The build agent appears in this chain <b>only as a proposer</b>. If the agent identity sits in any approval,
+        promotion, control-plane or cease-use role, the control plane is not activated — and everything else on
+        these four tabs is decoration.</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- /view-decide -->
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;width:100%">
+    <span class="mono">MiddleLeap · The Loom</span>
+    <span>The Loom is the deliverable. Open Finance was the first cloth off it.</span>
+  </div>
+</footer>
+
+<script>
+const ROLES = {
+  exec: {
+    title: "Executive sponsor",
+    who: "Board · CEO · COO · CIO · business head",
+    own: "The mandate and the risk appetite — and the named accountable officer for an autonomous system that now writes code inside your institution.",
+    get: "Delivery pace with a control position you can show rather than narrate. On the proof build — synthetic data, permanently non-production — 134 of roughly 139 backlog items were carried to done under quality gates with a human on every merge.",
+    ctl: "Go-live is a human decision. Cease-use is a required capability whose rehearsal date the pipeline refuses to let go stale — wiring the actual switch, and telling the truth about the drill, stay yours.",
+    q: "Show me the evidence bundle for the last release.",
+    h: ["warp","gate","cloth"]
+  },
+  product: {
+    title: "Product / business owner",
+    who: "Product · business line · design · change",
+    own: "The problem. The first harness is yours: the signals, the framing, the success measures, and a prototype real stakeholders react to before anyone writes code.",
+    get: "Permission to kill a bad idea cheaply. A discovery is allowed to fail — stopping the wrong problem early counts as a win, not a write-off.",
+    ctl: "The hand-off. No feature enters the build without a green one, and the success measure you write becomes the measure a release must carry a fresh passing score against — you build the rig that scores it.",
+    q: "Which logged evidence does that claim trace back to?",
+    h: ["idea","discovery","handoff"]
+  },
+  eng: {
+    title: "Engineering / delivery",
+    who: "Engineering lead · architect · developer",
+    own: "The build. One change at a time, on its own branch, contract first, with tests shown failing before they are made to pass.",
+    get: "The loop does the typing; your people do the judging. A backlog item arrives as a pull request to review rather than as a blank editor — and a spec change has to be its own reviewed change, never smuggled into a feature.",
+    ctl: "The merge. The agent does not merge its own work. The one calibrated exception is a narrow, pre-named routine class — a dependency patch, a lint fix — inside an expiring envelope the second line owns, where the approval was given once for the envelope instead of once per change.",
+    q: "Was this test ever shown red before it went green?",
+    h: ["delivery","handoff","shuttle"]
+  },
+  risk: {
+    title: "Risk & compliance",
+    who: "Second line · operational risk · legal · model risk",
+    own: "The register and the classification. A change's risk tier is set by a human with the authority to set it — an agent cannot classify its own work, and cannot lower a tier.",
+    get: "Controls checked mechanically on every change instead of sampled after the fact. Your position is current to the last commit rather than to the last committee meeting.",
+    ctl: "The release hold. It fails closed: no hold on file means held, and the people building cannot lift it.",
+    q: "Which control catches that — and does it fail if I break it on purpose?",
+    h: ["warp-approval","warp-audit","warp-residency","gate"]
+  },
+  audit: {
+    title: "Internal audit",
+    who: "Third line · external audit · the regulator's file",
+    own: "Re-performance. The gates and the sealed bundle can be re-run at the released version — and where the method rests on someone's attestation instead of a check, it says so rather than hiding it.",
+    get: "A sealed, hash-chained evidence bundle bound to the released version — test results, reviewer verdicts, lineage proof, scanner output, the spend ledger. Edit one entry and the chain visibly breaks.",
+    ctl: "The evidence gate. A declared pass without its report fails; a failing test or a critical finding inside the bundle fails the release even when the chain is intact.",
+    q: "Re-run the gates at the released commit — same result?",
+    h: ["cloth","warp-audit","warp-lineage"]
+  },
+  ops: {
+    title: "Operations / run",
+    who: "SRE · service management · incident · support",
+    own: "The running system — incidents, service levels, on-call. The Loom does not run your pager and does not pretend to.",
+    get: "A wire back into the front of the process. What production learns re-enters as evidence in exactly the same way a customer interview does; an incident is just a signal that happened to originate in production.",
+    ctl: "Routing. Every signal must declare where it goes — fix the build, update the register, reopen the problem, or accept it with a stated reason. A signal with no route fails the gate.",
+    q: "Where did that incident actually land?",
+    h: ["cloth","feedback","idea"]
+  },
+  sec: {
+    title: "Security & supply chain",
+    who: "CISO · AppSec · platform · vendor risk",
+    own: "The scanners, the standards and the thresholds — the tools stay yours.",
+    get: "Slots that already exist. Static analysis, dependency and secrets scanning, hardened images, software bill of materials and build provenance each have a named place in the line, so your tooling plugs in without redesigning the process.",
+    ctl: "The guardrails sit outside what the agent writes. A CI gate fails the build if any control-plane file loses its second-line owner — making that gate itself non-bypassable is your platform's activation step, not the harness's.",
+    q: "Can the agent change the control that checks the agent?",
+    h: ["warp-quality","delivery","cloth"]
+  }
+};
+
+const DEFAULT_CAP = "An idea enters on the left and leaves on the right as software that is already in use. Nothing crosses the middle without a hand-off, nothing comes off the loom without a person saying so, and the five threads underneath are on for every single pass.";
+
+const svg = document.getElementById('loom');
+const groups = Array.from(svg.querySelectorAll('.hl'));
+const chips = Array.from(document.querySelectorAll('.chip'));
+let active = null;
+
+function setRole(key){
+  if (active === key) key = null;          // click again to clear
+  active = key;
+
+  chips.forEach(c => c.setAttribute('aria-pressed', String(c.dataset.role === key)));
+
+  if (!key){
+    svg.classList.remove('filtered');
+    groups.forEach(g => g.classList.remove('on'));
+    document.getElementById('r-title').textContent = 'Everyone';
+    document.getElementById('r-who').textContent   = 'Select a role above';
+    document.getElementById('r-own').textContent   = 'Pick a role above and this panel fills in with what that role owns, what it gets out of the method, and the one control it holds.';
+    document.getElementById('r-get').textContent   = 'The picture does not change per role. Only the part you are accountable for is highlighted, so a room full of different functions can look at one diagram and each see themselves in it.';
+    document.getElementById('r-ctl').textContent   = 'Every role in this chain holds exactly one thing the machine cannot do for itself. That is the design.';
+    document.getElementById('r-q').textContent     = 'Which part of this can the AI change by itself?';
+    document.getElementById('cap-k').textContent   = 'Reading it';
+    document.getElementById('cap-v').textContent   = DEFAULT_CAP;
+    return;
+  }
+
+  const r = ROLES[key];
+  svg.classList.add('filtered');
+  groups.forEach(g => {
+    const tokens = (g.dataset.h || '').split(/\s+/);
+    g.classList.toggle('on', tokens.some(t => r.h.includes(t)));
+  });
+
+  document.getElementById('r-title').textContent = r.title;
+  document.getElementById('r-who').textContent   = r.who;
+  document.getElementById('r-own').textContent   = r.own;
+  document.getElementById('r-get').textContent   = r.get;
+  document.getElementById('r-ctl').textContent   = r.ctl;
+  document.getElementById('r-q').textContent     = r.q;
+  document.getElementById('cap-k').textContent   = r.title;
+  document.getElementById('cap-v').textContent   = r.ctl;
+}
+
+chips.forEach(c => c.addEventListener('click', () => setRole(c.dataset.role)));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setRole(null); });
+
+/* ── tabs ─────────────────────────────────────────────── */
+const tabs = Array.from(document.querySelectorAll('.tab'));
+function showTab(id){
+  tabs.forEach(t => {
+    const sel = t.id === id;
+    t.setAttribute('aria-selected', String(sel));
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !sel;
+  });
+}
+tabs.forEach(t => t.addEventListener('click', () => showTab(t.id)));
+
+/* ── adversarial checklist ────────────────────────────── */
+const PROVEN = [
+ ["I'll copy the control-plane template and never get round to filling it in.",
+  "control-plane-check · HG-0002",
+  "Every control-plane file must carry a real, non-builder CODEOWNERS owner.",
+  "The pipeline runs the gate against the untouched template <b>first</b>. A placeholder <span class='mono'>@your-org/…</span> owner must fail — only then does it do the adopt step and go green."],
+ ["I'll edit the sealed test results so the release looks clean.",
+  "evidence-seal-check · HG-0003",
+  "Sealed artifacts are verified semantically, not only for chain integrity.",
+  "The build rewrites <span class='mono'>\"failed\": 0</span> to <span class='mono'>1</span> in the sealed test results and errors out if the gate still passes."],
+ ["I'll just delete the test that keeps failing.",
+  "test-integrity-check · Q1b",
+  "The anti-reward-hacking gate diffs against the merge base — a deleted test file, or a net drop in assertions, fails.",
+  "The build deletes <span class='mono'>render.test.mjs</span> on a branch and runs the gate against <span class='mono'>main</span>. A pass is a build failure."],
+ ["I'll commit the key now and delete the file in the next commit.",
+  "secrets-scan · Q4",
+  "The scan reads git history, not just the working tree.",
+  "The build commits an AWS-shaped key, removes the file, commits again — and requires the gate to still fail."],
+ ["The security finding is a false positive. I'll ship anyway.",
+  "sast-check · Q2",
+  "An error-level finding blocks, regardless of the narrative around it.",
+  "The build injects an error-level <span class='mono'>demo-sqli</span> result into the SAST report and requires rejection."],
+ ["I'll hand-edit the control plan to drop the approval I don't have.",
+  "change-envelope-check · 1.11",
+  "A stored plan is reconciled against a fresh compile from the product profile.",
+  "The build removes <span class='mono'>PA1</span> from the compiled plan for CHG-2026-0042 and requires reconciliation to fail."],
+ ["We'll start building now and get product approval in parallel.",
+  "change-envelope-check · PA1",
+  "A high-risk product cannot enter Develop without PA1.",
+  "The build sets PA1 to <span class='mono'>pending</span> on a high-tier change already in delivery and requires the gate to block it."],
+ ["The agent can sign the risk approval — it did the analysis anyway.",
+  "product-approval-check · identity registry",
+  "Approvals must resolve to human identities holding the role. Agents hold no approver roles.",
+  "The build swaps the second-line approver for <span class='mono'>agent-loom-delivery</span> and requires the approval to be rejected."],
+ ["The kill-switch drill was a while back. It'll be fine.",
+  "operational-readiness-check · R-gates",
+  "Readiness attestations carry freshness windows — 90 days for the kill switch.",
+  "The build backdates the last kill-switch test to 2024 and requires readiness to fail."],
+ ["I'll mark it production-authorized. The second-line hold is a formality.",
+  "change-envelope-check · release hold",
+  "Production authorization is compound and fails closed — no hold on file means HELD.",
+  "The build sets the change to <span class='mono'>production-authorized</span> with the hold still held and requires refusal."],
+ ["Nothing has gone wrong since launch, so there is nothing to log.",
+  "operations-signal-check · silence after launch",
+  "Once anything holds a production state, an empty operational log is a failure, not a clean sheet.",
+  "The build empties the signals array while a change claims production and requires the gate to fail."],
+ ["I'll tidy up the assurance record after it's been signed off.",
+  "assurance-cycle-check · 2.0-rc",
+  "The cycle record is signed with ed25519 over its canonical hash and must name a second-line confirmer.",
+  "The build flips one step's status to <span class='mono'>fail</span> after signing and requires verification to break."],
+ ["I'll reword what the agent decided so the rationale reads better.",
+  "decision-log-check · 2.0-rc",
+  "An append-only hash chain — editing, reordering or dropping an entry breaks it.",
+  "The build rewrites the decision text on entry two and requires the chain check to fail."],
+ ["I'll point the adapter at a control that sounds about right.",
+  "adapter-check · enterprise adapters",
+  "An adapter naming a control the catalog does not have is a mapping to nothing.",
+  "The build repoints the GitHub branch-protection adapter at <span class='mono'>NO-SUCH-CONTROL</span> and requires failure."],
+ ["Our catalog says that control is platform-enforced. Nobody will check.",
+  "control-catalog-check · rc.12",
+  "A control claiming <b>platform enforced</b> must carry verified activation evidence. The catalog cannot overstate itself.",
+  "The build sets a control to platform-enforced with no verified activation evidence and requires the catalog gate to reject it. <b>The maturity model polices its own top state.</b>"],
+ ["I'll quietly re-enable force-push on main. Who reads settings?",
+  "config-reconciliation-check · rc.12",
+  "The approved control-plane configuration is reconciled against live observations, so a weakened setting surfaces as drift.",
+  "The build weakens the live config — force-push re-enabled — and requires it to be caught as drift rather than passing unnoticed."],
+ ["The policy says the guardrail is enforced. That is what enforcement means.",
+  "guardrail-policy-check · rc.13",
+  "A policy claiming enforcement via a mechanism that does not exist is a claim, not a control.",
+  "The build declares enforcement through a non-existent mechanism and requires the gate to refuse it."],
+ ["The agent wrote it, the tests pass, and it merged. Someone will pick it up later.",
+  "comprehension-check · rc.15",
+  "A high or critical change needs a comprehension record: a named non-agent human who can explain it, challenge questions, failure modes, and a decision-log replay reference.",
+  "The build removes the comprehension record from a high-tier change and requires it to fail. Metrics are reported, never gated — understanding is the objective, not throttling output."],
+ ["I'll point release_commit at a tag, and reuse last release's evidence.",
+  "release-subject-check · rc.11",
+  "Evidence binds to a built artifact digest, not just to a symbolic ref.",
+  "Two tests: a symbolic <span class='mono'>release_commit</span> must fail the seal, and reusing evidence for a different artifact digest must fail the binding."],
+ ["We pinned a BrainKit release. That it was later revoked is a detail.",
+  "brainkit-registry-check · rc.15",
+  "The institution's governed context is versioned and revocable — pinning a revoked release is an unsafe context, not a stale one.",
+  "The build pins a revoked BrainKit release and requires the gate to fail."],
+ ["I'll widen the routine envelope so my change skips review.",
+  "routine-change-check · HG-0013",
+  "An absolute floor <b>in code</b> keeps the control plane and the API contract out of the fast lane however the envelope is configured — and the envelope must be second-line-owned and unexpired. Your auth and migration roots are one line you add to the same floor.",
+  "Eleven negative cases: control-plane path, contract path, expired envelope, agent-owned, builder-owned, disallowed class, unknown class, oversized diff, missing green gate, path outside the allow-list, a governance path nested inside an allowed prefix. <b>Unit-tested rather than a pipeline bypass step</b> — and whether a conforming claim then auto-merges is your merge queue, which is yours to activate and evidence."],
+];
+
+const LIVE = [
+ ["I'll push straight to main.",
+  "Branch protection · HG-0001",
+  "Required code-owner review, no direct pushes, no bypass — enforced by the forge, not by the agent's restraint.",
+  "Activate it, then record a rejected-direct-push probe. <b>This is the gap that bit once already</b>: the governance catalog exists because an agent identity merged to main while branch protection was configured but never switched on."],
+ ["I'll recompute the whole evidence chain so it's internally consistent.",
+  "External WORM anchor + attestation",
+  "A chain you control end to end can be rebuilt. An external, immutable, timestamped anchor cannot.",
+  "Wire the WORM store and the issuer. Signature checking runs in-process today; platform mechanisms report <span class='mono'>UNVERIFIED-HERE</span> until connected — an honest gap, not a silent pass."],
+ ["I'll get the agent to carry the data out through its own tooling.",
+  "Onshore gateway + pre-egress DLP · HG-0011",
+  "Residency-controlled model traffic and attested sandbox execution.",
+  "Build it. The PII hook ships and blocks PII-shaped literals at write time — but a local hook is not a network control, and nothing in the bundle inspects what leaves your network."],
+ ["I'll hide an instruction in the repo for the agent to follow.",
+  "Protected control plane + hooks + A2 threat model",
+  "A CI gate fails the build if the agent edits the gates, the hooks or the workflows.",
+  "The control-plane half is proven. Runtime egress controls — and the judgement about what the agent may read — are yours."],
+ ["I'll post the same transaction twice.",
+  "A5 financial integrity",
+  "Idempotency and maker-checker, with threat-to-control-to-test traceability gate-checked.",
+  "The declaration is checked; the execution is not. Prove it in integration against your core."],
+ ["Rollback? It's documented.",
+  "R3 rollback drill",
+  "A 180-day freshness window on the attestation.",
+  "Freshness is checkable. Whether the drill happened — and whether it worked — is your attestation and your integrity."],
+ ["PA2 is signed, so the disclosure numbers must be right.",
+  "PA2 · pricing conduct, disclosures, key facts",
+  "The gate compiles which sections the product profile requires and checks the right role approved them.",
+  "A gate can prove the section exists and was approved. It cannot read the number and tell you it is correct. That is human review, and it stays human review."],
+ ["The model provider is down — we'll improvise.",
+  "HG-0006 runtime fallback",
+  "A high-tier model must declare monitoring metrics, a suspension threshold and an outage fallback.",
+  "The declaration is gate-checked. The failover is yours to build and to rehearse."],
+ ["The reconciliation broke overnight.",
+  "R6 reconciliation + signal routing",
+  "Once logged, a signal cannot be dropped untriaged.",
+  "Detection is yours — the gate reads a JSON log, it does not watch your ledgers."],
+ ["The third party went down.",
+  "R5 third-party continuity and exit",
+  "Readiness declarations with freshness windows.",
+  "Live failover, and the commercial exit path, are yours."],
+];
+
+function fillTable(id, rows, pill, pillClass){
+  const tb = document.querySelector('#' + id + ' tbody');
+  if (!tb) return;
+  tb.innerHTML = rows.map(([say, ctl, txt, proof]) => `
+    <tr>
+      <td class="c1"><span class="pill ${pillClass}">${pill}</span><div class="atk-say">“${say}”</div></td>
+      <td class="c2"><span class="atk-ctl">${ctl}</span><div class="atk-txt">${txt}</div></td>
+      <td class="c3"><div class="atk-proof">${proof}</div></td>
+    </tr>`).join('');
+}
+fillTable('tbl-proven', PROVEN, 'Refused', 'pill-pos');
+fillTable('tbl-live',   LIVE,   'Yours to prove', 'pill-cau');
+
+
+/* ── the toolkit inventory ────────────────────────────── */
+const KIT = [
+["Skills","How the agent is told to work. Each is a procedure the loop follows, not a suggestion.",[
+ ["loom","runs","The method canon — harnesses, gates, the governance catalog, and the honest self-grade.",["exec","product","eng","risk"]],
+ ["loom-adopt","runs","Stands the whole harness up in a repository: the copy map, the seams, the verification steps.",["eng"]],
+ ["discovery","runs","Walks a problem through Discover → Define → Prototype → hand-off, gate-clean and brand-conformant.",["product"]],
+ ["develop","runs","The diverge half of the right diamond: explores several solution directions, judges them, converges on one.",["product","eng"]],
+ ["next-story","runs","The body of the autonomous build loop — picks the next eligible item, builds it, opens a PR for human merge.",["eng"]],
+ ["implement-story","runs","One numbered story, one branch, contract first, tests shown red before green.",["eng"]],
+ ["spec-change","runs","The only sanctioned route to change the API contract — as its own reviewed change, never inside a feature.",["eng"]],
+ ["release","runs","Delivery ⑦/⑧ — promotes to pre-production, re-runs every gate at the released commit, seals the nine evidence types, and builds the production-authorization case, then stops.",["eng","exec","audit"]],
+ ["re-perform","runs","Read-only third-line support: re-runs gates in a fresh clone, recomputes the chain rather than trusting it, and states what it could not verify.",["audit"]],
+ ["govern","runs","Authors a governed artifact by interviewing the accountable human. The agent formats; the human decides.",["risk","product","eng"]],
+ ["brainkit-init","runs","Stands up the institution's governed context as a versioned, owner-approved artifact — the pattern, made an object with a lifecycle.",["risk","product","exec"]],
+]],
+["Reviewer agents","Second opinions with a verdict protocol. Five ship and work immediately; two are templates carrying your rules.",[
+ ["discovery-boundary-reviewer","runs","Catches solutioning leaking into discovery (D4) and prototypes that over-specify (D8).",["product"]],
+ ["data-governance-reviewer","runs","Checks a discovery run against the register — do the cited controls actually cover the cited risks?",["product","risk"]],
+ ["model-risk-reviewer","runs","Independent challenge of a model or prompt change before it ships (HG-0006).",["risk"]],
+ ["change-watch","runs","Continuous assurance ① Watch — surfaces regulation, certificate, CVE and drift changes that may invalidate a standing position.",["risk","ops","sec"]],
+ ["risk-reviewer","runs","Continuous assurance ② Assess — produces the ROUTE verdict that stops a signal falling on the floor.",["risk","ops"]],
+ ["hard-stop-reviewer","mount","Your project's non-negotiables, checked on every diff. The FAIL/VERDICT protocol ships; the checklist is yours.",["eng","risk"]],
+ ["contract-conformance-reviewer","mount","Your binding API conventions, checked on every diff.",["eng"]],
+]],
+["Guardrail hooks","Pre-write blocks that fire the moment the agent would do the wrong thing rather than afterwards — once you merge the settings snippet that wires them. Nothing here is always-on out of the box.",[
+ ["pii-guard","mount","Blocks PII-shaped literals in anything written. Ships UAE patterns — swap them for your jurisdiction.",["sec","risk"]],
+ ["spec-tripwire","mount","Blocks edits to the API contract on a feature branch. Point it at your contract file.",["eng"]],
+ ["test-tripwire","runs","Blocks test-disabling edits on working branches. A red bar goes green by fixing code, never by weakening the test. Needs no content of yours — only the wiring.",["eng"]],
+]],
+["Gates","Mechanical checks that block the merge. Each answers one question and cannot be argued with.",[
+ ["validate.mjs · D1–D9","runs","The discovery gate validator: framing, evidence, scope, no-solutioning, data governance, brand, tangibility, the validation loop.",["product"]],
+ ["discovery-link-check","runs","The waist gate — no feature enters the build without a gate-green hand-off.",["product","eng"]],
+ ["product-eval-check","runs","A release scores every D1 success measure against a fresh eval bound to the shipping commit. A regression blocks. Unit-tested, but not yet invoked by the reference CI — wire it.",["product","exec"]],
+ ["test-integrity-check · Q1b","runs","The anti-reward-hacking gate — diffs the test surface against the merge base.",["eng","audit"]],
+ ["sast-check · Q2","runs","Validates the SAST report semantically: an error-level finding blocks.",["sec"]],
+ ["secrets-scan · Q4","runs","Scans the working tree and git history — a deleted secret is still leaked.",["sec"]],
+ ["supply-chain-check · Q4","runs","SBOM, dependency audit and build provenance, output-validated.",["sec"]],
+ ["control-plane-check","runs","Every control-plane file keeps a real, non-builder owner. A placeholder fails (HG-0002).",["sec","eng","risk"]],
+ ["change-envelope-check","runs","The governed change object: plans reconciled against a fresh compile, classification authority, compound production authorization.",["risk","exec"]],
+ ["product-approval-check · PA1/PA2","runs","Approvals must resolve to human registry identities holding the role. Builders cannot issue second-line approvals.",["risk","exec"]],
+ ["architecture-assurance-check · A1–A5","runs","Threat → control → test traceability, including for the AI harness itself. Material open findings block.",["risk","sec"]],
+ ["identity-registry-check","runs","Agents hold no approver roles; second line and builders are disjoint sets.",["risk"]],
+ ["operational-readiness-check · R1–R6","runs","Rollback, kill switch, capacity, continuity — with freshness windows on each attestation.",["ops","exec"]],
+ ["operations-signal-check","runs","Triage and traceability as the exit condition for a signal. A signal with no route fails.",["ops"]],
+ ["model-provenance-check","runs","Eval pinned to the shipping model and prompt; the report cited by ref and sha256, re-hashed by the gate.",["risk"]],
+ ["evidence-seal-check","runs","The release bundle, hash-chained and semantically verified, bound to the released commit (HG-0003).",["audit"]],
+ ["decision-log-check","runs","An append-only hash chain of the agent's decisions — editing, reordering or dropping one breaks it.",["audit","risk"]],
+ ["assurance-cycle-check","runs","A signed record covering all six lifecycle steps, with an unresolved-findings register. An overdue finding blocks.",["audit","risk"]],
+ ["control-catalog-check","runs","The maturity state of record — and it cannot overstate itself.",["audit","exec"]],
+ ["adapter-check","runs","An external-system mapping to a control the catalog does not have fails. A mapping to nothing is not integration.",["sec","audit"]],
+ ["routine-change-check · HG-0013","runs","The graduated-autonomy lane, with an absolute in-code floor the envelope cannot widen. Unit-tested, but not yet invoked by the reference CI — wire it.",["eng","risk"]],
+ ["data-lifecycle-check","runs","Bounded retention and a right-to-erasure disposition for every data category.",["risk"]],
+ ["comprehension-check","runs","A high or critical change needs a human-authored comprehension record with a named non-agent owner who can explain it. Metrics reported, never gated on.",["eng","risk","audit"]],
+ ["config-reconciliation-check","runs","The approved control-plane configuration reconciled against live observations — a weakened setting surfaces as drift.",["sec","risk"]],
+ ["guardrail-policy-check","runs","A policy claiming enforcement through a mechanism that does not exist is refused.",["sec","risk"]],
+ ["release-subject-check","runs","Evidence binds to a built artifact digest, not just a symbolic ref. Reusing a bundle for a different artifact fails.",["audit","eng"]],
+ ["brainkit-check · brainkit-registry-check","runs","The governed context is versioned, owner-approved and revocable — pinning a revoked release fails.",["risk","product"]],
+ ["platform-activation-check","runs","A control may not claim platform-enforced without verified activation evidence.",["sec","exec","audit"]],
+ ["residency-check","runs","Data and model traffic stay inside the declared jurisdiction (HG-0011).",["risk","sec"]],
+ ["assurance-case-check","runs","The structured assurance argument holds together — claims, evidence, and the links between them.",["audit","risk"]],
+ ["doc-integrity-check","runs","Generated documentation cannot drift from the machinery it describes — including the adoption copy map.",["eng","audit"]],
+ ["self-claims-check","runs","The method's own claims about itself must resolve to something real. It grades its own marketing.",["exec","audit"]],
+]],
+["Seams you mount","Where your institution plugs in. The core stays vendor- and domain-neutral because these are data, not code.",[
+ ["discovery/brand/design.md","mount","Your design tokens, voice and layout rules. Every visual artifact renders from this — swap it and the same run renders in another brand.",["product"]],
+ ["data-risk-register/","mount","Your regulation → risk → control → residual chain. Gate D6 reads it.",["risk","product"]],
+ ["identities.json","mount","Who may approve what. Agents hold no approver roles; second line and builders stay disjoint.",["risk"]],
+ ["control-catalog.json","mount","Every control and its maturity state, on the five-state model. The gate runner reads its lanes and path scoping from here.",["audit","exec","risk"]],
+ ["model-manifest.json","mount","Your model inventory: pinning, evals, monitoring metrics, suspension threshold, outage fallback.",["risk"]],
+ ["service-readiness.json","mount","Rollback, kill-switch, capacity and continuity attestations, each with a rehearsal date.",["ops"]],
+ ["operations-signal.json","mount","The signal log: type, severity, route, and a resolving link.",["ops"]],
+ ["data-lifecycle.json","mount","Retention and erasure disposition per data category.",["risk"]],
+ ["routine-envelope.json","mount","Which narrow change classes may take the fast lane, owned by the second line and expiring.",["eng","risk"]],
+ ["product-evals.json","mount","The success measures a release is scored against — written in discovery, checked at release.",["product"]],
+ ["attestation-issuers.json","mount","The public keys that make an anchored attestation verifiable.",["audit","sec"]],
+ ["token-ledger.json","mount","One entry per iteration. Aggregates per iteration and per milestone; seals into the release record.",["exec"]],
+ ["CODEOWNERS","mount","Control-plane ownership. A placeholder team fails the gate by design.",["sec","eng"]],
+ ["brainkit/","mount","Your institution's governed context as an object: identity and design language, terminology, architecture principles, technology policy, decision rights, and an approved source register. Versioned, owner-approved, revocable.",["risk","product","exec"]],
+ ["config-baseline.json","mount","The approved control-plane configuration that live observations are reconciled against.",["sec","risk"]],
+ ["identity-map.json","mount","The mapping from registry identities to real platform accounts, with its own reconciliation record.",["risk","sec"]],
+ ["provider-selection.json","mount","Which model providers are permitted, on what terms.",["risk"]],
+ ["assurance-sla.template.json","mount","The service levels the assurance cycle itself must meet.",["risk","audit"]],
+ ["routine-controller.yml","mount","The reference auto-merge controller — separated bot identity, gated on routine-qualified plus config reconciliation.",["eng","sec"]],
+ ["profiles/","mount","Base, jurisdiction and product profiles as pure data — what the policy compiler reads to classify a change. An unprofiled change is blocked.",["risk","exec","eng"]],
+ ["ci.yml","mount","The reference workflow that runs every gate on each pull request. Own it in CODEOWNERS — it is itself control plane — and add your project's Q-gates.",["eng","sec"]],
+ ["adapters/","mount","Signed envelopes mapping external systems — branch protection, a GRC register — to catalog controls. Left on ADOPT placeholders it reports \"declared, not active\".",["sec","audit"]],
+ ["settings.hooks.json","mount","The snippet that wires the three hooks into your settings. Until it is merged, no hook fires.",["eng","sec"]],
+]],
+["Runbooks","The honest half: work a plugin structurally cannot do, written down rather than left for you to discover.",[
+ ["activation-runbook","yours","Paper to platform: real CODEOWNERS teams, branch protection with no bypass, a least-privilege agent identity. The step that makes controls enforced rather than written.",["sec","eng","exec"]],
+ ["pilot-playbook","yours","Six staged cohorts plus the adversarial checklist, marked CI-proven versus live.",["exec","risk"]],
+ ["governance-and-accountability","yours","The accountable senior manager, board oversight, change control, and the production pilot.",["exec"]],
+ ["independent-assurance","yours","Second and third lines, the auditor portal, the external WORM anchor.",["audit"]],
+ ["model-risk-operating-model","yours","An independent model-risk function and runtime drift monitoring.",["risk"]],
+ ["data-protection","yours","The real-PII control surface, DSAR handling, the full register.",["risk"]],
+ ["identity-and-secrets","yours","Least-privilege agent identity and vaulted secrets.",["sec"]],
+ ["security-testing-and-resilience","yours","DAST, pentest, threat modelling, and operational resilience.",["sec","ops"]],
+]],
+["Shared machinery","The parts every persona touches indirectly.",[
+ ["gate-runner","runs","Lanes and path scoping read from the catalog. The tamper core never skips, and every skip is recorded with its reason.",["eng","audit"]],
+ ["attestations","runs","Real ed25519 verification, in process — a flipped byte fails. Platform mechanisms report UNVERIFIED-HERE until you wire them, which is an honest gap rather than a silent pass.",["audit","sec"]],
+ ["policy-compiler","runs","Classification compiles the path — gates, control functions, evidence, passport sections. Monotonic by construction, so a change cannot classify itself low.",["risk"]],
+ ["render.mjs","runs","A zero-dependency branded renderer: document, deck, prototype. Content is data; presentation comes only from your tokens.",["product"]],
+ ["render-office.mjs","runs","Real .xlsx, .docx and .pptx as valid OOXML — inspected by the brand gate, not just generated.",["product"]],
+ ["token-report","runs","Per-iteration and per-milestone spend. Deliberately telemetry, never a merge gate.",["exec"]],
+ ["core/floor-*","runs","The Factory Floor: nineteen modules carrying the operating surface — decision, drift, degradation, MI, ops-signal, PII, projection, templates, webhook, export, keeper.",["ops","exec","risk"]],
+ ["compiled-requirements","runs","What the policy compiler emits, as a first-class object the gates read.",["risk"]],
+ ["identity-map / residency","runs","Identity resolution against real platform accounts, and jurisdiction enforcement for data and model traffic.",["risk","sec"]],
+ ["generate-scorecard","runs","Emits the maturity scorecard from the control catalog — the grading is generated, not asserted.",["exec","audit"]],
+ ["discovery/templates/","runs","Seven artifact templates: research log, synthesis, problem statement, data governance, prototype, stakeholder reaction, hand-off.",["product"]],
+]],
+["Worked examples","Reference instances that stay gate-green, so you can see the shape before you author your own.",[
+ ["register-example","runs","The D6 chain end to end: regulation, risk, control, residual verdict.",["risk","product"]],
+ ["change-example","runs","CHG-2026-0042 — a high-tier UAE retail lending change, in delivery, with its compiled control plan.",["risk"]],
+ ["evidence-example","runs","A real, tamper-evident sealed manifest with its artifacts.",["audit"]],
+ ["assurance-example","runs","A signed assurance cycle and a hash-chained decision log.",["audit"]],
+ ["operations-example","runs","Meridian Trust — a realistic signal log closing the loop across all four routes.",["ops"]],
+ ["product-eval-example","runs","A release scored against the success measures its discovery wrote.",["product"]],
+ ["routine-example","runs","A conforming routine change inside a valid, unexpired envelope.",["eng"]],
+ ["token-ledger-example","runs","Iterations across two milestones, aggregated per milestone.",["exec"]],
+ ["brand/examples/","runs","A second brand profile — Meridian Trust — proving the seam swap: the same run rendering in another institution's tokens.",["product"]],
+]],
+];
+
+// The lists below name what is worth knowing; these are the true counts in the repository.
+const TRUE_COUNTS = {"Skills":11,"Reviewer agents":7,"Guardrail hooks":3,"Gates":46,
+  "Seams you mount":23,"Runbooks":9,"Shared machinery":23,"Worked examples":19};
+const TRUE_TOTAL = Object.values(TRUE_COUNTS).reduce((a,b)=>a+b,0);
+const ROLE_LABEL = {exec:"Exec",product:"Product",eng:"Eng",risk:"Risk",audit:"Audit",ops:"Ops",sec:"Security"};
+const KIND_LABEL = {runs:"Runs",mount:"Mount",yours:"Yours"};
+let kRole = null;
+
+function renderKit(){
+  const body = document.getElementById('kitbody'); if (!body) return;
+  let shown = 0;
+  const html = KIT.map(([grp, why, items]) => {
+    const vis = items.filter(it => !kRole || it[3].includes(kRole));
+    if (!vis.length) return '';
+    shown += vis.length;
+    return `<div class="kitgrp">
+      <div class="kitgrp-h"><h3>${grp}</h3><span class="c">${kRole ? vis.length+' of '+(TRUE_COUNTS[grp]||items.length) : (TRUE_COUNTS[grp]||items.length)}${!kRole && TRUE_COUNTS[grp] && TRUE_COUNTS[grp]!==items.length ? ' · '+items.length+' named here' : ''}</span><span class="w">${why}</span></div>
+      <div class="kititems">${vis.map(([nm,kind,d,roles]) => `
+        <div class="kititem">
+          <div class="top"><span class="nm">${nm}</span><span class="kind kind-${kind}">${KIND_LABEL[kind]}</span></div>
+          <div class="d">${d}</div>
+          <div class="tags">${roles.map(r=>ROLE_LABEL[r]).join(' · ')}</div>
+        </div>`).join('')}</div>
+    </div>`;
+  }).join('');
+  body.innerHTML = html || '<div class="kitempty">Nothing is scoped to that role — which would itself be a finding. Clear the filter.</div>';
+
+  const all = KIT.flatMap(g => g[2]).filter(it => !kRole || it[3].includes(kRole));
+  const by = k => all.filter(i => i[1] === k).length;
+  document.getElementById('kitstats').innerHTML = [
+    [kRole ? all.length : TRUE_TOTAL, kRole ? 'Named here for this role' : 'Instruments in total'],
+    [by('runs'), 'Ship and run'],
+    [by('mount'), 'Seams you mount'],
+    [by('yours'), 'Runbooks — yours to do'],
+  ].concat(KIT.slice(0,4).map(([g,,items]) => [kRole ? items.filter(it=>it[3].includes(kRole)).length : (TRUE_COUNTS[g]||items.length), g]))
+   .map(([n,l]) => `<div><p class="n">${n}</p><p class="l">${l}</p></div>`).join('');
+}
+const kchips = Array.from(document.querySelectorAll('.kchip'));
+kchips.forEach(c => c.addEventListener('click', () => {
+  kRole = (kRole === c.dataset.krole) ? null : c.dataset.krole;
+  kchips.forEach(x => x.setAttribute('aria-pressed', String(x.dataset.krole === kRole)));
+  renderKit();
+}));
+renderKit();
+
+/* ── reviewer-capacity arithmetic ─────────────────────── */
+const ciPr = document.getElementById('ci-pr'), ciMin = document.getElementById('ci-min'), ciCap = document.getElementById('ci-cap');
+let ciTouched = false;
+function recalc(){
+  if (!ciPr) return;
+  const pr = Math.max(1, +ciPr.value || 0), min = Math.max(1, +ciMin.value || 0), cap = Math.max(1, +ciCap.value || 0);
+  const hrs = (pr * min) / 60;
+  const fte = hrs / cap;
+  const afford = (cap * 60) / pr;
+  document.getElementById('co-hrs').textContent = hrs.toFixed(1);
+  document.getElementById('co-fte').textContent = fte.toFixed(1);
+  document.getElementById('co-min').textContent = afford.toFixed(0);
+  const note = document.getElementById('co-note');
+  if (!ciTouched){
+    note.innerHTML = '<b>These are placeholder figures, not a recommendation.</b> Nothing in the method measures a reviewer ratio — change the numbers above to your own and the reading below becomes meaningful.';
+    return;
+  }
+  if (fte <= 1.5) note.innerHTML = 'One reviewer, or close to it. Review depth is affordable here — this is the regime where four-eyes is real. Watch the middle number as throughput grows.';
+  else if (fte <= 3) note.innerHTML = 'A small reviewing group. Workable, but review is now a named job rather than something done between other tasks — staff it explicitly or it degrades quietly.';
+  else note.innerHTML = '<b>This is the comprehension-debt regime.</b> At this throughput the reviewing capacity is the constraint on the whole system, and the failure mode is not a red build — it is a green one nobody read. Either fund the reviewers, or slow the loop deliberately.';
+}
+[ciPr, ciMin, ciCap].forEach(el => el && el.addEventListener('input', () => { ciTouched = true; recalc(); }));
+recalc();
+tabs.forEach((t,i) => t.addEventListener('keydown', e => {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+  next.focus(); showTab(next.id);
+}));
+</script>
+</body>
+</html>
