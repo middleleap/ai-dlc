@@ -16,6 +16,11 @@ jobs:
       - name: Validate manifests, skills, and agents
         run: node scripts/validate-marketplace.mjs
 
+      # The validator is the only gate this repo has, so it is itself gated: the
+      # suite builds throwaway git repos and asserts every violation still fails.
+      - name: Validator self-test
+        run: node --test scripts/validate-marketplace.test.mjs
+
       - name: Brand contrast gate (WCAG AA)
         run: node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs
 
