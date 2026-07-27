@@ -1,7 +1,19 @@
 # Reference CI workflow for a Loom adoption. Copy to .github/workflows/ci.yml (a control-plane
-# file — own it in CODEOWNERS, HG-0002). It runs every bundled gate on each PR, so the Loom's
-# controls are actually ENFORCED, not merely documented. `control-plane-check.mjs` names this
-# exact path as a CONTROL_TARGET; this file is what it guards.
+# file — own it in CODEOWNERS, HG-0002). `control-plane-check.mjs` names this exact path as a
+# CONTROL_TARGET; this file is what it guards.
+#
+# ONE SOURCE OF TRUTH (rc.26). Until now this file carried an explicit list of every gate, and
+# `core/gate-runner.mjs` derived the same list from the control catalog — two paths that had to be
+# kept saying the same thing. They did not: ten gates once ran here with no catalog entry, so the
+# runner would not have executed a single one of them. `ci-catalog-check` closed that hole, but
+# closing a hole is not the same as not having two paths, so the list is gone. CI now asks the
+# CATALOG what to run, per lane. Adding a gate means adding a control — there is nowhere else to
+# put it, and nothing to keep in step.
+#
+# What the runner gives you that a list cannot: risk-proportionate execution. It runs what THIS
+# diff implicates, and RECORDS every skip with its reason (`gate-run-*.json` below). A control
+# whose compiled plan requires it becomes unskippable whatever the diff touches. Skipping is never
+# silent — that property is why replacing the list is safe rather than merely tidier.
 #
 # ADOPT: add your project's own Q-gates (build+unit, SAST, integration) per
 # ../loom/references/delivery-harness.md, and fill the SAST/SCA seams (Snyk/Chainguard, see
@@ -28,74 +40,40 @@ jobs:
       - name: Bundled test suites (discovery gates + renderer + the gate tests)
         run: node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
 
-      - name: Warp & control-plane gates
+      - name: Control catalog is complete and honest
+        # Run before the runner, because the runner TRUSTS the catalog: these two gates are what
+        # make that trust earned. The catalog may not overstate a control's state, and it may not
+        # omit a gate this workflow runs — the second is what stops the list-vs-runner divergence
+        # from coming back in a new form.
         run: |
-          node scripts/control-plane-check.mjs        # HG-0002 — control-plane owned in CODEOWNERS
-          node scripts/control-catalog-check.mjs       # control state of record cannot overstate itself
-          node scripts/ci-catalog-check.mjs            # …and cannot OMIT a gate this workflow runs (the runner only selects catalogued controls)
-          node scripts/discovery-link-check.mjs        # HG-0007 — features trace to a green hand-off
-          node scripts/template-parity-check.mjs      # the guided floor form cannot drift from the git template
-          node scripts/identity-map-check.mjs         # P6 — the join from a signed subject to a registry identity
-          node scripts/residency-check.mjs            # D0.1/P1 — a floor may not run against an unsigned residency record
-          node scripts/freeze-stamp-check.mjs         # D4.1 — no frozen artifact was edited in place
-          node scripts/drift-check.mjs                # D4.2 — no NEW claim against a page that has moved on
-          node scripts/floor-only-check.mjs           # D3.3 — a floor-only note must never reach the record
-          node scripts/projection-capability-check.mjs # WS1 — the projector is OBSERVED unable to write git
-          node scripts/approval-surface-check.mjs      # D5.1/D5.4 — the approvals page matches the COMPILED roles
-          node scripts/floor-keeper-check.mjs          # D6.3/D6.4 — keepers hold no grant where approvals live; a paused floor says so
-          node scripts/routine-change-check.mjs        # HG-0013 · normal-human-review — an unqualified routine CLAIM fails; ordinary work passes
+          node scripts/control-catalog-check.mjs
+          node scripts/ci-catalog-check.mjs
+          node scripts/self-claims-check.mjs   # bundle-only; inert in an adopted tree
 
-      - name: Product-governance gates (envelope · PA1/PA2 · A1–A5 · identities)
+      - name: Gates — pr lane (risk-proportionate; every skip recorded)
+        run: node core/gate-runner.mjs --lane pr --base origin/main --out gate-run-pr.json
+
+      - name: Gates — scheduled lane (runtime assurance; safe to run per PR)
+        run: node core/gate-runner.mjs --lane scheduled --out gate-run-scheduled.json
+
+      - name: Gates — build · release · deploy lanes
+        # rc.11 WS1: release-evidence checks stopped masquerading as PR-source checks. On a PR
+        # these mostly find nothing to check and say so; on a release build they are the gate.
         run: |
-          node scripts/identity-registry-check.mjs     # approvals resolve; agents never approve; 2nd line ∩ builders = ∅
-          node scripts/change-envelope-check.mjs        # classified, compiled, reconciled, state receipts + compound prod auth
-          node scripts/product-approval-check.mjs       # PA1 before Develop, PA2 before launch — approvals resolve
-          node scripts/architecture-assurance-check.mjs # A1–A5 with threat→control→test traceability
-          node scripts/adapter-evidence-check.mjs       # D5.3 — one adapter, one control; declared is not active
-          node scripts/operational-readiness-check.mjs  # R1–R6 with freshness windows — stale drills block
-          node scripts/adapter-check.mjs                 # enterprise adapters map to real catalog controls
-          node scripts/provider-selection-check.mjs     # one role, one chosen provider — mounted, and required-when-compiled
+          node core/gate-runner.mjs --lane build   --out gate-run-build.json
+          node core/gate-runner.mjs --lane release --out gate-run-release.json
+          node core/gate-runner.mjs --lane deploy  --out gate-run-deploy.json
 
-      - name: Runtime assurance gates (scheduled lane — also safe to run per PR)
-        run: |
-          node scripts/assurance-cycle-check.mjs        # signed six-step cycle records, second-line confirmed
-          node scripts/assurance-case-check.mjs         # rc.14 WS6 — signal-triggered cases within SLA, mapped, contained, second-line decided
-          node scripts/decision-log-check.mjs           # replayable, append-only agent decision log
-          node scripts/platform-activation-check.mjs    # rc.12 WS2 — platform-enforced graduation: live observation, bypass-tested, independently signed, fresh
-          node scripts/config-reconciliation-check.mjs  # rc.12 WS2.4 — live config reconciled against the approved baseline; drift suspends routine auto-merge
+      # ── The four the runner structurally cannot drive, each for a stated reason ──────────────
+      # This list is short ON PURPOSE and every entry is `execute: false` in the catalog with an
+      # `execute_note` saying who runs it instead. If it grows, something is wrong: the default
+      # answer for a new gate is a catalog entry, not a line here.
 
-      # Risk-proportionate alternative to the explicit lists above: the runner reads the
-      # catalog's lanes + path scopes and executes only what this diff implicates —
-      # recording every skip. Use it once your catalog lanes are tuned:
-      #   node core/gate-runner.mjs --lane pr --base origin/main --out gate-run.json
-      # and on release:  node core/gate-runner.mjs --lane release --out gate-run-release.json
-
-      - name: Test integrity & security gates (Q1b · Q2 · Q4)
-        run: |
-          node scripts/test-integrity-check.mjs        # Q1b — tests didn't get weaker on the way to green
-          node scripts/sast-check.mjs                   # Q2 — SAST output is real and within policy
-          node scripts/secrets-scan.mjs                 # Q4 — no secrets in tree OR history
-          node scripts/supply-chain-check.mjs           # Q4 — SBOM + audit + provenance are real
-
-      - name: Model, evidence, data & feedback gates
-        run: |
-          node scripts/model-provenance-check.mjs      # HG-0006 — models pinned/tiered/evaluated, reports sealed
-          # Bind the eval to the PR HEAD sha, never GITHUB_SHA (the ephemeral merge commit on a PR).
-          node scripts/product-eval-check.mjs --commit "${{ github.event.pull_request.head.sha || github.sha }}"  # discovery-linked, measures green, fresh vs the head commit
-          node scripts/release-subject-check.mjs        # rc.11 WS1 — the immutable artifact subject is coherent (real commit, digest-pinned artifact, trusted builder)
-          node scripts/release-attestation-check.mjs    # rc.11 WS1 — source→artifact→evals→anchor all bind to ONE digest (closes the F1 self-reference)
-          node scripts/evidence-seal-check.mjs          # HG-0003 — release evidence sealed, commit-bound (40-hex, no symbolic subject), semantically verified
-          node scripts/data-lifecycle-check.mjs         # retention & right-to-erasure declared
-          node scripts/operations-signal-check.mjs      # Run→Discovery signals triaged & traceable
-          node scripts/brainkit-check.mjs               # rc.8 — institutional BrainKit conformance (mandatory-when-compiled)
-          node scripts/brainkit-registry-check.mjs      # rc.15 WS7 — BrainKit estate registry: no repo runs a revoked release
-          node scripts/comprehension-check.mjs          # rc.15 WS8 — high-tier changes carry a human understanding record
-          node scripts/guardrail-policy-check.mjs       # rc.13 WS4 — runtime-neutral guardrail coverage is explicit + honest (no implied protection)
-
-      - name: Cost telemetry (report, never a gate)
-        run: node scripts/token-report.mjs --check   # validate the token ledger is well-formed; spend never blocks a merge
+      - name: Q1b test integrity (needs the merge base, which the runner does not supply)
+        run: node scripts/test-integrity-check.mjs --base origin/main
 
       - name: Discovery runs are gate-green (D1–D9)
+        # Runs per discovery-run DIRECTORY, so it is a loop rather than one invocation.
         # rc.13 WS3: the data-risk register is MANDATORY-WHEN-COMPILED — if any governed change's
         # compiled plan requires the data_risk_register capability (a regulated/institution profile
         # is in its envelope), a missing register FAILS D6 with NO flag. --require-register /
@@ -108,6 +86,19 @@ jobs:
           for run in discovery/runs/*/; do
             node discovery/gates/validate.mjs "$run" --require-register
           done
+
+      - name: Cost telemetry (report, never a gate)
+        # Not a control, so deliberately not in the catalog: cost is a signal for humans and must
+        # never block a merge. `ci-catalog-check` exempts it by name, in a printed list.
+        run: node scripts/token-report.mjs --check
+
+      - name: Gate-run records (what ran, what skipped, and why)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loom-gate-runs
+          path: gate-run-*.json
+          if-no-files-found: warn
 
   # Routine auto-merge lane (HG-0013) — its OWN job, hence its OWN status context. GitHub
   # reports a check per job, not per step: while this lived as a step inside `gates`, an
@@ -138,14 +129,16 @@ jobs:
 # rule is that no such claim may be produced while ANY mandatory item is still adopt-pending.
 #
 # That rule makes it the wrong shape for a per-PR gate on a FRESH adoption. A repo that has just run
-# adopt.mjs has ~23 adopt-pending items by design — the installer never fakes activation — so wiring
+# adopt.mjs has adopt-pending items by design — the installer never fakes activation — so wiring
 # this in on day one gives every new adopter a permanently red build with no path to green except
 # completing the whole adoption. A gate that is red from the first commit is a gate that gets
-# deleted, and deleting it is worse than never adding it.
+# deleted, and deleting it is worse than never adding it. (`--tier core` makes that list much
+# shorter, but it is still not zero on day one.)
 #
-# Run it as a COMMAND while adopting (`node scripts/adoption-status.mjs` to see what is outstanding,
-# then `attest-adoption` once nothing is), and add it as a job here once your adoption is attested —
-# from that point it is exactly the right gate, because it fails if the adoption ever regresses.
+# Run it as a COMMAND while adopting (`node scripts/adoption-status.mjs --run` to see what is
+# outstanding and what actually passes, then `attest-adoption` once nothing is), and add it as a job
+# here once your adoption is attested — from that point it is exactly the right gate, because it
+# fails if the adoption ever regresses.
 #
 #   - name: adoption attested (add once your adoption is complete)
 #     run: node scripts/adoption-attest.mjs

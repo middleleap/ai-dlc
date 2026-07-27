@@ -157,6 +157,14 @@ and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (
 - **Brand (D7):** edit `discovery/brand/design.md` — entity name, banner, and the token
   *values* (never the token *names*; everything downstream reads names). If the org's brand
   lives elsewhere (e.g. a design-system skill), transcribe its values into the tokens.
+- **Base profile:** the compiler needs one, and there are two. `profiles/standard.json` is the
+  warp and nothing more — four-eyes merge, the waist gate, spec-first, quality gates — for a team
+  building with AI under ordinary engineering discipline. `profiles/regulated-bank.json` adds what
+  a regulated entity owes its regulator: PA1/PA2 product approval, architecture assurance,
+  operational readiness, the second-line hold, control-function approvers. It is strictly stronger,
+  not different: a test asserts `standard` requires a subset of it at every tier, so choosing
+  `standard` can never give you a control the bank profile lacks. Name your choice in a governed
+  change's `required_profiles`; layer a jurisdiction and product profile on top.
 - **Register (D6):** the installer does **not** place a register — a register it wrote would
   assert risks nobody accepted. Copy the worked example in first
   (`cp -r harness/register-example/ docs/governance/data-risk-register/`) so the pipeline is

@@ -21,7 +21,9 @@ jobs:
 
       - name: Loom doc-integrity — generated docs match their source of truth (rc.7 W4/W6)
         working-directory: plugins/middleleap-loom/skills/loom-adopt/harness
-        run: node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
+        run: |
+          node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
+          node scripts/self-claims-check.mjs     # rc.26 — the bundle is held to its own claims
 
       - name: Loom bundle — adoption dry-run (manifest-driven install via adopt.mjs — rc.8 WS1)
         run: |
@@ -238,6 +240,58 @@ jobs:
           node scripts/secrets-scan.mjs
           node scripts/supply-chain-check.mjs
           node scripts/model-provenance-check.mjs
+          # rc.25 — three NEGATIVE tests for the adversarial rows the pilot playbook grades
+          # CI-proven. That grade means "a negative bypass test in this workflow demonstrates the
+          # rejection"; until now these three rows had only the positive runs above, so the
+          # playbook was claiming a standard of evidence it did not meet for its own checklist.
+          # Each attack is staged, the gate is asserted to REJECT it, and the fixture is restored.
+          # Restores come from a snapshot taken here, NOT from $H: `P`/`H` are repo-relative (L29)
+          # and everything below `cd "$A"` (L90) runs from the dry-run tree, so an $H path does not
+          # resolve — the same trap the residency fixture comment above records. A snapshot needs no
+          # path resolution and cannot go stale. `git checkout --` cannot restore either: the
+          # dry-run tree is a copy, not a working tree.
+          cp docs/governance/model-manifest.json "$RUNNER_TEMP/pristine-model-manifest.json"
+          cp docs/governance/evidence/eval-report-delivery-loop.json "$RUNNER_TEMP/pristine-eval-report.json"
+          cp docs/governance/evidence/dependency-audit.json "$RUNNER_TEMP/pristine-dependency-audit.json"
+          #
+          #   ① Stale model evaluation — the eval was run against a superseded pin. This is
+          #      model-risk's analogue of Q1b: a passing eval for a model you are not shipping.
+          python3 - <<'PY'
+          import json
+          p = 'docs/governance/model-manifest.json'
+          d = json.load(open(p))
+          d['models'][0]['eval']['evaluated_model_id'] = 'example-model@2025-09'
+          json.dump(d, open(p, 'w'), indent=2)
+          PY
+          if node scripts/model-provenance-check.mjs; then
+            echo "::error::model-provenance accepted an eval run against a DIFFERENT pin than the shipping model — the stale-eval check is gone"; exit 1; fi
+          cp "$RUNNER_TEMP/pristine-model-manifest.json" docs/governance/model-manifest.json
+          #   ② Fabricated evaluation artifact — the report was edited after its digest was cited.
+          #      A declared pass is not evidence; the gate re-hashes the artifact.
+          python3 - <<'PY'
+          import json
+          p = 'docs/governance/evidence/eval-report-delivery-loop.json'
+          d = json.load(open(p))
+          d['fabricated'] = 'says pass, but is not the artifact that was hashed'
+          json.dump(d, open(p, 'w'), indent=2)
+          PY
+          if node scripts/model-provenance-check.mjs; then
+            echo "::error::model-provenance accepted an eval report that no longer matches its declared sha256 — a fabricated artifact passes"; exit 1; fi
+          cp "$RUNNER_TEMP/pristine-eval-report.json" docs/governance/evidence/eval-report-delivery-loop.json
+          #   ③ Vulnerable dependency — a critical CVE in the audit the release ships on.
+          python3 - <<'PY'
+          import json
+          p = 'docs/governance/evidence/dependency-audit.json'
+          d = json.load(open(p))
+          d['critical'] = 2
+          json.dump(d, open(p, 'w'), indent=2)
+          PY
+          if node scripts/supply-chain-check.mjs; then
+            echo "::error::supply-chain accepted 2 critical vulnerabilities against a policy maximum of 0"; exit 1; fi
+          cp "$RUNNER_TEMP/pristine-dependency-audit.json" docs/governance/evidence/dependency-audit.json
+          # Restored — both gates must be green again, or a later step inherits a broken fixture.
+          node scripts/model-provenance-check.mjs
+          node scripts/supply-chain-check.mjs
           node scripts/release-subject-check.mjs       # rc.11 WS1 — coherent immutable artifact subject
           node scripts/release-attestation-check.mjs    # rc.11 WS1 — source→artifact→evals→anchor bound to one digest
           node scripts/evidence-seal-check.mjs

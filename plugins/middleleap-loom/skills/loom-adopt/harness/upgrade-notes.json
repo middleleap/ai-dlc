@@ -124,6 +124,29 @@
       ]
     },
     {
+      "version": "2.0.0-rc.25",
+      "headline": "Three adversarial-checklist rows now meet the standard the playbook sets for them",
+      "notes": [
+        "The pilot playbook defines CI-proven as \"a negative bypass test in .github/workflows/validate.yml demonstrates the rejection\". Three rows — stale model evaluation, fabricated evaluation artifact, vulnerable dependency — carried that grade with only positive gate runs behind them in CI.",
+        "The rejections were already unit-tested in scripts/*.test.mjs; what was missing was the adoption-level bypass test the playbook's own definition demands. All three now exist, and each row names its test the way every other proven row does."
+      ],
+      "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.26",
+      "headline": "The bundle is held to its own claims; CI runs from the catalog; a non-bank base profile",
+      "notes": [
+        "New `self-claims-check` gate: prose may not cite a gate that does not exist, and a CI-proven claim must name the negative test that backs it or scope itself to the part it covers. Every defect the rc.18–rc.25 review found was this one shape — a claim and its evidence drifting apart — and each was fixed by hand after a human noticed. This makes the class mechanical.",
+        "The reference CI no longer carries an explicit gate list. It asks the control catalog what to run, per lane, via core/gate-runner.mjs — so the list-vs-runner divergence that let ten gates go uncatalogued cannot recur in a new form. Four gates the runner structurally cannot drive (Q1b's merge base, the per-directory D-gate loop, the token report, adoption-attest) stay as named steps, each `execute: false` in the catalog with a stated reason. Every run uploads gate-run-*.json: what ran, what skipped, and why.",
+        "New base profile `standard` — the warp and nothing more, for a team building with AI under ordinary engineering discipline. `regulated-bank` is now one of two bases rather than the floor of the system. A test asserts standard requires a SUBSET of regulated-bank at every tier, so choosing it can never hand you a control the stronger profile lacks.",
+        "template-parity-check finally has a regression suite, retiring the one catalog entry that had to admit it had none."
+      ],
+      "action_required": [
+        "If you copied the old ci.yml, take the new one: it is behaviourally equivalent (same gates, same fail-closed results) but sourced from the catalog. Keep your own Q-gate additions.",
+        "Non-regulated adopters: name `standard` in a governed change's required_profiles instead of `regulated-bank`. Regulated adopters change nothing."
+      ]
+    },
+    {
       "version": "2.0.0-rc.27",
       "headline": "Brownfield assessment — point it at an existing repository",
       "notes": [
