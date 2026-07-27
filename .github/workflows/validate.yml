@@ -242,8 +242,15 @@ jobs:
           # CI-proven. That grade means "a negative bypass test in this workflow demonstrates the
           # rejection"; until now these three rows had only the positive runs above, so the
           # playbook was claiming a standard of evidence it did not meet for its own checklist.
-          # Each attack is staged, the gate is asserted to REJECT it, and the fixture is restored
-          # from $H (the dry-run tree is a copy, so `git checkout --` cannot restore it).
+          # Each attack is staged, the gate is asserted to REJECT it, and the fixture is restored.
+          # Restores come from a snapshot taken here, NOT from $H: `P`/`H` are repo-relative (L29)
+          # and everything below `cd "$A"` (L90) runs from the dry-run tree, so an $H path does not
+          # resolve — the same trap the residency fixture comment above records. A snapshot needs no
+          # path resolution and cannot go stale. `git checkout --` cannot restore either: the
+          # dry-run tree is a copy, not a working tree.
+          cp docs/governance/model-manifest.json "$RUNNER_TEMP/pristine-model-manifest.json"
+          cp docs/governance/evidence/eval-report-delivery-loop.json "$RUNNER_TEMP/pristine-eval-report.json"
+          cp docs/governance/evidence/dependency-audit.json "$RUNNER_TEMP/pristine-dependency-audit.json"
           #
           #   ① Stale model evaluation — the eval was run against a superseded pin. This is
           #      model-risk's analogue of Q1b: a passing eval for a model you are not shipping.
@@ -256,7 +263,7 @@ jobs:
           PY
           if node scripts/model-provenance-check.mjs; then
             echo "::error::model-provenance accepted an eval run against a DIFFERENT pin than the shipping model — the stale-eval check is gone"; exit 1; fi
-          cp "$H/governance/model-manifest.template.json" docs/governance/model-manifest.json
+          cp "$RUNNER_TEMP/pristine-model-manifest.json" docs/governance/model-manifest.json
           #   ② Fabricated evaluation artifact — the report was edited after its digest was cited.
           #      A declared pass is not evidence; the gate re-hashes the artifact.
           python3 - <<'PY'
@@ -268,7 +275,7 @@ jobs:
           PY
           if node scripts/model-provenance-check.mjs; then
             echo "::error::model-provenance accepted an eval report that no longer matches its declared sha256 — a fabricated artifact passes"; exit 1; fi
-          cp "$H/evidence-example/eval-report-delivery-loop.json" docs/governance/evidence/
+          cp "$RUNNER_TEMP/pristine-eval-report.json" docs/governance/evidence/eval-report-delivery-loop.json
           #   ③ Vulnerable dependency — a critical CVE in the audit the release ships on.
           python3 - <<'PY'
           import json
@@ -279,7 +286,7 @@ jobs:
           PY
           if node scripts/supply-chain-check.mjs; then
             echo "::error::supply-chain accepted 2 critical vulnerabilities against a policy maximum of 0"; exit 1; fi
-          cp "$H/evidence-example/dependency-audit.json" docs/governance/evidence/
+          cp "$RUNNER_TEMP/pristine-dependency-audit.json" docs/governance/evidence/dependency-audit.json
           # Restored — both gates must be green again, or a later step inherits a broken fixture.
           node scripts/model-provenance-check.mjs
           node scripts/supply-chain-check.mjs
