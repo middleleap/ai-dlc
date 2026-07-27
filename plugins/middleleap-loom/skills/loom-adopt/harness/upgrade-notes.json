@@ -169,6 +169,17 @@
         "Set FEATURE in scripts/discovery-link-check.mjs (the 'ADOPT:' line) to your own feature-item id convention. If you left it on the default and your ids look nothing like STORY-<n>, this upgrade turns a false green into a red — the gate was never gating anything.",
         "If your backlog nests items under milestones keyed by `id`, items that were silently skipped will now be examined. Expect findings on pending features with no discovery hand-off: link them, or set 'discovery_exempt: true' with a reason."
       ]
+    },
+    {
+      "version": "2.0.0-rc.29",
+      "headline": "The discovery machinery's divergence from ofbo is counted instead of remembered",
+      "notes": [
+        "The discovery tree exists twice — here as the generic harness, and in openfinance-os/ofbo as the instantiation it was extracted from on 2026-07-17. The repository instructions have carried a standing note that the two must be kept in step, with nothing mechanical behind it. The adoption dry-run proves the tree still WORKS; nothing proved it still MATCHES, and nothing counted what was owed.",
+        "New `discovery-sync-check` gate over a `discovery-sync.json` ledger: change a file under harness/discovery/ without declaring it and the build fails. Measured on arrival, 7 files had diverged across four workstreams (rc.8 WS8 BrainKit provenance, rc.10 enforcement hardening, WS3 F5 regulated requirements, Phase 1 correctness) and 1 was added here that never existed upstream — 8 of 23 carrying an outstanding port, none of it visible anywhere before now.",
+        "The gate is deliberate about what it cannot see. It reads one side, so it NEVER reports the two trees as agreeing, and it prints that limit on every run including a clean one. Only `--upstream <checkout>`, run where both repositories are reachable, performs the three-way comparison and may retire a debt; `--record` may write what this side looks like and nothing about ofbo.",
+        "The comparison uses the shared ancestor (the extraction content, which this repository's history can prove) rather than the latest recorded digest. Using the latter inverts the verdict on exactly the files that carry a debt — it reports 'forward-port' for work we hardened, which would overwrite the hardening with the content it replaced. A regression test pins it."
+      ],
+      "action_required": []
     }
   ]
 }

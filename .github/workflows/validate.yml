@@ -24,6 +24,35 @@ jobs:
         run: |
           node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
           node scripts/self-claims-check.mjs     # rc.26 — the bundle is held to its own claims
+          node scripts/discovery-sync-check.mjs  # rc.29 — the ofbo back-port debt, counted not remembered
+          # ── Negative bypass tests for the sync ledger (rc.29) ─────────────────────────────
+          # This gate's whole value is that an undeclared change CANNOT pass. Prove it both ways
+          # on a scratch copy of the tree, then restore — `git checkout --` is safe here because
+          # this step runs at the repo root, before the dry-run's `cd "$A"`.
+          #   ① a modified tracked file with no declared debt
+          printf '\n// undeclared divergence\n' >> discovery/gates/lib.mjs
+          if node scripts/discovery-sync-check.mjs; then
+            echo "::error::discovery-sync passed on a tracked file changed without declaring the port owed — the drift is silent again"; exit 1; fi
+          git checkout -- discovery/gates/lib.mjs
+          #   ② a NEW file in the tracked tree. A file that exists here and not upstream is a
+          #      divergence by definition, and is the way a tree grows apart without any diff.
+          printf '// added, never recorded\n' > discovery/gates/_ci-probe.mjs
+          if node scripts/discovery-sync-check.mjs; then
+            echo "::error::discovery-sync passed on an untracked new file in discovery/ — the ledger no longer covers the tree"; exit 1; fi
+          rm -f discovery/gates/_ci-probe.mjs
+          #   ③ the ledger may never claim a reconciliation nobody performed. `reconciled` and a
+          #      non-null upstream digest are reachable ONLY from a checkout of ofbo; if either
+          #      appears without one, the gate has started asserting what it cannot see.
+          node -e '
+            const l = require("./discovery-sync.json");
+            if (l.upstream.last_reconciled !== null) { console.error("::error::ledger claims a reconciliation; only --upstream <checkout> may set it"); process.exit(1); }
+            for (const [p, e] of Object.entries(l.files)) {
+              if (e.upstream !== null || e.state === "reconciled") { console.error(`::error::${p} asserts an upstream state nobody verified`); process.exit(1); }
+            }
+          '
+          node scripts/discovery-sync-check.mjs > /tmp/ds.txt
+          grep -q 'NOT VERIFIED' /tmp/ds.txt || {
+            echo "::error::discovery-sync reported a clean run without stating that upstream was never compared"; exit 1; }
 
       - name: Loom bundle — adoption dry-run (manifest-driven install via adopt.mjs — rc.8 WS1)
         run: |
