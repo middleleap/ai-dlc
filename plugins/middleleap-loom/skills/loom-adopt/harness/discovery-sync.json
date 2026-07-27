@@ -8,7 +8,7 @@
     "direction": "This repository is canonical for the GENERIC harness: hardening lands here and is ported out to ofbo, whose own instantiation (CBUAE register, OFBO brand profile, hard-stop checklists, Q1-Q5 workflows) stays there and is never pulled in. The long-term fix is for ofbo to ADOPT via adopt.mjs, which retires this ledger entirely: the adoption stamp already tells a local edit from an upstream update, so there would be one source and nothing to reconcile by hand.",
     "last_reconciled": null,
     "last_reconciled_ref": null,
-    "note": "NEVER RECONCILED. The states below are computed from THIS repository's history alone. Run `node scripts/discovery-sync-check.mjs --upstream <ofbo-checkout>` from a session that can reach both repositories; only that can fill in `upstream`, move `base`, or set state `reconciled`."
+    "note": "NEVER RECONCILED. The states below are computed from THIS repository's history alone. Run `node scripts/discovery-sync-check.mjs --upstream <ofbo-checkout> --reconcile --ref <sha>` from a session that can reach both repositories; that is the only thing entitled to record an upstream digest, move a shared base, or set state reconciled/behind/diverged. A stamp records that somebody LOOKED, not that everything agreed — files that still differ keep their debt and their original base."
   },
   "files": {
     "discovery/brand/design.md": {

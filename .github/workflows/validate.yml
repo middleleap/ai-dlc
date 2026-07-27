@@ -40,16 +40,33 @@ jobs:
           if node scripts/discovery-sync-check.mjs; then
             echo "::error::discovery-sync passed on an untracked new file in discovery/ — the ledger no longer covers the tree"; exit 1; fi
           rm -f discovery/gates/_ci-probe.mjs
-          #   ③ the ledger may never claim a reconciliation nobody performed. `reconciled` and a
-          #      non-null upstream digest are reachable ONLY from a checkout of ofbo; if either
-          #      appears without one, the gate has started asserting what it cannot see.
+          #   ③ the ledger may not assert more than it has seen — tested as a RULE, not by pinning
+          #      today's values. The first version of this step asserted `last_reconciled === null`
+          #      outright, which froze "never reconciled" as an invariant: the moment somebody ran
+          #      the reconciliation and committed it, CI would go red and the only fix would be
+          #      deleting this check. Forge the claim instead, and require the gate to catch it.
+          cp discovery-sync.json "$RUNNER_TEMP/ledger-pristine.json"
           node -e '
-            const l = require("./discovery-sync.json");
-            if (l.upstream.last_reconciled !== null) { console.error("::error::ledger claims a reconciliation; only --upstream <checkout> may set it"); process.exit(1); }
-            for (const [p, e] of Object.entries(l.files)) {
-              if (e.upstream !== null || e.state === "reconciled") { console.error(`::error::${p} asserts an upstream state nobody verified`); process.exit(1); }
-            }
+            const { readFileSync, writeFileSync } = require("node:fs");
+            const l = JSON.parse(readFileSync("discovery-sync.json", "utf8"));
+            l.files["discovery/gates/lib.mjs"].upstream = "sha256:invented";   // nobody has seen ofbo
+            writeFileSync("discovery-sync.json", JSON.stringify(l, null, 2));
           '
+          if node scripts/discovery-sync-check.mjs; then
+            echo "::error::the ledger carried an upstream digest with no recorded reconciliation and the gate passed — it is asserting what it cannot see"; exit 1; fi
+          cp "$RUNNER_TEMP/ledger-pristine.json" discovery-sync.json
+          #   ④ and the converse, which matters just as much: a ledger that HAS been reconciled must
+          #      still pass. This is the action the frozen assertion used to punish.
+          node -e '
+            const { readFileSync, writeFileSync } = require("node:fs");
+            const l = JSON.parse(readFileSync("discovery-sync.json", "utf8"));
+            l.upstream.last_reconciled = "2026-01-01"; l.upstream.last_reconciled_ref = "ci-probe";
+            for (const e of Object.values(l.files)) { e.upstream = e.bundle; e.base = e.bundle; e.state = "reconciled"; }
+            writeFileSync("discovery-sync.json", JSON.stringify(l, null, 2));
+          '
+          node scripts/discovery-sync-check.mjs || {
+            echo "::error::a fully reconciled ledger failed the gate — the conditional rule has been frozen back into a fixed fact"; exit 1; }
+          cp "$RUNNER_TEMP/ledger-pristine.json" discovery-sync.json
           node scripts/discovery-sync-check.mjs > /tmp/ds.txt
           grep -q 'NOT VERIFIED' /tmp/ds.txt || {
             echo "::error::discovery-sync reported a clean run without stating that upstream was never compared"; exit 1; }

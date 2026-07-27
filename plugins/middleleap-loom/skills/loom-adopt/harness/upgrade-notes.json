@@ -180,6 +180,17 @@
         "The comparison uses the shared ancestor (the extraction content, which this repository's history can prove) rather than the latest recorded digest. Using the latter inverts the verdict on exactly the files that carry a debt — it reports 'forward-port' for work we hardened, which would overwrite the hardening with the content it replaced. A regression test pins it."
       ],
       "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.30",
+      "headline": "The discovery-sync ledger can actually be reconciled — rc.29 documented a flag it never implemented",
+      "notes": [
+        "`--reconcile` was described in the gate's header, its catalog note and its release notes, and did not exist. Passing it printed the comparison and silently changed nothing, while the operator believed a sync point had been stamped. That is the precise defect class the rc.26 self-claims gate was built for — a claim with no evidence behind it — shipped inside the gate written to prevent it.",
+        "It is implemented now, with `--ref <sha>` to record which upstream commit was compared. A stamp records that somebody LOOKED, not that everything agreed: files that match become the new shared base; files that still differ keep their old base and their debt, and gain a real upstream digest.",
+        "Three states join the ledger, reachable only by having seen ofbo: `reconciled` (the two agree), `behind` (upstream moved and this side did not — forward-port), `diverged` (both moved, or no shared ancestor — needs a merge). Together with `owed` they say which way each port runs.",
+        "rc.29 asserted `last_reconciled === null` outright, in CI and in a test. That reads as strictness and is the opposite: it froze today's state as an invariant, so the first correct reconciliation would have turned the build red with no fix but deleting the check. The rule is now conditional and enforced by checkClaims — an upstream digest or a seen-only state without a recorded reconciliation fails, and a genuine reconciliation passes. CI tests both directions."
+      ],
+      "action_required": []
     }
   ]
 }

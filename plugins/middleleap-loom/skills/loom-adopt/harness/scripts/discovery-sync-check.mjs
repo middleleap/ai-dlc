@@ -27,14 +27,22 @@
 // upgrade-notes.json — bundle provenance, never installed into an adopting repo. Per-file state:
 //
 //   at-extraction  byte-identical to what was extracted; nothing owed FROM this side
-//   owed           changed here since the sync point; a port to ofbo is outstanding
+//   owed           changed here; a port to ofbo is outstanding
 //   bundle-only    added here, never existed upstream
-//   reconciled     verified equal to upstream at `last_reconciled` (only --upstream can set it)
+//   reconciled     seen, and the two agree
+//   behind         seen; upstream moved and this side did not — forward-port
+//   diverged       seen; both moved, or no shared ancestor — needs a merge
+//
+// The last three require having SEEN ofbo, so only --reconcile may set them, and checkClaims()
+// enforces that: an upstream digest or a seen-only state without a recorded reconciliation is a
+// fabricated claim and fails. The rule is CONDITIONAL, deliberately — an earlier version froze
+// "never reconciled" as a fact, which made the one correct action turn the build red.
 //
 //   node scripts/discovery-sync-check.mjs                  # verify + report the debt
 //   node scripts/discovery-sync-check.mjs --record         # accept local changes as owed
 //   node scripts/discovery-sync-check.mjs --upstream <dir> # three-way compare against a checkout
-//   node scripts/discovery-sync-check.mjs --upstream <dir> --reconcile   # stamp a real sync point
+//   node scripts/discovery-sync-check.mjs --upstream <dir> --reconcile [--ref <sha>]
+//                                                          # stamp a real sync point
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -47,15 +55,22 @@ export const TRACKED = resolve(HARNESS, 'discovery');
 
 const sha = (p) => `sha256:${createHash('sha256').update(readFileSync(p)).digest('hex')}`;
 
-/** States a tracked file can be in. `reconciled` is the only one that asserts anything about ofbo. */
+/**
+ * States a tracked file can be in. The first two are all this repository can determine on its own;
+ * the last three require having SEEN ofbo, and only reconcile() may set them.
+ */
 export const STATE = {
-  EXTRACTION: 'at-extraction',
-  OWED: 'owed',
-  BUNDLE_ONLY: 'bundle-only',
-  RECONCILED: 'reconciled',
+  EXTRACTION: 'at-extraction', // unchanged since extraction; says nothing about upstream
+  OWED: 'owed', //               changed here; a port to ofbo is outstanding
+  BUNDLE_ONLY: 'bundle-only', // added here; never existed upstream
+  RECONCILED: 'reconciled', //   seen, and the two agree
+  BEHIND: 'behind', //           seen; upstream moved and this side did not — forward-port
+  DIVERGED: 'diverged', //       seen; both moved, or no shared ancestor — needs a merge
 };
 /** States that mean "this file is knowingly different from, or unknown to, upstream". */
-const DEBT = new Set([STATE.OWED, STATE.BUNDLE_ONLY]);
+const DEBT = new Set([STATE.OWED, STATE.BUNDLE_ONLY, STATE.BEHIND, STATE.DIVERGED]);
+/** States reachable ONLY by having compared against a checkout. */
+const SEEN_ONLY = new Set([STATE.RECONCILED, STATE.BEHIND, STATE.DIVERGED]);
 
 /** Every tracked file, harness-relative, sorted. */
 export function trackedFiles(root = TRACKED) {
@@ -79,8 +94,38 @@ export function trackedFiles(root = TRACKED) {
  * front of people, not a reason to stop the build, because the port lands in a different repository
  * and cannot be a merge condition here.
  */
-export function evaluate(ledger, digests) {
+/**
+ * The ledger may not assert more than it has seen — checked as a RULE, not as a frozen fact.
+ *
+ * The first version of this gate asserted `last_reconciled === null` outright, in CI and in a test.
+ * That reads as strictness and is the opposite: it makes the ledger unable to record a real
+ * reconciliation, so the one correct action turns the build red and the only way out is deleting
+ * the check. An invariant that punishes the right move is a booby trap, and it held here only
+ * because --reconcile was documented and never implemented — nothing could move the ledger, so
+ * nothing ever tested the rule.
+ *
+ * The real invariant is conditional: knowledge of upstream and the claim to have looked must rise
+ * and fall together, in both directions.
+ */
+export function checkClaims(ledger) {
   const findings = [];
+  const looked = Boolean(ledger.upstream && ledger.upstream.last_reconciled);
+  for (const [p, e] of Object.entries(ledger.files || {})) {
+    if (!looked && e.upstream !== null) {
+      findings.push(`${p}: carries an upstream digest while the ledger records no reconciliation — nobody has seen ofbo, so that digest was invented.`);
+    }
+    if (!looked && SEEN_ONLY.has(e.state)) {
+      findings.push(`${p}: state '${e.state}' asserts a comparison against ofbo that the ledger says never happened.`);
+    }
+    if (e.state === STATE.RECONCILED && !(e.upstream && e.base === e.bundle && e.bundle === e.upstream)) {
+      findings.push(`${p}: state 'reconciled' means all three digests agree, and they do not — base ${e.base}, bundle ${e.bundle}, upstream ${e.upstream}.`);
+    }
+  }
+  return findings;
+}
+
+export function evaluate(ledger, digests) {
+  const findings = [...checkClaims(ledger)];
   const notices = [];
   const entries = ledger.files || {};
   const onDisk = Object.keys(digests).sort();
@@ -191,6 +236,39 @@ export function record(ledger, digests, { now }) {
   return { ...ledger, files };
 }
 
+/**
+ * Stamp a real sync point from a checkout. This is the ONLY thing entitled to write about ofbo,
+ * because it is the only thing that has seen it.
+ *
+ * Reconciling does not mean everything agreed — it means somebody looked. Files that match become
+ * the new shared `base`; files that do not keep their old base and record what upstream actually
+ * holds, with the direction of the debt in their state. Moving the base on a file that still
+ * differs would erase the debt by declaring it paid.
+ */
+export function reconcile(ledger, digests, upstreamDigests, { now, ref = null }) {
+  const verdict = Object.fromEntries(compareUpstream(ledger, digests, upstreamDigests).map((r) => [r.path, r.verdict]));
+  const BY_VERDICT = {
+    identical: STATE.RECONCILED,
+    'bundle-ahead': STATE.OWED,
+    'upstream-ahead': STATE.BEHIND,
+    'both-changed': STATE.DIVERGED,
+    'no-shared-base': STATE.DIVERGED,
+    'missing-upstream': STATE.BUNDLE_ONLY,
+  };
+  const files = {};
+  for (const [p, here] of Object.entries(digests)) {
+    const there = upstreamDigests[p] || null;
+    const prev = ledger.files[p] || { base: null, upstream: null };
+    const state = BY_VERDICT[verdict[p]] || STATE.DIVERGED;
+    files[p] = state === STATE.RECONCILED
+      ? { base: here, bundle: here, upstream: there, state }
+      : { ...prev, bundle: here, upstream: there, state };
+  }
+  // `missing-here` files are upstream's, not ours: this ledger tracks THIS tree. compareUpstream
+  // still reports them, so they are visible without being silently adopted into our inventory.
+  return { ...ledger, upstream: { ...ledger.upstream, last_reconciled: now, last_reconciled_ref: ref }, files };
+}
+
 export function main(argv = process.argv.slice(2)) {
   process.stdout.write('\nDiscovery-sync gate — the bundle\'s copy of the discovery machinery vs its upstream\n\n');
   if (!existsSync(LEDGER)) {
@@ -215,10 +293,26 @@ export function main(argv = process.argv.slice(2)) {
       process.stderr.write(`  ${root} has no discovery/ — point --upstream at the repository root of a checkout\n\n`);
       return 1;
     }
-    const rows = compareUpstream(ledger, digests, digestTree(root));
+    const upstreamDigests = digestTree(root);
+    const rows = compareUpstream(ledger, digests, upstreamDigests);
     for (const r of rows) process.stdout.write(`  ${r.verdict.padEnd(17)} ${r.path}\n${r.verdict === 'identical' ? '' : `                    ${r.detail}\n`}`);
     const diverged = rows.filter((r) => r.verdict !== 'identical');
-    process.stdout.write(`\n  ${rows.length - diverged.length} of ${rows.length} identical; ${diverged.length} diverged\n\n`);
+    process.stdout.write(`\n  ${rows.length - diverged.length} of ${rows.length} identical; ${diverged.length} diverged\n`);
+    if (argv.includes('--reconcile')) {
+      const now = new Date().toISOString().slice(0, 10);
+      const ri = argv.indexOf('--ref');
+      const ref = ri >= 0 ? argv[ri + 1] || null : null;
+      const next = reconcile(ledger, digests, upstreamDigests, { now, ref });
+      writeFileSync(LEDGER, `${JSON.stringify(next, null, 2)}\n`);
+      const n = (s) => Object.values(next.files).filter((e) => e.state === s).length;
+      process.stdout.write(
+        `\n  sync point stamped ${now}${ref ? ` (${ref})` : ' — pass --ref <sha> to record which upstream commit'}\n`
+        + `  ${n(STATE.RECONCILED)} reconciled · ${n(STATE.OWED)} owed · ${n(STATE.BEHIND)} behind · `
+        + `${n(STATE.DIVERGED)} diverged · ${n(STATE.BUNDLE_ONLY)} bundle-only\n`
+        + '  A stamp records that somebody LOOKED, not that everything agreed — the debts above stand.\n',
+      );
+    }
+    process.stdout.write('\n');
     return diverged.length ? 1 : 0;
   }
 
