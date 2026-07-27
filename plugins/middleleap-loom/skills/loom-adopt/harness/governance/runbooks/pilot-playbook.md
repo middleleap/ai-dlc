@@ -44,15 +44,15 @@ the platform/organisational half in the pilot.
 | Agent modifies a gate | `control-plane-check` (control plane owned, non-builder CODEOWNERS) | **CI-proven** (placeholder-owner negative test) |
 | Placeholder / fake control-function approval | `product-approval-check` + identity registry (approvals resolve to real humans) | **CI-proven** (agent-as-approver negative test) |
 | Builder impersonates second line | Disjoint builders ∩ second-line; release hold is second-line-owned | **CI-proven** (held-release negative test) |
-| Stale model evaluation | `model-provenance-check` (eval pinned to the shipping model/prompt) | **CI-proven** |
-| Missing / fabricated evaluation artifact | `model-provenance-check` (report cited by ref + sha256, re-hashed) | **CI-proven** |
+| Stale model evaluation | `model-provenance-check` (eval pinned to the shipping model/prompt) | **CI-proven** (superseded-pin negative test) |
+| Missing / fabricated evaluation artifact | `model-provenance-check` (report cited by ref + sha256, re-hashed) | **CI-proven** (altered-report negative test) |
 | Tampered evidence bundle | `evidence-seal-check` (semantic + hash-chain) | **CI-proven** (tampered-tests negative test) |
 | Fully recomputed evidence chain | External WORM anchor + ed25519 attestation over the anchor | anchor verification **CI-proven**; external WORM **live** |
 | Forged assurance-cycle sign-off | `assurance-cycle-check` (ed25519 over the record, second-line confirmer) | **CI-proven** (tampered-cycle negative test) |
 | Rewritten agent decision history | `decision-log-check` (append-only hash chain) | **CI-proven** (rewritten-entry negative test) |
 | Malicious repository instruction / prompt injection | pii-guard + tripwires + protected control plane; A2 threat model | control plane **CI-proven**; runtime egress controls **live** |
 | PII egress attempt | pii-guard hook + data-lifecycle; HG-0011 DLP | hook **live**; pre-egress DLP **live** |
-| Vulnerable dependency | `supply-chain-check` (SCA policy) + Q4 | **CI-proven** (needs a real scanner fill) |
+| Vulnerable dependency | `supply-chain-check` (SCA policy) + Q4 | **CI-proven** (critical-CVE negative test); the scanner that PRODUCES the audit is the adopter's fill |
 | Incorrect pricing / disclosure | PA2 sections (pricing-conduct, disclosures, KFS) | PA2 **CI-proven**; correctness of the values **live** (human review) |
 | Duplicate core transaction | A5 financial integrity (idempotency, maker-checker) + Q3 integration | declared **CI-proven**; execution **live** |
 | Failed reconciliation | R6 reconciliation + A5; operations-signal routing | declared **CI-proven**; live break handling **live** |
