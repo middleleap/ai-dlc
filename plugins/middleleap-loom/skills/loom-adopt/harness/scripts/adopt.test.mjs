@@ -14,11 +14,12 @@ import { fileURLToPath } from 'node:url';
 // adopt.mjs and copy-manifest.json are BUNDLE-ONLY — the installer is not itself installed into
 // an adopting repo. In an adopted layout scripts/*.test.mjs still runs, so skip cleanly there
 // (the doc-integrity gate uses the same "inert where the bundle is absent" pattern).
-const ADOPT = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'adopt.mjs');
+const HARNESS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ADOPT = resolve(HARNESS_DIR, 'adopt.mjs');
 if (!existsSync(ADOPT)) {
   test('adopt.mjs installer contract (bundle-only — skipped in an adopted layout)', { skip: true }, () => {});
 } else {
-const { install, loadManifest, copyTable, bundleVersion } = await import(ADOPT);
+const { install, loadManifest, copyTable, bundleVersion, TIERS, tierIncludes, entriesForTier } = await import(ADOPT);
 
 const withTempDest = (fn) => {
   const dest = mkdtempSync(join(tmpdir(), 'loom-adopt-'));
@@ -146,5 +147,104 @@ test('a dry run writes nothing at all — not even the stamp', () => {
     assert.ok(!existsSync(join(dest, '.loom/adoption.json')));
     assert.ok(!existsSync(join(dest, 'scripts/sast-check.mjs')));
   });
+});
+
+// --- adoption tiers (rc.24) ------------------------------------------------------------------
+//
+// The burden this stages is the ADOPT markers, not the gates. Two invariants carry that, and
+// both are the kind that a later, well-meaning tier reassignment silently breaks:
+//
+//   1. EVERY TIER GETS EVERY GATE. Tiering the machinery would reintroduce the failure the
+//      scripts glob's own comment warns about — a per-file list that drops new gates.
+//   2. THE CATALOG MAY NOT CITE A GHOST. control-catalog-check fails on a mechanism_ref,
+//      test_ref or doc_ref that does not exist, so anything the catalog names must be core.
+//      This is exactly how the first tier assignment broke (ROUTINE-CONTROLLER.doc_ref).
+
+test('tiers are cumulative, and an entry with no tier is core', () => {
+  assert.deepEqual(TIERS, ['core', 'governed', 'full']);
+  assert.ok(tierIncludes('full', 'core') && tierIncludes('full', 'governed') && tierIncludes('full', 'full'));
+  assert.ok(tierIncludes('governed', 'core') && !tierIncludes('governed', 'full'));
+  assert.ok(tierIncludes('core', 'core') && !tierIncludes('core', 'governed'));
+  assert.ok(tierIncludes('core', undefined), 'an entry with no tier must land everywhere, not nowhere');
+});
+
+test('every manifest entry declares a known tier', () => {
+  for (const e of loadManifest().entries) {
+    assert.ok(TIERS.includes(e.tier ?? 'core'), `${e.dest} has unknown tier ${e.tier}`);
+  }
+});
+
+test('EVERY TIER GETS EVERY GATE — only fill-in content is tiered', () => {
+  const manifest = loadManifest();
+  const core = new Set(entriesForTier(manifest, 'core').map((e) => e.dest));
+  for (const dest of ['scripts', 'core', 'discovery/gates', 'discovery/render', 'profiles', '.claude/hooks', '.github/workflows/ci.yml']) {
+    assert.ok(core.has(dest), `${dest} is machinery and must be in the core tier`);
+  }
+});
+
+test('THE CATALOG MAY NOT CITE A GHOST — everything it references is core-tier', async () => {
+  // The invariant that broke the first assignment. Derived from the catalog, not a hand list,
+  // so a new control citing a deferred file fails here rather than in an adopter's CI.
+  const manifest = loadManifest();
+  const catalog = JSON.parse(readFileSync(resolve(HARNESS_DIR, 'governance/control-catalog.template.json'), 'utf8'));
+  const refs = new Set();
+  for (const c of catalog.controls) {
+    for (const f of ['mechanism_ref', 'test_ref', 'doc_ref']) if (typeof c[f] === 'string') refs.add(c[f]);
+  }
+  const ownerTier = (ref) => {
+    let best = null;
+    for (const e of manifest.entries) {
+      if (ref === e.dest || ref.startsWith(`${e.dest.replace(/\/$/, '')}/`)) {
+        if (!best || e.dest.length > best.dest.length) best = e;
+      }
+    }
+    return best ? (best.tier ?? 'core') : null;
+  };
+  const offenders = [...refs].filter((r) => { const t = ownerTier(r); return t && t !== 'core'; });
+  assert.deepEqual(offenders, [], `catalog cites files the core tier does not install:\n${offenders.join('\n')}`);
+});
+
+test('a core adoption installs fewer entries but every gate, and stamps its tier', () => {
+  withTempDest((dest) => {
+    const report = install(dest, { tier: 'core' });
+    assert.equal(report.tier, 'core');
+    assert.ok(report.length < loadManifest().entries.length, 'core should install fewer entries than full');
+    assert.ok(existsSync(join(dest, 'scripts/floor-only-check.mjs')), 'a deferred FEATURE must still ship its gate');
+    assert.ok(!existsSync(join(dest, 'institution/brainkit/manifest.json')), 'full-tier content should not land at core');
+    assert.equal(JSON.parse(readFileSync(join(dest, '.loom/adoption.json'), 'utf8')).tier, 'core');
+  });
+});
+
+test('a re-run with no --tier keeps the adopted tier — never a silent demotion', () => {
+  withTempDest((dest) => {
+    install(dest, { tier: 'governed' });
+    const again = install(dest);
+    assert.equal(again.tier, 'governed');
+  });
+});
+
+test('raising the tier adds the deferred entries and keeps the rest', () => {
+  withTempDest((dest) => {
+    install(dest, { tier: 'core' });
+    assert.ok(!existsSync(join(dest, 'docs/governance/product-evals.json')));
+    install(dest, { tier: 'governed' });
+    assert.ok(existsSync(join(dest, 'docs/governance/product-evals.json')), 'governed content should arrive');
+    assert.ok(existsSync(join(dest, 'discovery/gates')), 'core content should survive');
+    install(dest, { tier: 'full' });
+    assert.ok(existsSync(join(dest, 'institution/brainkit/manifest.json')));
+  });
+});
+
+test('an unknown tier throws rather than installing something arbitrary', () => {
+  withTempDest((dest) => {
+    assert.throws(() => install(dest, { tier: 'enterprise' }), /unknown tier/);
+  });
+});
+
+test('the copy table carries the tier column for every entry', () => {
+  const manifest = loadManifest();
+  const table = copyTable(manifest);
+  assert.match(table, /\| Bundle source \| Destination \| Tier \| What it is \|/);
+  assert.equal(table.split('\n').length, manifest.entries.length + 2);
 });
 }

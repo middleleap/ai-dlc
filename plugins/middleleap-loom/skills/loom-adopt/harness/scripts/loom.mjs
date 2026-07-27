@@ -45,6 +45,7 @@ export function versionReport(cwd = process.cwd(), out = process.stdout) {
   }).sort();
 
   out.write(`\nLoom ${stamp.bundle_version || '(unknown)'}\n`);
+  out.write(`  adoption tier   ${stamp.tier || '(pre-tier adoption — treated as full)'}\n`);
   out.write(`  first adopted   ${stamp.first_adopted_at || '—'}\n`);
   out.write(`  last installed  ${stamp.updated_at || '—'}\n`);
   out.write(`  managed files   ${Object.keys(files).length}\n`);

@@ -109,6 +109,19 @@
       "action_required": [
         "First upgrade onto a stamped adoption: files that differ from this bundle cannot be told apart from your edits, so ALL of them are preserved and reported as `unverifiable`. Reconcile the .loom-new sidecars, or re-run with --force if you know you never customised anything. Later upgrades know the difference and this will not recur."
       ]
+    },
+    {
+      "version": "2.0.0-rc.24",
+      "headline": "Adoption tiers — you no longer have to adopt all of it at once",
+      "notes": [
+        "`adopt.mjs --tier core|governed|full` stages the adoption. Core lands roughly eight files to fill instead of seventy-odd; governed adds the product-governance plane; full is everything and stays the default.",
+        "Every tier installs EVERY gate. Only what you must fill in is tiered — a gate whose input file is absent is silent, so deferred controls are already running and waiting rather than missing.",
+        "Core is the smallest adoption that is SAFE, not the smallest that installs: data-lifecycle.json and model-manifest.json fail closed when absent, so they stay in core.",
+        "A re-run with no --tier keeps the tier you already adopted; it never silently demotes. `loom version` reports it."
+      ],
+      "action_required": [
+        "Nothing, if you are already adopted: an existing adoption has no recorded tier and is treated as full, which is what it is. Pass --tier explicitly only if you want to change it."
+      ]
     }
   ]
 }

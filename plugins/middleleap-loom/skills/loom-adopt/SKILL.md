@@ -27,60 +27,90 @@ what it installed in `.loom/adoption.json` and never overwrites a file you have 
 (step 7). A `*.template` file is copied but never auto-filled — templates land `adopt-pending`
 and you fill their ADOPT markers in step 3.
 
+### Pick a tier — you do not have to adopt all of it at once
+
+A full adoption lands 133 ADOPT markers across 28 files to fill in, which is a cliff rather than
+an on-ramp — and it grows every release. `--tier` stages it:
+
+```bash
+node harness/adopt.mjs --dest . --tier core       # the warp: 12 markers in 9 files
+node harness/adopt.mjs --dest . --tier governed   # + product governance: 44 in 16
+node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution: 133 in 28 (default)
+```
+
+Two things make this safe rather than merely smaller:
+
+- **Every tier installs every gate.** Only what you must *fill in* is tiered. A gate whose input
+  file does not exist yet is silent, so the deferred controls cost you nothing and cannot be
+  forgotten — they are already running, waiting for their file. (Tiering the machinery would
+  reintroduce the exact failure the `scripts/*.mjs` glob's comment warns about: a per-file list
+  that silently drops new gates.)
+- **Core is the smallest adoption that is safe, not the smallest that installs.** Which entries
+  may be deferred was decided by test: each was removed from a real adoption and its gates
+  confirmed silent. Two would not go — `data-lifecycle.json` and `model-manifest.json` fail
+  *closed* when absent, and they stay in core however inconvenient, because in this method the
+  agent is a model and data has a lifecycle.
+
+Raising the tier is just re-running with a higher one; it adds the deferred entries and leaves
+everything else alone. A re-run with **no** `--tier` keeps the tier you already adopted — an
+upgrade never silently demotes you. `node scripts/loom.mjs version` reports which tier you are on.
+
+The **Tier** column in the table below says where each entry lands.
+
 The table below is **generated from that same manifest** (a doc-integrity gate fails the build if
 it drifts), so it can never lag the machinery. Sources are relative to `harness/`; destinations
 are repo-root-relative.
 
 <!-- LOOM:COPY-TABLE:START -->
-| Bundle source | Destination | What it is |
-|---|---|---|
-| `../../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | The discovery canon (single source — do not fork the text) |
-| `discovery/gates` | `discovery/gates` | Pure-Node D1–D9 validator + its tests |
-| `discovery/render` | `discovery/render` | Zero-dep branded renderer (HTML + OOXML) + tests |
-| `discovery/templates` | `discovery/templates` | One template per discovery artifact |
-| `discovery/brand/design.md` | `discovery/brand/design.md` | Brand seam (neutral demo instance) |
-| `discovery/brand/examples` | `discovery/brand/examples` | A second brand proving the seam swap |
-| `delivery/templates` | `delivery/templates` | One template per delivery decision artifact (ADR · Solution Direction Record) |
-| `floor/templates` | `floor/templates` | Guided collaboration-surface forms, GENERATED from the git templates (parity-gated) |
-| `floor/catalog-b` | `floor/catalog-b` | Decision-routed floor forms (WS5 · D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed |
-| `floor/catalog-c` | `floor/catalog-c` | Floor-only forms (WS3 · D3.3) — write class `lives-on-the-floor`, NEVER frozen. The catalog where personal data actually turns up, because it is where people write prose about people: each form carries its write-class banner and asks for roles rather than names, and scripts/floor-only-check.mjs refuses one that has crossed into discovery/runs/ |
-| `scripts/*.mjs` | `scripts/` | Every gate + its tests (globbed — a per-file list silently drops new gates) |
-| `core` | `core` | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
-| `profiles` | `profiles` | Profiles as data: base + jurisdiction + product-type |
-| `hooks/*.sh` | `.claude/hooks/` | Pre-write guardrail hooks (pii-guard, spec/test tripwires) |
-| `hooks/settings.hooks.json` | `.claude/settings.json` | Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand) |
-| `governance/runbooks/*.md` | `docs/governance/runbooks/` | Seven adoption runbooks + the supervised-pilot playbook |
-| `governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | How to activate branch protection, IAM, the routine lane |
-| `governance/routine-controller.yml` | `docs/governance/routine-controller.yml` | Reference routine auto-merge controller — separated bot identity, gated on routine-qualified + config-reconciliation (rc.12 WS2.3) |
-| `governance/CODEOWNERS.template` | `CODEOWNERS` | The control-plane ownership map (replace @your-org/… — the gate fails until you do) |
-| `governance/control-catalog.template.json` | `docs/governance/control-catalog.json` | The machine-readable control state of record |
-| `governance/identities.template.json` | `docs/governance/identities.json` | The identity registry (approvals resolve against it) |
-| `governance/attestation-issuers.template.json` | `docs/governance/attestation-issuers.json` | Allowed-issuers registry for ed25519 attestations |
-| `governance/assertion-issuers.template.json` | `docs/governance/assertion-issuers.json` | Identity-provider material for human approval assertions (kept separate from service keys) |
-| `governance/identity-map.template.json` | `docs/governance/identity-map.json` | The P6 join: surface person id → IdP subject → registry identity. Second-line owned; never written by a service |
-| `governance/identity-map-reconciliation.template.json` | `docs/governance/identity-map-reconciliation.json` | The observer's signed observation that the map is still current (observed, not declared) |
-| `governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | Model inventory (pinned, tiered, evaluated, runtime-governed) |
-| `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | Data classification, retention, erasure, residency |
-| `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | The Run→Discovery feedback log |
-| `governance/service-readiness.template.json` | `docs/governance/services/example-service.json` | Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills) |
-| `governance/product-evals.template.json` | `docs/governance/product-evals.json` | Product-outcome evals (discovery-linked, measures scored, commit-bound) |
-| `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | The second-line-owned routine-change envelope (HG-0013) |
-| `governance/config-baseline.template.json` | `docs/governance/config-baseline.json` | The approved control-plane configuration reconciled against live observations (rc.12 WS2.4) |
-| `governance/assurance-sla.template.json` | `docs/governance/assurance-sla.json` | Service-level expectations for continuous-assurance cases (rc.14 WS6) |
-| `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | Token-spend ledger (a report, never a merge gate) |
-| `adapters/README.md` | `docs/governance/adapters/README.md` | The neutral adapter contract |
-| `adapters/providers` | `docs/governance/adapters/providers` | The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it |
-| `governance/provider-selection.template.json` | `docs/governance/provider-selection.json` | Which provider this institution chose per role (the choice is recorded, never defaulted) |
-| `guardrails` | `guardrails` | Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks) |
-| `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
-| `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | BrainKit institutional identity + design language (the D7 projection source) |
-| `brainkit/terminology.md` | `institution/brainkit/terminology.md` | BrainKit binding vocabulary |
-| `brainkit/architecture.md` | `institution/brainkit/architecture.md` | BrainKit architecture principles and constraints |
-| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | BrainKit technology policy (allowed / consult / forbidden) |
-| `brainkit/governance.md` | `institution/brainkit/governance.md` | BrainKit decision rights |
-| `brainkit/source-register.json` | `institution/brainkit/source-register.json` | BrainKit approved source register (every section grounds in it) |
-| `brainkit/repository-instructions.md` | `institution/brainkit/repository-instructions.md` | Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them |
-| `ci/ci.yml` | `.github/workflows/ci.yml` | The reference CI workflow that runs every gate |
+| Bundle source | Destination | Tier | What it is |
+|---|---|---|---|
+| `../../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | core | The discovery canon (single source — do not fork the text) |
+| `discovery/gates` | `discovery/gates` | core | Pure-Node D1–D9 validator + its tests |
+| `discovery/render` | `discovery/render` | core | Zero-dep branded renderer (HTML + OOXML) + tests |
+| `discovery/templates` | `discovery/templates` | core | One template per discovery artifact |
+| `discovery/brand/design.md` | `discovery/brand/design.md` | core | Brand seam (neutral demo instance) |
+| `discovery/brand/examples` | `discovery/brand/examples` | core | A second brand proving the seam swap |
+| `delivery/templates` | `delivery/templates` | core | One template per delivery decision artifact (ADR · Solution Direction Record) |
+| `floor/templates` | `floor/templates` | full | Guided collaboration-surface forms, GENERATED from the git templates (parity-gated) |
+| `floor/catalog-b` | `floor/catalog-b` | full | Decision-routed floor forms (WS5 · D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed |
+| `floor/catalog-c` | `floor/catalog-c` | full | Floor-only forms (WS3 · D3.3) — write class `lives-on-the-floor`, NEVER frozen. The catalog where personal data actually turns up, because it is where people write prose about people: each form carries its write-class banner and asks for roles rather than names, and scripts/floor-only-check.mjs refuses one that has crossed into discovery/runs/ |
+| `scripts/*.mjs` | `scripts/` | core | Every gate + its tests (globbed — a per-file list silently drops new gates) |
+| `core` | `core` | core | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
+| `profiles` | `profiles` | core | Profiles as data: base + jurisdiction + product-type |
+| `hooks/*.sh` | `.claude/hooks/` | core | Pre-write guardrail hooks (pii-guard, spec/test tripwires) |
+| `hooks/settings.hooks.json` | `.claude/settings.json` | core | Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand) |
+| `governance/runbooks/*.md` | `docs/governance/runbooks/` | core | Seven adoption runbooks + the supervised-pilot playbook |
+| `governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | core | How to activate branch protection, IAM, the routine lane |
+| `governance/routine-controller.yml` | `docs/governance/routine-controller.yml` | core | Reference routine auto-merge controller — separated bot identity, gated on routine-qualified + config-reconciliation (rc.12 WS2.3) |
+| `governance/CODEOWNERS.template` | `CODEOWNERS` | core | The control-plane ownership map (replace @your-org/… — the gate fails until you do) |
+| `governance/control-catalog.template.json` | `docs/governance/control-catalog.json` | core | The machine-readable control state of record |
+| `governance/identities.template.json` | `docs/governance/identities.json` | core | The identity registry (approvals resolve against it) |
+| `governance/attestation-issuers.template.json` | `docs/governance/attestation-issuers.json` | governed | Allowed-issuers registry for ed25519 attestations |
+| `governance/assertion-issuers.template.json` | `docs/governance/assertion-issuers.json` | governed | Identity-provider material for human approval assertions (kept separate from service keys) |
+| `governance/identity-map.template.json` | `docs/governance/identity-map.json` | governed | The P6 join: surface person id → IdP subject → registry identity. Second-line owned; never written by a service |
+| `governance/identity-map-reconciliation.template.json` | `docs/governance/identity-map-reconciliation.json` | governed | The observer's signed observation that the map is still current (observed, not declared) |
+| `governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | core | Model inventory (pinned, tiered, evaluated, runtime-governed) |
+| `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | core | Data classification, retention, erasure, residency |
+| `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | governed | The Run→Discovery feedback log |
+| `governance/service-readiness.template.json` | `docs/governance/services/example-service.json` | governed | Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills) |
+| `governance/product-evals.template.json` | `docs/governance/product-evals.json` | governed | Product-outcome evals (discovery-linked, measures scored, commit-bound) |
+| `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | governed | The second-line-owned routine-change envelope (HG-0013) |
+| `governance/config-baseline.template.json` | `docs/governance/config-baseline.json` | full | The approved control-plane configuration reconciled against live observations (rc.12 WS2.4) |
+| `governance/assurance-sla.template.json` | `docs/governance/assurance-sla.json` | full | Service-level expectations for continuous-assurance cases (rc.14 WS6) |
+| `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | full | Token-spend ledger (a report, never a merge gate) |
+| `adapters/README.md` | `docs/governance/adapters/README.md` | full | The neutral adapter contract |
+| `adapters/providers` | `docs/governance/adapters/providers` | full | The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it |
+| `governance/provider-selection.template.json` | `docs/governance/provider-selection.json` | full | Which provider this institution chose per role (the choice is recorded, never defaulted) |
+| `guardrails` | `guardrails` | governed | Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks) |
+| `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | full | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
+| `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | full | BrainKit institutional identity + design language (the D7 projection source) |
+| `brainkit/terminology.md` | `institution/brainkit/terminology.md` | full | BrainKit binding vocabulary |
+| `brainkit/architecture.md` | `institution/brainkit/architecture.md` | full | BrainKit architecture principles and constraints |
+| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | full | BrainKit technology policy (allowed / consult / forbidden) |
+| `brainkit/governance.md` | `institution/brainkit/governance.md` | full | BrainKit decision rights |
+| `brainkit/source-register.json` | `institution/brainkit/source-register.json` | full | BrainKit approved source register (every section grounds in it) |
+| `brainkit/repository-instructions.md` | `institution/brainkit/repository-instructions.md` | full | Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them |
+| `ci/ci.yml` | `.github/workflows/ci.yml` | core | The reference CI workflow that runs every gate |
 <!-- LOOM:COPY-TABLE:END -->
 
 Plus, still copied by hand (project-specific templates, see step 3): `harness/skills/*/SKILL.md`
