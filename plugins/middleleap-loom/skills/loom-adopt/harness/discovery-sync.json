@@ -1,0 +1,161 @@
+{
+  "_comment": "The discovery-sync ledger (rc.29). The Loom discovery machinery exists TWICE: here as the generic harness, and in openfinance-os/ofbo as the instantiation this was extracted FROM on 2026-07-17. CLAUDE.md has carried a standing note that the two must be kept in step, with nothing mechanical behind it — the adoption dry-run proves the tree still WORKS, never that it still MATCHES. This file is the sync point and scripts/discovery-sync-check.mjs holds it to it. THREE DIGESTS PER FILE, and the distinction is the whole design. `base` is the last content the two sides are KNOWN to have shared — seeded from the extraction commit, which is a fact this repository's history can prove, not a guess about ofbo. `bundle` is what the file looks like here now. `upstream` is what it looks like in ofbo, and it is null on every entry because nobody has ever run the comparison from a checkout; inventing those digests would be exactly the overstatement this method exists to refuse. `base` is the merge ancestor and moves ONLY on a real reconciliation — --record updates `bundle` alone, because moving the base without having seen the other side would silently erase the debt it is meant to book. WHAT THIS ASSERTS: a change here that is not declared fails the build. WHAT IT DOES NOT ASSERT: that the two trees agree. `at-extraction` means byte-identical to what was extracted, which says nothing about whether ofbo has moved since. BUNDLE-ONLY: never installed into an adopting repo — provenance for this bundle, a peer of copy-manifest.json and upgrade-notes.json.",
+  "upstream": {
+    "repo": "openfinance-os/ofbo",
+    "path": "discovery/",
+    "extracted_at": "2026-07-17",
+    "extracted_ref": "898f8fbc80a60a7ee9752c0101c318d2ddf9bbd8",
+    "direction": "This repository is canonical for the GENERIC harness: hardening lands here and is ported out to ofbo, whose own instantiation (CBUAE register, OFBO brand profile, hard-stop checklists, Q1-Q5 workflows) stays there and is never pulled in. The long-term fix is for ofbo to ADOPT via adopt.mjs, which retires this ledger entirely: the adoption stamp already tells a local edit from an upstream update, so there would be one source and nothing to reconcile by hand.",
+    "last_reconciled": null,
+    "last_reconciled_ref": null,
+    "note": "NEVER RECONCILED. The states below are computed from THIS repository's history alone. Run `node scripts/discovery-sync-check.mjs --upstream <ofbo-checkout>` from a session that can reach both repositories; only that can fill in `upstream`, move `base`, or set state `reconciled`."
+  },
+  "files": {
+    "discovery/brand/design.md": {
+      "base": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
+      "bundle": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/brand/examples/meridian-trust.design.md": {
+      "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
+      "bundle": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/gates/brand.mjs": {
+      "base": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
+      "bundle": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/gates/lib.mjs": {
+      "base": "sha256:5d68006763c5e488380e574e3aa7a9a2558c2d5af2d58210823f4d45a8d85d2d",
+      "bundle": "sha256:5d68006763c5e488380e574e3aa7a9a2558c2d5af2d58210823f4d45a8d85d2d",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/gates/registers.mjs": {
+      "base": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
+      "bundle": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/gates/validate.mjs": {
+      "base": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
+      "bundle": "sha256:255e3537434a34dd3bb248d10f848645b2dd794775c916f80f68ea032c1b7906",
+      "upstream": null,
+      "state": "owed",
+      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, Phase 1 correctness"
+    },
+    "discovery/gates/validate.test.mjs": {
+      "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
+      "bundle": "sha256:023920c075f17c4c5bc00ccaf74875b7c6a0e82033c863afab5b68111b8ce528",
+      "upstream": null,
+      "state": "owed",
+      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements"
+    },
+    "discovery/render/README.md": {
+      "base": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
+      "bundle": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/render/brainkit-provenance.test.mjs": {
+      "base": null,
+      "bundle": "sha256:4aa5fed254adf0f97e380c3de19af359a2ce79fcbbaec8eb8631b231b8d4cfa1",
+      "upstream": null,
+      "state": "bundle-only",
+      "note": "added here 2026-07-23 (rc.8 WS8) — never existed upstream"
+    },
+    "discovery/render/office.test.mjs": {
+      "base": "sha256:08bcd73de99fe59753ca0dae25c337129bbe53980e34039eeb001cbb2b90137d",
+      "bundle": "sha256:08bcd73de99fe59753ca0dae25c337129bbe53980e34039eeb001cbb2b90137d",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/render/office/ooxml.mjs": {
+      "base": "sha256:3750cdd3ab051258d378ce87918903802902e4c41cb7e2aeeb3d4d36cdce2c6e",
+      "bundle": "sha256:47b349547cc69e1e8a9cda773c668d856473672e910aa4fba18dabc8f614bc55",
+      "upstream": null,
+      "state": "owed",
+      "note": "changed here: rc.8 WS8 D7 compatibility projection carries BrainKit provenance"
+    },
+    "discovery/render/office/zip.mjs": {
+      "base": "sha256:810e33eb52b17fc84e008df76d1d1a1a076fef062e640b2c2ec56b99bec9beca",
+      "bundle": "sha256:810e33eb52b17fc84e008df76d1d1a1a076fef062e640b2c2ec56b99bec9beca",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/render/render-office.mjs": {
+      "base": "sha256:ef3831db83b60d0436694dbef68c040ca31b1b4543f67c4d8e4720ec8ba98921",
+      "bundle": "sha256:1996c6f414781ea7c93054943d1815f0506a976e01e9b04725e254087ad83955",
+      "upstream": null,
+      "state": "owed",
+      "note": "changed here: rc.8 WS8 BrainKit provenance, rc.10 enforcement hardening"
+    },
+    "discovery/render/render.mjs": {
+      "base": "sha256:74a7dc3e3a04240018d7afe7e0651ec10049450f0478b13cd69eb3a9eca2874d",
+      "bundle": "sha256:79aaf0257067643a57106aef3478f6d4aeaeae5d77eada4fd8aa0ec894796a4b",
+      "upstream": null,
+      "state": "owed",
+      "note": "changed here: rc.8 WS8 BrainKit provenance, rc.10 enforcement hardening"
+    },
+    "discovery/render/render.test.mjs": {
+      "base": "sha256:0827fbdc544c5d42a81ebb7b390334f09f0ed10080448c7e90938b89dd6a6186",
+      "bundle": "sha256:bfab962d77ef5ecebe2b85ed745a1c54a17a61b5cc71899294c2f41d04806594",
+      "upstream": null,
+      "state": "owed",
+      "note": "changed here: rc.10 enforcement hardening"
+    },
+    "discovery/render/tokens.mjs": {
+      "base": "sha256:0c12607726e53bc3f83f1e53156de108a7f34be50a61c42e637ab6c9b0ef23a3",
+      "bundle": "sha256:f17032d0dc9304400cea189697daf0b9dd20281d9b160ba486de5e0e4b131443",
+      "upstream": null,
+      "state": "owed",
+      "note": "changed here: rc.8 WS8 BrainKit provenance"
+    },
+    "discovery/templates/data-governance.md": {
+      "base": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
+      "bundle": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/templates/handoff.md": {
+      "base": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
+      "bundle": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/templates/problem-statement.md": {
+      "base": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
+      "bundle": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/templates/prototype.md": {
+      "base": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
+      "bundle": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/templates/research-log.md": {
+      "base": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
+      "bundle": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/templates/stakeholder-reaction.md": {
+      "base": "sha256:5dd3fc31cb9f75081ede8911cd56088264ce30ecb4b05489d55b7de2264f2b0c",
+      "bundle": "sha256:5dd3fc31cb9f75081ede8911cd56088264ce30ecb4b05489d55b7de2264f2b0c",
+      "upstream": null,
+      "state": "at-extraction"
+    },
+    "discovery/templates/synthesis.md": {
+      "base": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",
+      "bundle": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",
+      "upstream": null,
+      "state": "at-extraction"
+    }
+  }
+}

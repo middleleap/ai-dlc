@@ -48,7 +48,8 @@ jobs:
         run: |
           node scripts/control-catalog-check.mjs
           node scripts/ci-catalog-check.mjs
-          node scripts/self-claims-check.mjs   # bundle-only; inert in an adopted tree
+          node scripts/self-claims-check.mjs      # bundle-only; inert in an adopted tree
+          node scripts/discovery-sync-check.mjs   # bundle-only; the ofbo back-port debt, counted
 
       - name: Gates — pr lane (risk-proportionate; every skip recorded)
         run: node core/gate-runner.mjs --lane pr --base origin/main --out gate-run-pr.json

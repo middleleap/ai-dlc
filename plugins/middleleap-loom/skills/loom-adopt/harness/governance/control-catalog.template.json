@@ -868,6 +868,18 @@
       "lane": "pr",
       "always": true,
       "note": "rc.26. Every defect the rc.18–rc.25 review found was one shape — a claim and its evidence drifting apart, in both directions — and each was fixed by hand after a human noticed. This makes the class mechanical, in the method's own idiom: observed, not declared. Bundle-only (it reads this repository's workflow and layout) and inert in an adopted tree. Uncredited inversions are REPORTED, never failed: the checklist enumerates attacks, not gates, so forcing one row per inversion would manufacture rows nobody meant to write"
+    },
+    {
+      "control_id": "DISCOVERY-SYNC",
+      "objective": "The bundle's copy of the discovery machinery cannot diverge from its openfinance-os/ofbo upstream unnoticed: a change here that is not declared as a port owed fails the build, and the outstanding debt is counted on every run",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/discovery-sync-check.mjs",
+      "test_ref": "scripts/discovery-sync-check.test.mjs",
+      "lane": "pr",
+      "always": true,
+      "note": "rc.29. The discovery machinery exists twice — here as the generic harness, in ofbo as the instantiation it was extracted from — and CLAUDE.md carried a standing 'must track upstream fixes (no automated sync)' note with nothing behind it. The adoption dry-run proves the tree still WORKS, never that it still MATCHES; seven files had diverged across four workstreams before anyone measured it. This counts the debt instead of remembering it. HONEST LIMIT, printed on every run including a clean one: it can only see THIS side. It never reports the trees as agreeing — only --upstream <checkout>, which has actually seen ofbo, may set state 'reconciled' or move a file's shared base. Bundle-only and inert in an adopted tree"
     }
   ]
 }
