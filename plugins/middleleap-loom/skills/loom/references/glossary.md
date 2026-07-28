@@ -74,8 +74,8 @@ decision**. They are unrelated, and the resemblance is an accident of two number
 meeting.
 
 The word `Decision` is therefore mandatory on the floor ids, at least on first use in any
-document. A bare `D5.4` is a bug in the prose, because a reader has every reason to resolve
-it to gate `D5`.
+document, and `scripts/id-legibility-check.mjs` enforces it. A bare `D5.4` is a bug in the
+prose, because a reader has every reason to resolve it to gate `D5`.
 
 ## Why these are not renamed
 
