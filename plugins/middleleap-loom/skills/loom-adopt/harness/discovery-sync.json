@@ -43,17 +43,17 @@
     },
     "discovery/gates/validate.mjs": {
       "base": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
-      "bundle": "sha256:255e3537434a34dd3bb248d10f848645b2dd794775c916f80f68ea032c1b7906",
+      "bundle": "sha256:f035e11dd84c9c177c25bbea745954d52f51e07379c776b2b404ad356c32aa43",
       "upstream": null,
       "state": "owed",
-      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, Phase 1 correctness"
+      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, Phase 1 correctness, rc.31 D8 over-specification scan widened to the wireframe asset and specs/*.json"
     },
     "discovery/gates/validate.test.mjs": {
       "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
-      "bundle": "sha256:023920c075f17c4c5bc00ccaf74875b7c6a0e82033c863afab5b68111b8ce528",
+      "bundle": "sha256:5409c8a1362ca2adaf0e82220caccd4db94ce114b936a1bc16942234ffb7dedd",
       "upstream": null,
       "state": "owed",
-      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements"
+      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, rc.31 D8 wireframe/spec over-specification cases"
     },
     "discovery/render/README.md": {
       "base": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",

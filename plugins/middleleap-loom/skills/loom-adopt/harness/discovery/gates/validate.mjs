@@ -56,6 +56,18 @@ function scanSolutioning(label, text) {
   return out;
 }
 
+/**
+ * Drop generated presentation before a solutioning scan. The renderer owns <style>/<script>
+ * and emits them from design.md tokens, so a keyword hit inside them would be a renderer
+ * defect, not a run leaking into the right diamond — scanning them would only teach authors
+ * to distrust the gate. Authored content is what remains.
+ */
+function authoredHtml(html) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '');
+}
+
 export function validateRun(runDir, opts = {}) {
   const p = (f) => join(runDir, f);
   const docs = {};
@@ -186,9 +198,24 @@ export function validateRun(runDir, opts = {}) {
     else {
       if (docs.prototype.fm.fidelity !== 'low') issues.push("prototype fidelity must be 'low' (validation, not delivery)");
       const wf = docs.prototype.fm.wireframe || 'wireframe.html';
-      if (!existsSync(p(wf))) issues.push(`wireframe asset ${wf} missing`);
-      else if (!read(p(wf)).includes(MARKER)) issues.push(`${wf} missing brand marker`);
+      if (!existsSync(p(wf))) {
+        issues.push(`wireframe asset ${wf} missing`);
+      } else {
+        const raw = read(p(wf));
+        if (!raw.includes(MARKER)) issues.push(`${wf} missing brand marker`);
+        // A prototype is three things — the brief, the asset a stakeholder reacts to, and the
+        // structured content the asset renders from — and the fidelity line (§4) applies to all
+        // three. Scanning only the brief left the two surfaces where over-specification actually
+        // lands unchecked, so a wireframe could name a route or a stack while D8 reported PASS.
+        issues.push(...scanSolutioning(`${wf} (over-specified)`, /\.html?$/i.test(wf) ? authoredHtml(raw) : raw));
+      }
       issues.push(...scanSolutioning(`${ARTIFACTS.prototype} (over-specified)`, docs.prototype.body));
+      // specs/ holds the JSON the renderer turns into the wireframe. It is authored by hand, so
+      // it is exactly as capable of over-specifying as the brief is — and a run that renders its
+      // wireframe (the documented path) puts all its authored content here.
+      for (const spec of listFiles(join(runDir, 'specs'), '.json')) {
+        issues.push(...scanSolutioning(`specs/${basename(spec)} (over-specified)`, read(spec)));
+      }
     }
     gates.push(gate('D8', 'Tangibility', issues));
   }
