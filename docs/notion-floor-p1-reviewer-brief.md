@@ -47,7 +47,7 @@ into "do we do this programme at all" or narrow it into "is Notion an approved v
 - **Not the harness controls.** The gates, the approval-attestation contract and the identity map
   are separately reviewable and already CI-enforced. This record governs *what content goes out*,
   not *how decisions come back*.
-- **Not a workspace build.** Approval unblocks WS1 (read-only projection). D0.3 scaffold, P3
+- **Not a workspace build.** Approval unblocks WS1 (read-only projection). Decision D0.3 scaffold, P3
   token issuance and any content of any class on any surface remain blocked until this record is
   merged — see the record's own blocking statement.
 

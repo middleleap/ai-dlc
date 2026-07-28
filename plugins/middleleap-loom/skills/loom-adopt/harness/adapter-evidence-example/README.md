@@ -1,4 +1,4 @@
-# The adapter-evidence worked example (Factory Floor WS5 · D5.3)
+# The adapter-evidence worked example (Factory Floor WS5 · Decision D5.3)
 
 Four evidence-stream declarations, and one **real signed observation** for one of them, so
 `scripts/adapter-evidence-check.mjs` verifies something instead of reporting

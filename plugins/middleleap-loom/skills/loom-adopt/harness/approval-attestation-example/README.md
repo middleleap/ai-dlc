@@ -1,4 +1,4 @@
-# Approval attestation — the worked example (Factory Floor WS2 · D2.4)
+# Approval attestation — the worked example (Factory Floor WS2 · Decision D2.4)
 
 An approval made **somewhere other than this repository** — a collaboration surface, a workflow
 tool, an approval page — and brought home as evidence. `pa1-risk-second-line.json` is one PA1

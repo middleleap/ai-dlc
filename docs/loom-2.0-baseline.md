@@ -380,7 +380,7 @@ four defects in its decision-routing design; all four were verified against this
 Two of them were defects in *the harness's own vocabulary*, not just the plan, and this release
 closes them.
 
-- **The approval-attestation contract (D2.4)** — `core/approval-attestations.mjs`. When a product
+- **The approval-attestation contract (Decision D2.4)** — `core/approval-attestations.mjs`. When a product
   approval is made somewhere other than this repository, the record must answer an auditor's two
   questions: **who decided**, and **what exactly did they approve**. It carries two signatures with
   deliberately different meanings — `subject.assertion` (the institution's identity provider,

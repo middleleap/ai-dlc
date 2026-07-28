@@ -9,7 +9,7 @@ approval.
 
 ## Why the directory exists
 
-`scripts/residency-check.mjs` gates D0.1 — the signatures that block every workstream after WS0.
+`scripts/residency-check.mjs` gates Decision D0.1 — the signatures that block every workstream after WS0.
 Wired without a fixture it would run against an absent record, report OK, and prove nothing. That is
 precisely the vacuum `freeze-stamp`, `drift`, `approval-surface`, `floor-keeper` and
 `adapter-evidence` each carried until an example was staged beside them. This one shipped with its

@@ -1,4 +1,4 @@
-# The floor worked example (Factory Floor WS6 · D6.3 + D6.4)
+# The floor worked example (Factory Floor WS6 · Decision D6.3 + D6.4)
 
 `generate.mjs` produces the two artifacts `scripts/floor-keeper-check.mjs` reads — a floor-keeper
 **grant register** and a **degradation observation** — so the WS6 gate checks a floor instead of

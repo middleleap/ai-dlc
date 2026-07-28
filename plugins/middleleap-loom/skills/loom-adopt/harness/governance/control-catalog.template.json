@@ -371,7 +371,7 @@
       "test_ref": "core/residency.test.mjs",
       "lane": "pr",
       "always": true,
-      "note": "Factory Floor WS0 · D0.1 / prerequisite P1. `always` because the failure it names is the ABSENCE of a record beside the PRESENCE of a floor — a state no diff announces. The record is the institution's to write and sign (docs/governance/residency-review.md); residency-example/ is the worked instance"
+      "note": "Factory Floor WS0 · Decision D0.1 / prerequisite P1. `always` because the failure it names is the ABSENCE of a record beside the PRESENCE of a floor — a state no diff announces. The record is the institution's to write and sign (docs/governance/residency-review.md); residency-example/ is the worked instance"
     },
     {
       "control_id": "FLOOR-ONLY",
