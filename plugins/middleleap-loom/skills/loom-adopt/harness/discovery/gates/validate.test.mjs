@@ -176,6 +176,60 @@ test('D8 fails when the prototype claims delivery fidelity', () => {
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// --- D8 over-specification reaches the whole prototype, not just the brief -----------------
+// Regression: D8 scanned prototype.md alone, so the two surfaces where over-specification
+// actually lands — the wireframe a stakeholder reacts to, and the spec JSON it renders from —
+// were never checked. A wireframe could name an API route while D8 reported PASS.
+
+test('D8 fails when the WIREFRAME over-specifies (an API route)', () => {
+  const dir = makeRun({ 'wireframe.html': FILES['wireframe.html'].replace('<body>wireframe</body>', '<body>wireframe<p>Balances load from GET /accounts/{id}/balances</p></body>') });
+  try {
+    const g = gateOf(validateRun(dir, OPTS), 'D8');
+    assert.equal(g.status, 'fail');
+    assert.ok(g.issues.some((i) => /wireframe\.html \(over-specified\).*API route/.test(i)), 'expected the wireframe to be named as the source: ' + JSON.stringify(g.issues));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D8 fails when the wireframe names a tech-stack choice', () => {
+  const dir = makeRun({ 'wireframe.html': FILES['wireframe.html'].replace('<body>wireframe</body>', '<body>wireframe<p>Rendered in React against Postgres</p></body>') });
+  try { assert.equal(gateOf(validateRun(dir, OPTS), 'D8').status, 'fail'); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D8 fails when the SPEC JSON over-specifies, even though the rendered wireframe is clean', () => {
+  const dir = makeRun();
+  try {
+    mkdirSync(join(dir, 'specs'), { recursive: true });
+    writeFileSync(join(dir, 'specs/wireframe.prototype.json'), JSON.stringify({ title: 'x', affordance: { label: 'y', text: 'Reads the openapi contract directly' } }, null, 2));
+    const g = gateOf(validateRun(dir, OPTS), 'D8');
+    assert.equal(g.status, 'fail');
+    assert.ok(g.issues.some((i) => /specs\/wireframe\.prototype\.json \(over-specified\)/.test(i)), 'expected the spec file to be named: ' + JSON.stringify(g.issues));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D8 does NOT fire on the renderer-generated <style> block (no false positive)', () => {
+  // The renderer emits style/script from design.md tokens. A keyword there would be a renderer
+  // defect, not a run's leak — scanning it would only teach authors to distrust the gate.
+  const dir = makeRun({
+    'wireframe.html': FILES['wireframe.html'].replace('</style>', '.endpoint{background:#1F4DB8}.node-graphql{color:#0B1221}</style>'),
+  });
+  try {
+    const g = gateOf(validateRun(dir, OPTS), 'D8');
+    assert.equal(g.status, 'pass', 'generated CSS must not trip the solutioning scan: ' + JSON.stringify(g.issues));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D8 still passes a clean prototype with a rendered wireframe and a spec', () => {
+  const dir = makeRun();
+  try {
+    mkdirSync(join(dir, 'specs'), { recursive: true });
+    writeFileSync(join(dir, 'specs/wireframe.prototype.json'), JSON.stringify({ title: 'The moment the offer arrives', tiles: [{ label: 'Time to a decision', value: 'This session' }] }, null, 2));
+    const res = validateRun(dir, OPTS);
+    assert.equal(gateOf(res, 'D8').status, 'pass');
+    assert.ok(res.ok, 'a clean run must stay green: ' + JSON.stringify(res.gates.filter((g) => g.status === 'fail')));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('D9 fails when the prototype was shown to no one (no reaction)', () => {
   const dir = makeRun({ 'stakeholder-reaction.md': null });
   try { assert.equal(gateOf(validateRun(dir, OPTS), 'D9').status, 'fail'); }
