@@ -390,7 +390,7 @@
       "test_ref": "core/residency.test.mjs",
       "lane": "pr",
       "always": true,
-      "note": "Factory Floor WS0 \u00b7 D0.1 / prerequisite P1. `always` because the failure it names is the ABSENCE of a record beside the PRESENCE of a floor \u2014 a state no diff announces. rc.36: the record of decision is the SIGNED docs/governance/residency-approval.json (verified through the approval-attestation core); the markdown table (docs/governance/residency-review.md) remains one release as a deprecated fallback with a printed migration notice. residency-example/ is the worked instance"
+      "note": "Factory Floor WS0 \u00b7 Decision D0.1 / prerequisite P1. `always` because the failure it names is the ABSENCE of a record beside the PRESENCE of a floor \u2014 a state no diff announces. rc.36: the record of decision is the SIGNED docs/governance/residency-approval.json (verified through the approval-attestation core); the markdown table (docs/governance/residency-review.md) remains one release as a deprecated fallback with a printed migration notice. residency-example/ is the worked instance"
     },
     {
       "control_id": "FLOOR-ONLY",

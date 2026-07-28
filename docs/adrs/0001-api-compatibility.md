@@ -4,7 +4,7 @@
 repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
 acceptance** below · **Institutional deciders (per adopter, unassigned here):** `solution-architect` · `enterprise-architect` · `platform-admin`
 
-**Companions:** plan §3 P3 · §4 WS0 · D0.5 · §7 open decision 4 ·
+**Companions:** plan §3 P3 · §4 WS0 · Decision D0.5 · §7 open decision 4 ·
 `docs/research/notion-software-factory-collaboration-2026-07.md` §2.2 and §8 ·
 `docs/notion-floor-threat-model.md` (the seam's identities and gaps).
 

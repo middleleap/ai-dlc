@@ -1,6 +1,6 @@
 # Residency review record — the Factory Floor
 
-**Status:** **DRAFT — not approved. Nothing in this record is in force.** · **Deliverable:** D0.1
+**Status:** **DRAFT — not approved. Nothing in this record is in force.** · **Deliverable:** Decision D0.1
 (WS0), prerequisite **P1** of `docs/notion-floor-plan.md` · **Drafted:** 2026-07-25 ·
 **Owner:** AWAITING — programme owner to be named, must resolve to a registry identity ·
 **Approvers required:** data-protection + risk-second-line (see §11) · **Companions:**

@@ -1,7 +1,7 @@
 # Identity mapping specification — the Factory Floor
 
 **Status:** **DRAFT — not approved. Nothing in this specification is in force, and no code reads
-the mapping today.** · **Deliverable:** D0.4 part 2 (WS0), prerequisite **P6** of
+the mapping today.** · **Deliverable:** Decision D0.4 part 2 (WS0), prerequisite **P6** of
 `docs/notion-floor-plan.md` · **Drafted:** 2026-07-25 · **Owner:** AWAITING — programme owner to
 be named, must resolve to a registry identity · **Approvers required:** information-security +
 risk-second-line + data-protection (see §12) · **Companions:** the D0.4 threat model and

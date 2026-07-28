@@ -5,7 +5,7 @@ repository owner and Factory Floor programme sponsor, for the *method* — see *
 acceptance** below · **Institutional deciders (per adopter, unassigned here):**
 `information-security` · `risk-second-line` · `data-protection` · `enterprise-architect` ·
 **Programme:** Factory Floor (`docs/notion-floor-plan.md`)
-**Companions:** plan §0 finding **F1** · §4 WS5 entry gate and D5.2 · §7 open decision 5 · WS2 ·
+**Companions:** plan §0 finding **F1** · §4 WS5 entry gate and Decision D5.2 · §7 open decision 5 · WS2 ·
 D2.4/D2.5 · `docs/notion-floor-identity-mapping.md` (P6 — the subject → registry join) ·
 `docs/notion-floor-threat-model.md` · `plugins/middleleap-loom/skills/loom-adopt/harness/core/approval-attestations.mjs`
 (the shipped contract) · `plugins/middleleap-loom/skills/loom/references/governance.md`.

@@ -4,7 +4,7 @@
 repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
 acceptance** below · **Institutional deciders (per adopter, unassigned here):** `product-owner` · `solution-architect` · `risk-second-line`
 
-**Companions:** plan §7 open decision 2 · §4 WS4 (D4.1–D4.3) · §5 M3 ·
+**Companions:** plan §7 open decision 2 · §4 WS4 (Decision D4.1–D4.3) · §5 M3 ·
 `docs/research/notion-software-factory-collaboration-2026-07.md` §6 (the freeze lifecycle) and
 §6a step 2 · `plugins/middleleap-loom/skills/loom/references/governance.md` (HG-0013).
 

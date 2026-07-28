@@ -1,6 +1,6 @@
 # The Factory Floor seam — threat model and capability matrix
 
-**Status:** DRAFT — not reviewed, not approved · **Deliverable:** WS0 · D0.4 part 1 (prerequisite
+**Status:** DRAFT — not reviewed, not approved · **Deliverable:** WS0 · Decision D0.4 part 1 (prerequisite
 P6) · **Date:** 2026-07-25 · **Owner:** AWAITING: D0.4 owner — name, date
 **Companions:** `docs/notion-floor-plan.md` (v2 — findings F1–F4, goals G1–G6, prerequisites
 P1–P6) · `docs/research/notion-software-factory-collaboration-2026-07.md` (governing rules §4.1,

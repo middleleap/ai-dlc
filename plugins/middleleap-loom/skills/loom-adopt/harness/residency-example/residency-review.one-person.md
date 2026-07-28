@@ -21,4 +21,4 @@ The ceiling table lives here in a real record. Elided.
 
 Until both required signatures are recorded above and this record is merged, WS1 onward remain
 blocked: no workspace scaffold, no integration token, and no content of any class on any floor
-surface. Only the paper deliverables (D0.2, D0.4, D0.5) may proceed.
+surface. Only the paper deliverables (Decision D0.2, D0.4, D0.5) may proceed.

@@ -70,7 +70,7 @@
       "source": "floor/catalog-b",
       "dest": "floor/catalog-b",
       "kind": "dir",
-      "seam": "Decision-routed floor forms (WS5 · D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed",
+      "seam": "Decision-routed floor forms (WS5 · Decision D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed",
       "tier": "full"
     },
     {
