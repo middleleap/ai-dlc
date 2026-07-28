@@ -97,6 +97,18 @@ test('generated floor forms are out of bounds — the pointer belongs in their t
   assert.equal(isLoomOwned('plugins/middleleap-loom/skills/loom-adopt/harness/floor/catalog-c/x.md'), false);
 });
 
+test('completed discovery runs are out of bounds — a run is evidence, not documentation', () => {
+  // Found by upgrading a real adopted repo: the gate failed the build on seven artifacts of a
+  // finished, gate-green, already-reviewed run. A run scaffolded from the templates inherits
+  // their pointer, so policing finished runs only ever catches runs written before this gate
+  // existed — at the cost of pushing people to edit their own evidence.
+  assert.equal(isLoomOwned('discovery/runs/sme-liquidity/handoff.md'), false);
+  assert.equal(isLoomOwned('discovery/runs/any-slug/problem-statement.md'), false);
+  // The machinery around the runs is still in scope.
+  assert.equal(isLoomOwned('discovery/DISCOVERY.md'), true);
+  assert.equal(isLoomOwned('discovery/templates/handoff.md'), true);
+});
+
 test('accepted ADRs are out of bounds — a signed record is not amended for legibility', () => {
   // An ADR is the decision as it was taken, signed and dated. Editing one after approval to
   // add a pointer is precisely what a governance method must not do casually.

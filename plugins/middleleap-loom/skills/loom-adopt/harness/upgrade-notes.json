@@ -195,6 +195,31 @@
         "release/SKILL.md carries five ADOPT markers — the pre-production promotion command and environment, the smoke command and its URL, the decision-log capture wiring, the eval-rig command, and the production promotion path together with who is entitled to run it.",
         "re-perform/SKILL.md carries one — the audit repository or store the re-performance report is written to. It does not belong on the release branch."
       ]
+    },
+    {
+      "version": "2.0.0-rc.31",
+      "headline": "D8 over-specification scanning reaches the whole prototype, not just its brief",
+      "notes": [
+        "D8 scanned prototype.md alone, so the two surfaces where over-specification actually lands were unchecked: the wireframe a stakeholder reacts to, and the specs/*.json it renders from. A wireframe could name a route, a store or a stack while D8 reported PASS. Found by discovery-boundary-reviewer during an end-to-end run.",
+        "The scan now covers the brief, the asset, and the spec. Generated presentation (<style>/<script>) is stripped first — the renderer emits it from design.md tokens, so a keyword hit there would be a renderer defect, not a run leaking into the right diamond.",
+        "Scope, stated plainly: this closes a structural gap (files never scanned at all). It is a keyword scan and does NOT catch prose-level over-specification — that remains the reviewer agent's job."
+      ],
+      "action_required": [
+        "If any existing discovery run has a wireframe or specs/*.json naming a route, a schema, or a technology, D8 will now fail it. That failure is correct: rewrite the wireframe to show the direction rather than the implementation."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.32",
+      "headline": "Identifiers become self-describing, and a gate keeps them that way",
+      "notes": [
+        "No identifier is renamed. D1–D9, Q1–Q5, S-001, T-1, H1 and the governance ids all keep their values — they appear in adopters branch-protection required-status-checks and in every discovery run already written, and a gate that answers to two names is harder to trust than a terse one. The burden moved to the prose instead.",
+        "New discovery/GLOSSARY.md ships with the harness: one canonical expansion of every id family, installed beside DISCOVERY.md so the runbooks and templates that link it resolve in an adopting repo.",
+        "A real collision was fixed: D0.1–D6.4 are Factory Floor DECISION ids, unrelated to the discovery gates. A reader meeting \"WS5 · D5.4\" reasonably read \"gate D5\". First use in each document now carries the word Decision.",
+        "New ID-LEGIBILITY gate (scripts/id-legibility-check.mjs, registered in ci.yml and the control catalogue): a Loom-owned markdown file must expand the first use of each id family or link the glossary. It is scoped to the trees the harness installs — an adopter's own docs never opted into this vocabulary and must not fail their build for labelling a diagram D1. Generated floor forms, institutional BrainKit content and accepted ADRs are out of bounds."
+      ],
+      "action_required": [
+        "If you have edited any harness-owned markdown, the ID-LEGIBILITY gate may fail it. Fix by expanding the first use of the gate id (\"D8 (Tangibility)\") or linking discovery/GLOSSARY.md — do not weaken the gate."
+      ]
     }
   ]
 }

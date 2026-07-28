@@ -56,14 +56,19 @@ const LOOM_OWNED = [
 //   INSTITUTIONAL — a BrainKit is the institution's own content, sealed by digest. The Loom
 //   does not write in it, and a gate that demanded the Loom's vocabulary there would be
 //   asserting ownership the method explicitly disclaims.
-//   ACCEPTED RECORDS — an ADR is a decision as it was taken, signed and dated. Amending one
-//   to add a pointer rewrites a record after its approval, which is precisely what a
-//   governance method must not do casually. Legibility is a property of living documentation.
+//   ACCEPTED RECORDS — an ADR is a decision as it was taken, signed and dated. A completed
+//   discovery run is the same kind of thing: evidence, gate-checked and reviewed, for one
+//   problem at one moment. Amending either to add a pointer rewrites a record after the fact,
+//   which is precisely what a governance method must not do casually — and it is unnecessary,
+//   because a run scaffolded from the templates inherits their pointer already. Policing
+//   finished runs would only ever catch runs written before this gate existed, at the cost of
+//   pushing people to edit their own evidence. Legibility is a property of living documentation.
 const NOT_OURS_TO_EDIT = [
   /(^|\/)floor\//,
   /(^|\/)brainkit(-example)?\//,
   /(^|\/)institution\//,
   /(^|\/)adrs?\//,
+  /(^|\/)discovery\/runs\//,
 ];
 
 export function isLoomOwned(path) {
