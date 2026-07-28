@@ -5,6 +5,9 @@ description: Generate a DRAFT Institutional BrainKit and institution profile for
 
 # Initialise an Institutional BrainKit (draft)
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 The BrainKit is the **institution-owned seed of the Loom's context brain**. This skill produces a
 **draft** — a starting point for the institution's accountable owners, never a fait accompli. Read
 `../loom/references/brainkit.md` first for the concepts, boundaries, and lifecycle.

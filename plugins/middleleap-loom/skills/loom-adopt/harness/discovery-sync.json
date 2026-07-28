@@ -13,15 +13,17 @@
   "files": {
     "discovery/brand/design.md": {
       "base": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
-      "bundle": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
+      "bundle": "sha256:c1f80a5126f4be747003cdc6f8790ebe73dc2188f0ecbbb07a55ee6c5e7cee7b",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
     },
     "discovery/brand/examples/meridian-trust.design.md": {
       "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
-      "bundle": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
+      "bundle": "sha256:ede29da50af55711ae657ea3ba46b4eed9e3892e784acc0deda1576f45fa425f",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
     },
     "discovery/gates/brand.mjs": {
       "base": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
@@ -57,9 +59,10 @@
     },
     "discovery/render/README.md": {
       "base": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
-      "bundle": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
+      "bundle": "sha256:44656b93d87569355313b0c0998fbbf17dffcd3fd537ef53485a9165c05308ba",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
     },
     "discovery/render/brainkit-provenance.test.mjs": {
       "base": null,
@@ -117,45 +120,52 @@
     },
     "discovery/templates/data-governance.md": {
       "base": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
-      "bundle": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
+      "bundle": "sha256:520d3feeb3d23ed5f0e69ebc3ed0eba0b7171327d6498fd44f5a96249e035004",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
     },
     "discovery/templates/handoff.md": {
       "base": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
-      "bundle": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
+      "bundle": "sha256:1f72fb051550dc5fee73c6919be81a6779f930df9f102a8a9d7cb580567422f9",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
     },
     "discovery/templates/problem-statement.md": {
       "base": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
-      "bundle": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
+      "bundle": "sha256:2fda98a745bee184954dadfc218f761a0a7e1ee4938474c8133a0d78416cd73c",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
     },
     "discovery/templates/prototype.md": {
       "base": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
-      "bundle": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
+      "bundle": "sha256:2718acde1e83025e8bfca6a8c27f4b5d11ea0e7fea0541810cc8f3d458a59a25",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
     },
     "discovery/templates/research-log.md": {
       "base": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
-      "bundle": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
+      "bundle": "sha256:52c8b260a6d19209371be2d8808192d262947f4ea67d02defecd24a1e7c64a8c",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
     },
     "discovery/templates/stakeholder-reaction.md": {
       "base": "sha256:5dd3fc31cb9f75081ede8911cd56088264ce30ecb4b05489d55b7de2264f2b0c",
-      "bundle": "sha256:5dd3fc31cb9f75081ede8911cd56088264ce30ecb4b05489d55b7de2264f2b0c",
+      "bundle": "sha256:8b50ef31e76e937a9d974f5d480a520d12e0512b068b0acef081583b075ce9df",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
     },
     "discovery/templates/synthesis.md": {
       "base": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",
-      "bundle": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",
+      "bundle": "sha256:ce36933ff80997d815bc9f596f2b47ad57f405707f1df84b0bea702ba858fb21",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
     }
   }
 }

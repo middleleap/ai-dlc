@@ -7,6 +7,9 @@ handoff: "discovery/runs/<slug>/handoff.md"
 
 # Solution direction — <slug>
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 > Develop (diverge, then converge). The right diamond's first half explores **N solution
 > directions** and judges them; this record is the convergence. It is the boundary object
 > between "we agreed the problem" and "we are building this" — written once per discovery

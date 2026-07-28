@@ -9,6 +9,13 @@
       "tier": "core"
     },
     {
+      "source": "../../loom/references/glossary.md",
+      "dest": "discovery/GLOSSARY.md",
+      "kind": "file",
+      "seam": "Every identifier expanded — discovery gates D1–D9, quality gates Q1–Q5, signals, themes, hypotheses, governance ids. Ships with the harness because the runbooks and templates that link it are installed here too",
+      "tier": "core"
+    },
+    {
       "source": "discovery/gates",
       "dest": "discovery/gates",
       "kind": "dir",
@@ -70,7 +77,7 @@
       "source": "floor/catalog-b",
       "dest": "floor/catalog-b",
       "kind": "dir",
-      "seam": "Decision-routed floor forms (WS5 · D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed",
+      "seam": "Decision-routed floor forms (WS5 · Decision D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed",
       "tier": "full"
     },
     {

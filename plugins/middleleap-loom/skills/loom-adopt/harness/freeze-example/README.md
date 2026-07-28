@@ -1,4 +1,4 @@
-# The freeze worked example (Factory Floor WS4 · D4.1)
+# The freeze worked example (Factory Floor WS4 · Decision D4.1)
 
 One discovery artifact that was **actually frozen** from a collaboration surface, kept beside the
 stamp that vouches for it. It exists so `scripts/freeze-stamp-check.mjs` has something real to

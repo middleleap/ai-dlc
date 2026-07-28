@@ -1,5 +1,8 @@
 # Run / Operations — closing the loop (the cloth in use)
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 The double diamond *builds*: discovery finds the right problem, delivery ships it under
 control. But a regulated system does not stop at ship — it **runs**, and running is where
 reality tests the framing. Run is the Loom's **third arc**: the cloth in use. It is not a

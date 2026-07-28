@@ -1,4 +1,4 @@
-# The drift worked example (Factory Floor WS4 · D4.2)
+# The drift worked example (Factory Floor WS4 · Decision D4.2)
 
 `observe.mjs` generates a drift observation for the bundled `freeze-example/`, so
 `scripts/drift-check.mjs` compares a real digest against a real freeze stamp instead of reporting

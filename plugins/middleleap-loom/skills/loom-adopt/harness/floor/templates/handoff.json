@@ -6,7 +6,7 @@
   "stage": "handoff",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/handoff.md",
-  "source_digest": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
+  "source_digest": "sha256:1f72fb051550dc5fee73c6919be81a6779f930df9f102a8a9d7cb580567422f9",
   "gates": [
     "D1",
     "D2",
@@ -15,9 +15,10 @@
     "D5",
     "D6",
     "D7",
-    "D8"
+    "D8",
+    "D9"
   ],
-  "guidance": "The boundary object (canon §6). Delivery-ready iff D1–D8 green and this contains **no** delivery design (no endpoints/schemas/stories/tech). Problem in, solution authored later.",
+  "guidance": "The boundary object (canon §6). Delivery-ready iff gates D1–D9 (Problem framing through Validation loop) are green and this contains **no** delivery design (no endpoints/schemas/stories/tech). Problem in, solution authored later.",
   "properties": [
     {
       "name": "Run",
@@ -112,7 +113,8 @@
         "D5",
         "D6",
         "D7",
-        "D8"
+        "D8",
+        "D9"
       ]
     },
     {

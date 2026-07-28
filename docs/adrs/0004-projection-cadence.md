@@ -4,7 +4,7 @@
 repository owner and Factory Floor programme sponsor, for the *method* — see **Scope of this
 acceptance** below · **Institutional deciders (per adopter, unassigned here):** `solution-architect` · `platform-admin` · `operations`
 
-**Companions:** plan §7 open decision 3 · §1 G4 and G6 · §4 WS1 (D1.1–D1.3) · §4 WS6 · D6.4 ·
+**Companions:** plan §7 open decision 3 · §1 G4 and G6 · §4 WS1 (Decision D1.1–D1.3) · §4 WS6 · D6.4 ·
 §8 (stale-data risk) · `docs/research/notion-software-factory-collaboration-2026-07.md` §4.2 ·
 `docs/adrs/0001-api-compatibility.md` (the pinned REST version this cadence runs against).
 

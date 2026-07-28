@@ -8,7 +8,9 @@ description: Run the discovery harness — the left half of the Double Diamond. 
 Canon: `discovery/DISCOVERY.md` (read it). This skill produces a **problem worth solving** plus
 a **tangible prototype of the direction**, and stops at the hand-off. It never designs the
 production solution, writes delivery stories, or touches the API contract — crossing that line
-is a gate failure (D4).
+is a gate failure (D4 — No-solutioning boundary). Every identifier used here — the gates
+`D1`–`D9`, signals `S-001`, themes `T-1`, hypotheses `H1` — is expanded in
+`discovery/GLOSSARY.md`.
 
 You are the discovery facilitator. Stay on the problem side. When a solution idea appears, park
 it as a *direction* in the prototype/hand-off; do not specify a build.

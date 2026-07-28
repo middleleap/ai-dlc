@@ -1,4 +1,4 @@
-# The approvals-surface worked example (Factory Floor WS5 · D5.1)
+# The approvals-surface worked example (Factory Floor WS5 · Decision D5.1)
 
 `derive.mjs` generates the PA1 and PA2 approvals surfaces for the bundled `change-example/`'s
 compiled control plan, so `scripts/approval-surface-check.mjs` checks a real derived surface against

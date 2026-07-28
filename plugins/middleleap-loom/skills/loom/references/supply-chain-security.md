@@ -1,5 +1,8 @@
 # Supply-chain security — filling slots the frame already has
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 Supply-chain security is **not a new warp thread**. The Loom already names the slots where it
 belongs — the `Q2` and `Q4` quality gates, `HG-0002` (supply-chain integrity), the sealed
 evidence bundle, and the continuous-assurance triggers. What follows is how concrete tooling

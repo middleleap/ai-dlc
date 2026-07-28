@@ -5,6 +5,9 @@ description: Use to author a governed artifact the gates require — a change en
 
 # Govern — draft the artifact, never the decision
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 Most of the harness's governance gates judge an artifact that no other skill authors. That
 asymmetry is why the governance plane feels heavier than it is: the machinery is excellent at telling you the
 JSON is wrong and silent on how to make it right. This skill closes that, and it is the one

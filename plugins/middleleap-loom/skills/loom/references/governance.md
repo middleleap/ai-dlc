@@ -1,5 +1,8 @@
 # Harness governance — the HG catalog
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 Decision records for **how the AI build harness itself is governed** — the AI-SDLC, not the
 product it builds. They are kept separate from product architecture ADRs because the audience
 and concern differ: change management, model risk, separation of duties, and the controls a

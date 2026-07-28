@@ -5,6 +5,9 @@ description: Run the Develop phase — the diverge half of the right diamond. Ta
 
 # Develop — the diverge half of the right diamond
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 Canon: `discovery/DISCOVERY.md` (the Double Diamond) and the Loom governance catalog
 (develop-diverge, HG-0009).
 

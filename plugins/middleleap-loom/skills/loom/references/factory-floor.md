@@ -1,5 +1,8 @@
 # The Factory Floor — canon
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 The Loom's harnesses are operated from a repository. Most of the people a regulated build depends
 on — the product manager who owns the problem, the stakeholder who reacts to a prototype, the
 second-line approver who clears a release, the architect wearing a governance hat — do not open
@@ -112,7 +115,7 @@ risk-proportionate gate runner selects them like any other control.
 
 | Gate | Deliverable | Refuses |
 |---|---|---|
-| `residency-check` | WS0 · D0.1 | A floor that exists while the residency record is unsigned; an agent, a builder, or one person holding both signature roles |
+| `residency-check` | WS0 · Decision D0.1 | A floor that exists while the residency record is unsigned; an agent, a builder, or one person holding both signature roles |
 | `identity-map-check` | WS0 · D0.4 (P6) | An unsound or stale join from surface person → IdP subject → registry identity |
 | `projection-capability-check` | WS1 | A projector whose inability to write git is *declared* rather than probed and refused |
 | `template-parity-check` | WS3 · D3.1 | A guided form that has drifted from the git template it produces |

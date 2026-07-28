@@ -11,7 +11,7 @@ acceptance** below · **Institutional deciders (per adopter, unassigned here):**
 This record decides the runtime for the three **service** identities that cross the seam between
 the floor (Notion) and the record (git) — `svc-floor-projector`, `svc-floor-freezer` and
 `svc-floor-bridge`. It decides nothing about the API version (ADR-0001), nothing about the
-human-assertion mechanism for D5.2 (plan §7.5, decided in the WS5 entry-gate review), and it
+human-assertion mechanism for Decision D5.2 (plan §7.5, decided in the WS5 entry-gate review), and it
 creates no authority: hosting choices move credentials, logs and failure modes, never approval
 rights.
 

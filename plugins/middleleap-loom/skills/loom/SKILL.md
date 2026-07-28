@@ -47,6 +47,9 @@ into Discovery as evidence — the third arc (`references/operations.md`).
 ```
 
 Full canon for each half:
+- `references/glossary.md` — **every identifier expanded**: the discovery gates `D1`–`D9`, the
+  quality gates `Q1`–`Q5`, signals (`S-001`), themes (`T-1`), hypotheses (`H1`), gaps (`G-01`),
+  and the governance ids. Read this first if an id anywhere else is opaque.
 - `references/discovery-harness.md` — stages, artifacts, the D1–D9 gate model, the prototype
   boundary, the two seams, and the hand-off contract. This file **is** the canon an adopting
   repo mounts as `discovery/DISCOVERY.md`.

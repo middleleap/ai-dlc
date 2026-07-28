@@ -6,13 +6,13 @@
   "stage": "define",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/problem-statement.md",
-  "source_digest": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
+  "source_digest": "sha256:2fda98a745bee184954dadfc218f761a0a7e1ee4938474c8133a0d78416cd73c",
   "gates": [
     "D1",
     "D3",
     "D4"
   ],
-  "guidance": "Define (converge). The single problem worth solving. Gates D1 (framing), D3 (scope), D4 (no solutioning — name the problem, not the build).",
+  "guidance": "Define (converge). The single problem worth solving. Gates D1 (Problem framing), D3 (Scope & stakeholders), D4 (No-solutioning boundary — name the problem, not the build).",
   "properties": [
     {
       "name": "Run",

@@ -1,6 +1,6 @@
 ---
 name: discovery-boundary-reviewer
-description: Reviews a discovery run for the two boundaries the gates can only partly enforce — the no-solutioning line (D4) and the prototype fidelity line (D8/§4). Use before a discovery hand-off. Catches solutioning and over-fidelity that slip past keyword matching.
+description: Reviews a discovery run for the two boundaries the gates can only partly enforce — the no-solutioning line (D4 — No-solutioning boundary) and the prototype fidelity line (D8 — Tangibility, §4). Use before a discovery hand-off. Catches solutioning and over-fidelity that slip past keyword matching.
 tools: Read, Grep, Glob, Bash
 ---
 

@@ -1,5 +1,8 @@
 # Agent credential brokering — the vault half of HG-0004
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 `agent-egress-control.md` covers the **network** side of the agent's runtime: the chokepoint that
 decides whether a request leaves at all. This file covers the **credential** side: what the agent
 is holding when it does. That file's mapping table names the half a gateway of its shape leaves
