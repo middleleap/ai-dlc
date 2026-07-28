@@ -316,7 +316,14 @@ test('a pattern_claim on a non-standard change is a claim nobody checks', () => 
   assert.ok(ok({ pattern_claim: { pattern_id: 'x' } }).some((f) => /only change_class "standard" rides a pattern/.test(f)));
 });
 
-test('the shipped pattern example rides its pattern, and loses coverage the moment it expires', () => {
+// The pattern example is a SECOND worked change (CHG-2026-0055), and like the first it is bundle
+// demonstration data the installer does not ship — so in an adopted layout it is absent and this
+// fixture test skips. The pure pattern logic above and in core/change-patterns.test.mjs runs in
+// both layouts; only the "the shipped example is sound" assertion needs the shipped example.
+const PATTERN_EXAMPLE_PRESENT = ['change-pattern-example/change-envelope.json', 'docs/governance/changes/CHG-2026-0055/change-envelope.json']
+  .some((c) => existsSync(`${HARNESS}/${c}`));
+
+test('the shipped pattern example rides its pattern, and loses coverage the moment it expires', { skip: PATTERN_EXAMPLE_PRESENT ? false : 'pattern example is bundle-only — absent in an adopted layout' }, () => {
   const env = J('change-pattern-example/change-envelope.json', 'docs/governance/changes/CHG-2026-0055/change-envelope.json');
   const plan = J('change-pattern-example/control-plan.json', 'docs/governance/changes/CHG-2026-0055/control-plan.json');
   const passport = J('change-pattern-example/product-passport.json', 'docs/governance/changes/CHG-2026-0055/product-passport.json');

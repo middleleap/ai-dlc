@@ -5,12 +5,17 @@
 // commit, a change nobody governed, a release taken by somebody who may not take it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TRAIN_FIELDS, evaluateTrains, trainForCommit } from './release-trains.mjs';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// The worked train is BUNDLE demonstration data — the installer does not ship it (it names
+// changes an adopter does not have), so in an adopted layout it is absent and the fixture test
+// below skips rather than throwing. Every pure case above it runs in both layouts.
+const TRAIN_EXAMPLE = ['release-train-example/train.json', 'docs/governance/release-trains/train.json']
+  .map((c) => `${HARNESS}/${c}`).find(existsSync) || null;
 const REGISTRY = {
   identities: [
     { id: 'risk-lena', kind: 'human', groups: ['second-line'], roles: ['risk-second-line'] },
@@ -98,8 +103,8 @@ test('trainForCommit finds the train binding a commit, and nothing for an unboun
   assert.equal(trainForCommit([TRAIN()], undefined), null);
 });
 
-test('the shipped worked example is a valid train against the bundled changes', () => {
-  const train = JSON.parse(readFileSync(`${HARNESS}/release-train-example/train.json`, 'utf8'));
+test('the shipped worked example is a valid train against the bundled changes', { skip: TRAIN_EXAMPLE ? false : 'worked train is bundle-only — absent in an adopted layout' }, () => {
+  const train = JSON.parse(readFileSync(TRAIN_EXAMPLE, 'utf8'));
   const ids = new Set(['CHG-2026-0042', 'CHG-2026-0055']);
   // The committed release_commit is a placeholder the release job stamps; everything ELSE about
   // the example must already be sound, or the fixture is teaching a shape that does not verify.
