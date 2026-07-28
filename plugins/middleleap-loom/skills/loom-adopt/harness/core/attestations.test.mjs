@@ -15,10 +15,24 @@ const J = (...candidates) => {
 // The evidence manifest resolves in BOTH layouts: the bundle (evidence-example/) and an adopted
 // repo that mounted it (docs/governance/evidence/). In a BARE adoption it is in neither, so skip
 // cleanly rather than crash at module load.
+//
+// The `attestation` check is load-bearing, not defensive. These three tests exercise the SHIPPED
+// EXAMPLE's signed anchor — they need the example's own signature to verify against. An adopter
+// who follows the adoption guide ("adapt evidence-example/ into docs/governance/evidence/") and
+// then assembles a REAL bundle from their own release has a manifest at that path with a
+// different anchor and, until they sign it, no attestation at all. Resolving on existence alone
+// pointed these tests at that bundle and failed a repository for doing exactly what it was told:
+// one assertion failure and two TypeErrors on `MANIFEST.attestation.signature`.
+//
+// So: run when the manifest carries an attestation to verify, skip when it does not. A mounted
+// copy of the example still runs them; an adopter's own unsigned bundle is not this suite's
+// business. Found by assembling a real bundle in an adopted repo.
 const MANIFEST_PATH = ['evidence-example/manifest.json', 'docs/governance/evidence/manifest.json']
   .map((c) => `${HARNESS}/${c}`).find(existsSync);
-if (!MANIFEST_PATH) {
-  test('attestation verification (evidence example is bundle-only — skipped in an adopted layout)', { skip: true }, () => {});
+const HAS_ATTESTATION = MANIFEST_PATH
+  && JSON.parse(readFileSync(MANIFEST_PATH, 'utf8')).attestation !== undefined;
+if (!HAS_ATTESTATION) {
+  test('attestation verification (no attested manifest resolved — nothing to verify against)', { skip: true }, () => {});
 } else {
 const MANIFEST = J('evidence-example/manifest.json', 'docs/governance/evidence/manifest.json');
 const ISSUERS = J('governance/attestation-issuers.template.json', 'docs/governance/attestation-issuers.json');
