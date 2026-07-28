@@ -123,3 +123,34 @@ test('lane separation still holds — a required release-family control does not
 test('the lanes cover the artifact life: pr, build, release, deploy, scheduled (rc.11 WS1.4)', () => {
   assert.deepEqual(LANES, ['pr', 'build', 'release', 'deploy', 'scheduled']);
 });
+
+/* ---- rc.34: tier-aware selection — min_tier is opt-in, and always/mandated override upward ---- */
+
+const TIERCAT = { controls: [
+  { control_id: 'HI-ONLY', mechanism_ref: 'scripts/h.mjs', lane: 'pr', min_tier: 'high' },
+  { control_id: 'HI-ALWAYS', mechanism_ref: 'scripts/ha.mjs', lane: 'pr', min_tier: 'high', always: true },
+  { control_id: 'HI-FAM', mechanism_ref: 'scripts/hf.mjs', lane: 'pr', min_tier: 'high', gate_family: 'PA2', paths: ['nothing/'] },
+  { control_id: 'ANY', mechanism_ref: 'scripts/any.mjs', lane: 'pr' },
+] };
+
+test('a min_tier control skips below its tier WITH a recorded reason, and runs at or above it', () => {
+  const low = { families: new Set(), changes: [], maxTier: 'low' };
+  const rLow = select(TIERCAT, { lane: 'pr', changedPaths: null, requirements: low });
+  const s = rLow.skipped.find((x) => x.id === 'HI-ONLY');
+  assert.ok(s && /min_tier:high/.test(s.reason), 'the skip must name the tier rule');
+  assert.ok(ids(rLow).includes('ANY'), 'controls without min_tier are untouched');
+  const high = { families: new Set(), changes: [], maxTier: 'high' };
+  assert.ok(ids(select(TIERCAT, { lane: 'pr', changedPaths: null, requirements: high })).includes('HI-ONLY'));
+});
+
+test('always and plan-mandated controls IGNORE min_tier — the override goes upward, never downward', () => {
+  const low = { families: new Set(['PA2']), changes: [{ change_id: 'CHG-1', families: ['PA2'] }], maxTier: 'low' };
+  const r = select(TIERCAT, { lane: 'pr', changedPaths: ['README.md'], requirements: low });
+  assert.ok(ids(r).includes('HI-ALWAYS'), 'always beats min_tier');
+  assert.ok(ids(r).includes('HI-FAM'), 'a plan-mandated family beats min_tier');
+});
+
+test('with no aggregated requirements at all, min_tier does not apply — fail open', () => {
+  const r = select(TIERCAT, { lane: 'pr', changedPaths: null });
+  assert.ok(ids(r).includes('HI-ONLY'));
+});

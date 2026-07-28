@@ -43,6 +43,20 @@ test('the shipped worked example passes end to end', () => {
   assert.deepEqual(ok(), []);
 });
 
+test('TERMINAL — a closed change is valid without plan reconciliation or receipts, but keeps its classifier (rc.34)', () => {
+  // A closed change's profiles may have moved on; it must not go red because a profile did,
+  // and it must not demand PA receipts for work it abandoned. It contributes nothing to the
+  // compiled-requirements aggregate (asserted in core/compiled-requirements.test.mjs).
+  const closed = evaluate({ ...ENVELOPE, current_state: 'closed' }, { plan: null, freshPlan: null, passport: null, architectureExists: false });
+  assert.deepEqual(closed, [], `a closed change must not be re-litigated:\n${closed.join('\n')}`);
+  const superseded = evaluate({ ...ENVELOPE, current_state: 'superseded' }, {});
+  assert.deepEqual(superseded, []);
+  // The record of who judged it survives its closure.
+  const anonymous = evaluate({ ...ENVELOPE, current_state: 'closed', classification: {} }, {});
+  assert.equal(anonymous.length, 1);
+  assert.match(anonymous[0], /classified_by/);
+});
+
 test('RECONCILIATION — a hand-edited plan fails even when it keeps its old hash', () => {
   // PA1 edited out, plan_hash left untouched: content no longer matches its own hash.
   const doctored = { ...PLAN, required_gates: PLAN.required_gates.filter((g) => g !== 'PA1') };

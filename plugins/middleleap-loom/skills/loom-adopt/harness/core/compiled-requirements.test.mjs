@@ -94,6 +94,72 @@ test('anyInProduction flips when a change holds a production state', () => {
   } finally { rmSync(inProd, { recursive: true, force: true }); rmSync(notProd, { recursive: true, force: true }); }
 });
 
+test('a TERMINAL change (closed/superseded) contributes nothing — the union stops growing with repo age (rc.34)', () => {
+  const dir = repo([
+    { id: 'CHG-LIVE', state: 'in-delivery', gates: ['D', 'Q'], evidence: ['tests'] },
+    { id: 'CHG-DONE', state: 'closed', gates: ['PA1', 'PA2', 'R'], evidence: ['sast'], capabilities: { model_risk: { required: true } } },
+    { id: 'CHG-OLD', state: 'superseded', gates: ['A'] },
+  ]);
+  try {
+    const agg = aggregateRequirements(dir);
+    assert.deepEqual([...agg.families].sort(), ['D', 'Q'], 'terminal changes must not mandate families');
+    assert.deepEqual([...agg.evidence].sort(), ['tests']);
+    assert.equal(capabilityRequired(agg, 'model_risk'), false, 'a closed change must not keep a capability mandatory');
+    assert.deepEqual(agg.changes.map((c) => c.change_id), ['CHG-LIVE']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('changedPaths scopes the aggregate to the changes the diff implicates (rc.34)', () => {
+  const dir = repo([
+    { id: 'CHG-A', gates: ['PA1'], evidence: ['sast'] },
+    { id: 'CHG-B', gates: ['R'], evidence: ['provenance'] },
+  ]);
+  try {
+    // A diff inside CHG-A's envelope directory implicates CHG-A only.
+    const scoped = aggregateRequirements(dir, { changedPaths: ['docs/governance/changes/CHG-A/product-passport.json', 'src/app.mjs'] });
+    assert.equal(scoped.scoped, true);
+    assert.deepEqual([...scoped.families], ['PA1'], 'only the implicated change mandates families');
+    assert.deepEqual(scoped.changes.map((c) => c.change_id), ['CHG-A']);
+    // A diff touching neither implicates nothing — the light path, with the reason recorded upstream.
+    const none = aggregateRequirements(dir, { changedPaths: ['README.md'] });
+    assert.equal(none.families.size, 0);
+    // Unknown diff (null) fails open: every non-terminal change counts.
+    const all = aggregateRequirements(dir, { changedPaths: null });
+    assert.equal(all.scoped, false);
+    assert.deepEqual([...all.families].sort(), ['PA1', 'R']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('an envelope scope_paths prefix implicates its change from a code diff (rc.34)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cr-'));
+  try {
+    const base = join(dir, 'docs/governance/changes/CHG-S');
+    mkdirSync(base, { recursive: true });
+    writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: 'CHG-S', current_state: 'in-delivery', control_plan: 'control-plan.json', scope_paths: ['services/credit/'] }));
+    writeFileSync(join(base, 'control-plan.json'), JSON.stringify({ required_gates: ['Q'] }));
+    const hit = aggregateRequirements(dir, { changedPaths: ['services/credit/handler.mjs'] });
+    assert.deepEqual([...hit.families], ['Q']);
+    const miss = aggregateRequirements(dir, { changedPaths: ['services/payments/handler.mjs'] });
+    assert.equal(miss.families.size, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('maxTier is the highest risk_tier among counted changes, and scoping narrows it (rc.34)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cr-'));
+  try {
+    for (const [id, tier] of [['CHG-LOW', 'low'], ['CHG-CRIT', 'critical']]) {
+      const base = join(dir, 'docs/governance/changes', id);
+      mkdirSync(base, { recursive: true });
+      writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: id, current_state: 'in-delivery', risk_tier: tier, control_plan: 'control-plan.json' }));
+      writeFileSync(join(base, 'control-plan.json'), JSON.stringify({ required_gates: [] }));
+    }
+    assert.equal(aggregateRequirements(dir).maxTier, 'critical');
+    const scoped = aggregateRequirements(dir, { changedPaths: ['docs/governance/changes/CHG-LOW/change-envelope.json'] });
+    assert.equal(scoped.maxTier, 'low', 'a diff implicating only the low change must not carry the critical tier');
+    assert.equal(aggregateRequirements(dir, { changedPaths: ['README.md'] }).maxTier, null);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('a change with no plan contributes nothing — it never lowers a requirement', () => {
   const dir = mkdtempSync(join(tmpdir(), 'cr-'));
   try {

@@ -25,6 +25,8 @@ on:
     branches: [main]
   pull_request:
   merge_group:   # the routine auto-merge lane runs in the merge-queue context
+  schedule:
+    - cron: '17 5 * * 1'   # rc.34 — the scheduled lane runs on a SCHEDULE, as its name promises
 
 jobs:
   gates:
@@ -37,24 +39,42 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Bundled test suites (discovery gates + renderer + the gate tests)
-        run: node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+      - name: Test suites — machinery smoke in an adoption, the full suite in the bundle
+        # rc.34: an adopted repository no longer runs the harness's own ~1,400-test regression
+        # suite on every PR — that is the BUNDLE'S suite, billed to the adopter's cycle time.
+        # The adopted path keeps a machinery-integrity smoke (the compiler, the runner, and the
+        # layering invariant — the three modules every gate trusts); the stamp is what tells the
+        # two contexts apart, because only a real adoption has one.
+        run: |
+          if [ -f .loom/adoption.json ]; then
+            node --test core/policy-compiler.test.mjs core/gate-runner.test.mjs core/layering.test.mjs
+          else
+            node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+          fi
 
       - name: Control catalog is complete and honest
         # Run before the runner, because the runner TRUSTS the catalog: these two gates are what
         # make that trust earned. The catalog may not overstate a control's state, and it may not
         # omit a gate this workflow runs — the second is what stops the list-vs-runner divergence
-        # from coming back in a new form.
+        # from coming back in a new form. The two bundle-only gates run only where there is no
+        # adoption stamp (rc.34) — in an adopted tree they were two inert process spawns per PR.
         run: |
           node scripts/control-catalog-check.mjs
           node scripts/ci-catalog-check.mjs
-          node scripts/self-claims-check.mjs      # bundle-only; inert in an adopted tree
-          node scripts/discovery-sync-check.mjs   # bundle-only; the ofbo back-port debt, counted
+          if [ ! -f .loom/adoption.json ]; then
+            node scripts/self-claims-check.mjs      # bundle-only; inert in an adopted tree
+            node scripts/discovery-sync-check.mjs   # bundle-only; the ofbo back-port debt, counted
+          fi
 
       - name: Gates — pr lane (risk-proportionate; every skip recorded)
         run: node core/gate-runner.mjs --lane pr --base origin/main --out gate-run-pr.json
 
-      - name: Gates — scheduled lane (runtime assurance; safe to run per PR)
+      - name: Gates — scheduled lane
+        # rc.34: runs on the cron trigger (and the push-to-main build as a backstop), not on
+        # every PR — with no diff to scope by, this lane fails open to running everything in it,
+        # which made "scheduled" a per-PR cost. The lane's own controls are freshness checks;
+        # they do not need a PR to have moved.
+        if: github.event_name == 'schedule' || github.event_name == 'push'
         run: node core/gate-runner.mjs --lane scheduled --out gate-run-scheduled.json
 
       - name: Gates — release lane

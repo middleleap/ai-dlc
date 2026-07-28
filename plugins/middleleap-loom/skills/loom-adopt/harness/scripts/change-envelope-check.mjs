@@ -18,6 +18,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { compile, loadProfiles, resolveBindings, planHash } from '../core/policy-compiler.mjs';
+import { TERMINAL_STATES } from '../core/compiled-requirements.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { evaluate as evaluateReadiness, SERVICES_DIR } from './operational-readiness-check.mjs';
 import { loadIssuers, verifyAnchorAttestation } from '../core/attestations.mjs';
@@ -26,6 +27,12 @@ import { pathToFileURL } from 'node:url';
 export const CHANGES_DIR = 'docs/governance/changes';
 export const STATES = ['classified', 'permission-to-develop', 'in-delivery', 'delivery-complete',
   'permission-to-launch', 'operationally-ready', 'production-authorized', 'in-production'];
+// rc.34 — terminal states (see core/compiled-requirements.mjs TERMINAL_STATES). A closed or
+// superseded change ships nothing: it stops contributing compiled requirements, its plan is no
+// longer reconciled (profiles move on; a closed change must not go red because a profile did),
+// and state receipts no longer apply. What it keeps is its classification — the record of who
+// judged it — and its envelope, which stays in the tree as the traceability record.
+export { TERMINAL_STATES };
 export const CLASSIFIER_ROLES = ['product-owner', 'risk-second-line'];
 export const ANCHOR_REQUIRED_TIERS = new Set(['high', 'critical']);
 
@@ -38,11 +45,22 @@ const at = (state) => STATES.indexOf(state);
 export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence } = {}) {
   const findings = [];
   const id = envelope?.change_id || '(no id)';
-  if (!STATES.includes(envelope?.current_state)) {
-    findings.push(`${id}: current_state must be one of ${STATES.join('|')} (got ${JSON.stringify(envelope?.current_state)})`);
+  if (!STATES.includes(envelope?.current_state) && !TERMINAL_STATES.has(envelope?.current_state)) {
+    findings.push(`${id}: current_state must be one of ${STATES.join('|')}|${[...TERMINAL_STATES].join('|')} (got ${JSON.stringify(envelope?.current_state)})`);
     return findings;
   }
   const state = envelope.current_state;
+
+  // A terminal change (closed/superseded) ships nothing: no plan reconciliation (profiles move
+  // on), no state receipts, no exemption clock. What it must keep is the record of who judged
+  // it — the classification stays required. Closing a change is abandonment, not a bypass: the
+  // moment work resumes it needs a new envelope taking the full route from `classified`.
+  if (TERMINAL_STATES.has(state)) {
+    if (!envelope.classification?.classified_by) {
+      findings.push(`${id}: terminal state ${state} still requires classification.classified_by — the record of who judged the change survives its closure`);
+    }
+    return findings;
+  }
 
   // Reconciliation, both halves: the stored plan's CONTENT must match its own hash (a
   // hand-edit that keeps the old hash is still an edit), and that hash must match a fresh
@@ -156,6 +174,12 @@ export function run(cwd = process.cwd()) {
     const envelope = readJson(`${base}/change-envelope.json`);
     if (!envelope) { findings.push(`${name}: no parseable change-envelope.json`); continue; }
     count++;
+    // Terminal changes are validated for their record only — no fresh compile (their profiles
+    // may have moved on or been retired; a closed change must not go red because a profile did).
+    if (TERMINAL_STATES.has(envelope.current_state)) {
+      findings.push(...evaluate(envelope, { registry }));
+      continue;
+    }
     const plan = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
     const passport = readJson(`${base}/product-passport.json`);
     const architectureExists = existsSync(`${base}/architecture-assurance.json`);

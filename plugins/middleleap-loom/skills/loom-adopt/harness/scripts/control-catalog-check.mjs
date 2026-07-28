@@ -62,6 +62,11 @@ export function evaluate(catalog, exists = existsSync) {
     if (c.paths !== undefined && !(Array.isArray(c.paths) && c.paths.every((p) => typeof p === 'string' && p.trim()))) {
       findings.push(`${id}: paths must be an array of non-empty path prefixes`);
     }
+    // min_tier (rc.34) opts a control into tier-aware selection: it runs only when the highest
+    // implicated change tier reaches it. `always` and plan-mandated controls override upward.
+    if (c.min_tier !== undefined && !['low', 'medium', 'high', 'critical'].includes(c.min_tier)) {
+      findings.push(`${id}: min_tier must be low|medium|high|critical (got ${JSON.stringify(c.min_tier)})`);
+    }
     // gate_family (W1) binds a control to the compiler family it implements, so the runner can
     // make a plan-required control unskippable. The vocabulary is the compiler's plan families.
     if (c.gate_family !== undefined && !GATE_FAMILIES.has(c.gate_family)) {

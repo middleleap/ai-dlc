@@ -233,6 +233,22 @@
         "If your .github/workflows/ci.yml still invokes `gate-runner --lane build` or `--lane deploy`, remove those lines (or catalogue a control for those lanes): the runner now fails an empty lane instead of passing about nothing. The reference ci.yml shows the new shape.",
         "If you relied on unflagged adopt.mjs runs landing the full tier on a FRESH repo, pass --tier full explicitly (re-runs keep the tier already stamped, as before)."
       ]
+    },
+    {
+      "version": "2.0.0-rc.34",
+      "headline": "Flow-plan Phase 1 — risk-proportionality made real at execution time",
+      "notes": [
+        "Terminal change states: `closed` and `superseded` end a change. A terminal change stops contributing compiled requirements (the requirement union no longer grows forever), skips plan reconciliation and receipts, and keeps only its classification record.",
+        "Per-diff requirement scoping: the gate runner aggregates requirements from the changes THIS diff implicates (the envelope directory, or the envelope's optional `scope_paths` prefixes). No base means every non-terminal change counts, as before. The run record states the scope, the implicated changes, and the max tier.",
+        "Tier-aware selection: a catalog control may declare `min_tier` — it runs only when the highest implicated change tier reaches it. `always` and plan-mandated controls override upward. The shipped catalog declares none; this is the adopter knob for a genuinely shorter documentation-PR route.",
+        "The reference ci.yml runs the scheduled lane on a cron trigger (plus push-to-main) instead of every PR, and runs the bundle test suite and the two bundle-only gates only where no adoption stamp exists — an adopted repo keeps a compiler/runner/layering smoke instead of the ~1,400-test bundle suite.",
+        "`loom gates` runs the pr-lane gate run locally against the merge base — same runner, catalog, and recorded skips as CI; `loom compile` forwards to the policy compiler."
+      ],
+      "action_required": [
+        "Close finished changes: set `current_state: closed` (or `superseded`) on governed changes that shipped or were abandoned — until you do, their compiled requirements keep mandating gates on every diff-unknown run.",
+        "Optionally declare `scope_paths` on active envelopes so code-only PRs implicate the right change, and `min_tier` on catalog controls you want tier-scoped.",
+        "Adopt the new ci.yml shape (the installer drops it as a .loom-new sidecar if you have edited yours): scheduled lane on cron, bundle-only steps stamped out."
+      ]
     }
   ]
 }

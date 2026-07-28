@@ -17,6 +17,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 import { aggregateRequirements, requiredBy } from './compiled-requirements.mjs';
+import { TIERS } from './policy-compiler.mjs';
 import { pathToFileURL } from 'node:url';
 
 // rc.11 (WS1.4): the lane model extends from pr|release|scheduled to cover the artifact's life —
@@ -38,6 +39,7 @@ export function select(catalog, { lane = 'pr', changedPaths = null, requirements
   const run = new Map(); // mechanism → {mechanism, ids[]}
   const skipped = [];
   const reqFamilies = requirements ? requirements.families : new Set();
+  const tierIdx = (t) => TIERS.indexOf(t);
   for (const c of catalog?.controls || []) {
     if (!runnable(c)) continue; // documented/absent controls have nothing to execute
     if (c.execute === false) { skipped.push({ id: c.control_id, reason: c.execute_note || 'not directly executable — enforced via another gate' }); continue; }
@@ -45,6 +47,19 @@ export function select(catalog, { lane = 'pr', changedPaths = null, requirements
     if (cLane !== lane) { skipped.push({ id: c.control_id, reason: `lane:${cLane} (this is a ${lane} run)` }); continue; }
     // A compiled plan requires this control's family → it runs, whatever the diff.
     const mandated = c.gate_family && reqFamilies.has(c.gate_family);
+    // rc.34 — tier-aware selection, OPT-IN per control. A control declaring `min_tier` runs only
+    // when the highest risk tier among the implicated changes reaches it. `always` and
+    // plan-mandated controls ignore it (the override goes upward, never downward), and it only
+    // applies when requirements were aggregated at all — no aggregate, no tier scoping (fail
+    // open). The shipped catalog declares none; adding min_tier is how an adopter gives a
+    // documentation-only PR a genuinely shorter route.
+    if (!mandated && !c.always && c.min_tier && requirements) {
+      const maxT = requirements.maxTier ?? null;
+      if (maxT === null || tierIdx(maxT) < tierIdx(c.min_tier)) {
+        skipped.push({ id: c.control_id, reason: `min_tier:${c.min_tier} — highest implicated change tier is ${maxT || 'none'}` });
+        continue;
+      }
+    }
     let why = null;
     if (mandated) why = `required by compiled plan [${requiredBy(requirements, c.gate_family).join(', ')}] (family ${c.gate_family})`;
     else if (c.always) why = 'always';
@@ -87,7 +102,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(2);
   }
   const changedPaths = base ? changedSince(base) : null;
-  const requirements = aggregateRequirements(process.cwd());
+  // rc.34 — the aggregate is scoped to the changes THIS diff implicates (a change counts when
+  // the diff touches its envelope directory or a declared scope_path). No base, or a git error,
+  // means an unknown diff: every non-terminal change counts — fail open toward more control.
+  const requirements = aggregateRequirements(process.cwd(), { changedPaths });
   const { run, skipped } = select(catalog, { lane, changedPaths, requirements });
 
   const executed = [];
@@ -104,7 +122,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const record = {
     lane, base: base || null, commit: head,
     changed_paths: changedPaths,
-    required_families: [...requirements.families].sort(), // what the active plans compiled
+    requirements_scope: requirements.scoped ? 'diff' : 'all', // rc.34 — which changes the aggregate counted
+    implicated_changes: requirements.changes.map((c) => c.change_id).sort(),
+    max_implicated_tier: requirements.maxTier,
+    required_families: [...requirements.families].sort(), // what the counted plans compiled
     executed, skipped,
     result: failed === 0 ? 'pass' : 'fail',
   };
