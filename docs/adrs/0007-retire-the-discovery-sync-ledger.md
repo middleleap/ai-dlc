@@ -81,18 +81,46 @@ The six conflicts are resolved **once**, as part of the adoption, rather than gr
 by a ledger that describes it. `discovery-sync-check.mjs`, its ledger, its six states and its
 tests all delete. The reverse-debt problem disappears rather than being modelled.
 
-**Cost.** A real migration in another repository, owned by people who did not take this
-decision. ofbo's instantiation content (CBUAE register, OFBO brand profile, hard-stop
-checklists, Q1–Q5 workflows) must be confirmed to survive adoption untouched — it should, since
-those are seams the installer never writes, but "should" is not "verified". The six conflicts
-must be resolved by someone who understands both sides.
+**Cost — measured, not estimated.** `assess.mjs` and `adopt.mjs --dry-run` were run against a
+real ofbo checkout on 2026-07-28 (read-only; nothing was written). At `core` tier:
+
+| Outcome | Count | What it means |
+|---|---|---|
+| `unverifiable-preserved` | **9** | ofbo's file is kept; the Loom's lands beside it as `<file>.loom-new` |
+| `installed` | 8 | Machinery ofbo does not have — `GLOSSARY.md`, `core/`, `profiles/`, runbooks, `delivery/templates` |
+| `merge-required` | 1 | `.claude/settings.json` — hook wiring, merged by hand from a sidecar |
+| `adopt-pending` | 5 | Templates ofbo fills in |
+
+**Nothing of ofbo's is overwritten.** That was this ADR's stated unknown and it is now verified:
+all six conflict files appear in the preserved set. The installer resolves them exactly as
+argued — ofbo keeps its version, ours arrives beside it, a human merges once.
+
+Two honest costs the dry run exposed:
+
+- The entries read **`unverifiable`-preserved, not `local-edit`-preserved.** ofbo has no
+  `.loom/adoption.json`, so on a first adoption the installer cannot tell an ofbo edit from an
+  older copy of ours. All nine are preserved and flagged for hand reconciliation. This is a
+  **one-time** cost: the stamp written on that run means every later upgrade can tell.
+- The six conflicts still need someone who understands both sides. Adoption changes *when* and
+  *how often* that judgement is needed — once, with both versions side by side — not whether.
+
+**ofbo is a better adoption candidate than assumed.** The assessment observed CODEOWNERS naming
+**two real teams**, four CI workflows, a defined test script, and an existing data-risk register.
+The control-plane gate would have something real to check on day one — which is more than this
+repository's own sandbox could offer.
 
 **If rejected**, the honest fallback is to keep the ledger *and schedule the reconciliation* —
 because rc.35 made it possible for the first time. An unscheduled reconciliation has already
 demonstrated what it does: nothing, for eleven days, silently.
 
-**Not decided here.** Whether ofbo adopts at `core`, `governed` or `full` tier; the migration
-sequence; who resolves the six conflicts. Those follow the decision, they do not precede it.
+**Not decided here.** Whether ofbo adopts at `core`, `governed` or `full` tier (the assessment
+recommends `core`, with `regulated-bank` as the profile — *inferred from directory names, and it
+says so; a tool cannot tell a regulator from a folder*); the migration sequence; who resolves the
+six conflicts. Those follow the decision, they do not precede it.
+
+**Nothing has been written to ofbo.** The figures above come from `assess.mjs` and
+`adopt.mjs --dry-run`, both read-only. Running the installer for real is the decision this
+record asks for, not a step taken while drafting it.
 
 ## Alternatives considered
 
