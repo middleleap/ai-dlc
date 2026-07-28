@@ -206,6 +206,17 @@
         "rc.29 asserted `last_reconciled === null` outright, in CI and in a test. That reads as strictness and is the opposite: it froze today's state as an invariant, so the first correct reconciliation would have turned the build red with no fix but deleting the check. The rule is now conditional and enforced by checkClaims — an upstream digest or a seen-only state without a recorded reconciliation fails, and a genuine reconciliation passes. CI tests both directions."
       ],
       "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.32",
+      "headline": "The self-claims gate learns the defect class it missed: a documented CLI flag must exist",
+      "notes": [
+        "rc.29 advertised `--reconcile` in a gate's own usage line and never implemented it; rc.31 wrote it. This closes the class rather than the instance. self-claims-check gained C5: a flag a CLI documents about itself must appear in its code.",
+        "C1 could not have caught it. C1 checks that a cited script PATH resolves, and the script existed — only its advertised behaviour did not. A tool that accepts a flag and silently does nothing is worse than one that rejects it, because the operator walks away believing it worked.",
+        "The rule is narrow on purpose. A flag counts as documented only on a comment line that names its own file — the usage lines these CLIs already carry — so prose about git's `--force-with-lease` or a sibling script's `--tier` is not a claim. Comment-stripping is conservative, so it errs toward missing a defect rather than inventing one: a gate that cries wolf gets switched off, and then it protects nothing.",
+        "Measured, not asserted: zero false positives across the 61 flag-documenting scripts, and the rule is pinned against the ACTUAL rc.29 blob from git history rather than a synthetic fixture. A negative bypass test in CI mutates the very file the fault shipped in."
+      ],
+      "action_required": []
     }
   ]
 }

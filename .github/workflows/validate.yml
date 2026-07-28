@@ -29,6 +29,16 @@ jobs:
         run: |
           node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
           node scripts/self-claims-check.mjs     # rc.26 — the bundle is held to its own claims
+          # ── Negative bypass test for C5, the documented-flag rule (rc.32) ────────────────
+          # C5 exists because this gate MISSED a defect: rc.29 advertised `--reconcile` in the
+          # header of discovery-sync-check.mjs and never implemented it. Prove the rule bites, on
+          # the very file that shipped the fault. `git checkout --` is safe here — this step runs
+          # at the repo root, before the dry-run's `cd "$A"`.
+          printf '\n// node scripts/discovery-sync-check.mjs --ci-probe-flag\n' >> scripts/discovery-sync-check.mjs
+          if node scripts/self-claims-check.mjs; then
+            echo "::error::a CLI advertised a flag it does not implement and the self-claims gate passed — the rc.29 class is invisible again"; exit 1; fi
+          git checkout -- scripts/discovery-sync-check.mjs
+          node scripts/self-claims-check.mjs > /dev/null   # and it is clean again after the restore
           node scripts/discovery-sync-check.mjs  # rc.29 — the ofbo back-port debt, counted not remembered
           # ── Negative bypass tests for the sync ledger (rc.29) ─────────────────────────────
           # This gate's whole value is that an undeclared change CANNOT pass. Prove it both ways

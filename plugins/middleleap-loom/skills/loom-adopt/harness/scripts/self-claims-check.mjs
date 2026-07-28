@@ -39,13 +39,31 @@
 //        reverse drift is printed on every run and blocks nothing: visible, not tyrannical.
 //        Silence about it is what let the first gap grow.
 //
+//   C5 · A documented CLI FLAG must exist (rc.32). Added because this gate missed one, and the
+//        one it missed was in the gate written to stop exactly this: rc.29 shipped
+//        discovery-sync-check.mjs whose header advertised `--reconcile`, and never implemented it.
+//        Passing it printed a comparison and silently changed nothing, while the operator believed
+//        a sync point had been stamped. C1 could not see it — C1 checks that a cited SCRIPT PATH
+//        exists, and the script did exist; only its advertised behaviour did not.
+//
+//        The rule is deliberately narrow, because a broad one is unusable. A flag counts as
+//        documented only when a comment line NAMES THIS FILE and shows the flag on it — the usage
+//        lines every CLI here already carries:
+//
+//            //   node scripts/discovery-sync-check.mjs --upstream <dir> --reconcile
+//
+//        so a comment mentioning git's `--force-with-lease`, or another script's `--tier`, is not
+//        a claim this file makes about itself. It then has to appear outside the file's own
+//        full-line comments. Measured against the tree at the time it was written: 61 scripts
+//        document flags, zero false positives, and it catches the rc.29 defect from the git blob.
+//
 // BUNDLE-ONLY, like doc-integrity and the installer contract. It reads this repository's own
 // workflow and layout; an adopted tree has neither, so it exits clean there rather than
 // inventing a verdict about files that were never meant to be present.
 //
 //   node scripts/self-claims-check.mjs
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 
@@ -63,6 +81,41 @@ export function proseFiles() {
     for (const f of readdirSync(dir)) if (f.endsWith('.md')) out.push(join(dir, f));
   }
   return out.filter(existsSync);
+}
+
+/** The command-line entry points whose advertised flags this gate holds to account (C5). */
+export function cliFiles() {
+  const out = [resolve(HARNESS, 'adopt.mjs'), resolve(HARNESS, 'assess.mjs')];
+  const dir = resolve(HARNESS, 'scripts');
+  if (existsSync(dir)) {
+    for (const f of readdirSync(dir)) if (f.endsWith('.mjs') && !f.endsWith('.test.mjs')) out.push(join(dir, f));
+  }
+  return out.filter(existsSync);
+}
+
+/**
+ * Flags a file advertises ABOUT ITSELF. Only a full-line comment that names the file counts — the
+ * usage lines these CLIs already carry. That narrowness is the point: a comment mentioning another
+ * tool's flag (`git --force-with-lease`, `adopt.mjs --tier`) is not a claim this file makes.
+ */
+export function documentedFlags(text, name) {
+  const flags = new Set();
+  for (const line of text.split('\n')) {
+    if (!/^\s*(\/\/|\*)/.test(line) || !line.includes(name)) continue;
+    for (const m of line.matchAll(/--[a-z][a-z0-9-]*/g)) flags.add(m[0]);
+  }
+  return [...flags].sort();
+}
+
+/**
+ * Documented flags the file never mentions outside its own full-line comments. Comment stripping is
+ * deliberately conservative — only whole-line comments go, so a flag referenced anywhere in real
+ * code counts as implemented. This errs toward MISSING a defect rather than inventing one: a gate
+ * that cries wolf about flags gets switched off, and then it protects nothing.
+ */
+export function unimplementedFlags(text, name) {
+  const code = text.split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+  return documentedFlags(text, name).filter((f) => !code.includes(f));
 }
 
 /** Gates the workflow runs a NEGATIVE test against — `if node scripts/X.mjs; then <error>; fi`. */
@@ -100,7 +153,7 @@ export function checklistRows(playbookText) {
 }
 
 /** Findings (blocking) plus notices (reported, never blocking). Pure — inputs are text. */
-export function evaluate({ playbook, workflow, prose = [], exists = existsSync }) {
+export function evaluate({ playbook, workflow, prose = [], clis = [], exists = existsSync }) {
   const findings = [];
   const notices = [];
 
@@ -108,6 +161,16 @@ export function evaluate({ playbook, workflow, prose = [], exists = existsSync }
   for (const { file, text } of prose) {
     for (const m of text.matchAll(/`(scripts\/[a-z0-9-]+\.(?:mjs|sh))`/g)) {
       if (!exists(resolve(HARNESS, m[1]))) findings.push(`${file}: cites \`${m[1]}\`, which does not exist`);
+    }
+  }
+
+  // C5 — a CLI may not advertise a flag it does not handle.
+  for (const { file, name, text } of clis) {
+    for (const flag of unimplementedFlags(text, name)) {
+      findings.push(
+        `${file}: its usage documents \`${flag}\`, which appears nowhere in the code — passing it ` +
+          'does nothing, silently, while the operator believes it worked',
+      );
     }
   }
 
@@ -157,10 +220,12 @@ export function main() {
     return 0;
   }
   const prose = proseFiles().map((f) => ({ file: f.slice(REPO.length + 1), text: readFileSync(f, 'utf8') }));
+  const clis = cliFiles().map((f) => ({ file: f.slice(REPO.length + 1), name: basename(f), text: readFileSync(f, 'utf8') }));
   const { findings, notices, rows } = evaluate({
     playbook: readFileSync(PLAYBOOK, 'utf8'),
     workflow: readFileSync(WORKFLOW, 'utf8'),
     prose,
+    clis,
   });
 
   if (notices.length) {
@@ -180,9 +245,13 @@ export function main() {
   }
   const named = rows.filter((r) => r.form === 'named').length;
   const scoped = rows.filter((r) => r.form === 'scoped').length;
+  const flagged = clis.filter((c) => documentedFlags(c.text, c.name).length);
+  const flagCount = flagged.reduce((n, c) => n + documentedFlags(c.text, c.name).length, 0);
   process.stdout.write(
     `  ${rows.length} CI-proven claim(s): ${named} named and linked to a real inversion, ${scoped} scoped to a part\n` +
-      `  ${prose.length} prose file(s) checked — every gate they cite exists\n\nSelf-claims gate — OK\n\n`,
+      `  ${prose.length} prose file(s) checked — every gate they cite exists\n` +
+      `  ${flagCount} documented flag(s) across ${flagged.length} CLI(s) — every one of them is handled\n` +
+      '\nSelf-claims gate — OK\n\n',
   );
   return 0;
 }

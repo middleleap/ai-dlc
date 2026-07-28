@@ -7,7 +7,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { classifyClaim, checklistRows, evaluate, invertedGates, proseFiles, PLAYBOOK, WORKFLOW } from './self-claims-check.mjs';
+import { execFileSync } from 'node:child_process';
+import { classifyClaim, checklistRows, cliFiles, documentedFlags, evaluate, invertedGates, proseFiles, unimplementedFlags, PLAYBOOK, WORKFLOW } from './self-claims-check.mjs';
 
 const BUNDLE = existsSync(WORKFLOW) && existsSync(PLAYBOOK);
 const row = (mech, status) => `| An attack | ${mech} | ${status} |`;
@@ -126,4 +127,68 @@ test('the gate is inert where the bundle layout is absent', () => {
   assert.deepEqual(findings, []);
   assert.deepEqual(notices, []);
   assert.deepEqual(rows, []);
+});
+
+// ── C5 · a documented CLI flag must exist (rc.32) ────────────────────────────────────────────
+//
+// Added because this gate MISSED one, in the gate written to stop exactly this class. C1 checks a
+// cited script PATH resolves; rc.29's discovery-sync-check.mjs existed, and only its advertised
+// `--reconcile` did not. Everything below defends the narrowness that makes the rule usable.
+
+const CLI = (usage, code) => `// ${usage}\n${code}\n`;
+
+test('REGRESSION — a flag in the usage line with no implementation fails', () => {
+  const text = CLI('node scripts/foo.mjs --upstream <dir> --reconcile', "if (argv.includes('--upstream')) run();");
+  assert.deepEqual(unimplementedFlags(text, 'foo.mjs'), ['--reconcile']);
+  const { findings } = evaluate({ playbook: null, workflow: null, clis: [{ file: 'scripts/foo.mjs', name: 'foo.mjs', text }] });
+  assert.equal(findings.length, 1);
+  assert.match(findings[0], /documents `--reconcile`, which appears nowhere in the code/);
+  assert.match(findings[0], /silently/, 'the finding says why it matters, not just that it happened');
+});
+
+test('a flag that IS handled passes', () => {
+  const text = CLI('node scripts/foo.mjs --record', "if (argv.includes('--record')) write();");
+  assert.deepEqual(unimplementedFlags(text, 'foo.mjs'), []);
+});
+
+test("another tool's flag in a comment is not a claim THIS file makes", () => {
+  // The false positive that would make the rule unusable: prose about git, npm, or a sibling script.
+  const text = ['// Restores use `git checkout --force-with-lease`, never --force.',
+                '// See adopt.mjs --tier for how staging works.',
+                '// node scripts/foo.mjs --record',
+                "if (argv.includes('--record')) write();"].join('\n');
+  assert.deepEqual(documentedFlags(text, 'foo.mjs'), ['--record'], 'only the line naming THIS file counts');
+  assert.deepEqual(unimplementedFlags(text, 'foo.mjs'), []);
+});
+
+test('a flag used in code but only in a trailing comment position still counts as implemented', () => {
+  // Conservative comment-stripping: whole-line comments go, nothing else. The rule errs toward
+  // missing a defect rather than inventing one — a gate that cries wolf gets switched off.
+  const text = CLI('node scripts/foo.mjs --dry-run', "const dry = argv.includes('--dry-run'); // the flag");
+  assert.deepEqual(unimplementedFlags(text, 'foo.mjs'), []);
+});
+
+test('a CLI documenting no flags is simply not subject to the rule', () => {
+  assert.deepEqual(documentedFlags('// node scripts/foo.mjs\nrun();\n', 'foo.mjs'), []);
+});
+
+// The historical proof: run the rule against the ACTUAL rc.29 blob, from git. A synthetic fixture
+// only shows the rule works on what I imagined; this shows it catches the defect that really shipped.
+let RC29 = null;
+try {
+  RC29 = execFileSync('git', ['show', '39995a3:plugins/middleleap-loom/skills/loom-adopt/harness/scripts/discovery-sync-check.mjs'],
+    { encoding: 'utf8', cwd: process.cwd(), stdio: ['ignore', 'pipe', 'ignore'] });
+} catch { /* shallow clone or adopted layout — the git history is not reachable here */ }
+
+test('HISTORICAL — the real rc.29 blob is caught', { skip: !RC29 && 'git history not reachable' }, () => {
+  assert.deepEqual(documentedFlags(RC29, 'discovery-sync-check.mjs'), ['--reconcile', '--record', '--upstream'].sort());
+  assert.deepEqual(unimplementedFlags(RC29, 'discovery-sync-check.mjs'), ['--reconcile'],
+    'the flag rc.29 advertised and never wrote — and only this flag');
+});
+
+test('the bundle as shipped implements every flag it advertises', { skip: !BUNDLE && 'bundle-only', concurrency: false }, () => {
+  const offenders = cliFiles()
+    .map((f) => ({ f, missing: unimplementedFlags(readFileSync(f, 'utf8'), f.split('/').pop()) }))
+    .filter((x) => x.missing.length);
+  assert.deepEqual(offenders.map((x) => `${x.f.split('/').pop()}: ${x.missing.join(' ')}`), []);
 });
