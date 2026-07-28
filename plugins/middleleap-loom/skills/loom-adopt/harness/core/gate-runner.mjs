@@ -49,7 +49,10 @@ export function select(catalog, { lane = 'pr', changedPaths = null, requirements
     if (mandated) why = `required by compiled plan [${requiredBy(requirements, c.gate_family).join(', ')}] (family ${c.gate_family})`;
     else if (c.always) why = 'always';
     else if (changedPaths === null) why = 'diff unknown — fail open to running';
-    else if (Array.isArray(c.paths) && c.paths.some((p) => changedPaths.some((f) => f === p || f.startsWith(p)))) why = 'implicated by diff';
+    // Path scopes match a file exactly, or as a DIRECTORY prefix (a scope of `docs/backlog.yaml`
+    // must not implicate `docs/backlog.yaml.bak`; a scope of `floor/cat` must not match
+    // `floor/catalogue-x/`). rc.33 — raw startsWith did both.
+    else if (Array.isArray(c.paths) && c.paths.some((p) => changedPaths.some((f) => f === p || f.startsWith(p.endsWith('/') ? p : `${p}/`)))) why = 'implicated by diff';
     else if (!Array.isArray(c.paths)) why = 'no path scope declared — runs by default';
     if (!why) { skipped.push({ id: c.control_id, reason: `no implicated paths in this diff (scope: ${c.paths.join(', ')})` }); continue; }
     const entry = run.get(c.mechanism_ref) || { mechanism: c.mechanism_ref, ids: [], args: c.mechanism_args || [] };
@@ -75,6 +78,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const path = CATALOG_LOCATIONS.map((p) => `${process.cwd()}/${p}`).find(existsSync);
   if (!path) { process.stderr.write('no control catalog — the runner has no state of record to read\n'); process.exit(2); }
   const catalog = JSON.parse(readFileSync(path, 'utf8'));
+  // A lane with NO runnable catalogued control is a CI step that structurally cannot fail — two
+  // of those ran green for months (build, deploy). An empty lane is a hole, not a pass: refuse
+  // to report OK about nothing (rc.33). Catalogue a control for the lane, or drop the invocation.
+  const laneControls = (catalog?.controls || []).filter((c) => runnable(c) && c.execute !== false && (c.lane || 'pr') === lane);
+  if (laneControls.length === 0) {
+    process.stderr.write(`lane ${lane} has no runnable catalogued controls — an empty lane is a hole, not a pass.\nCatalogue a control with lane "${lane}", or remove this invocation from the workflow until one exists.\n`);
+    process.exit(2);
+  }
   const changedPaths = base ? changedSince(base) : null;
   const requirements = aggregateRequirements(process.cwd());
   const { run, skipped } = select(catalog, { lane, changedPaths, requirements });

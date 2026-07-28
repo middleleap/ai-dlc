@@ -1,7 +1,14 @@
 // Tests for the gate runner's selection logic. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { select, LANES } from './gate-runner.mjs';
+
+const RUNNER = resolve(dirname(fileURLToPath(import.meta.url)), 'gate-runner.mjs');
 
 const CAT = { controls: [
   { control_id: 'CORE-1', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true },
@@ -45,6 +52,29 @@ test('lanes separate: a release run skips pr controls (recorded) and runs releas
 test('a control with no path scope runs by default — declaring a scope is the opt-in', () => {
   const r = select(CAT, { lane: 'pr', changedPaths: ['nothing/relevant.txt'] });
   assert.ok(ids(r).includes('UNSCOPED'));
+});
+
+test('a file scope matches the file and its children, never a sibling that shares the prefix (rc.33)', () => {
+  // SCOPED-2 is scoped to the exact file docs/governance/model-manifest.json. A raw prefix
+  // match also implicated docs/governance/model-manifest.json.bak — a sibling, not the file.
+  const exact = select(CAT, { lane: 'pr', changedPaths: ['docs/governance/model-manifest.json'] });
+  assert.ok(ids(exact).includes('SCOPED-2'), 'the exact file must implicate its control');
+  const sibling = select(CAT, { lane: 'pr', changedPaths: ['docs/governance/model-manifest.json.bak'] });
+  assert.ok(!ids(sibling).includes('SCOPED-2'), 'a shared-prefix sibling must NOT implicate the control');
+  const dirLike = select(CAT, { lane: 'pr', changedPaths: ['docs/governance/changesets/x.json'] });
+  assert.ok(!ids(dirLike).includes('SCOPED-1'), 'changesets/ must not satisfy a changes/ scope');
+});
+
+test('the CLI refuses a lane with no runnable catalogued controls — an empty lane is a hole (rc.33)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-'));
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'PR-1', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'build'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 2, `an empty build lane must exit 2, got ${r.status}\n${r.stderr}`);
+    assert.match(r.stderr, /empty lane is a hole/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('two controls sharing one mechanism dedupe into a single execution', () => {

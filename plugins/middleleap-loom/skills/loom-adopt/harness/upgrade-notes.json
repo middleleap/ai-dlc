@@ -217,6 +217,22 @@
         "Measured, not asserted: zero false positives across the 61 flag-documenting scripts, and the rule is pinned against the ACTUAL rc.29 blob from git history rather than a synthetic fixture. A negative bypass test in CI mutates the very file the fault shipped in."
       ],
       "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.33",
+      "headline": "Flow-plan Phase 0 — the found defects, fixed",
+      "notes": [
+        "Capability aggregation across governed changes is strongest-wins (it was first-wins by directory order, which could silently weaken a minimum version/tier).",
+        "Gate path scopes match a file exactly or as a directory prefix — docs/backlog.yaml no longer implicates docs/backlog.yaml.bak.",
+        "The gate runner refuses a lane with no runnable catalogued controls (exit 2) — an empty lane was a CI step that structurally could not fail.",
+        "ci-catalog-check fails two controls sharing one mechanism_ref with different mechanism_args (the runner executed only one variant while reporting both), and prints the execute:false inventory on every run.",
+        "evidence-seal-check and release-attestation-check resolve the evidence manifest from one shared list.",
+        "A first adopt.mjs run with no --tier lands core, not full."
+      ],
+      "action_required": [
+        "If your .github/workflows/ci.yml still invokes `gate-runner --lane build` or `--lane deploy`, remove those lines (or catalogue a control for those lanes): the runner now fails an empty lane instead of passing about nothing. The reference ci.yml shows the new shape.",
+        "If you relied on unflagged adopt.mjs runs landing the full tier on a FRESH repo, pass --tier full explicitly (re-runs keep the tier already stamped, as before)."
+      ]
     }
   ]
 }

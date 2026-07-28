@@ -33,6 +33,28 @@ test('capabilities aggregate across changes; capabilityRequired reflects "requir
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('capability attributes aggregate STRONGEST-WINS in either read order (rc.33 — the first-wins weakening)', () => {
+  // Two plans require the same capability at different strengths. Whichever directory is read
+  // first, the aggregate must report the STRONGER attributes — a first-wins merge silently
+  // weakened the requirement to whichever change happened to sort first.
+  const lowFirst = repo([
+    { id: 'CHG-A', capabilities: { data_risk_register: { required: true, minimum_version: '3.1', minimum_tier: 'low' } } },
+    { id: 'CHG-B', capabilities: { data_risk_register: { required: true, minimum_version: '4.0', minimum_tier: 'high' } } },
+  ]);
+  const highFirst = repo([
+    { id: 'CHG-A', capabilities: { data_risk_register: { required: true, minimum_version: '4.0', minimum_tier: 'high' } } },
+    { id: 'CHG-B', capabilities: { data_risk_register: { required: true, minimum_version: '3.1', minimum_tier: 'low' } } },
+  ]);
+  try {
+    for (const dir of [lowFirst, highFirst]) {
+      const cap = aggregateRequirements(dir).capabilities.data_risk_register;
+      assert.equal(cap.minimum_version, '4.0', 'the weaker minimum_version must never survive the merge');
+      assert.equal(cap.minimum_tier, 'high', 'the weaker minimum_tier must never survive the merge');
+      assert.equal(cap.required, true);
+    }
+  } finally { rmSync(lowFirst, { recursive: true, force: true }); rmSync(highFirst, { recursive: true, force: true }); }
+});
+
 test('a change that does NOT require a capability leaves it unrequired (generic repo)', () => {
   const dir = repo([{ id: 'CHG-1', gates: ['D', 'Q'] }]);
   try {

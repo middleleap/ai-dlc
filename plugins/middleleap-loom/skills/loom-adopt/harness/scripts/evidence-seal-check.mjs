@@ -25,7 +25,9 @@ import { checkAudit } from './supply-chain-check.mjs';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 import { pathToFileURL } from 'node:url';
 
-const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
+// Exported (rc.33): release-attestation-check reads the SAME list, so the two gates can never
+// again resolve DIFFERENT manifests in one repo — the lists had quietly diverged.
+export const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
 const GENESIS = 'GENESIS';
 
 // ADOPT: the evidence every release must carry. Add yours (smoke results, attestations).

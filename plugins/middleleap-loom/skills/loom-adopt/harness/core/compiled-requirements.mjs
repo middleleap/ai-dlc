@@ -15,6 +15,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { mergeCapabilities } from './policy-compiler.mjs';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 // Production states — once a change reaches one, cadence-style capabilities apply even if the
@@ -43,24 +44,16 @@ export function aggregateRequirements(cwd = process.cwd()) {
     const ev = new Set(plan.required_evidence || []);
     for (const f of fam) families.add(f);
     for (const e of ev) evidence.add(e);
-    mergeCaps(capabilities, plan.required_capabilities);
+    mergeCapabilities(capabilities, plan.required_capabilities);
     changes.push({ change_id: envelope.change_id || name, state: envelope.current_state, families: [...fam], evidence: [...ev], capabilities: plan.required_capabilities || {} });
   }
   return { families, evidence, capabilities, changes, anyInProduction };
 }
 
-/** Merge a plan's capability map into the aggregate — "required" wins, strongest attributes kept. */
-function mergeCaps(target, source) {
-  for (const [name, spec] of Object.entries(source || {})) {
-    const cur = target[name] || {};
-    target[name] = {
-      required: Boolean(cur.required || spec.required),
-      ...(cur.minimum_version || spec.minimum_version ? { minimum_version: cur.minimum_version || spec.minimum_version } : {}),
-      ...(cur.minimum_tier || spec.minimum_tier ? { minimum_tier: cur.minimum_tier || spec.minimum_tier } : {}),
-      ...(cur.institution_owned || spec.institution_owned ? { institution_owned: true } : {}),
-    };
-  }
-}
+// Capability merging is the compiler's mergeCapabilities — one implementation, strongest-wins.
+// A local first-wins copy lived here until rc.33 and could silently WEAKEN an aggregate: two
+// plans requiring data_risk_register ≥3.1 and ≥4.0 reported 3.1 or 4.0 depending on directory
+// read order. The regression test in compiled-requirements.test.mjs holds the door shut.
 
 /** Does any compiled plan require the named capability? (rc.13 WS3 — for mandatory-when-compiled.) */
 export function capabilityRequired(agg, name) {

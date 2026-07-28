@@ -186,7 +186,11 @@ export function install(destRoot, { dryRun = false, manifest = loadManifest(), f
   const previous = stamp ?? readStamp(destRoot) ?? emptyStamp();
   // A re-run keeps the tier already adopted unless one is named — an upgrade must never silently
   // demote a repository to core and start reporting its governed templates as missing.
-  const adoptedTier = tier ?? previous.tier ?? 'full';
+  // rc.33: a FIRST run with no --tier lands `core`, not `full`. Defaulting to full handed every
+  // unflagged first-time adopter the 200-marker cliff the tiering exists to remove — the header
+  // above and assess.mjs both argue for core, and now the default agrees with them. `--tier full`
+  // is one flag away and assess.mjs prints the cost of each tier before you choose.
+  const adoptedTier = tier ?? previous.tier ?? 'core';
   if (!TIERS.includes(adoptedTier)) throw new Error(`unknown tier ${adoptedTier} — expected ${TIERS.join('|')}`);
   const ctx = { stamp: previous, force, dryRun };
   const report = entriesForTier(manifest, adoptedTier).map((e) => copyEntry(e, destRoot, ctx));

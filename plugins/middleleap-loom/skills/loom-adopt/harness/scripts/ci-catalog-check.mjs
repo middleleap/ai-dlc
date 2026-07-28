@@ -77,6 +77,34 @@ export function evaluate(yaml, catalog) {
   return findings;
 }
 
+/**
+ * rc.33 — two controls sharing one mechanism_ref with DIFFERENT mechanism_args is a silent
+ * misexecution: the runner de-duplicates by mechanism and takes the args of whichever control it
+ * encountered first, while REPORTING both as executed. The second control's arguments never ran.
+ * Pure over the parsed catalog; one finding per colliding mechanism.
+ */
+export function mechanismArgCollisions(catalog) {
+  const byMechanism = new Map(); // mechanism_ref → Map(argsJson → [control_id])
+  for (const c of Array.isArray(catalog?.controls) ? catalog.controls : []) {
+    if (!c || typeof c.mechanism_ref !== 'string') continue;
+    const variants = byMechanism.get(c.mechanism_ref) || new Map();
+    const key = JSON.stringify(c.mechanism_args || []);
+    variants.set(key, [...(variants.get(key) || []), c.control_id]);
+    byMechanism.set(c.mechanism_ref, variants);
+  }
+  const findings = [];
+  for (const [mechanism, variants] of byMechanism) {
+    if (variants.size < 2) continue;
+    const detail = [...variants.entries()].map(([args, ids]) => `${ids.join('+')} → ${args}`).join(' vs ');
+    findings.push(
+      `${mechanism} is claimed by controls with DIFFERENT mechanism_args (${detail}) — the gate runner ` +
+        `de-duplicates by mechanism and would execute only one variant while reporting all controls as ` +
+        `run. Give each variant its own mechanism (a wrapper script), or align the args.`,
+    );
+  }
+  return findings;
+}
+
 const firstExisting = (paths) => paths.find((p) => existsSync(p)) || null;
 
 export function main(argv = process.argv.slice(2)) {
@@ -105,7 +133,7 @@ export function main(argv = process.argv.slice(2)) {
   }
 
   const yaml = readFileSync(ciPath, 'utf8');
-  const findings = evaluate(yaml, catalog);
+  const findings = [...evaluate(yaml, catalog), ...mechanismArgCollisions(catalog)];
   const gates = gatesInWorkflow(yaml);
 
   // The exemptions are printed whether or not anything failed — never a silent carve-out.
@@ -113,6 +141,18 @@ export function main(argv = process.argv.slice(2)) {
   if (exempt.length) {
     process.stdout.write('  report-only, deliberately not controls:\n');
     for (const g of exempt) process.stdout.write(`    · ${g} — ${REPORT_ONLY.get(g)}\n`);
+    process.stdout.write('\n');
+  }
+
+  // rc.33 — the `execute: false` escape hatch, printed on every run in the same posture as the
+  // report-only list. Each entry is a control the runner will never spawn, on the strength of its
+  // own note. ci.yml says this list "is short ON PURPOSE"; printing it is what keeps that claim
+  // checkable rather than a comment.
+  const unexecuted = (Array.isArray(catalog?.controls) ? catalog.controls : [])
+    .filter((c) => c && c.execute === false && typeof c.mechanism_ref === 'string');
+  if (unexecuted.length) {
+    process.stdout.write('  execute:false — the runner never spawns these; each rides its stated note:\n');
+    for (const c of unexecuted) process.stdout.write(`    · ${c.control_id} (${c.mechanism_ref}) — ${c.execute_note || 'NO NOTE'}\n`);
     process.stdout.write('\n');
   }
 

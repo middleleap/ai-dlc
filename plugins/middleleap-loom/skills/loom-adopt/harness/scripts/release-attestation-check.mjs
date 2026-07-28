@@ -26,10 +26,14 @@ import process from 'node:process';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 import { verifyAnchorAttestation, loadIssuers } from '../core/attestations.mjs';
 import { evaluate as evaluateSubject } from './release-subject-check.mjs';
+import { MANIFEST_LOCATIONS as SEAL_MANIFEST_LOCATIONS } from './evidence-seal-check.mjs';
 import { pathToFileURL } from 'node:url';
 
 const SUBJECT_LOCATIONS = ['docs/governance/release-subject.json', 'release-subject.json'];
-const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json', 'evidence-example/manifest.json'];
+// The adopter-facing locations are the SEAL GATE'S list, imported — a locally-kept copy had
+// diverged, so the two gates could resolve different manifests in one repo (rc.33). The single
+// extra fallback is the bundle's own worked example, which only exists in the bundle tree.
+const MANIFEST_LOCATIONS = [...SEAL_MANIFEST_LOCATIONS, 'evidence-example/manifest.json'];
 const PRODUCT_LOCATIONS = ['docs/governance/product-evals.json', 'product-evals.json', 'product-eval-example/product-evals.json'];
 
 const bare = (d) => (typeof d === 'string' ? d.replace(/^sha256:/, '') : d);

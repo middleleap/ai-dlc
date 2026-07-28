@@ -57,13 +57,17 @@ jobs:
       - name: Gates — scheduled lane (runtime assurance; safe to run per PR)
         run: node core/gate-runner.mjs --lane scheduled --out gate-run-scheduled.json
 
-      - name: Gates — build · release · deploy lanes
+      - name: Gates — release lane
         # rc.11 WS1: release-evidence checks stopped masquerading as PR-source checks. On a PR
         # these mostly find nothing to check and say so; on a release build they are the gate.
-        run: |
-          node core/gate-runner.mjs --lane build   --out gate-run-build.json
-          node core/gate-runner.mjs --lane release --out gate-run-release.json
-          node core/gate-runner.mjs --lane deploy  --out gate-run-deploy.json
+        #
+        # rc.33: the build and deploy lane invocations are GONE, deliberately. The shipped catalog
+        # carries zero controls in either lane, so both steps were CI checks that structurally
+        # could not fail — two green lights about nothing. The runner now refuses an empty lane
+        # (exit 2: "an empty lane is a hole, not a pass"); re-add an invocation only together with
+        # the catalog entry that gives its lane a control (deploy's first is the deployed-digest
+        # verification, see the flow plan).
+        run: node core/gate-runner.mjs --lane release --out gate-run-release.json
 
       # ── The four the runner structurally cannot drive, each for a stated reason ──────────────
       # This list is short ON PURPOSE and every entry is `execute: false` in the catalog with an

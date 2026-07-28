@@ -95,7 +95,10 @@ jobs:
           # copy list. A new manifest entry now lands in the adopted layout with zero CI edits
           # (scripts/adopt.test.mjs proves this). The generated SKILL copy table is still gated
           # for drift by the doc-integrity step above.
-          node "$H/adopt.mjs" --dest "$A"
+          # --tier full, explicitly: the dry-run exercises governed/full-tier templates (identity
+          # map, routine envelope, service readiness, institution BrainKit …). rc.33 made the
+          # unflagged default `core` — the safe on-ramp for a real adopter, the wrong coverage here.
+          node "$H/adopt.mjs" --dest "$A" --tier full
           # Worked-example fixtures the installer deliberately does NOT ship (they are the Loom's
           # own demonstration data, not adopter machinery, so they are not in the copy manifest).
           mkdir -p "$A/docs/governance/changes" "$A/docs/governance/services" \

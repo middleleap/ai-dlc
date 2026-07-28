@@ -55,10 +55,13 @@ A full adoption lands 133 ADOPT markers across 28 files to fill in, which is a c
 an on-ramp — and it grows every release. `--tier` stages it:
 
 ```bash
-node harness/adopt.mjs --dest . --tier core       # the warp: 12 markers in 9 files
+node harness/adopt.mjs --dest . --tier core       # the warp: 12 markers in 9 files (the default)
 node harness/adopt.mjs --dest . --tier governed   # + product governance: 44 in 16
-node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution: 133 in 28 (default)
+node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution: 133 in 28
 ```
+
+A first run with no `--tier` lands `core` (rc.33 — it used to land `full`, handing every
+unflagged first-timer the cliff this section exists to remove).
 
 Two things make this safe rather than merely smaller:
 
