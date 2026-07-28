@@ -12,9 +12,10 @@
 // never less); selection comes from the catalog + compiled plans, so a change cannot talk
 // its way onto the light path. This file is control plane (CONTROL_TARGETS).
 //
-// Run: `node core/gate-runner.mjs --lane pr [--base <ref>] [--out record.json]`.
+// Run: `node core/gate-runner.mjs --lane pr [--base <ref>] [--out record.json] [--emit-dir <dir>]`.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import process from 'node:process';
 import { aggregateRequirements, requiredBy } from './compiled-requirements.mjs';
 import { TIERS } from './policy-compiler.mjs';
@@ -108,17 +109,42 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const requirements = aggregateRequirements(process.cwd(), { changedPaths });
   const { run, skipped } = select(catalog, { lane, changedPaths, requirements });
 
+  // rc.35 (flow-plan Phase 2): with --emit-dir, control-plane-style evidence becomes a gate
+  // OUTPUT rather than a human transcription — one result record per mechanism, plus the run
+  // record, each carrying the commit and timestamp. A hand-typed "PASS" is fabricatable; a
+  // runner-emitted one is what the evidence seal was built to chain.
+  const emitDir = arg('--emit-dir');
+  if (emitDir) mkdirSync(emitDir, { recursive: true });
+  let head = null;
+  try { head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { /* no git */ }
+
   const executed = [];
   let failed = 0;
   for (const g of run) {
     const t0 = Date.now();
-    const r = spawnSync(process.execPath, [g.mechanism, ...g.args], { stdio: 'inherit' });
+    // Output is CAPTURED (rc.35 — it used to stream via stdio:'inherit'), then printed verbatim
+    // after each gate finishes, so the log reads the same while the runner can emit what it saw.
+    const r = spawnSync(process.execPath, [g.mechanism, ...g.args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    if (r.stdout) process.stdout.write(r.stdout);
+    if (r.stderr) process.stderr.write(r.stderr);
+    if (r.error) process.stderr.write(`${g.mechanism}: ${r.error.message}\n`);
     const status = r.status === 0 ? 'pass' : 'fail';
     if (status === 'fail') failed++;
     executed.push({ controls: g.ids, mechanism: g.mechanism, status, ms: Date.now() - t0 });
+    if (emitDir) {
+      const text = [r.stderr, r.stdout, r.error ? r.error.message : ''].filter(Boolean).join('\n').trim();
+      const emitted = {
+        gate: g.mechanism,
+        controls: g.ids,
+        result: status,
+        findings_excerpt: text.split('\n').slice(-40).join('\n').slice(-4000),
+        commit: head,
+        produced_at: new Date().toISOString(),
+      };
+      const name = g.mechanism.replace(/\.mjs$/, '').replace(/[\\/]/g, '-');
+      writeFileSync(join(emitDir, `${name}.json`), JSON.stringify(emitted, null, 2) + '\n');
+    }
   }
-  let head = null;
-  try { head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { /* no git */ }
   const record = {
     lane, base: base || null, commit: head,
     changed_paths: changedPaths,
@@ -128,9 +154,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     required_families: [...requirements.families].sort(), // what the counted plans compiled
     executed, skipped,
     result: failed === 0 ? 'pass' : 'fail',
+    produced_at: new Date().toISOString(), // rc.35 — when this record was emitted
   };
   const out = arg('--out');
   if (out) writeFileSync(out, JSON.stringify(record, null, 2) + '\n');
+  // The run record itself is evidence: emitted beside the per-mechanism records under the name
+  // the evidence collector (scripts/seal-evidence.mjs) recognises and seals into the chain.
+  if (emitDir) writeFileSync(join(emitDir, 'gate-run.json'), JSON.stringify(record, null, 2) + '\n');
   process.stdout.write(`\nGate runner [${lane}] — ${record.result.toUpperCase()}: ${executed.length} mechanism(s) run, ${skipped.length} control(s) skipped (recorded${out ? ` → ${out}` : ''})\n`);
   for (const s of skipped) process.stdout.write(`  · skipped ${s.id} — ${s.reason}\n`);
   process.exit(failed === 0 ? 0 : 1);

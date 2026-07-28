@@ -154,3 +154,73 @@ test('with no aggregated requirements at all, min_tier does not apply — fail o
   const r = select(TIERCAT, { lane: 'pr', changedPaths: null });
   assert.ok(ids(r).includes('HI-ONLY'));
 });
+
+/* ---- rc.35 (flow-plan Phase 2): the runner EMITS evidence instead of a human transcribing it ---- */
+
+import { mkdirSync, readFileSync, existsSync } from 'node:fs';
+
+// A runnable layout: two tiny mechanisms and a catalog naming them.
+function emitFixture() {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-emit-'));
+  mkdirSync(join(dir, 'scripts'));
+  writeFileSync(join(dir, 'scripts', 'ok.mjs'), 'console.log("ok-gate stdout line"); process.exit(0);\n');
+  writeFileSync(join(dir, 'scripts', 'bad.mjs'), 'console.error("bad-gate: a real finding"); process.exit(1);\n');
+  return dir;
+}
+
+test('--emit-dir writes one result record per mechanism plus the run record; the log still streams', () => {
+  const dir = emitFixture();
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'OK-1', mechanism_ref: 'scripts/ok.mjs', lane: 'pr', always: true },
+      { control_id: 'OK-2', mechanism_ref: 'scripts/ok.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr', '--emit-dir', 'emitted', '--out', 'record.json'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    // Capture must not eat the log: the mechanism's own output still reaches the runner's stdout.
+    assert.match(r.stdout, /ok-gate stdout line/);
+    const emitted = JSON.parse(readFileSync(join(dir, 'emitted', 'scripts-ok.json'), 'utf8'));
+    assert.equal(emitted.gate, 'scripts/ok.mjs');
+    assert.deepEqual(emitted.controls.sort(), ['OK-1', 'OK-2']);
+    assert.equal(emitted.result, 'pass');
+    assert.match(emitted.findings_excerpt, /ok-gate stdout line/);
+    assert.ok(!Number.isNaN(Date.parse(emitted.produced_at)), 'produced_at must be a timestamp');
+    assert.ok('commit' in emitted, 'the record must carry the commit (null where there is no git)');
+    // The run record is itself emitted, under the name the evidence collector seals (gate-run*),
+    // byte-identical to --out — one record, two homes.
+    assert.equal(readFileSync(join(dir, 'emitted', 'gate-run.json'), 'utf8'), readFileSync(join(dir, 'record.json'), 'utf8'));
+    const rec = JSON.parse(readFileSync(join(dir, 'record.json'), 'utf8'));
+    assert.equal(rec.result, 'pass');
+    assert.ok(!Number.isNaN(Date.parse(rec.produced_at)), 'the rc.34 record fields gain produced_at');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a failing mechanism is emitted as result:fail with its findings excerpt, and the run fails', () => {
+  const dir = emitFixture();
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'BAD-1', mechanism_ref: 'scripts/bad.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr', '--emit-dir', 'emitted'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /bad-gate: a real finding/, 'the failing gate\'s output still reaches the log');
+    const emitted = JSON.parse(readFileSync(join(dir, 'emitted', 'scripts-bad.json'), 'utf8'));
+    assert.equal(emitted.result, 'fail');
+    assert.match(emitted.findings_excerpt, /a real finding/);
+    assert.equal(JSON.parse(readFileSync(join(dir, 'emitted', 'gate-run.json'), 'utf8')).result, 'fail');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('without --emit-dir nothing is emitted and the captured output still streams (no behaviour change)', () => {
+  const dir = emitFixture();
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'OK-1', mechanism_ref: 'scripts/ok.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /ok-gate stdout line/);
+    assert.ok(!existsSync(join(dir, 'emitted')));
+    assert.ok(!existsSync(join(dir, 'gate-run.json')));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

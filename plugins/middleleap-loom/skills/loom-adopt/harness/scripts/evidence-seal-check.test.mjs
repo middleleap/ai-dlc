@@ -236,6 +236,47 @@ test('a plan requiring brainkit-provenance makes the seal DEMAND it; a generic r
   assert.ok(!REQUIRED_TYPES.includes('brainkit-provenance'), 'it stays out of the generic-repo default');
 });
 
+/* ---- rc.35 flow-plan Phase 2: the gate-run record joins the evidence chain ---- */
+
+// A bundle with the runner's emitted record chained AFTER the nine required types.
+function bundleWithGateRun(gateRun) {
+  const { dir } = realBundle();
+  const body = JSON.stringify(gateRun) + '\n';
+  writeFileSync(join(dir, 'gate-run.json'), body);
+  const raw = [
+    ...REQUIRED_TYPES.map((t) => ({ type: t, ref: `${t}.json`, sha256: createHash('sha256').update(JSON.stringify(VALID[t]) + '\n').digest('hex') })),
+    { type: 'gate-run', ref: 'gate-run.json', sha256: createHash('sha256').update(body).digest('hex') },
+  ];
+  return { dir, manifest: { release: 'v', release_commit: COMMIT, entries: buildChain(raw) } };
+}
+
+test('a sealed PASSING gate-run record at the release commit verifies clean', () => {
+  const { dir, manifest } = bundleWithGateRun({ lane: 'release', commit: COMMIT, executed: [], skipped: [], result: 'pass' });
+  try { assert.deepEqual(evaluate(manifest, { baseDir: dir }), []); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a sealed FAILING gate-run record fails the seal — a failed run is not release evidence', () => {
+  const { dir, manifest } = bundleWithGateRun({ lane: 'release', commit: COMMIT, executed: [], skipped: [], result: 'fail' });
+  try { assert.ok(evaluate(manifest, { baseDir: dir }).some((x) => /not a passing run/.test(x))); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a gate-run produced at a different commit than the release fails the binding', () => {
+  const other = 'b'.repeat(40);
+  const { dir, manifest } = bundleWithGateRun({ lane: 'release', commit: other, executed: [], skipped: [], result: 'pass' });
+  try { assert.ok(evaluate(manifest, { baseDir: dir }).some((x) => /not the release commit/.test(x))); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('gate-run stays OUT of the required floor — existing bundles keep passing without one', () => {
+  assert.ok(SEMANTICS['gate-run'], 'the seal must know HOW to verify a gate-run record');
+  assert.ok(!REQUIRED_TYPES.includes('gate-run'), 'demanding it would break every existing bundle');
+  assert.ok(!EVIDENCE_FLOOR.includes('gate-run'));
+  assert.deepEqual(SEMANTICS['gate-run']({ result: 'pass', commit: null }, { releaseCommit: COMMIT }), [],
+    'a record with no commit (no git) is not failed on the binding it cannot state');
+});
+
 test('a sealed brainkit-provenance record is verified for what it SAYS', () => {
   const good = { brainkit_id: 'acme-brainkit', brainkit_version: '1.0.0', brainkit_digest: 'sha256:' + 'a'.repeat(64), artifacts: [{ ref: 'reports/prd.html' }] };
   assert.deepEqual(SEMANTICS['brainkit-provenance'](good), []);

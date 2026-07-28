@@ -31,6 +31,12 @@ that external store is the adopter's (see `governance/runbooks/independent-assur
 ## Mounting / regenerating
 
 On adoption this bundle is copied to `docs/governance/evidence/`. For a real release, replace the
-artifacts with your actual evidence and **reseal**: recompute each `sha256`, then re-chain with
-`buildChain()` from `scripts/evidence-seal-check.mjs`. The gate fails a release whose manifest and
-artifacts disagree, so a bundle can't be edited after the fact without breaking a seal.
+artifacts with your actual evidence and **derive** the manifest — never hand-chain it:
+
+```bash
+node scripts/seal-evidence.mjs --commit "$RELEASE_COMMIT"   # rc.35 — hashes, orders, chains, anchors
+```
+
+The collector re-verifies its own output with the seal gate before writing and refuses a bundle
+whose sealed content is bad. The gate fails a release whose manifest and artifacts disagree, so a
+bundle can't be edited after the fact without breaking a seal.

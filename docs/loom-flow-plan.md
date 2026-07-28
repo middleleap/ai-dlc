@@ -238,6 +238,18 @@ tooling with zero hand-computed digests; deleting the anchor, editing a
 sealed artifact, or forging a verdict each fails the existing verifier
 unchanged.
 
+**Status:** items 1–3 landed at rc.35 — `scripts/seal-evidence.mjs` (+ `loom
+seal`) derives, orders, chains, anchors and self-verifies the manifest and
+refuses to write on any finding (CI proves it reproduces the worked example's
+anchor from the artifacts alone); `core/gate-runner.mjs --emit-dir` emits one
+result record per mechanism plus the run record with captured output; the
+seal gate's semantics verify a sealed `gate-run` artifact (must be a passing
+run at the release commit) without joining the required floor; the release
+skill calls the collector instead of narrating hand-chaining. Items 4–5
+(drills as signed observations; signed residency) and the exit criterion's
+full fixture regeneration — including the D3/D4/D5 fixes deferred from Phase
+0 — remain for the second half (Phase 2b).
+
 ### Phase 3 — Instrument the value stream (F3)
 
 1. **`state_history` on the envelope.** Append-only `[{state, at, by}]`,

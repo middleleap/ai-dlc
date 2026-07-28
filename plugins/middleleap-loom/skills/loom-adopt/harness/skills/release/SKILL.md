@@ -55,13 +55,16 @@ In the clean worktree, run the full gate set — not a summary of the last CI ru
 green badge. Re-run them.
 
 ```bash
-node core/gate-runner.mjs --lane release --out /tmp/release-gates.json
+node core/gate-runner.mjs --lane release --out /tmp/release-gates.json --emit-dir /tmp/release-emitted
 ```
 
 The release lane runs more than the PR lane by design. Any gate the runner skips must appear in
 `/tmp/release-gates.json` with its reason; **a skip with no reason is a stop**, not a note.
 
-Capture each gate's raw output as a file. These are the artifacts, not your summary of them.
+`--emit-dir` makes the runner capture each mechanism's output and write one result record per
+mechanism plus the run record (`gate-run.json`) — gate-emitted artifacts carrying the commit and
+timestamp, not your summary of them. Do not transcribe a verdict by hand: a hand-typed "PASS" is
+exactly the fabricatable evidence the seal gate exists to refuse.
 
 ## 4. Assemble the bundle — nine required types
 
@@ -82,11 +85,20 @@ table ever disagrees with the gate, the gate is right:
 | `provenance` | Build provenance for the artifacts themselves |
 
 The **token ledger** seals into the same bundle but is not one of the nine: it is telemetry, and
-it must never become a pass/fail input. Copy the artifacts back into the repository checkout's
-`docs/governance/evidence/` — the worktree is for running gates, not for holding the record.
+it must never become a pass/fail input. Copy the artifacts — including the runner's
+`gate-run.json` from step 3's `--emit-dir` — back into the repository checkout's
+`docs/governance/evidence/`; the worktree is for running gates, not for holding the record.
 
-Set `release_commit` in the manifest to the commit from step 1. Then hash-chain the manifest and
-run its gate:
+Then **derive** the manifest; never hand-chain it. The collector hashes every artifact, orders
+the entries by the seal gate's required-types contract, binds `release_commit`, seals the
+gate-run record when present, and re-verifies its own output with the seal gate's `evaluate()`
+**before** writing — a bundle that would fail verification is never written at all:
+
+```bash
+node scripts/seal-evidence.mjs --commit "$RELEASE_COMMIT"
+```
+
+Then run the gate itself, as the independent re-verification CI will repeat:
 
 ```bash
 node scripts/evidence-seal-check.mjs

@@ -79,6 +79,19 @@ export const SEMANTICS = {
   'dependency-audit': (a) => checkAudit(a).map((f) => `sealed dependency audit: ${f}`),
   provenance: (a) => (Array.isArray(a.subject) && a.subject.length > 0 && a.subject.every((s) => s?.digest?.sha256)
     && (a.predicate?.builder?.id || a.builder?.id)) ? [] : ['sealed provenance lacks subject digests or a builder'],
+  // rc.35 (flow-plan Phase 2): the gate runner's own record joins the chain — the most
+  // trustworthy artifact CI produces is sealed instead of expiring as a CI artifact. A sealed
+  // gate-run must record a PASSING run (sealing a failing run would launder the failure into
+  // release evidence), and when it names a commit, that commit must be the release commit.
+  // Deliberately NOT in REQUIRED_TYPES or EVIDENCE_FLOOR: demanding it today would break every
+  // existing bundle. scripts/seal-evidence.mjs seals it whenever the runner's --emit-dir record
+  // is present in the evidence directory.
+  'gate-run': (a, ctx) => {
+    const f = [];
+    if (a.result !== 'pass') f.push(`sealed gate-run record is not a passing run (result=${JSON.stringify(a.result)}) — a failed run is not release evidence`);
+    if (ctx.releaseCommit && a.commit && a.commit !== ctx.releaseCommit) f.push(`sealed gate-run record was produced at ${JSON.stringify(a.commit)}, not the release commit ${JSON.stringify(ctx.releaseCommit)}`);
+    return f;
+  },
   // rc.8 hardening: a sealed brainkit-provenance record must NAME the BrainKit it claims (id,
   // version, sha256 package digest) and LIST the artifacts it covers. Whether that digest is the
   // LIVE BrainKit's — and whether each listed artifact actually embeds it — is brainkit-check's

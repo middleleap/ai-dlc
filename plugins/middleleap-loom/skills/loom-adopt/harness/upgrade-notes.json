@@ -249,6 +249,20 @@
         "Optionally declare `scope_paths` on active envelopes so code-only PRs implicate the right change, and `min_tier` on catalog controls you want tier-scoped.",
         "Adopt the new ci.yml shape (the installer drops it as a .loom-new sidecar if you have edited yours): scheduled lane on cron, bundle-only steps stamped out."
       ]
+    },
+    {
+      "version": "2.0.0-rc.35",
+      "headline": "Flow-plan Phase 2 (first half) — evidence is derived, not authored",
+      "notes": [
+        "scripts/seal-evidence.mjs (also `loom seal`): the evidence manifest is now DERIVED from the artifacts — it hashes every file in docs/governance/evidence/, orders entries by the seal gate's required-types contract, binds release_commit (git HEAD, or --commit), sets the anchor to the final seal, and re-verifies its own output with the seal gate's evaluate() BEFORE writing. A bundle that would fail verification is never written; files that are not evidence are listed, never silently ignored.",
+        "core/gate-runner.mjs --emit-dir <dir>: the runner captures each mechanism's output (still printed verbatim, so logs read the same) and emits one {gate, controls, result, findings_excerpt, commit, produced_at} record per mechanism plus the run record (gate-run.json) — control-plane-style evidence becomes a gate OUTPUT rather than a human transcription. The run record keeps every rc.34 field and gains produced_at.",
+        "The gate-run record joins the evidence chain: the seal gate's semantics now verify a sealed gate-run artifact (result must be 'pass'; a named commit must be the release commit). Deliberately NOT added to the required floor — existing bundles keep passing without one; the collector seals it whenever the runner's emitted record is present in the evidence directory.",
+        "skills/release/SKILL.md steps 3–4 now run the collector instead of narrating hand-chaining — a hand-typed verdict is exactly the fabricatable evidence the seal was built to refuse."
+      ],
+      "action_required": [
+        "Stop hand-building docs/governance/evidence/manifest.json: run `node scripts/seal-evidence.mjs --commit <release-sha>` (or `loom seal`) after copying the release artifacts in. Note it drops a pre-existing manifest attestation loudly — the anchor changes when the chain is rebuilt, so re-anchor and re-attest.",
+        "Optionally add --emit-dir to your release-lane gate-runner invocation and copy the emitted gate-run.json into the evidence directory so the run record is sealed with the bundle."
+      ]
     }
   ]
 }

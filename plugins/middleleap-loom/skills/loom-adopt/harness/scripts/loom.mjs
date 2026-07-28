@@ -8,6 +8,7 @@
 //   loom gates                     the pr-lane gate run CI would do, locally, against the merge
 //                                  base (rc.34) — same runner, same catalog, same recorded skips
 //   loom compile <envelope-path>   the policy compiler, forwarded (rc.34)
+//   loom seal                      derive + verify the evidence manifest (rc.35, seal-evidence.mjs)
 //   loom activate --platform …     observe the live platform → platform-activated (WS2)
 //   loom attest-adoption           sign the adoption report (fails while anything is adopt-pending)
 //   loom status                    the five-stage matrix + unresolved inventory (machine or human)
@@ -107,6 +108,9 @@ export const COMMANDS = {
     return node('../core/gate-runner.mjs', extra);
   },
   compile: (args) => node('../core/policy-compiler.mjs', args),
+  // rc.35 (flow-plan Phase 2) — the evidence collector: derive the manifest from the artifacts,
+  // verified by the seal gate's own evaluate() before anything is written. Never hand-chain.
+  seal: (args) => node('seal-evidence.mjs', args),
   activate: (args) => {
     process.stdout.write('Activation — observe the live platform and record signed evidence, then verify it:\n');
     return node('platform-activation-check.mjs', args.filter((a) => a !== '--platform' && !a.startsWith('github')));

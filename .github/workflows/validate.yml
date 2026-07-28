@@ -680,6 +680,38 @@ jobs:
             echo "::error::the adoption gate refused, but not for being adopt-pending"; cat /tmp/aa.txt; exit 1; }
           echo "all negative bypass tests rejected, as required"
 
+      - name: Loom — evidence is derived, not authored (rc.35, flow-plan Phase 2)
+        run: |
+          # The collector must reproduce the hand-built worked example FROM THE ARTIFACTS ALONE —
+          # same entry order (the seal gate's required-types contract), same seals, same anchor,
+          # zero hand-computed digests. Run in a scratch dir with no governed changes so the
+          # required-types contract is the fixed baseline the example was sealed under.
+          H=plugins/middleleap-loom/skills/loom-adopt/harness
+          SEAL="$PWD/$H/scripts/seal-evidence.mjs"
+          S="$RUNNER_TEMP/seal-derive"
+          mkdir -p "$S"
+          for f in tests.json reviews.json lineage.json model-provenance.json control-plane.json \
+                   sast.sarif sbom.cdx.json dependency-audit.json provenance.json; do
+            cp "$H/evidence-example/$f" "$S/"
+          done
+          ( cd "$S" && node "$SEAL" --dir . --commit 7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f --release v-demo )
+          node -e '
+            const { readFileSync } = require("node:fs");
+            const built = JSON.parse(readFileSync(process.argv[1], "utf8"));
+            const shipped = JSON.parse(readFileSync(process.argv[2], "utf8"));
+            if (built.anchor !== shipped.anchor) {
+              console.error(`::error::the derived chain resolves to ${built.anchor}, not the sealed example anchor ${shipped.anchor} — the collector no longer derives what the gate verifies`); process.exit(1); }
+            console.log("seal-evidence reproduced the worked-example anchor from the artifacts alone:", built.anchor);
+          ' "$S/manifest.json" "$H/evidence-example/manifest.json"
+          # The refusal, both halves: a bundle of failing tests must not seal, and the refusal
+          # must write NOTHING — the previous manifest stays byte-for-byte intact.
+          sed -i 's/"failed": 0/"failed": 3/' "$S/tests.json"
+          BEFORE=$(sha256sum "$S/manifest.json")
+          if ( cd "$S" && node "$SEAL" --dir . --commit 7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f ); then
+            echo "::error::the collector sealed a bundle of FAILING tests — derived evidence just laundered a failure"; exit 1; fi
+          [ "$BEFORE" = "$(sha256sum "$S/manifest.json")" ] || {
+            echo "::error::a refused seal still rewrote the manifest — refusal must write nothing"; exit 1; }
+
       - name: Loom — operations-signal adopter example stays green
         run: |
           cd plugins/middleleap-loom/skills/loom-adopt/harness/operations-example
