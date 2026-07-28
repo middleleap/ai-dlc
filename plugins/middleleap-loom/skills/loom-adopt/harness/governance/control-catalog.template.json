@@ -859,7 +859,7 @@
     },
     {
       "control_id": "SELF-CLAIMS",
-      "objective": "The bundle is held to the claims it makes about itself: prose may not cite a gate that does not exist, and a CI-proven claim must name the negative test that backs it or scope itself to the part it covers",
+      "objective": "The bundle is held to the claims it makes about itself: prose may not cite a gate that does not exist, a CI-proven claim must name the negative test that backs it or scope itself to the part it covers, and a CLI may not advertise a flag it does not implement",
       "owner_role": "platform-admin",
       "line": 1,
       "state": "mechanically-validated",
@@ -867,7 +867,7 @@
       "test_ref": "scripts/self-claims-check.test.mjs",
       "lane": "pr",
       "always": true,
-      "note": "rc.26. Every defect the rc.18–rc.25 review found was one shape — a claim and its evidence drifting apart, in both directions — and each was fixed by hand after a human noticed. This makes the class mechanical, in the method's own idiom: observed, not declared. Bundle-only (it reads this repository's workflow and layout) and inert in an adopted tree. Uncredited inversions are REPORTED, never failed: the checklist enumerates attacks, not gates, so forcing one row per inversion would manufacture rows nobody meant to write"
+      "note": "rc.26, extended rc.32. Every defect the rc.18–rc.25 review found was one shape — a claim and its evidence drifting apart, in both directions — and each was fixed by hand after a human noticed. This makes the class mechanical, in the method's own idiom: observed, not declared. Bundle-only (it reads this repository's workflow and layout) and inert in an adopted tree. Uncredited inversions are REPORTED, never failed: the checklist enumerates attacks, not gates, so forcing one row per inversion would manufacture rows nobody meant to write. C5 (rc.32) was added because this gate MISSED a defect of its own class: rc.29 documented a `--reconcile` flag in discovery-sync-check.mjs and never wrote it, so passing it changed nothing while the operator believed a sync point had been stamped. C1 could not see it — the cited script existed; only its advertised behaviour did not. The rule is narrow on purpose: a flag counts as documented only on a comment line that names its own file, so prose about git or a sibling script is not a claim. Zero false positives across the 61 flag-documenting scripts, and it catches the rc.29 blob from git history — pinned as a test"
     },
     {
       "control_id": "DISCOVERY-SYNC",

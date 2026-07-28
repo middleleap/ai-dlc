@@ -63,6 +63,7 @@ the platform/organisational half in the pilot.
 | Regulatory change mid-delivery | operations-signal regulatory route → discovery (`operations-signal-check`) | **CI-proven** (untriaged-signal negative test); live routing **live** |
 | Feature hidden from the waist gate by backlog nesting | `discovery-link-check` (HG-0007): every item is its own block, whichever key its milestone uses | **CI-proven** (id-keyed-milestone negative test) |
 | Waist gate quietly inert — a backlog it cannot parse, or an `ADOPT:` marker never set to the adopter's ids | `discovery-link-check` (HG-0007) coverage: it must have examined something before it may print OK, and it states how much | **CI-proven** (unparsed-backlog and unedited-marker negative tests) |
+| A tool advertises a capability it does not have | `self-claims-check` C5: a flag documented in a CLI's own usage must appear in its code | **CI-proven** (undocumented-flag negative test) |
 
 ## Exit criteria
 
