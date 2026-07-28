@@ -7,7 +7,7 @@ run: <slug>
 
 # Stakeholder reaction — <slug>
 
-> **Make-tangible closes here (D9).** The prototype is not done when it is *built* — it is
+> **Make-tangible closes here (gate D9 — Validation loop).** The prototype is not done when it is *built* — it is
 > done when someone has *reacted* to it and that reaction is captured as evidence. Show
 > `wireframe.html` to the people the problem statement names, record their reaction against
 > each framing hypothesis, and log each reaction as a new signal so it feeds D2.
@@ -22,7 +22,7 @@ run: <slug>
 
 ## Reactions
 
-> One row per framing hypothesis the prototype tests (`H1`, `H2`, …). Verdict ∈
+> One row per framing hypothesis the prototype tests (hypotheses `H1`, `H2`, …). Verdict ∈
 > `confirmed` / `refuted` / `uncertain` / `partially`. Each reaction is logged as a new
 > signal in `research-log.md` (continue the `S-NNN` numbering) so it is evidence, not opinion.
 

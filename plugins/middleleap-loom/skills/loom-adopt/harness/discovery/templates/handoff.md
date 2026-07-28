@@ -7,7 +7,7 @@ run: "<slug>"
 
 # Delivery hand-off — <slug>
 
-> The boundary object (canon §6). Delivery-ready iff D1–D8 green and this contains **no**
+> The boundary object (canon §6). Delivery-ready iff gates D1–D9 (Problem framing through Validation loop) are green and this contains **no**
 > delivery design (no endpoints/schemas/stories/tech). Problem in, solution authored later.
 
 ## Problem (from `problem-statement.md`)
@@ -30,9 +30,13 @@ run: "<slug>"
 
 ## Gate status
 
-| Gate | D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 |
-|---|---|---|---|---|---|---|---|---|
-| Pass? | | | | | | | | |
+| Gate | D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9 |
+|---|---|---|---|---|---|---|---|---|---|
+| Pass? | | | | | | | | | |
+
+> Problem framing · Evidence · Scope & stakeholders · No-solutioning boundary · Synthesis
+> integrity · Data-governance feasibility · Brand conformance · Tangibility · Validation loop.
+> Full expansion in `discovery/GLOSSARY.md`.
 
 ## What delivery owns now
 
