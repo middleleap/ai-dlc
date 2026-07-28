@@ -12,7 +12,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import {
-  LEDGER, STATE, evaluate, compareUpstream, record, trackedFiles,
+  LEDGER, STATE, checkClaims, evaluate, compareUpstream, reconcile, record, trackedFiles,
 } from './discovery-sync-check.mjs';
 
 /** A ledger with the given per-file states, digests keyed 'd:<path>' unless overridden. */
@@ -165,6 +165,75 @@ test('record drops entries whose files are gone', () => {
   assert.ok(!('discovery/gone.mjs' in out.files));
 });
 
+// ── checkClaims: the ledger may not assert more than it has seen ────────────────────────────
+
+test('an upstream digest with no recorded reconciliation is a fabrication and fails', () => {
+  const l = ledgerOf({ 'discovery/a.mjs': STATE.EXTRACTION });
+  l.files['discovery/a.mjs'].upstream = 'd:INVENTED';
+  assert.match(checkClaims(l)[0], /nobody has seen ofbo, so that digest was invented/);
+});
+
+test('a seen-only state with no recorded reconciliation fails', () => {
+  for (const s of [STATE.RECONCILED, STATE.BEHIND, STATE.DIVERGED]) {
+    const l = ledgerOf({ 'discovery/a.mjs': s });
+    assert.ok(checkClaims(l).some((f) => /asserts a comparison against ofbo that the ledger says never happened/.test(f)), s);
+  }
+});
+
+test("'reconciled' with digests that do not actually agree fails", () => {
+  const l = ledgerOf({ 'discovery/a.mjs': STATE.RECONCILED }, { last_reconciled: '2026-08-01' });
+  l.files['discovery/a.mjs'].upstream = 'd:DIFFERENT';
+  assert.match(checkClaims(l).find((f) => /all three digests agree/.test(f)), /all three digests agree/);
+});
+
+test('THE RULE IS CONDITIONAL: a real reconciliation is allowed, not frozen out', () => {
+  // The regression this exists for. A ledger that HAS been reconciled may carry upstream digests
+  // and seen-only states — otherwise doing the right thing breaks the build.
+  const l = ledgerOf({ 'discovery/a.mjs': STATE.RECONCILED, 'discovery/b.mjs': STATE.BEHIND }, { last_reconciled: '2026-08-01', last_reconciled_ref: 'abc1234' });
+  l.files['discovery/a.mjs'].upstream = 'd:discovery/a.mjs';
+  l.files['discovery/b.mjs'].upstream = 'd:THEIRS';
+  assert.deepEqual(checkClaims(l), []);
+});
+
+// ── reconcile(): the only thing entitled to write about ofbo ────────────────────────────────
+
+test('reconcile records what was seen, and a stamp does not mean everything agreed', () => {
+  const l = ledgerOf({
+    'discovery/same.mjs': STATE.EXTRACTION,
+    'discovery/ours.mjs': STATE.OWED,
+    'discovery/theirs.mjs': STATE.EXTRACTION,
+  });
+  l.files['discovery/ours.mjs'].bundle = 'd:HARDENED'; // we are ahead; base still the ancestor
+  const out = reconcile(
+    l,
+    // here: same unchanged · ours hardened · theirs still at the ancestor
+    { 'discovery/same.mjs': 'd:discovery/same.mjs', 'discovery/ours.mjs': 'd:HARDENED', 'discovery/theirs.mjs': 'd:discovery/theirs.mjs' },
+    // upstream: same agrees · ours still at the ancestor · theirs moved on
+    { 'discovery/same.mjs': 'd:discovery/same.mjs', 'discovery/ours.mjs': 'd:discovery/ours.mjs', 'discovery/theirs.mjs': 'd:MOVED' },
+    { now: '2026-08-01', ref: 'abc1234' },
+  );
+  assert.equal(out.upstream.last_reconciled, '2026-08-01');
+  assert.equal(out.files['discovery/same.mjs'].state, STATE.RECONCILED);
+  assert.equal(out.files['discovery/ours.mjs'].state, STATE.OWED, 'we are ahead — the debt survives the stamp');
+  assert.equal(out.files['discovery/theirs.mjs'].state, STATE.BEHIND, 'they are ahead — forward-port');
+  assert.deepEqual(checkClaims(out), [], 'and the result is internally consistent');
+});
+
+test('reconcile moves the shared base ONLY on files that actually agree', () => {
+  const l = ledgerOf({ 'discovery/ours.mjs': STATE.OWED });
+  l.files['discovery/ours.mjs'].bundle = 'd:HARDENED';
+  const out = reconcile(l, { 'discovery/ours.mjs': 'd:HARDENED' }, { 'discovery/ours.mjs': 'd:discovery/ours.mjs' }, { now: '2026-08-01' });
+  assert.equal(out.files['discovery/ours.mjs'].base, 'd:discovery/ours.mjs', 'base stays at the ancestor — moving it declares an unpaid debt paid');
+  assert.equal(out.files['discovery/ours.mjs'].upstream, 'd:discovery/ours.mjs', 'but what upstream holds is now real evidence');
+});
+
+test('reconcile does not adopt upstream-only files into this tree', () => {
+  // The ledger tracks OUR tree. compareUpstream still reports missing-here, so it stays visible.
+  const l = ledgerOf({ 'discovery/a.mjs': STATE.EXTRACTION });
+  const out = reconcile(l, disk('discovery/a.mjs'), { 'discovery/a.mjs': 'd:discovery/a.mjs', 'discovery/theirs.mjs': 'd:x' }, { now: '2026-08-01' });
+  assert.ok(!('discovery/theirs.mjs' in out.files));
+});
+
 // ── The shipped ledger is the contract ──────────────────────────────────────────────────────
 //
 // Bundle-only (never installed — it is provenance for this bundle), so skip in an adopted layout.
@@ -178,13 +247,11 @@ if (!existsSync(LEDGER)) {
     assert.deepEqual(findings, [], 'every tracked file is recorded and every record has a file');
   });
 
-  test('the shipped ledger claims nothing about upstream', () => {
-    const l = JSON.parse(readFileSync(LEDGER, 'utf8'));
-    assert.equal(l.upstream.last_reconciled, null, 'nobody has reconciled — do not let this become non-null without a checkout');
-    for (const [p, e] of Object.entries(l.files)) {
-      assert.equal(e.upstream, null, `${p}: an upstream digest nobody has seen is a fabricated one`);
-      assert.notEqual(e.state, STATE.RECONCILED, `${p}: reconciled is only reachable via --upstream`);
-    }
+  test('the shipped ledger asserts no more than it has seen', () => {
+    // NOT `last_reconciled === null`. That was the original assertion and it was a booby trap: it
+    // froze today's state as an invariant, so a real reconciliation would turn the build red and
+    // the only fix would be deleting the check. The rule is conditional — see checkClaims.
+    assert.deepEqual(checkClaims(JSON.parse(readFileSync(LEDGER, 'utf8'))), []);
   });
 
   test('the shipped ledger states agree with its own digests', () => {
