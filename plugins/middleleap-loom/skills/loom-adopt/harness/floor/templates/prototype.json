@@ -6,14 +6,14 @@
   "stage": "define",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/prototype.md",
-  "source_digest": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
+  "source_digest": "sha256:2718acde1e83025e8bfca6a8c27f4b5d11ea0e7fea0541810cc8f3d458a59a25",
   "gates": [
     "D2",
     "D4",
     "D7",
     "D8"
   ],
-  "guidance": "Define (*make tangible*). A **disposable, low-fidelity** wireframe that visualises how the direction *could* look, to test the framing before delivery. Gates D8 (this brief + a brand-conformant `wireframe.html` exist) and D4/§4 (validation fidelity, not a delivery spec). The wireframe renders against `design.md` (D7).",
+  "guidance": "Define (*make tangible*). A **disposable, low-fidelity** wireframe that visualises how the direction *could* look, to test the framing before delivery. Gates D8 — Tangibility (this brief + a brand-conformant `wireframe.html` exist) and D4/§4 (validation fidelity, not a delivery spec). The wireframe renders against `design.md` (D7).",
   "properties": [
     {
       "name": "Run",

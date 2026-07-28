@@ -6,11 +6,11 @@
   "stage": "discover",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/synthesis.md",
-  "source_digest": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",
+  "source_digest": "sha256:ce36933ff80997d815bc9f596f2b47ad57f405707f1df84b0bea702ba858fb21",
   "gates": [
     "D5"
   ],
-  "guidance": "Discover (converge). Cluster signals into themes; every theme traces to ≥1 signal id from `research-log.md` (gate D5). State the prioritisation method explicitly.",
+  "guidance": "Discover (converge). Cluster signals into themes; every theme traces to ≥1 signal id from `research-log.md` (gate D5 — Synthesis integrity). State the prioritisation method explicitly.",
   "properties": [
     {
       "name": "Run",
