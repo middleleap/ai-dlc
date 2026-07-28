@@ -47,8 +47,39 @@ test('a pending feature with no discovery link fails (HG-0007)', () => {
   assert.match(f[0], /pending feature with no 'discovery/);
 });
 
-test('discovery_exempt:true lets a pending feature through', () => {
-  assert.deepEqual(checkItems('- id: STORY-1\n  status: pending\n  discovery_exempt: true', resolver({})), []);
+// The escape hatch is the one way a feature reaches delivery without an evidenced problem.
+// It may be taken — but only out loud. An exemption with no reason is a silent bypass of the
+// gate that makes discovery non-optional, and it is the shape a reward-seeking agent finds
+// first. The header comment, the failure message and the shipped example all promised a
+// reason was required; until rc.33 nothing checked.
+test('discovery_exempt:true WITH a reason lets a pending feature through', () => {
+  assert.deepEqual(
+    checkItems('- id: STORY-1\n  status: pending\n  discovery_exempt: true\n  reason: Regulatory pin with no user-facing choice', resolver({})),
+    [],
+  );
+});
+
+test('discovery_exempt:true with NO reason is refused', () => {
+  const f = checkItems('- id: STORY-1\n  status: pending\n  discovery_exempt: true', resolver({}));
+  assert.equal(f.length, 1);
+  assert.match(f[0], /STORY-1/);
+  assert.match(f[0], /reason/i);
+});
+
+test('an exemption reason that is only whitespace is refused', () => {
+  const f = checkItems('- id: STORY-1\n  status: pending\n  discovery_exempt: true\n  reason: "   "', resolver({}));
+  assert.equal(f.length, 1, 'blank is not a reason');
+});
+
+test('an exemption reason still carrying the ADOPT/TODO placeholder is refused', () => {
+  const f = checkItems('- id: STORY-1\n  status: pending\n  discovery_exempt: true\n  reason: TODO', resolver({}));
+  assert.equal(f.length, 1, 'a placeholder is not a reason a human can argue with');
+});
+
+test('a reason is only required when the exemption is actually claimed', () => {
+  // A linked item needs no reason, and neither does a non-pending one.
+  assert.deepEqual(checkItems('- id: STORY-1\n  status: pending\n  discovery: revoke-latency', resolver({ 'revoke-latency': GREEN })), []);
+  assert.deepEqual(checkItems('- id: STORY-1\n  status: done', resolver({})), []);
 });
 
 test('a linked, gate-green run passes', () => {

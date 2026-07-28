@@ -377,6 +377,18 @@
         "None. If you vendored core/gate-cache.mjs, re-copy it — your cache stays valid either way, because the key is unchanged.",
         "If you carry your own binary-file policy for source trees, note that this class is worth a check: a .mjs that git reports as Bin is a file your review process cannot show a reviewer."
       ]
+    },
+    {
+      "version": "2.0.0-rc.44",
+      "headline": "The waist-gate exemption must state a reason — a silent bypass no longer passes",
+      "notes": [
+        "discovery_exempt: true let a pending feature reach delivery with no justification recorded at all. The header comment, the failure message and the shipped example every one promised a reason was required (\"Silence is not an option; an exemption is\") — and nothing checked. One line bypassed the gate that makes discovery non-optional, and the gate printed OK.",
+        "An exemption now needs a `reason:` a human can argue with. Empty, whitespace-only, and leftover placeholders (TODO / TBD / ADOPT / N/A / <...>) are refused: a placeholder is the same silence dressed as compliance.",
+        "Found by testing the gate rather than reading it. The gate had never been asked to refuse anything — it had only ever been run against a backlog with nothing in it."
+      ],
+      "action_required": [
+        "BREAKING for any backlog carrying `discovery_exempt: true` without a `reason:`. The build will now fail. Add the reason — that is the fix, and writing it is the control. Do not remove the exemption to dodge the gate; an exemption with a stated reason is a legitimate, auditable choice."
+      ]
     }
   ]
 }
