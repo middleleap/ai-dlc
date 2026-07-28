@@ -245,6 +245,20 @@
       "action_required": [
         "None. If your own bundle was failing these three tests, it will now skip them. Sign your anchor and they run again."
       ]
+    },
+    {
+      "version": "2.0.0-rc.35",
+      "headline": "The discovery-sync ledger can finally be reconciled — and can describe a divergence that runs both ways",
+      "notes": [
+        "--reconcile was documented in the gate header, in the ledger note and in CLAUDE.md since rc.29, and was NEVER IMPLEMENTED. last_reconciled was null because nothing could set it: the debt was not unretired, it was unretirable. It exists now.",
+        "Two new states. upstream-ahead: upstream moved and we did not — every earlier state described what WE did, so a debt owed TO us was invisible by construction. conflict: both sides moved from the shared base, which is a merge and not a copy; calling it a port invites someone to settle it by overwriting one side.",
+        "The comparison now excludes upstream's own instantiation content — its discovery runs and rendered artifacts. The first run returned 46 missing-here rows of which 44 were that noise, burying the 21 that mattered. A gate whose output you learn to skim is a gate you have stopped reading.",
+        "The summary line no longer says every divergence is owed TO upstream, because after upstream-ahead that is not true.",
+        "First reconciliation against a real ofbo checkout (2026-07-28, 99ab0dd): 4 identical, 11 bundle-ahead, 6 CONFLICT, 1 upstream-ahead, 1 bundle-only. ADR-0007 proposes retiring the ledger entirely by having ofbo adopt via adopt.mjs — six conflicts that grow with every edit are the argument."
+      ],
+      "action_required": [
+        "If you maintain a fork of discovery/ tracked by this ledger, re-run the gate with --upstream <checkout> --reconcile to replace inferred states with a real three-way comparison. Expect conflicts the old vocabulary was reporting as ports."
+      ]
     }
   ]
 }

@@ -6,166 +6,171 @@
     "extracted_at": "2026-07-17",
     "extracted_ref": "898f8fbc80a60a7ee9752c0101c318d2ddf9bbd8",
     "direction": "This repository is canonical for the GENERIC harness: hardening lands here and is ported out to ofbo, whose own instantiation (CBUAE register, OFBO brand profile, hard-stop checklists, Q1-Q5 workflows) stays there and is never pulled in. The long-term fix is for ofbo to ADOPT via adopt.mjs, which retires this ledger entirely: the adoption stamp already tells a local edit from an upstream update, so there would be one source and nothing to reconcile by hand.",
-    "last_reconciled": null,
-    "last_reconciled_ref": null,
-    "note": "NEVER RECONCILED. The states below are computed from THIS repository's history alone. Run `node scripts/discovery-sync-check.mjs --upstream <ofbo-checkout>` from a session that can reach both repositories; only that can fill in `upstream`, move `base`, or set state `reconciled`."
+    "last_reconciled": "2026-07-28",
+    "last_reconciled_ref": "99ab0dd",
+    "note": "Reconciled against a real checkout on 2026-07-28. States below are a three-way comparison, not an inference from this repository alone. Whether upstream has moved SINCE is still not knowable from here — re-run with --upstream <checkout>."
   },
   "files": {
     "discovery/brand/design.md": {
       "base": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
       "bundle": "sha256:c1f80a5126f4be747003cdc6f8790ebe73dc2188f0ecbbb07a55ee6c5e7cee7b",
-      "upstream": null,
-      "state": "owed",
-      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
+      "upstream": "sha256:596396d7463ec84f86d6e5eb3ba5b41911ce110db87514b65b906c7c014e416b",
+      "state": "conflict",
+      "note": "both sides moved as of 2026-07-28 — a real merge, not a copy"
     },
     "discovery/brand/examples/meridian-trust.design.md": {
       "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
       "bundle": "sha256:ede29da50af55711ae657ea3ba46b4eed9e3892e784acc0deda1576f45fa425f",
-      "upstream": null,
-      "state": "owed",
-      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
+      "upstream": "sha256:a387e0a9bf29bb7c55423b01e598387e2b6aa54af5093d715babe266aa2d5fe4",
+      "state": "conflict",
+      "note": "both sides moved as of 2026-07-28 — a real merge, not a copy"
     },
     "discovery/gates/brand.mjs": {
       "base": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
       "bundle": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
-      "upstream": null,
-      "state": "at-extraction"
+      "upstream": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
+      "state": "reconciled",
+      "note": "verified equal to upstream 2026-07-28"
     },
     "discovery/gates/lib.mjs": {
       "base": "sha256:5d68006763c5e488380e574e3aa7a9a2558c2d5af2d58210823f4d45a8d85d2d",
       "bundle": "sha256:5d68006763c5e488380e574e3aa7a9a2558c2d5af2d58210823f4d45a8d85d2d",
-      "upstream": null,
-      "state": "at-extraction"
+      "upstream": "sha256:5d68006763c5e488380e574e3aa7a9a2558c2d5af2d58210823f4d45a8d85d2d",
+      "state": "reconciled",
+      "note": "verified equal to upstream 2026-07-28"
     },
     "discovery/gates/registers.mjs": {
       "base": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
       "bundle": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
-      "upstream": null,
-      "state": "at-extraction"
+      "upstream": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
+      "state": "reconciled",
+      "note": "verified equal to upstream 2026-07-28"
     },
     "discovery/gates/validate.mjs": {
       "base": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
       "bundle": "sha256:f035e11dd84c9c177c25bbea745954d52f51e07379c776b2b404ad356c32aa43",
-      "upstream": null,
+      "upstream": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
       "state": "owed",
-      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, Phase 1 correctness, rc.31 D8 over-specification scan widened to the wireframe asset and specs/*.json"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/gates/validate.test.mjs": {
       "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
       "bundle": "sha256:5409c8a1362ca2adaf0e82220caccd4db94ce114b936a1bc16942234ffb7dedd",
-      "upstream": null,
-      "state": "owed",
-      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, rc.31 D8 wireframe/spec over-specification cases"
+      "upstream": "sha256:00ec304b615d02657adb395d459231a04be0006b130e5f27d5b84cef8f671c70",
+      "state": "conflict",
+      "note": "both sides moved as of 2026-07-28 — a real merge, not a copy"
     },
     "discovery/render/README.md": {
       "base": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
       "bundle": "sha256:44656b93d87569355313b0c0998fbbf17dffcd3fd537ef53485a9165c05308ba",
-      "upstream": null,
-      "state": "owed",
-      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
+      "upstream": "sha256:54b9b143333a2304c539f7dbdd9e0ddfb33c8443e31025ff9ceb8c1d44037df9",
+      "state": "conflict",
+      "note": "both sides moved as of 2026-07-28 — a real merge, not a copy"
     },
     "discovery/render/brainkit-provenance.test.mjs": {
       "base": null,
       "bundle": "sha256:4aa5fed254adf0f97e380c3de19af359a2ce79fcbbaec8eb8631b231b8d4cfa1",
       "upstream": null,
       "state": "bundle-only",
-      "note": "added here 2026-07-23 (rc.8 WS8) — never existed upstream"
+      "note": "exists here only as of 2026-07-28"
     },
     "discovery/render/office.test.mjs": {
       "base": "sha256:08bcd73de99fe59753ca0dae25c337129bbe53980e34039eeb001cbb2b90137d",
       "bundle": "sha256:08bcd73de99fe59753ca0dae25c337129bbe53980e34039eeb001cbb2b90137d",
-      "upstream": null,
-      "state": "at-extraction"
+      "upstream": "sha256:22e8b2b8cbb9a046fc7eed0a44194debb0291c2c39b5a739c4da6b58f0e0491d",
+      "state": "upstream-ahead",
+      "note": "upstream ahead at 2026-07-28 — forward-port owed to THIS repository"
     },
     "discovery/render/office/ooxml.mjs": {
       "base": "sha256:3750cdd3ab051258d378ce87918903802902e4c41cb7e2aeeb3d4d36cdce2c6e",
       "bundle": "sha256:47b349547cc69e1e8a9cda773c668d856473672e910aa4fba18dabc8f614bc55",
-      "upstream": null,
+      "upstream": "sha256:3750cdd3ab051258d378ce87918903802902e4c41cb7e2aeeb3d4d36cdce2c6e",
       "state": "owed",
-      "note": "changed here: rc.8 WS8 D7 compatibility projection carries BrainKit provenance"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/render/office/zip.mjs": {
       "base": "sha256:810e33eb52b17fc84e008df76d1d1a1a076fef062e640b2c2ec56b99bec9beca",
       "bundle": "sha256:810e33eb52b17fc84e008df76d1d1a1a076fef062e640b2c2ec56b99bec9beca",
-      "upstream": null,
-      "state": "at-extraction"
+      "upstream": "sha256:810e33eb52b17fc84e008df76d1d1a1a076fef062e640b2c2ec56b99bec9beca",
+      "state": "reconciled",
+      "note": "verified equal to upstream 2026-07-28"
     },
     "discovery/render/render-office.mjs": {
       "base": "sha256:ef3831db83b60d0436694dbef68c040ca31b1b4543f67c4d8e4720ec8ba98921",
       "bundle": "sha256:1996c6f414781ea7c93054943d1815f0506a976e01e9b04725e254087ad83955",
-      "upstream": null,
+      "upstream": "sha256:ef3831db83b60d0436694dbef68c040ca31b1b4543f67c4d8e4720ec8ba98921",
       "state": "owed",
-      "note": "changed here: rc.8 WS8 BrainKit provenance, rc.10 enforcement hardening"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/render/render.mjs": {
       "base": "sha256:74a7dc3e3a04240018d7afe7e0651ec10049450f0478b13cd69eb3a9eca2874d",
       "bundle": "sha256:79aaf0257067643a57106aef3478f6d4aeaeae5d77eada4fd8aa0ec894796a4b",
-      "upstream": null,
-      "state": "owed",
-      "note": "changed here: rc.8 WS8 BrainKit provenance, rc.10 enforcement hardening"
+      "upstream": "sha256:953eb87b8a635e9ee8205df97ad315e7bcf9e875732a3a98fed89fdda6e9acc8",
+      "state": "conflict",
+      "note": "both sides moved as of 2026-07-28 — a real merge, not a copy"
     },
     "discovery/render/render.test.mjs": {
       "base": "sha256:0827fbdc544c5d42a81ebb7b390334f09f0ed10080448c7e90938b89dd6a6186",
       "bundle": "sha256:bfab962d77ef5ecebe2b85ed745a1c54a17a61b5cc71899294c2f41d04806594",
-      "upstream": null,
-      "state": "owed",
-      "note": "changed here: rc.10 enforcement hardening"
+      "upstream": "sha256:2dd8a21b5eff70099a180cabd2fc2b02dd931f6a3ed8830e2d8a384bb660e4ef",
+      "state": "conflict",
+      "note": "both sides moved as of 2026-07-28 — a real merge, not a copy"
     },
     "discovery/render/tokens.mjs": {
       "base": "sha256:0c12607726e53bc3f83f1e53156de108a7f34be50a61c42e637ab6c9b0ef23a3",
       "bundle": "sha256:f17032d0dc9304400cea189697daf0b9dd20281d9b160ba486de5e0e4b131443",
-      "upstream": null,
+      "upstream": "sha256:0c12607726e53bc3f83f1e53156de108a7f34be50a61c42e637ab6c9b0ef23a3",
       "state": "owed",
-      "note": "changed here: rc.8 WS8 BrainKit provenance"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/templates/data-governance.md": {
       "base": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
       "bundle": "sha256:520d3feeb3d23ed5f0e69ebc3ed0eba0b7171327d6498fd44f5a96249e035004",
-      "upstream": null,
+      "upstream": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/templates/handoff.md": {
       "base": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
       "bundle": "sha256:1f72fb051550dc5fee73c6919be81a6779f930df9f102a8a9d7cb580567422f9",
-      "upstream": null,
+      "upstream": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/templates/problem-statement.md": {
       "base": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
       "bundle": "sha256:2fda98a745bee184954dadfc218f761a0a7e1ee4938474c8133a0d78416cd73c",
-      "upstream": null,
+      "upstream": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/templates/prototype.md": {
       "base": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
       "bundle": "sha256:2718acde1e83025e8bfca6a8c27f4b5d11ea0e7fea0541810cc8f3d458a59a25",
-      "upstream": null,
+      "upstream": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/templates/research-log.md": {
       "base": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
       "bundle": "sha256:52c8b260a6d19209371be2d8808192d262947f4ea67d02defecd24a1e7c64a8c",
-      "upstream": null,
+      "upstream": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/templates/stakeholder-reaction.md": {
       "base": "sha256:5dd3fc31cb9f75081ede8911cd56088264ce30ecb4b05489d55b7de2264f2b0c",
       "bundle": "sha256:8b50ef31e76e937a9d974f5d480a520d12e0512b068b0acef081583b075ce9df",
-      "upstream": null,
+      "upstream": "sha256:5dd3fc31cb9f75081ede8911cd56088264ce30ecb4b05489d55b7de2264f2b0c",
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     },
     "discovery/templates/synthesis.md": {
       "base": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",
       "bundle": "sha256:ce36933ff80997d815bc9f596f2b47ad57f405707f1df84b0bea702ba858fb21",
-      "upstream": null,
+      "upstream": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "ahead of upstream at 2026-07-28 — back-port owed to ofbo"
     }
   }
 }

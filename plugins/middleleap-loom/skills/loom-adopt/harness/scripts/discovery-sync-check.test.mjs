@@ -12,7 +12,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import {
-  LEDGER, STATE, evaluate, compareUpstream, record, trackedFiles,
+  LEDGER, STATE, evaluate, compareUpstream, record, trackedFiles, reconcile, ofboSpecific,
 } from './discovery-sync-check.mjs';
 
 /** A ledger with the given per-file states, digests keyed 'd:<path>' unless overridden. */
@@ -178,12 +178,32 @@ if (!existsSync(LEDGER)) {
     assert.deepEqual(findings, [], 'every tracked file is recorded and every record has a file');
   });
 
-  test('the shipped ledger claims nothing about upstream', () => {
+  test('the shipped ledger claims about upstream only what a checkout could have told it', () => {
+    // This guard used to assert `last_reconciled === null` — "nobody has reconciled, do not let
+    // this become non-null without a checkout". That was correct until 2026-07-28, when someone
+    // finally ran --reconcile against a real ofbo checkout and it became legitimately non-null.
+    //
+    // The guard is NOT deleted, because its purpose still holds: nothing may claim knowledge of
+    // upstream that no checkout produced. It now asserts the invariant instead of the state —
+    // a reconciliation must carry the ref it was taken at, and every per-file upstream digest and
+    // every `reconciled` state must be backed by that same reconciliation.
     const l = JSON.parse(readFileSync(LEDGER, 'utf8'));
-    assert.equal(l.upstream.last_reconciled, null, 'nobody has reconciled — do not let this become non-null without a checkout');
+    const reconciled = l.upstream.last_reconciled !== null;
+    if (!reconciled) {
+      for (const [p, e] of Object.entries(l.files)) {
+        assert.equal(e.upstream, null, `${p}: an upstream digest nobody has seen is a fabricated one`);
+        assert.notEqual(e.state, STATE.RECONCILED, `${p}: reconciled is only reachable via --reconcile`);
+      }
+      return;
+    }
+    assert.ok(l.upstream.last_reconciled_ref,
+      'a reconciliation with no ref is a claim with no evidence — --reconcile pins the upstream commit');
+    assert.match(l.upstream.last_reconciled, /^\d{4}-\d{2}-\d{2}$/);
     for (const [p, e] of Object.entries(l.files)) {
-      assert.equal(e.upstream, null, `${p}: an upstream digest nobody has seen is a fabricated one`);
-      assert.notEqual(e.state, STATE.RECONCILED, `${p}: reconciled is only reachable via --upstream`);
+      if (e.state === STATE.RECONCILED) {
+        assert.ok(e.upstream, `${p}: reconciled without an upstream digest is unsupported`);
+        assert.equal(e.base, e.upstream, `${p}: reconciled means equal — base and upstream must agree`);
+      }
     }
   });
 
@@ -199,3 +219,80 @@ if (!existsSync(LEDGER)) {
     }
   });
 }
+
+// ── rc.35 ────────────────────────────────────────────────────────────────────────────────────
+// The reconciliation these tests cover had never been run when they were written, and running it
+// for the first time showed the ledger's model was wrong in three ways: it could not express a
+// debt owed TO us, it could not express a conflict, and `--reconcile` — the only thing the ledger
+// and CLAUDE.md say can retire a debt — was documented but never implemented.
+
+test('ofbo-specific content is excluded — an instantiation is not a divergence', () => {
+  // The first real comparison returned 46 `missing-here` rows, 44 of which were ofbo's own
+  // discovery run and its rendered artifacts. Those belong ONLY in ofbo. Reporting them as
+  // divergence buried the 21 rows that mattered under noise the reader must learn to ignore —
+  // and a gate whose output you learn to skim is a gate you have stopped reading.
+  assert.equal(ofboSpecific('discovery/runs/fee-variance-reconciliation/handoff.md'), true);
+  assert.equal(ofboSpecific('discovery/brand/examples/rendered/summary.pptx'), true);
+  assert.equal(ofboSpecific('discovery/DISCOVERY.md'), true, 'generated from the loom skill, not a bundle file');
+  // The machinery is emphatically still compared.
+  assert.equal(ofboSpecific('discovery/gates/validate.mjs'), false);
+  assert.equal(ofboSpecific('discovery/templates/handoff.md'), false);
+  assert.equal(ofboSpecific('discovery/render/render.mjs'), false);
+});
+
+test('compareUpstream drops ofbo-specific paths rather than calling them divergence', () => {
+  const l = ledgerOf({ 'discovery/gates/validate.mjs': STATE.OWED });
+  const rows = compareUpstream(l, disk('discovery/gates/validate.mjs'), {
+    'discovery/gates/validate.mjs': 'd:discovery/gates/validate.mjs',
+    'discovery/runs/fee-variance/handoff.md': 'd:theirs',
+  });
+  assert.deepEqual(rows.map((r) => r.path), ['discovery/gates/validate.mjs']);
+});
+
+test('reconcile stamps a real sync point — the thing that was documented and missing', () => {
+  const l = ledgerOf({ 'discovery/a.mjs': STATE.OWED });
+  const out = reconcile(l, disk('discovery/a.mjs'), disk('discovery/a.mjs'), { now: '2026-07-28', ref: 'deadbee' });
+  assert.equal(out.upstream.last_reconciled, '2026-07-28');
+  assert.equal(out.upstream.last_reconciled_ref, 'deadbee');
+});
+
+test('reconcile moves base ONLY for files verified equal on both sides', () => {
+  const l = ledgerOf({ 'discovery/same.mjs': STATE.OWED, 'discovery/ahead.mjs': STATE.OWED });
+  l.files['discovery/ahead.mjs'].bundle = 'd:CHANGED-HERE';
+  const out = reconcile(
+    l,
+    { 'discovery/same.mjs': 'd:discovery/same.mjs', 'discovery/ahead.mjs': 'd:CHANGED-HERE' },
+    { 'discovery/same.mjs': 'd:discovery/same.mjs', 'discovery/ahead.mjs': 'd:discovery/ahead.mjs' },
+    { now: '2026-07-28', ref: 'deadbee' },
+  );
+  assert.equal(out.files['discovery/same.mjs'].state, STATE.RECONCILED);
+  assert.equal(out.files['discovery/same.mjs'].base, 'd:discovery/same.mjs', 'equal on both sides — a new shared base');
+  assert.equal(out.files['discovery/ahead.mjs'].state, STATE.OWED);
+  assert.equal(out.files['discovery/ahead.mjs'].base, 'd:discovery/ahead.mjs',
+    'still ahead — moving base here would erase the very debt the ledger exists to book');
+});
+
+test('reconcile can say upstream is AHEAD of us — a debt the ledger could not previously express', () => {
+  // office.test.mjs was hardened in ofbo and never came back. The old states were owed /
+  // at-extraction / bundle-only, all one-directional, so a real gap in OUR tree was invisible.
+  const l = ledgerOf({ 'discovery/x.mjs': STATE.EXTRACTION });
+  const out = reconcile(l, disk('discovery/x.mjs'), { 'discovery/x.mjs': 'd:THEIRS-NEWER' }, { now: '2026-07-28', ref: 'r' });
+  assert.equal(out.files['discovery/x.mjs'].state, STATE.UPSTREAM_AHEAD);
+  assert.match(out.files['discovery/x.mjs'].note, /forward-port/i);
+});
+
+test('reconcile records a conflict as a conflict — "port owed" assumes a copy will do', () => {
+  const l = ledgerOf({ 'discovery/y.mjs': STATE.OWED });
+  l.files['discovery/y.mjs'].bundle = 'd:OURS';
+  const out = reconcile(l, { 'discovery/y.mjs': 'd:OURS' }, { 'discovery/y.mjs': 'd:THEIRS' }, { now: '2026-07-28', ref: 'r' });
+  assert.equal(out.files['discovery/y.mjs'].state, STATE.CONFLICT);
+  assert.match(out.files['discovery/y.mjs'].note, /merge/i);
+  assert.equal(out.files['discovery/y.mjs'].base, 'd:discovery/y.mjs', 'a conflict has no new shared base');
+});
+
+test('a conflict and an upstream-ahead both count as debt — neither is "in sync"', () => {
+  const l = ledgerOf({ 'discovery/c.mjs': STATE.CONFLICT, 'discovery/u.mjs': STATE.UPSTREAM_AHEAD });
+  const { debt, findings } = evaluate(l, disk('discovery/c.mjs', 'discovery/u.mjs'));
+  assert.deepEqual(findings, [], 'a declared divergence is not undeclared drift');
+  assert.deepEqual(debt.sort(), ['discovery/c.mjs', 'discovery/u.mjs']);
+});

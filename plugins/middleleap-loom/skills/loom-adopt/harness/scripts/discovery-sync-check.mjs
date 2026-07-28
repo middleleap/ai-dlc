@@ -27,9 +27,20 @@
 // upgrade-notes.json — bundle provenance, never installed into an adopting repo. Per-file state:
 //
 //   at-extraction  byte-identical to what was extracted; nothing owed FROM this side
-//   owed           changed here since the sync point; a port to ofbo is outstanding
+//   owed           changed here since the sync point; a back-port to ofbo is outstanding
 //   bundle-only    added here, never existed upstream
-//   reconciled     verified equal to upstream at `last_reconciled` (only --upstream can set it)
+//   reconciled     verified equal to upstream at `last_reconciled` (only --reconcile sets it)
+//   upstream-ahead ofbo moved and we did not; a forward-port to HERE is outstanding   (rc.35)
+//   conflict       both sides moved from the shared base — a merge, not a copy        (rc.35)
+//
+// The last two exist because the first real reconciliation (2026-07-28, the first time anyone ran
+// --upstream against a checkout) showed the vocabulary could not describe what was true. Every
+// earlier state said something about what WE did, so a debt owed TO us was invisible by
+// construction — and six files needed a merge while the ledger only knew the word "port", which
+// invites someone to settle a conflict by overwriting one side.
+//
+// Also learned that day: `--reconcile` had been documented in this header since the gate shipped
+// and never implemented. The debt was not merely unretired, it was unretirable.
 //
 //   node scripts/discovery-sync-check.mjs                  # verify + report the debt
 //   node scripts/discovery-sync-check.mjs --record         # accept local changes as owed
@@ -37,6 +48,7 @@
 //   node scripts/discovery-sync-check.mjs --upstream <dir> --reconcile   # stamp a real sync point
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
@@ -53,9 +65,38 @@ export const STATE = {
   OWED: 'owed',
   BUNDLE_ONLY: 'bundle-only',
   RECONCILED: 'reconciled',
+  // rc.35. The first real reconciliation found two things the old vocabulary could not say.
+  //
+  // UPSTREAM_AHEAD — ofbo hardened a file and we never received it. Every previous state was
+  // one-directional (owed / at-extraction / bundle-only all describe what WE did), so a genuine
+  // gap in our own tree was invisible by construction, not by oversight.
+  //
+  // CONFLICT — both sides moved from the shared base. "Port owed" quietly assumes a copy will
+  // settle it. For a conflict it will not, and calling it a port invites someone to overwrite
+  // one side with the other. Six files were in this state the first time anyone looked.
+  UPSTREAM_AHEAD: 'upstream-ahead',
+  CONFLICT: 'conflict',
 };
 /** States that mean "this file is knowingly different from, or unknown to, upstream". */
-const DEBT = new Set([STATE.OWED, STATE.BUNDLE_ONLY]);
+const DEBT = new Set([STATE.OWED, STATE.BUNDLE_ONLY, STATE.UPSTREAM_AHEAD, STATE.CONFLICT]);
+
+/**
+ * Paths that live in ofbo alone and are not divergence.
+ *
+ * ofbo is an INSTANTIATION: its own discovery runs and the artifacts rendered from them belong
+ * there and must never be pulled into the generic bundle. `DISCOVERY.md` is a third case — in the
+ * bundle it is not a file at all, but generated from the loom skill's canon via copy-manifest, so
+ * comparing it here reports a difference that does not exist.
+ *
+ * This matters more than tidiness. The first comparison returned 46 `missing-here` rows of which
+ * 44 were this noise, burying the 21 that mattered. A gate whose output you learn to skim is a
+ * gate you have stopped reading.
+ */
+export function ofboSpecific(path) {
+  return /^discovery\/runs\//.test(path)
+    || /^discovery\/brand\/examples\/rendered\//.test(path)
+    || path === 'discovery/DISCOVERY.md';
+}
 
 /** Every tracked file, harness-relative, sorted. */
 export function trackedFiles(root = TRACKED) {
@@ -128,7 +169,11 @@ export function evaluate(ledger, digests) {
         + `Whether upstream has moved since is not knowable from here — re-run with --upstream <checkout>.`,
   );
   if (debt.length) {
-    notices.push(`${debt.length} of ${onDisk.length} tracked file(s) owe a port to ${upstreamName(ledger)}:`);
+    // "owe a port TO ofbo" was true when every state described what we did. It stopped being true
+    // the moment `upstream-ahead` existed: that debt runs the other way, and a summary line that
+    // points every divergence outward is how a gap in our own tree stays invisible. The per-file
+    // notes carry the direction; this line no longer guesses it.
+    notices.push(`${debt.length} of ${onDisk.length} tracked file(s) diverge from ${upstreamName(ledger)} (direction per file below):`);
     for (const p of debt) notices.push(`    · ${p} (${entries[p].state})${entries[p].note ? ` — ${entries[p].note}` : ''}`);
   }
   return { findings, notices, debt, total: onDisk.length };
@@ -149,7 +194,8 @@ const upstreamName = (l) => (l.upstream && l.upstream.repo) || 'upstream';
  */
 export function compareUpstream(ledger, digests, upstreamDigests) {
   const entries = ledger.files || {};
-  const all = [...new Set([...Object.keys(digests), ...Object.keys(upstreamDigests)])].sort();
+  const all = [...new Set([...Object.keys(digests), ...Object.keys(upstreamDigests)])]
+    .filter((p) => !ofboSpecific(p)).sort();
   return all.map((p) => {
     const here = digests[p] || null;
     const there = upstreamDigests[p] || null;
@@ -191,6 +237,64 @@ export function record(ledger, digests, { now }) {
   return { ...ledger, files };
 }
 
+/**
+ * Stamp a real sync point from a comparison that has actually seen ofbo.
+ *
+ * This is what the header, the ledger's own note and CLAUDE.md have all promised since the gate
+ * shipped — and what nothing implemented, which is why `last_reconciled` was null. The debt was
+ * not merely unretired; it was structurally unretirable.
+ *
+ * The discipline is in what it refuses to do. **`base` moves only for files verified equal on
+ * both sides.** A file we are ahead on keeps its old base, because moving it would erase the
+ * exact debt the ledger exists to book — the failure mode the `--record` comment warns about,
+ * arriving by a different door. A conflict gets no new base either: there is no shared ancestor
+ * to move to when both sides have left it.
+ */
+export function reconcile(ledger, digests, upstreamDigests, { now, ref }) {
+  const files = { ...(ledger.files || {}) };
+  for (const row of compareUpstream(ledger, digests, upstreamDigests)) {
+    const prev = files[row.path] || { base: null, upstream: null };
+    const here = digests[row.path] || null;
+    const there = upstreamDigests[row.path] || null;
+    const set = (state, note, base = prev.base) =>
+      { files[row.path] = { ...prev, base, bundle: here, upstream: there, state, note }; };
+
+    switch (row.verdict) {
+      case 'identical':
+        // Equal on both sides — this IS the new shared ancestor, and the only case that earns one.
+        set(STATE.RECONCILED, `verified equal to upstream ${now}`, here);
+        break;
+      case 'bundle-ahead':
+        set(STATE.OWED, `ahead of upstream at ${now} — back-port owed to ofbo`);
+        break;
+      case 'upstream-ahead':
+        set(STATE.UPSTREAM_AHEAD, `upstream ahead at ${now} — forward-port owed to THIS repository`);
+        break;
+      case 'both-changed':
+      case 'no-shared-base':
+        set(STATE.CONFLICT, `both sides moved as of ${now} — a real merge, not a copy`);
+        break;
+      case 'missing-upstream':
+        set(STATE.BUNDLE_ONLY, `exists here only as of ${now}`);
+        break;
+      default: // missing-here — not tracked on this side; nothing to record about our own tree
+        break;
+    }
+  }
+  return {
+    ...ledger,
+    upstream: {
+      ...(ledger.upstream || {}),
+      last_reconciled: now,
+      last_reconciled_ref: ref,
+      note: `Reconciled against a real checkout on ${now}. States below are a three-way comparison, `
+        + 'not an inference from this repository alone. Whether upstream has moved SINCE is still '
+        + 'not knowable from here — re-run with --upstream <checkout>.',
+    },
+    files,
+  };
+}
+
 export function main(argv = process.argv.slice(2)) {
   process.stdout.write('\nDiscovery-sync gate — the bundle\'s copy of the discovery machinery vs its upstream\n\n');
   if (!existsSync(LEDGER)) {
@@ -215,10 +319,26 @@ export function main(argv = process.argv.slice(2)) {
       process.stderr.write(`  ${root} has no discovery/ — point --upstream at the repository root of a checkout\n\n`);
       return 1;
     }
-    const rows = compareUpstream(ledger, digests, digestTree(root));
+    const upstreamDigests = digestTree(root);
+    const rows = compareUpstream(ledger, digests, upstreamDigests);
     for (const r of rows) process.stdout.write(`  ${r.verdict.padEnd(17)} ${r.path}\n${r.verdict === 'identical' ? '' : `                    ${r.detail}\n`}`);
     const diverged = rows.filter((r) => r.verdict !== 'identical');
-    process.stdout.write(`\n  ${rows.length - diverged.length} of ${rows.length} identical; ${diverged.length} diverged\n\n`);
+    process.stdout.write(`\n  ${rows.length - diverged.length} of ${rows.length} identical; ${diverged.length} diverged\n`);
+    process.stdout.write('  (ofbo\'s own runs and rendered artifacts are excluded — an instantiation is not a divergence)\n\n');
+
+    if (argv.includes('--reconcile')) {
+      let ref = null;
+      try {
+        ref = execFileSync('git', ['-C', root, 'rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim();
+      } catch {
+        process.stderr.write('  --reconcile needs the upstream checkout to be a git repository (to pin the ref)\n\n');
+        return 1;
+      }
+      const now = new Date().toISOString().slice(0, 10);
+      writeFileSync(LEDGER, `${JSON.stringify(reconcile(ledger, digests, upstreamDigests, { now, ref }), null, 2)}\n`);
+      process.stdout.write(`  ledger reconciled against ${root} @ ${ref} — states are now a three-way comparison\n\n`);
+      return 0;
+    }
     return diverged.length ? 1 : 0;
   }
 
