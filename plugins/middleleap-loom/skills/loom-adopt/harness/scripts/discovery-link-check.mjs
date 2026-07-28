@@ -151,6 +151,19 @@ export function coverage(text, feature = FEATURE) {
  * `{ handoffMissing: true }`, `{ failedGates: [...] }`, or `null` when the run is gate-green.
  * `feature` decides which ids are waist-gated. No filesystem here — see check() for the wiring.
  */
+/**
+ * Does this item carry a reason a human could argue with? Presence is not enough — an empty
+ * string, whitespace, or a leftover placeholder is the same silence the check exists to stop,
+ * dressed as compliance.
+ */
+function hasReason(block) {
+  const raw = field(block, /\breason:\s*(.+)/);
+  if (!raw) return false;
+  const reason = raw.trim().replace(/^["']|["'],?$/g, '').replace(/[,}]\s*$/, '').trim();
+  if (!reason) return false;
+  return !/^(TODO|TBD|ADOPT|N\/?A|none|<[^>]*>)$/i.test(reason);
+}
+
 export function checkItems(text, resolveRun, feature = FEATURE) {
   const findings = [];
   for (const block of parseItems(text)) {
@@ -179,6 +192,16 @@ export function checkItems(text, resolveRun, feature = FEATURE) {
       findings.push(
         `${id}: pending feature with no 'discovery: <slug>' hand-off (HG-0007). ` +
         `Run the discovery harness first, or set 'discovery_exempt: true' with a reason.`,
+      );
+    } else if (status === 'pending' && exempt && !hasReason(block)) {
+      // Check 2b — the escape hatch may be taken, but only OUT LOUD. An exemption with no
+      // reason is a silent bypass of the gate that makes discovery non-optional: one line,
+      // no justification, and the gate prints OK. Three places promised a reason was
+      // required (the header comment, the failure message above, and the shipped example's
+      // "Silence is not an option; an exemption is") and until rc.33 nothing checked.
+      findings.push(
+        `${id}: discovery_exempt: true with no reason (HG-0007). An exemption is allowed; ` +
+        `a silent one is not. Add 'reason: <why no discovery applies>' — a sentence a human can argue with.`,
       );
     }
   }
