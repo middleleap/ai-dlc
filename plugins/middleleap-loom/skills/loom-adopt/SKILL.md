@@ -90,6 +90,7 @@ are repo-root-relative.
 | Bundle source | Destination | Tier | What it is |
 |---|---|---|---|
 | `../../loom/references/discovery-harness.md` | `discovery/DISCOVERY.md` | core | The discovery canon (single source — do not fork the text) |
+| `../../loom/references/glossary.md` | `discovery/GLOSSARY.md` | core | Every identifier expanded — discovery gates D1–D9, quality gates Q1–Q5, signals, themes, hypotheses, governance ids. Ships with the harness because the runbooks and templates that link it are installed here too |
 | `discovery/gates` | `discovery/gates` | core | Pure-Node D1–D9 validator + its tests |
 | `discovery/render` | `discovery/render` | core | Zero-dep branded renderer (HTML + OOXML) + tests |
 | `discovery/templates` | `discovery/templates` | core | One template per discovery artifact |
