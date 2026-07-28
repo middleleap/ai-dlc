@@ -55,6 +55,10 @@ for blocked items, or an item parked after failing its gates twice.
 
 ## The quality-gate pattern (CI)
 
+> **Identifiers.** `Q1`–`Q5` are the quality gates, named in full in the table below;
+> `D1`–`D9` are the discovery gates. All of them, plus the run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis), are expanded in `references/glossary.md`.
+
 A failed gate blocks merge. The gate set scales with the project, but the pattern is fixed —
 each gate answers one question, mechanically:
 
