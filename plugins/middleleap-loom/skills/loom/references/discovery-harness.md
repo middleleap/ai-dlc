@@ -72,7 +72,7 @@ Gates are *mechanical* — they check structure, references, and presence, not t
 | **D5** | Synthesis integrity | Themes don't trace to signals; prioritisation lacks a stated method |
 | **D6** | Data-governance feasibility | `data-governance.md` doesn't cite ≥1 `DR-*` risk category **and** ≥1 regulatory driver; any cited `DR-*`/`CTRL-*` id fails to resolve against the register; no residual-risk verdict |
 | **D7** | Brand conformance | Any **visual** artifact (HTML, docs, PPT, Excel, wireframe) doesn't reference `discovery/brand/design.md`, or contains raw hex/px/font literals instead of design tokens |
-| **D8** | Tangibility | The Prototype stage didn't produce `prototype.md` **and** a brand-conformant wireframe asset, or the prototype claims delivery fidelity (over-specifies) |
+| **D8** | Tangibility | The Prototype stage didn't produce `prototype.md` **and** a brand-conformant wireframe asset, or the prototype claims delivery fidelity (over-specifies). The over-specification scan covers all three parts of the prototype — the brief, the wireframe asset, and the `specs/*.json` it renders from |
 | **D9** | Validation loop | A prototype exists but `stakeholder-reaction.md` doesn't close the make-tangible loop — no recorded reaction/verdict per framing hypothesis, or reactions not logged as signals (→ D2) |
 
 D6 depends on the **data-risk register** seam; D7 depends on the **brand profile** seam. A
@@ -123,6 +123,16 @@ answer?"* — a stakeholder reacts to it, and that reaction is evidence (D2). It
 (so reactions aren't distorted by ugliness) but behaviour-hollow (no real data, no API).
 When delivery picks it up, it re-builds against the API contract from scratch; the
 wireframe informs, it does not bind.
+
+**The boundary is enforced across the whole prototype, not just its brief.** A prototype is
+three artifacts — `prototype.md`, the wireframe asset, and the `specs/*.json` the renderer
+turns into it — and D8's over-specification scan reads all three. This matters because
+over-specification lands *hardest* in the asset: the brief is written to be disciplined,
+while the wireframe is written to be persuasive, and a stakeholder reacts to the wireframe.
+A screen that names a route, a store, or a stack has already made a delivery decision, and
+it made it in front of the person whose reaction is supposed to be evidence. Generated
+presentation (`<style>`/`<script>`) is excluded — the renderer emits it from `design.md`
+tokens, so a keyword there is a renderer defect, not a run leaking into the right diamond.
 
 ---
 
