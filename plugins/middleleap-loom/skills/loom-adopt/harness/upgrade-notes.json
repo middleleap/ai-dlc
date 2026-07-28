@@ -364,6 +364,19 @@
         "If you add `depends_on` to your own catalog entries, keep the graph acyclic: control-catalog-check fails the build on a cycle and the runner exits 2 rather than running one.",
         "Adopting the `--parallel` lane is opt-in and needs `paths:` on the backlog items you intend to run together. Until you declare them, every item is treated as touching everything and the lane degrades to one story at a time — which is the current behaviour, and the safe one."
       ]
+    },
+    {
+      "version": "2.0.0-rc.41",
+      "headline": "The cache-key module is text again — a control-plane source file that no diff could show",
+      "notes": [
+        "core/gate-cache.mjs shipped at rc.40 with LITERAL NUL, 0x01 and 0x02 bytes embedded in the cache-key template literals as field delimiters. They work at runtime, but they made git and ripgrep classify the file as BINARY: `git show` rendered rc.40 as `Bin 0 -> 7746 bytes`, and a directory-wide `rg` sweep skipped the file silently while still matching it when named explicitly. The module that decides which gates may be served from cache — that is, which gates may not run — was invisible to both review and search. Replaced with the \\x00 / \\x01 / \\x02 ESCAPE SEQUENCES.",
+        "The runtime strings are byte-identical, so this is not a cache format change: the pre-change and post-change modules compute the SAME key for the same input (asserted directly, old module vs new module, against a stable mechanism). No stored entry is invalidated and no gate re-runs that would not have. FORMAT is unchanged.",
+        "The file is now 145 lines of text to git and is returned by directory-wide greps. Nothing else moved: no gate, catalog entry, profile, template or default changed at this version."
+      ],
+      "action_required": [
+        "None. If you vendored core/gate-cache.mjs, re-copy it — your cache stays valid either way, because the key is unchanged.",
+        "If you carry your own binary-file policy for source trees, note that this class is worth a check: a .mjs that git reports as Bin is a file your review process cannot show a reviewer."
+      ]
     }
   ]
 }

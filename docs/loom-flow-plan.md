@@ -212,6 +212,27 @@ low change, a docs-only PR demonstrably selects the small set with every
 skip reasoned; wall-clock of the pr lane on this repo drops and the
 `gate-run-*.json` records prove why.
 
+**Status:** items 1–4 landed at rc.34, and the exit criterion is met.
+`closed`/`superseded` are terminal states that stop contributing compiled
+requirements (so the union no longer grows with repo age) while keeping the
+classification record; `aggregateRequirements` scopes to the changes a diff
+implicates via the envelope directory or the envelope's optional
+`scope_paths`, with an unknown diff still counting every non-terminal change
+(fail open) and the run record stating the scope, the implicated changes and
+the max implicated tier; an opt-in `min_tier` on a catalog control skips it
+with a recorded reason below the highest implicated tier, `always` and
+plan-mandated controls overriding upward only; and `ci/ci.yml` honours its own
+lane model, with the bundle's own suite and the two bundle-only gates running
+only where no adoption stamp exists.
+
+Item 5 landed in part: `loom gates` (pr lane against the merge base, same
+runner/catalog/recorded skips as CI) and `loom compile` shipped at rc.34, and
+`loom seal` followed at rc.35 with Phase 2's collector. **Deferred:** `loom
+classify` (envelope scaffolding) and the `pre-push` hook template — neither is
+load-bearing for the exit criterion, and the hook template in particular
+touches the copy-manifest and the adoption stamps, which is the same surface
+Phase 6's deferred item 5 owns. They belong together.
+
 ### Phase 2 — Derive evidence; stop authoring it (F2)
 
 1. **`scripts/seal-evidence.mjs`** — a `--write` CLI over the existing
@@ -575,6 +596,69 @@ one's case with data the previous phase started recording — the same
 | Pattern/standard-change aperture creep | Patterns expire, are second-line-owned governed changes, carry sampling rates, and the flow report makes their failure rate visible — the evidenced-widening loop |
 | Narrowed binding hash misses a field an approver relied on | The binding set per role is generated from the compiled plan (not hand-picked), reviewed as part of the phase, and the full `plan_hash` remains in the attestation as context |
 | More machinery = more comprehension debt | Phase 3.5 finally trends the comprehension metrics; every phase's exit criterion is demonstrable on the worked example, in the tests, before rc |
+
+---
+
+## 6 · Independent verification (rc.41)
+
+Phases 0–6 were verified adversarially at rc.41, against the committed branch
+rather than the phase agents' reports.
+
+**What was re-performed.** The full harness suite (1698/1698); all four bundle
+self-gates (`self-claims`, `doc-integrity`, `discovery-sync`, `ci-catalog`);
+the marketplace validator and its own suite. The repo CI dry-run's critical
+path was re-run end to end from a clean clone — every step of
+`.github/workflows/validate.yml` extracted verbatim and executed: the
+doc-integrity negatives, the full `--tier full` adoption dry-run, the negative
+bypass suite, the derived-evidence seal, the operations example and the
+BrainKit conformance suite. **All six steps exit 0 and every negative test
+still fails when it should** — including the ones Phases 2–6 added (anchorless
+manifest, foreign `release_commit`, demo-signed anchor, rewritten
+`state_history`, ghost `caused_by_change`, default-on and expired flags,
+missing exposure register, stripped ramp, wrong deployed digest, skipped and
+unbaked ramp stages, cached red, `--no-cache`, and the 1ms timeout).
+
+**Invariants confirmed.** No telemetry became a gate: `flow-report`,
+`approval-status` and `comprehension-report` exit non-zero only inside
+`--check`, which validates input *shape* and explicitly judges no duration,
+rate or count — `token-report`'s posture exactly — and all three are exempted
+by name in `ci-catalog-check`'s printed list. No override or relaxation
+semantics were introduced: the Phase 4/5 profile changes are pure additions,
+the monotonicity property tests still hold, and the `emergency` class defers
+receipts against a bounded, enforced deadline without dropping one. The cache
+is never silent — hits print with their key, non-cacheable mechanisms print
+their reason, failures are never stored, and `always:true` controls and the
+release/deploy lanes are excluded in code and asserted in CI. Versions ascend
+consistently across `plugin.json`, `marketplace.json` and `upgrade-notes.json`.
+
+**Fresh-adoption behaviour.** At `--tier core` the new Phase 3–6 gates are
+either not shipped or silent. At `governed`/`full`, `environments.json` and
+`feature-flags.json` are installed as ADOPT templates; `feature-flag-check`
+refuses the unadopted placeholders, which is the established posture of
+`control-plane-check` against the `@your-org` template — both files are listed
+as adopt-pending by `loom status`, and `attest-adoption` refuses while they
+are.
+
+**One defect found and fixed.** `core/gate-cache.mjs` shipped at rc.40 with
+*literal* NUL, `0x01` and `0x02` bytes as cache-key delimiters, which made git
+and ripgrep classify the file as **binary**: `git show` rendered it as
+`Bin 0 -> 7746 bytes`, and a directory-wide `rg` sweep skipped it silently —
+so the module deciding which gates may be skipped was invisible to both review
+and search. Replaced with the `\x00`/`\x01`/`\x02` escape sequences, which
+produce byte-identical runtime strings: the old and new modules compute the
+same key for the same input, so no stored entry is invalidated. The file is
+now 145 lines of text to git and is found by directory sweeps.
+
+**Claims checked, not taken.** rc.40's notes assert the cache directory
+"writes its own `.gitignore`" — the same class of claim that shipped
+unimplemented at rc.29 and produced the C5 rule. Verified empirically on a
+staged adoption: the store writes `.loom/gate-cache/.gitignore` containing
+`*` on first write, so an adopter cannot accidentally commit cached results
+even without touching their own ignore file. Cache correctness was probed the
+same way rather than read: an entry is served only when the mechanism digest,
+canonical catalog entry, path scopes, input digests and plan-hash set are all
+identical, and the shipped poisoning tests confirm a stored pass is refused
+the moment any of them moves.
 
 ---
 
