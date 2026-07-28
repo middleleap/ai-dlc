@@ -171,3 +171,20 @@ test('a change with no plan contributes nothing — it never lowers a requiremen
     assert.equal(agg.families.size, 0);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+/* ---- rc.40 (flow-plan Phase 6.2): plan_hash travels with the change, for the result cache ---- */
+
+test('each counted change carries its plan_hash — the cache keys on the set of them', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cr-ph-'));
+  try {
+    const base = `${dir}/docs/governance/changes/CHG-9`;
+    mkdirSync(base, { recursive: true });
+    writeFileSync(`${base}/change-envelope.json`, JSON.stringify({ change_id: 'CHG-9', current_state: 'proposed', risk_tier: 'high' }));
+    writeFileSync(`${base}/control-plan.json`, JSON.stringify({ required_gates: ['Q'], plan_hash: 'abc123' }));
+    const agg = aggregateRequirements(dir);
+    assert.equal(agg.changes.find((c) => c.change_id === 'CHG-9').plan_hash, 'abc123');
+    // A plan with no stored hash reports null rather than inventing one.
+    writeFileSync(`${base}/control-plan.json`, JSON.stringify({ required_gates: ['Q'] }));
+    assert.equal(aggregateRequirements(dir).changes[0].plan_hash, null);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

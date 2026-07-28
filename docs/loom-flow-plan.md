@@ -518,6 +518,24 @@ recorded) show the wave structure; a second run with no input changes is
 mostly `pass-cached` with keys; two independent stories land as two PRs from
 one invocation.
 
+**Status (rc.40).** Items 1–4 landed. The runner is a bounded-concurrency
+pool (`--jobs`, default `availableParallelism()-1`) with a per-gate
+`--timeout-ms` (default 300000; a timeout is a recorded failure, never a
+pass), captured output flushed in catalog order, and `depends_on` waves —
+RELEASE-ATTESTATION after RELEASE-SUBJECT + HG-0003, FLOOR-DRIFT after
+FREEZE-STAMP; cycles are refused by the catalog gate and by the runner, never
+flattened. `core/gate-cache.mjs` (GATE-CACHE) is the content-addressed cache:
+scoped controls only, never `always:true`, never the release or deploy lanes,
+only passes stored, hits recorded as `pass-cached` with the key, `--no-cache`
+to disable. Measured on a staged full-tier adoption (4 cores, 34 mechanisms,
+2 waves, 21 cacheable): serial baseline ~2.35s → cold pooled ~0.98s → warm
+~0.45s. Items 5 (one Node hook; `Stop`/`PostToolUse` capture) and 6 (the
+shared `core/governance-io.mjs`) are **deferred**: both touch the
+copy-manifest and adoption stamps (5) or every gate's read path (6), and
+neither could land with its own worked example inside this pass without
+putting the rest of the phase at risk. They remain the right next step and
+nothing here blocks them.
+
 ---
 
 ## 3 · Sequencing and dependencies

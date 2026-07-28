@@ -58,3 +58,35 @@ test('duplicate ids and an empty catalog are findings', () => {
   assert.ok(evaluate(dup, EXISTS).some((x) => /duplicate control_id/.test(x)));
   assert.match(evaluate({ controls: [] }, EXISTS)[0], /no control state of record/);
 });
+
+/* ---- rc.40 (flow-plan Phase 6.1): depends_on, the runner's wave ordering ---- */
+
+const two = (a, b) => ({ controls: [{ ...base, control_id: 'A', ...a }, { ...base, control_id: 'B', ...b }] });
+
+test('a well-formed depends_on edge between two real controls passes', () => {
+  assert.deepEqual(evaluate(two({}, { depends_on: ['A'] }), EXISTS), []);
+});
+
+test('depends_on must be an array of control_ids, and may not name itself', () => {
+  assert.ok(evaluate(cat({ depends_on: 'HG-0001' }), EXISTS).some((x) => /must be an array of control_ids/.test(x)));
+  assert.ok(evaluate(cat({ depends_on: [''] }), EXISTS).some((x) => /must be an array of control_ids/.test(x)));
+  assert.ok(evaluate(cat({ depends_on: ['HG-0002'] }), EXISTS).some((x) => /names itself/.test(x)));
+});
+
+test('a depends_on edge to a control that does not exist is a barrier that can never be satisfied', () => {
+  const f = evaluate(cat({ depends_on: ['NO-SUCH'] }), EXISTS);
+  assert.ok(f.some((x) => /no such control_id/.test(x)));
+});
+
+test('a depends_on CYCLE fails the catalog — the runner refuses to execute one', () => {
+  const f = evaluate(two({ depends_on: ['B'] }, { depends_on: ['A'] }), EXISTS);
+  assert.ok(f.some((x) => /depends_on cycle/.test(x)), `expected a cycle finding, got ${JSON.stringify(f)}`);
+});
+
+test('a longer cycle is caught too, and a diamond is not a cycle', () => {
+  const mk = (id, deps) => ({ ...base, control_id: id, ...(deps ? { depends_on: deps } : {}) });
+  const cycle = { controls: [mk('A', ['C']), mk('B', ['A']), mk('C', ['B'])] };
+  assert.ok(evaluate(cycle, EXISTS).some((x) => /depends_on cycle/.test(x)));
+  const diamond = { controls: [mk('A'), mk('B', ['A']), mk('C', ['A']), mk('D', ['B', 'C'])] };
+  assert.deepEqual(evaluate(diamond, EXISTS), []);
+});

@@ -650,6 +650,70 @@ jobs:
           node core/gate-runner.mjs --lane pr --base main --out /tmp/gate-run.json
           node -e 'const r=require("/tmp/gate-run.json");if(!r.skipped.length||r.skipped.some(s=>!s.reason))throw new Error("runner must record every skip with a reason");console.log(`gate-runner: ${r.executed.length} run, ${r.skipped.length} skipped — all recorded`)'
 
+          # ── rc.40 · flow-plan Phase 6: the pool, the waves, and the cache, on a REAL lane ───
+          # The unit tests run the pool over synthetic gates. This runs it over the adopted
+          # repository's actual pr lane — the only place the wave structure and the cache meet
+          # the real catalog. Everything asserted here is a PROPERTY, never a duration: a gate
+          # runner that got slower is not a build failure, and never becomes one.
+          rm -rf .loom/gate-cache
+          node core/gate-runner.mjs --lane pr --out /tmp/cold.json | tee /tmp/cold.txt
+          node -e '
+            const r=require("/tmp/cold.json");
+            if(!r.concurrency||!(r.concurrency.jobs>=1)||!(r.concurrency.waves>=1)) throw new Error("the run record does not describe how it was executed");
+            if(r.concurrency.timeout_ms!==300000) throw new Error("the default per-gate timeout is not recorded");
+            if(r.executed.some(e=>typeof e.wave!=="number")) throw new Error("an execution has no wave number");
+            // The two shipped depends_on edges must produce a real ordering, not a single flat wave.
+            const drift=r.executed.find(e=>e.controls.includes("FLOOR-DRIFT")), freeze=r.executed.find(e=>e.controls.includes("FREEZE-STAMP"));
+            if(!drift||!freeze) throw new Error("the drift/freeze pair did not run — the depends_on edge is untested here");
+            if(!(drift.wave>freeze.wave)) throw new Error(`FLOOR-DRIFT (wave ${drift.wave}) did not wait for FREEZE-STAMP (wave ${freeze.wave})`);
+            if(r.cache.stored<1) throw new Error("nothing was cacheable on a full-tier pr lane — the cache is being exercised against nothing");
+            if(!r.cache.not_cacheable.length||r.cache.not_cacheable.some(x=>!x.reason)) throw new Error("a mechanism was excluded from the cache without a recorded reason");
+            if(!r.cache.not_cacheable.some(x=>/always:true/.test(x.reason))) throw new Error("the always-on tamper core is not being excluded from the cache");
+            console.log(`gate-runner: ${r.concurrency.waves} wave(s), ${r.concurrency.jobs} job(s), ${r.cache.stored} result(s) cached, ${r.cache.not_cacheable.length} never cacheable`);
+          '
+          # The warm run: hits are recorded as pass-cached WITH the key, and the log still says
+          # what the cold run said — a cached run is not a quieter run.
+          node core/gate-runner.mjs --lane pr --out /tmp/warm.json | tee /tmp/warm.txt
+          node -e '
+            const c=require("/tmp/cold.json"), w=require("/tmp/warm.json");
+            const hits=w.executed.filter(e=>e.status==="pass-cached");
+            if(!hits.length) throw new Error("a second run with no input change served nothing from cache");
+            if(hits.some(e=>!/^[0-9a-f]{64}$/.test(e.cache_key||""))) throw new Error("a pass-cached execution carries no key — a hit must be as auditable as a skip");
+            if(hits.some(e=>c.cache.not_cacheable.find(x=>x.mechanism===e.mechanism))) throw new Error("a mechanism declared never-cacheable was served from cache");
+            if(w.result!=="pass"||c.result!=="pass") throw new Error("the benchmark lane is not green — the cache is being measured against a red run");
+            if(c.executed.map(e=>e.mechanism).join()!==w.executed.map(e=>e.mechanism).join()) throw new Error("the cached run reports a different set of mechanisms, in a different order");
+            console.log(`gate-runner: ${hits.length} pass-cached, each with its key`);
+          '
+          # NEGATIVE ① a failing gate is never cached — the failure must be re-discovered, not
+          #            remembered as absent. Break a scoped gate's input and run twice.
+          cp docs/governance/data-lifecycle.json /tmp/dl.json
+          node -e 'const fs=require("fs"),p="docs/governance/data-lifecycle.json",s=JSON.parse(fs.readFileSync(p));s.categories[0].retention={period:"soon"};fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node core/gate-runner.mjs --lane pr --out /tmp/red1.json > /dev/null 2>&1; then
+            echo "::error::a broken data-lifecycle input did not fail the pr lane"; exit 1; fi
+          if node core/gate-runner.mjs --lane pr --out /tmp/red2.json > /dev/null 2>&1; then
+            echo "::error::a FAILING gate was served from cache on the second run — there is no such thing as a cached red"; exit 1; fi
+          node -e '
+            const r=require("/tmp/red2.json"), e=r.executed.find(x=>x.mechanism==="scripts/data-lifecycle-check.mjs");
+            if(!e||e.status!=="fail") throw new Error("the broken gate did not re-run as a failure on the second pass");
+          '
+          cp /tmp/dl.json docs/governance/data-lifecycle.json
+          # NEGATIVE ② --no-cache means no cache, and the record says which it was.
+          node core/gate-runner.mjs --lane pr --no-cache --out /tmp/nocache.json | tee /tmp/nc.txt
+          grep -q 'cache OFF' /tmp/nc.txt || { echo "::error::--no-cache did not report the cache as off"; exit 1; }
+          node -e 'const r=require("/tmp/nocache.json");if(r.cache.enabled!==false||r.cache.hits!==0||r.executed.some(e=>e.status==="pass-cached"))throw new Error("--no-cache still served a cached result")'
+          # NEGATIVE ③ a hung gate is KILLED and recorded as a timeout — a timeout is a failure.
+          #            Run the lane with an impossible bound; every gate must be recorded, none passed.
+          if node core/gate-runner.mjs --lane pr --no-cache --timeout-ms 1 --out /tmp/to.json > /dev/null 2>&1; then
+            echo "::error::a 1ms per-gate timeout produced a PASSING run — a timeout is not a pass"; exit 1; fi
+          node -e '
+            const r=require("/tmp/to.json");
+            if(!r.executed.some(e=>e.status==="timeout")) throw new Error("no execution was recorded as a timeout");
+            if(r.executed.some(e=>e.status==="pass-cached")) throw new Error("a timeout run served a cached pass");
+            if(r.result!=="fail") throw new Error("a run containing a timeout was reported as passing");
+            console.log(`gate-runner: ${r.executed.filter(e=>e.status==="timeout").length} timeout(s), recorded as failures`);
+          '
+          rm -rf .loom/gate-cache
+
           # ── rc.37 · flow-plan Phase 3: the flow instruments measure something REAL ──────────
           # The failure mode for a report is not a wrong answer, it is a confident answer about an
           # empty set — the same vacuum freeze-stamp, drift and approval-surface each had. So the

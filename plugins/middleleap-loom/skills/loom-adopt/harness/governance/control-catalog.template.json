@@ -1,5 +1,5 @@
 {
-  "_comment": "ADOPT: the control state of record (replaces any hand-graded scorecard). Five states: absent | defined | mechanically-validated | platform-enforced | organisationally-enforced \u2014 each state demands receipts (scripts/control-catalog-check.mjs fails the build on an overstated entry). As shipped, the bundle's gates grade mechanically-validated; platform-enforced is YOURS to claim once branch protection is active with a negative bypass test recorded in activation_evidence. Execution fields (read by core/gate-runner.mjs): `lane` pr|release|scheduled, `always` = tamper-detection core that never skips in its lane, `paths` = prefixes that implicate the control on a diff (no paths = runs by default), `execute:false` = library/composed control enforced via another gate. Skipping is always RECORDED, never silent.",
+  "_comment": "ADOPT: the control state of record (replaces any hand-graded scorecard). Five states: absent | defined | mechanically-validated | platform-enforced | organisationally-enforced \u2014 each state demands receipts (scripts/control-catalog-check.mjs fails the build on an overstated entry). As shipped, the bundle's gates grade mechanically-validated; platform-enforced is YOURS to claim once branch protection is active with a negative bypass test recorded in activation_evidence. Execution fields (read by core/gate-runner.mjs): `lane` pr|release|scheduled, `always` = tamper-detection core that never skips in its lane, `paths` = prefixes that implicate the control on a diff (no paths = runs by default), `execute:false` = library/composed control enforced via another gate. `depends_on` = control_ids that must finish first (rc.40 \u2014 the runner runs a bounded-concurrency pool in topological waves; real ids only, cycles refused). Skipping is always RECORDED, never silent, and so is a cache hit (`pass-cached` with its key).",
   "controls": [
     {
       "control_id": "HG-0001",
@@ -250,7 +250,12 @@
         "docs/governance/evidence/",
         "docs/governance/product-evals.json"
       ],
-      "note": "Cross-binding verifier (mechanically-validated): it proves the RECORDS agree on the digest and the anchor is authentically signed. Live observation of the registry and the running deployment is the platform's (WS2). Mandatory-when-compiled: a production release with no artifact-bound subject fails"
+      "note": "Cross-binding verifier (mechanically-validated): it proves the RECORDS agree on the digest and the anchor is authentically signed. Live observation of the registry and the running deployment is the platform's (WS2). Mandatory-when-compiled: a production release with no artifact-bound subject fails",
+      "depends_on": [
+        "RELEASE-SUBJECT",
+        "HG-0003"
+      ],
+      "depends_on_note": "rc.40: depends_on RELEASE-SUBJECT + HG-0003 \u2014 it cross-binds what those two prove, so reading their verdicts first is the order the release lane always assumed and never stated. The runner turns it into a wave."
     },
     {
       "control_id": "Q4-SUPPLY",
@@ -316,7 +321,7 @@
     },
     {
       "control_id": "GATE-RUNNER",
-      "objective": "Risk-proportionate execution: lanes + diff scoping from this catalog, with every skip recorded, never silent",
+      "objective": "Risk-proportionate execution: lanes + diff scoping from this catalog, run as a bounded-concurrency pool in depends_on waves with a per-gate timeout, with every skip and every cache hit recorded, never silent",
       "owner_role": "platform-admin",
       "line": 1,
       "state": "mechanically-validated",
@@ -325,6 +330,19 @@
       "lane": "pr",
       "execute": false,
       "execute_note": "the runner itself \u2014 CI invokes it per lane"
+    },
+    {
+      "control_id": "GATE-CACHE",
+      "objective": "A gate result may be reused only when its inputs are PROVABLY identical: mechanism digest + arguments + canonical catalog entry + every file under the declared path scope + the compiled plan_hash set; always-on tamper checks, unscoped controls and the release/deploy lanes are never cached, only passes are stored, and every hit is recorded as pass-cached with its key",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "core/gate-cache.mjs",
+      "test_ref": "core/gate-cache.test.mjs",
+      "lane": "pr",
+      "execute": false,
+      "execute_note": "library \u2014 enforced via the gate runner, which decides cacheability per mechanism and records the reason either way",
+      "note": "rc.40 \u00b7 flow-plan Phase 6.2. The cache cannot turn a fail into a pass: a failure is never stored, and a stale key simply misses. `--no-cache` disables it; the run record states which it was."
     },
     {
       "control_id": "HOOK-PII",
@@ -457,7 +475,11 @@
         "discovery/runs/",
         "docs/governance/floor-drift/"
       ],
-      "note": "Factory Floor WS4 \u00b7 D4.2, the other side of D4.1's seam. Drift ALONE does not fail the build \u2014 it is reported on every run including green ones; only a new claim against a drifted page fails"
+      "note": "Factory Floor WS4 \u00b7 D4.2, the other side of D4.1's seam. Drift ALONE does not fail the build \u2014 it is reported on every run including green ones; only a new claim against a drifted page fails",
+      "depends_on": [
+        "FREEZE-STAMP"
+      ],
+      "depends_on_note": "rc.40: depends_on FREEZE-STAMP \u2014 drift is measured against a stamp whose integrity FREEZE-STAMP is what establishes."
     },
     {
       "control_id": "TEMPLATE-PARITY",

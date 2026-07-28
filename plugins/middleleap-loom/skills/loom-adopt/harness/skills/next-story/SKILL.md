@@ -5,7 +5,9 @@ description: Use as the body of the autonomous build loop (/loop /next-story) �
 
 # Next story — one autonomous build iteration
 
-One invocation = one backlog item, end to end. The user is not a **mid-iteration** gatekeeper:
+One invocation = one backlog item, end to end (see §6 for the opt-in `--parallel N` lane, where
+one invocation drives N *independent* items — one worktree, branch and PR each, and every one of
+them still stops at a human merge). The user is not a **mid-iteration** gatekeeper:
 **never ask them anything mid-iteration** — decisions they must make are recorded as `blocked`
 items and the loop moves on. They ARE the gatekeeper at the **end**: the loop opens a PR and
 stops for a human to merge, never self-merging (governance: human-four-eyes merge, HG-0001).
@@ -50,9 +52,11 @@ drafting an ADR is not deciding it, and a `proposed` ADR unblocks nothing.
 
 1. The project's full verify suite green (build, lint, typecheck, unit, integration against real
    local stores), coverage at or above the project's floor. <!-- ADOPT: name your commands -->
-2. Dispatch BOTH reviewer subagents on the diff: `hard-stop-reviewer` must return
-   `VERDICT: PASS`; `contract-conformance-reviewer` must return `VERDICT: CONFORMANT`. A FAIL is
-   fixed and re-reviewed — never argued away.
+2. Dispatch BOTH reviewer subagents on the diff **in ONE message** (so they run concurrently and
+   blind to each other — a reviewer that has read the other's verdict is not a second pair of
+   eyes, and serialising them doubles the wall-clock for nothing): `hard-stop-reviewer` must
+   return `VERDICT: PASS`; `contract-conformance-reviewer` must return `VERDICT: CONFORMANT`. A
+   FAIL is fixed and re-reviewed — never argued away.
 3. Push, open the PR (cite the story ID), wait for the CI gates.
 
 ## 4. Merge policy — propose, never dispose
@@ -98,9 +102,91 @@ a human must make is an **ESCALATE** (recorded as a `blocked` item, notification
 parked after failing its gates twice is an **ABSTAIN** (notification (d)) — a bounded stop, not
 a silent give-up. Naming them makes the loop's stops legible in the run record.
 
+## 6. `--parallel N` — more than one story per invocation, honestly
+
+**Opt-in, and everything above still holds.** The default remains one item per invocation; this
+mode changes *how many loops run*, never what any one of them must satisfy. Every branch still
+ends at a PR a **human** merges (HG-0001), both reviewers still run on every diff, and the
+routine lane is still the only calibrated auto-merge exception.
+
+The canon already says concurrent loops use git worktrees. This is that sentence, made operable.
+
+### Select — DAG-independent AND path-disjoint
+
+From the eligible set (§1: `status: pending`, `depends_on` all `done`, waist gate satisfied),
+take up to **N** items that are **both**:
+
+- **mutually independent in the DAG** — no selected item appears in another selected item's
+  `depends_on`, transitively. Two items that both depend on a *done* item are independent;
+- **disjoint in `paths:`** — the optional per-item list of path prefixes the story is expected to
+  touch (see `docs/backlog.example.yaml`). Two items sharing any prefix are **not** selected
+  together, whichever way the prefixes nest.
+
+An item with **no `paths:`** is treated as touching everything: it may be selected, but only
+alone. That is the fail-closed direction — an undeclared scope is not an empty one. If a story
+turns out to touch a path it did not declare, finish it, then **widen its `paths:` in the same
+PR**; do not quietly proceed. A declared scope that was wrong is a fact about the backlog, and
+the next selection needs to know it.
+
+Selecting fewer than N because nothing else qualifies is the normal case, not a failure.
+
+### Run — one worktree, one branch, one PR each
+
+Same pattern the `release` skill uses for its verification checkout:
+
+```bash
+git worktree add ../wt-<ID> -b feature/<ID>-<slug> main   # one per selected item
+```
+
+Each loop runs §2–§5 **inside its own worktree**, on its own branch, and opens its **own PR**
+citing its own story ID. Nothing is shared: not the working tree, not the backlog edit (each
+branch carries its own `in-progress` → `done` transition for its item only), not the build log
+entry. Remove the worktree (`git worktree remove ../wt-<ID>`) only after its PR is merged — a
+removed worktree with an unmerged branch is how work gets lost.
+
+Record in `docs/build-log.md`, per item, that it ran in the parallel lane and against which
+sibling IDs: a reviewer of PR #N is entitled to know that PR #M was in flight beside it.
+
+### Stacked PRs — when a dependent story cannot wait
+
+Sometimes the next item genuinely depends on one that is still in review. Rather than idling,
+branch **from the dependency's branch** and record the relationship on the item:
+
+```yaml
+- id: STORY-5
+  status: pending
+  depends_on: [STORY-4]
+  stacked_on: 118        # the PR number STORY-4 is waiting in
+  paths: [src/consent/]
+```
+
+```bash
+git worktree add ../wt-STORY-5 -b feature/STORY-5-slug feature/STORY-4-slug
+```
+
+Rules, none of them optional:
+
+- The PR body **names the base PR** and says it is stacked on it. A reviewer must not have to
+  infer that half the diff belongs to someone else's review.
+- **Merge order stays human-controlled and follows the stack.** The dependent PR is not
+  mergeable until its base is merged; after the base merges, rebase onto `main` and re-run the
+  gates on the rebased diff — the reviewed diff and the merged diff must be the same diff.
+- If the base PR is **rejected or substantially reworked**, the stacked branch is abandoned and
+  the item goes back to `pending`. Rescuing a stack whose foundation moved is how a reviewed
+  change becomes an unreviewed one.
+- Depth of **one** by default. A stack three deep is a queue with extra steps, and the review
+  each layer received was against a base that no longer exists.
+
+`stacked_on` is a record, not a permission: it changes *when review can start*, never *who
+merges*. The back-pressure the loop was always designed to create moves from "everything waits"
+to "only true dependents wait", and that is the whole of the gain.
+
 ## Red flags — stop and re-read this skill
 - Asking the user a question mid-iteration ("should I…?") — record a blocker instead
 - Merging ANY PR yourself — spec, ADR, feature, or infra. The loop proposes; a human merges
 - Marking `done` without reviewer verdicts and green CI in the log
 - Starting a second backlog item in the same iteration
 - Retrying a twice-failed item instead of parking it
+- Selecting two `--parallel` items that share a `paths:` prefix, or one that declares none, into
+  the same batch — an undeclared scope is not an empty one
+- Merging a stacked PR before its base, or without re-running the gates on the rebased diff

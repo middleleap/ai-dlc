@@ -80,7 +80,9 @@ export function aggregateRequirements(cwd = process.cwd(), { changedPaths = null
     mergeCapabilities(capabilities, plan.required_capabilities);
     const tier = envelope.risk_tier;
     if (TIER_ORDER.includes(tier) && (maxTier === null || TIER_ORDER.indexOf(tier) > TIER_ORDER.indexOf(maxTier))) maxTier = tier;
-    changes.push({ change_id: envelope.change_id || name, state: envelope.current_state, families: [...fam], evidence: [...ev], capabilities: plan.required_capabilities || {} });
+    // rc.40 — plan_hash travels with the change. The gate result cache keys on the sorted set of
+    // them, so recompiling ANY counted plan invalidates every cached result in the run.
+    changes.push({ change_id: envelope.change_id || name, state: envelope.current_state, families: [...fam], evidence: [...ev], capabilities: plan.required_capabilities || {}, plan_hash: plan.plan_hash || null });
   }
   return { families, evidence, capabilities, changes, anyInProduction, maxTier, scoped };
 }

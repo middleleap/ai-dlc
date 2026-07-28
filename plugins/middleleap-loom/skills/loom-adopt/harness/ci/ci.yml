@@ -42,6 +42,29 @@ jobs:
         with:
           node-version: '22'
 
+      # rc.40 (flow-plan Phase 6.2) — the gate result cache, persisted across runs.
+      #
+      # THE TRUST ARGUMENT, because a cache is the obvious place to launder a control. An entry is
+      # served only when the key matches, and the key covers the mechanism FILE's digest, its
+      # arguments, the canonical catalog entry of every control sharing it, the digest of every
+      # file under the control's DECLARED PATH SCOPE, the sorted set of compiled plan_hashes, and
+      # the cache format version. That path scope is not new trust: it is already what decides
+      # whether the control runs at all on a diff. Three hard rules on top: `always: true`
+      # tamper checks and unscoped controls are never cached; the RELEASE and DEPLOY lanes are
+      # never cached (the release re-runs its gates at the released commit, for real); and only
+      # PASSES are stored, so a failure always re-runs. Every hit is recorded as `pass-cached`
+      # with its key in gate-run-*.json — as auditable as a skip, and never silent.
+      #
+      # Losing the cache costs time and nothing else: a miss runs the gate. `--no-cache` on the
+      # runner turns it off entirely, and the run record says which it was.
+      - name: Gate result cache
+        uses: actions/cache@v4
+        with:
+          path: .loom/gate-cache
+          key: loom-gate-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            loom-gate-cache-${{ runner.os }}-
+
       - name: Test suites — machinery smoke in an adoption, the full suite in the bundle
         # rc.34: an adopted repository no longer runs the harness's own ~1,400-test regression
         # suite on every PR — that is the BUNDLE'S suite, billed to the adopter's cycle time.
