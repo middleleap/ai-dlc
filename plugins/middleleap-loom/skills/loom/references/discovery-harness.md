@@ -13,6 +13,12 @@ the **Double Diamond** — *Discover* and *Define* — and hands a validated, ev
 > and the same machinery runs discovery for a different organisation. Nothing in the gate
 > validator, skills, or agents hard-codes an entity, a regulator, or a platform.
 
+> **New to the Loom's identifiers?** `D1`–`D9` are the nine discovery gates, `S-001` is a
+> signal, `T-1` a theme, `H1` a framing hypothesis, `G-01` a recorded gap. Every one of them
+> is expanded in **`GLOSSARY.md`**, beside this file in an adopting repo (and
+> `references/glossary.md` in the method skill). The ids are terse on purpose — they exist so
+> a claim can cite exactly what it rests on — but you should never have to guess at one.
+
 ---
 
 ## 1. The Double Diamond, and where this harness sits
@@ -36,7 +42,7 @@ The waist between them is enforced: a feature can't enter delivery without a gre
 hand-off. The harness deliberately stops at the hand-off: it produces a problem worth solving
 and a low-fidelity prototype that makes the direction tangible — it does **not** design the
 production solution, write delivery stories, or touch the API contract. That is the right
-diamond's job, and crossing the line is a gate failure (D4).
+diamond's job, and crossing the line is a gate failure (D4 — No-solutioning boundary).
 
 ### Stages and their artifacts
 
