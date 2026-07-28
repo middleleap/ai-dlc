@@ -6,11 +6,11 @@
   "stage": "define",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/data-governance.md",
-  "source_digest": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
+  "source_digest": "sha256:520d3feeb3d23ed5f0e69ebc3ed0eba0b7171327d6498fd44f5a96249e035004",
   "gates": [
     "D6"
   ],
-  "guidance": "Define (converge). Asked in discovery, not retrofitted in delivery. Gate D6: cite ≥1 `DR-*` risk category **and** ≥1 regulatory driver; every cited `DR-*`/`CTRL-*` id must resolve against `docs/governance/data-risk-register/`; record a residual-risk verdict. The `data-governance-reviewer` agent checks control coverage.",
+  "guidance": "Define (converge). Asked in discovery, not retrofitted in delivery. Gate D6 (Data-governance feasibility): cite ≥1 `DR-*` risk category **and** ≥1 regulatory driver; every cited `DR-*`/`CTRL-*` id must resolve against `docs/governance/data-risk-register/`; record a residual-risk verdict. The `data-governance-reviewer` agent checks control coverage.",
   "properties": [
     {
       "name": "Run",
@@ -81,7 +81,7 @@
       ]
     },
     {
-      "name": "Residual-risk verdict (D6)",
+      "name": "Residual-risk verdict (gate D6)",
       "required": true,
       "kind": "fields",
       "help": "",

@@ -6,12 +6,12 @@
   "stage": "discover",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/research-log.md",
-  "source_digest": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",
+  "source_digest": "sha256:52c8b260a6d19209371be2d8808192d262947f4ea67d02defecd24a1e7c64a8c",
   "gates": [
     "D2",
     "D5"
   ],
-  "guidance": "Discover (diverge). Every signal recorded here is referenced by `synthesis.md` and gates D2/D5. Synthetic/illustrative signals must be tagged `[synthetic]`. Zero real PII.",
+  "guidance": "Discover (diverge). Every signal recorded here is referenced by `synthesis.md` and gates D2 (Evidence) and D5 (Synthesis integrity). Synthetic/illustrative signals must be tagged `[synthetic]`. Zero real PII.",
   "properties": [
     {
       "name": "Run",
