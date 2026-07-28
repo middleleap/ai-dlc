@@ -389,6 +389,19 @@
       "action_required": [
         "BREAKING for any backlog carrying `discovery_exempt: true` without a `reason:`. The build will now fail. Add the reason — that is the fix, and writing it is the control. Do not remove the exemption to dodge the gate; an exemption with a stated reason is a legitimate, auditable choice."
       ]
+    },
+    {
+      "version": "2.0.0-rc.45",
+      "headline": "The attestation tests stop failing a repository for assembling its own evidence bundle",
+      "notes": [
+        "core/attestations.test.mjs resolved the evidence manifest in either layout — the bundle example or an adopted repo — and skipped only when NEITHER existed. It then verified the SHIPPED EXAMPLE's ed25519 attestation against whatever it found.",
+        "An adopter who follows the adoption guide (adapt evidence-example/ into docs/governance/evidence/) and then assembles a real bundle from their own release has a manifest at that path with a different anchor and, until they sign it, no attestation at all. The suite pointed at that bundle and failed: one assertion failure and two TypeErrors on MANIFEST.attestation.signature. The repository was punished for doing exactly what it was told.",
+        "The tests now run when the resolved manifest carries an attestation and skip when it does not. A mounted copy of the example still runs them; an adopter's own unsigned bundle is not this suite's business.",
+        "Found by assembling a real evidence bundle in an adopted repo — the release path had never been exercised."
+      ],
+      "action_required": [
+        "None. If your own bundle was failing these three tests, it will now skip them. Sign your anchor and they run again."
+      ]
     }
   ]
 }
