@@ -97,6 +97,13 @@ test('generated floor forms are out of bounds — the pointer belongs in their t
   assert.equal(isLoomOwned('plugins/middleleap-loom/skills/loom-adopt/harness/floor/catalog-c/x.md'), false);
 });
 
+test('accepted ADRs are out of bounds — a signed record is not amended for legibility', () => {
+  // An ADR is the decision as it was taken, signed and dated. Editing one after approval to
+  // add a pointer is precisely what a governance method must not do casually.
+  assert.equal(isLoomOwned('docs/adrs/0001-api-compatibility.md'), false);
+  assert.equal(isLoomOwned('docs/adr/0007-something.md'), false);
+});
+
 test('institutional BrainKit content is out of bounds — it is not the Loom to write in', () => {
   // A BrainKit is the institution's own content, sealed by digest. A gate demanding the
   // Loom's vocabulary there would assert an ownership the method explicitly disclaims.

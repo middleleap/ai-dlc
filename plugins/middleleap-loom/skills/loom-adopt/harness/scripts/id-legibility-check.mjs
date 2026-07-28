@@ -42,7 +42,7 @@ const GATE_ID = /\bD([1-9])\b(?!\.\d)/;
 // vocabulary they never opted into. The gate speaks only for the files the harness installs.
 const LOOM_OWNED = [
   /^discovery\//, /^delivery\//, /^guardrails\//,
-  /^docs\/governance\//, /^docs\/develop\//, /^docs\/adrs\//,
+  /^docs\/governance\//, /^docs\/develop\//,
   /^\.claude\/(skills|agents)\//,
   /^plugins\/middleleap-loom\//,   // the source repo, where the bundle itself lives
 ];
@@ -56,10 +56,14 @@ const LOOM_OWNED = [
 //   INSTITUTIONAL — a BrainKit is the institution's own content, sealed by digest. The Loom
 //   does not write in it, and a gate that demanded the Loom's vocabulary there would be
 //   asserting ownership the method explicitly disclaims.
+//   ACCEPTED RECORDS — an ADR is a decision as it was taken, signed and dated. Amending one
+//   to add a pointer rewrites a record after its approval, which is precisely what a
+//   governance method must not do casually. Legibility is a property of living documentation.
 const NOT_OURS_TO_EDIT = [
   /(^|\/)floor\//,
   /(^|\/)brainkit(-example)?\//,
   /(^|\/)institution\//,
+  /(^|\/)adrs?\//,
 ];
 
 export function isLoomOwned(path) {
