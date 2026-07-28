@@ -23,6 +23,9 @@ name: loom-gates
 on:
   push:
     branches: [main]
+    tags: ['v*']   # rc.39 — a release event: the deploy lane's trigger (ADOPT your tag pattern)
+  release:
+    types: [published]
   pull_request:
   merge_group:   # the routine auto-merge lane runs in the merge-queue context
   schedule:
@@ -87,7 +90,21 @@ jobs:
         # (exit 2: "an empty lane is a hole, not a pass"); re-add an invocation only together with
         # the catalog entry that gives its lane a control (deploy's first is the deployed-digest
         # verification, see the flow plan).
+        #
+        # rc.39: DEPLOY is back, below, because it now has one — DEPLOYED-DIGEST. `build` stays
+        # gone: it still carries zero controls, and the guard is what says so out loud.
         run: node core/gate-runner.mjs --lane release --out gate-run-release.json
+
+      - name: Gates — deploy lane (rc.39 · flow-plan Phase 5.4)
+        # The lane that verifies what actually went out: the deployed digest IS the authorized
+        # digest, and it reached customers under the progressive strategy the service declared.
+        # Gated on RELEASE EVENTS — a tag push or a published release — because that is when a
+        # deployment record exists to check. On an ordinary PR there is nothing deployed and the
+        # step would be the empty green light rc.33 removed. ADOPT: if your platform deploys from
+        # a workflow_dispatch or a deployment event, add it to this condition; the rule is that
+        # this step runs wherever a docs/governance/deployments/ record is written.
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'release'
+        run: node core/gate-runner.mjs --lane deploy --out gate-run-deploy.json
 
       # ── The four the runner structurally cannot drive, each for a stated reason ──────────────
       # This list is short ON PURPOSE and every entry is `execute: false` in the catalog with an

@@ -230,6 +230,22 @@
       "tier": "governed"
     },
     {
+      "source": "governance/environments.template.json",
+      "dest": "docs/governance/environments.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The promotion ladder (rc.39) — one entry per environment: purpose, data classification, who may promote INTO it, what it promotes FROM. Replaces three unmountable ADOPT comments in the release skill",
+      "tier": "governed"
+    },
+    {
+      "source": "governance/feature-flags.template.json",
+      "dest": "docs/governance/feature-flags.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The exposure register (rc.39) — flags default OFF, belong to a governed change, name an owner and a kill path, and expire. Mandatory once a compiled plan requires the exposure_control capability",
+      "tier": "governed"
+    },
+    {
       "source": "governance/product-evals.template.json",
       "dest": "docs/governance/product-evals.json",
       "kind": "file",

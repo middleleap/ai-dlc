@@ -1,0 +1,16 @@
+{
+  "_comment": "ADOPTER EXAMPLE (rc.39 · flow-plan Phase 5.2) — the exposure register for the bundled CHG-2026-0042, mounted as docs/governance/feature-flags.json. It exists so scripts/feature-flag-check.mjs verifies something REAL: the change-example compiles HIGH, the regulated-bank profile declares the exposure_control capability at high tier, and mandatory-when-compiled therefore makes this register non-optional in the adopted layout. Without a worked example the gate would only ever have been exercised against tmp fixtures, which is the vacuum every *-example/ directory in this bundle exists to fill. Note what the flag_key is: the SAME lever governance/service-readiness.template.json names as `kill_switch.mechanism`, which is what makes the R3 kill-switch drill evidence for this control too — one switch, drilled once, cited twice.",
+  "flags": [
+    {
+      "flag_key": "credit.decisioning.enabled",
+      "change_id": "CHG-2026-0042",
+      "default": false,
+      "owner": "po-fatima",
+      "kill_path": "flag console → credit.decisioning.enabled → off; in-flight applications drain to the manual underwriting queue (runbooks/credit-origination-rollback.md §kill-switch)",
+      "cohort_stage": "capped-production-cohort",
+      "_expires_comment": "ADOPT: a real flag's life is short — one or two releases. The date here is far out ON PURPOSE, for the reason the pattern expiry states in profiles/regulated-bank.json: a shipped fixture with a 90-day life is a build that turns red on a calendar, and a check that turns red on a calendar gets deleted rather than renewed. The bundle's CI restamps this field per run to prove BOTH directions (warned, then expired-and-blocked) without the date being load-bearing.",
+      "expires": "2030-01-01",
+      "notes": "The affordability model is in the decision path behind this flag. OFF means every application routes to manual underwriting — the pre-change behaviour — so 'off' is a working product, not a broken one. That is the property that makes the kill path real."
+    }
+  ]
+}

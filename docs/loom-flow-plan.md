@@ -445,6 +445,38 @@ carried as their own change rather than smuggled in here.
 **Exit criterion:** the worked example ships dark behind a flag with the
 hold released at exposure time; the deploy lane can actually fail.
 
+**Status:** items 1–4 landed at rc.39, and the exit criterion is met and
+asserted in CI's dry-run. `governance/environments.template.json` +
+`scripts/environments-check.mjs` (ENVIRONMENTS, pr lane) make the promotion
+ladder data — one root, no cycles, a non-builder promoter wherever approval is
+required, personal data never behind an unattended promotion, an
+always-approval-required terminal environment — and the release skill now
+*reads* it where three unmountable `<!-- ADOPT -->` comments used to sit.
+`governance/feature-flags.template.json` + `scripts/feature-flag-check.mjs`
+(EXPOSURE-CONTROL, pr lane) are mandatory-when-compiled behind a new
+`exposure_control` capability that `profiles/regulated-bank.json` declares at
+high tier; `exposure-example/` supplies the worked register and the worked
+deployment record, and both example control-plans were recompiled (the pattern's
+`pre_compiled_plan_hash` and the bound approval attestation with them).
+`progressive_delivery` is validated as R3b in `operational-readiness-check`,
+with the automated-rollback trigger test in rc.36's signed-observation shape on
+a 90-day window and Phase 3's 80% warning band. `scripts/deployed-digest-check.mjs`
+(DEPLOYED-DIGEST) is the deploy lane's first control — the deployed digest must
+be the *authorized artifact* digest, not merely the same source, and every
+declared ramp stage must have run in order, at its declared traffic, having
+baked at least its declared time — which is what lets `ci/ci.yml` invoke the
+deploy lane again (on release events only) without re-opening the rc.33
+empty-lane hole; the guard itself is unchanged. Reading a clock for the bake is
+not telemetry gating: the *declared* bake is compared with the *observed* one.
+
+The one thing deliberately not taken further here is Phase 2's item-4 tail — a
+real rollback executed on smoke failure appending itself as drill evidence. R3b
+now gives it somewhere to land (`automated_rollback.last_tested` is exactly that
+record's shape), but emitting it requires the release skill's smoke path to
+produce a signed observation from a live target, which no CI in this repository
+can honestly demonstrate. Wiring it would mean shipping a mechanism whose only
+exercise is a fixture — the vacuum every worked example here exists to prevent.
+
 ### Phase 6 — Parallelize the machinery (orthogonal; start anytime after Phase 0)
 
 1. **Parallel gate runner.** Replace the serial `spawnSync` loop with a

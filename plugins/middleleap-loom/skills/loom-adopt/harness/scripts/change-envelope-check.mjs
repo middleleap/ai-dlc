@@ -516,7 +516,14 @@ export function run(cwd = process.cwd(), { baseRef = null, now = Date.now() } = 
       if (!sr) readiness.missing.push(s);
       // rc.36: observation-shaped drills verify their observer and signature — pass the registry
       // and issuers so a signed drill judged here is judged by the same stack as the R gate.
-      else readiness.findings.push(...evaluateReadiness(sr, Date.now(), { registry, issuers: loadIssuers(cwd) }));
+      // rc.39: and this change's OWN plan decides whether R3b (progressive delivery) is required
+      // of the services it declares — the R gate asks the repository-wide question, the envelope
+      // gate asks it of the change in hand.
+      else readiness.findings.push(...evaluateReadiness(sr, Date.now(), {
+        registry,
+        issuers: loadIssuers(cwd),
+        exposureRequired: Boolean(plan?.required_capabilities?.exposure_control?.required),
+      }));
     }
     const hold = readJson(`${base}/release-hold.json`);
     const manifest = readJson(`${cwd}/docs/governance/evidence/manifest.json`);

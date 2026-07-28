@@ -265,14 +265,15 @@
     },
     {
       "control_id": "OPS-READINESS",
-      "objective": "R1\u2013R6 operational readiness with freshness windows: an expired DR exercise, undrilled rollback or untested kill-switch blocks production; a drill is a signed observation (refused negative test, non-builder observer, registered signature) \u2014 bare dates are deprecated",
+      "objective": "R1\u2013R6 operational readiness with freshness windows: an expired DR exercise, undrilled rollback or untested kill-switch blocks production; a drill is a signed observation (refused negative test, non-builder observer, registered signature) \u2014 bare dates are deprecated. R3b (rc.39) adds progressive delivery: a declared ramp with increasing traffic, bake time and watched SLOs, and an automated rollback trigger tested inside a 90-day window",
       "owner_role": "operations",
       "line": 1,
       "state": "mechanically-validated",
       "mechanism_ref": "scripts/operational-readiness-check.mjs",
       "test_ref": "scripts/operational-readiness-check.test.mjs",
       "lane": "release",
-      "gate_family": "R"
+      "gate_family": "R",
+      "note": "Mandatory-when-compiled at R3b: progressive_delivery is optional for a service nobody is ramping and REQUIRED the moment a compiled plan asks for the exposure_control capability (regulated-bank declares it at high tier). The ramp's feature_flag_ref and the exposure register name the SAME switch, so \u201cwe can turn it off\u201d is one claim rather than two about two switches"
     },
     {
       "control_id": "PROD-AUTH",
@@ -968,6 +969,54 @@
       "lane": "pr",
       "always": true,
       "note": "Removes the single-named-human bus factor without touching separation of duties: delegation moves WHO may approve inside a signed window, quorum moves HOW MANY must. A lapsed delegation is inert and is reported on every run rather than left in the file to be quietly renewed"
+    },
+    {
+      "control_id": "ENVIRONMENTS",
+      "objective": "The promotion ladder is declared data, not prose: one root and no cycles, every environment naming its purpose, its data classification, its url and the identity entitled to promote INTO it \u2014 with an approval-required environment promoted into by a non-builder human, personal data never behind an unattended promotion, and the terminal environment always requiring approval",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/environments-check.mjs",
+      "test_ref": "scripts/environments-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/environments.json",
+        "docs/governance/identities.json"
+      ],
+      "note": "Replaces three <!-- ADOPT --> comments in skills/release/SKILL.md that told an adopter to \u201cname your pre-production environment\u201d and could never be checked. Absence is silence (an estate may be declared later); an INCOHERENT declared estate is not, and a ladder still carrying the shipped template's example.invalid URLs prints a NOTICE on every run rather than reading green as somebody's real estate"
+    },
+    {
+      "control_id": "EXPOSURE-CONTROL",
+      "objective": "Exposure is separated from deploy and governed: every feature flag defaults OFF, belongs to a governed change, names a human owner and a kill path, sits at one of the pilot playbook's six cohort stages, and EXPIRES \u2014 and every change whose compiled plan requires the exposure_control capability names at least one flag",
+      "owner_role": "product-owner",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/feature-flag-check.mjs",
+      "test_ref": "scripts/feature-flag-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/feature-flags.json",
+        "docs/governance/changes/",
+        "docs/governance/identities.json"
+      ],
+      "note": "Mandatory-when-compiled, exactly like the data-risk register: a repository doing no staged exposure is SILENT, and the requirement arrives from the profile (regulated-bank declares exposure_control at high tier), never from a CI flag. An EXPIRED flag fails and 30/14/7-day notices precede it; a flag whose owning change is closed or superseded fails as stale exposure machinery, which is how flag debt becomes visible instead of permanent"
+    },
+    {
+      "control_id": "DEPLOYED-DIGEST",
+      "objective": "What is deployed IS what was authorized, and it went out the way the service declared it would: the deployed digest equals the release subject's artifact digest, and the recorded stages replay the declared progressive-delivery ramp in order, at the declared traffic, each having baked at least its declared time",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/deployed-digest-check.mjs",
+      "test_ref": "scripts/deployed-digest-check.test.mjs",
+      "lane": "deploy",
+      "paths": [
+        "docs/governance/deployments/",
+        "docs/governance/release-subject.json",
+        "docs/governance/services/",
+        "docs/governance/environments.json"
+      ],
+      "note": "The DEPLOY LANE'S FIRST CONTROL \u2014 it is what retires rc.33's empty-lane guard for `deploy` (the guard itself stands: an empty lane is still a hole). Everything upstream binds an immutable artifact digest and nothing compared it to what actually ran; a rebuild of the same source is a different artifact and was not the one evaluated. Reading a clock here is not telemetry gating: the DECLARED bake is compared with the OBSERVED bake, which is a control being verified, not a duration being judged"
     }
   ]
 }

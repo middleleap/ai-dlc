@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
-import { drillHash, evaluate, verifyDrillObservation, WINDOWS } from './operational-readiness-check.mjs';
+import { drillHash, evaluate, STRATEGIES, verifyDrillObservation, verifyProgressiveDelivery, WINDOWS } from './operational-readiness-check.mjs';
 
 const NOW = Date.parse('2026-07-22');
 const days = (n) => new Date(NOW - n * 86400000).toISOString().slice(0, 10);
@@ -171,3 +171,93 @@ function verifyDrillObservationBand(findings, notices, observed_at, now) {
   );
   findings.push(...f.filter((x) => /window|STALE/.test(x)));
 }
+
+/* ---- rc.39 · flow-plan Phase 5.3: R3b — progressive delivery ---- */
+
+const PD = () => ({
+  strategy: 'canary',
+  stages: [
+    { name: 'internal', traffic_pct: 1, bake_minutes: 60, slo_refs: ['err-rate'] },
+    { name: 'capped', traffic_pct: 10, bake_minutes: 240, slo_refs: ['err-rate', 'p99'] },
+    { name: 'full', traffic_pct: 100, bake_minutes: 0, slo_refs: ['err-rate'] },
+  ],
+  automated_rollback: { trigger_slo: 'err-rate', last_tested: observation({ observedDaysAgo: 5 }) },
+  feature_flag_ref: 'credit.decisioning.enabled',
+});
+const pdOpts = { label: 'svc-x: progressive delivery', now: NOW, ...CTX };
+
+test('R3b — a complete progressive-delivery block passes', () => {
+  assert.deepEqual(verifyProgressiveDelivery(PD(), pdOpts), []);
+});
+
+test('R3b is OPTIONAL until a compiled plan requires exposure_control, then it is MANDATORY', () => {
+  assert.deepEqual(evaluate(READY, NOW, CTX), [], 'a service not doing staged exposure is not failing');
+  const required = evaluate(READY, NOW, { ...CTX, exposureRequired: true });
+  assert.ok(required.some((f) => /progressive_delivery is not an object/.test(f)), required.join('\n'));
+  // Declaring one opts in even without the capability — a half-written ramp is not ignored.
+  const halfWritten = evaluate({ ...READY, progressive_delivery: { strategy: 'canary' } }, NOW, CTX);
+  assert.ok(halfWritten.some((f) => /no stages/.test(f)));
+});
+
+test('R3b — the strategy vocabulary is closed', () => {
+  for (const s of STRATEGIES) assert.deepEqual(verifyProgressiveDelivery({ ...PD(), strategy: s }, pdOpts), []);
+  assert.ok(verifyProgressiveDelivery({ ...PD(), strategy: 'big-bang' }, pdOpts).some((f) => /strategy must be/.test(f)));
+});
+
+test('R3b — a ramp must GO somewhere: strictly increasing, ending at 100', () => {
+  const flat = PD();
+  flat.stages[1].traffic_pct = 1;
+  assert.ok(verifyProgressiveDelivery(flat, pdOpts).some((f) => /does not increase/.test(f)));
+  const reversed = PD();
+  reversed.stages = [reversed.stages[2], reversed.stages[1], reversed.stages[0]];
+  assert.ok(verifyProgressiveDelivery(reversed, pdOpts).some((f) => /flattens or reverses/.test(f)));
+  const unfinished = PD();
+  unfinished.stages.pop();
+  assert.ok(verifyProgressiveDelivery(unfinished, pdOpts).some((f) => /never reaches 100%/.test(f)));
+});
+
+test('R3b — every stage bakes while WATCHING something', () => {
+  const noBake = PD();
+  delete noBake.stages[0].bake_minutes;
+  assert.ok(verifyProgressiveDelivery(noBake, pdOpts).some((f) => /a stage with no bake is a stage nobody watched/.test(f)));
+  const blind = PD();
+  blind.stages[0].slo_refs = [];
+  assert.ok(verifyProgressiveDelivery(blind, pdOpts).some((f) => /baking without watching anything is waiting/.test(f)));
+});
+
+test('R3b — the automated rollback fires on an SLO the ramp actually observes', () => {
+  const orphan = PD();
+  orphan.automated_rollback.trigger_slo = 'cost-per-decision';
+  assert.ok(verifyProgressiveDelivery(orphan, pdOpts).some((f) => /is not among the SLOs the stages watch/.test(f)));
+  const none = PD();
+  delete none.automated_rollback;
+  assert.ok(verifyProgressiveDelivery(none, pdOpts).some((f) => /rolls back at human speed/.test(f)));
+});
+
+test('R3b — the rollback trigger test is a SIGNED OBSERVATION on a 90-day window', () => {
+  assert.equal(WINDOWS.progressive_rollback, 90);
+  const stale = PD();
+  stale.automated_rollback.last_tested = observation({ observedDaysAgo: WINDOWS.progressive_rollback + 5 });
+  assert.ok(verifyProgressiveDelivery(stale, pdOpts).some((f) => /automated-rollback trigger test.*STALE/.test(f)));
+  const bareDate = PD();
+  bareDate.automated_rollback.last_tested = days(5);
+  assert.ok(verifyProgressiveDelivery(bareDate, pdOpts).some((f) => /observation has no observed_at/.test(f)),
+    'a bare date is NOT accepted here — this field was born in the signed world');
+  const forged = PD();
+  forged.automated_rollback.last_tested = observation({ mutateAfterSigning: (r) => { r.observation.note = 'it went fine'; } });
+  assert.ok(verifyProgressiveDelivery(forged, pdOpts).some((f) => /does NOT verify/.test(f)));
+});
+
+test('R3b — the warning band applies to the rollback window too (80% of 90d)', () => {
+  const notices = [];
+  const warm = PD();
+  warm.automated_rollback.last_tested = observation({ observedDaysAgo: 75 });
+  assert.deepEqual(verifyProgressiveDelivery(warm, { ...pdOpts, notices }), []);
+  assert.ok(notices.some((n) => /75d of the 90d window used, 15d left/.test(n)), notices.join('\n'));
+});
+
+test('R3b — the ramp and the exposure register must name the SAME switch', () => {
+  const unlinked = PD();
+  delete unlinked.feature_flag_ref;
+  assert.ok(verifyProgressiveDelivery(unlinked, pdOpts).some((f) => /no feature_flag_ref/.test(f)));
+});

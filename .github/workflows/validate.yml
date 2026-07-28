@@ -144,6 +144,17 @@ jobs:
           # rc.18 WS0 · D0.1: staged HERE with every other example, because $H is repo-root-relative
           # and everything below `cd "$A"` runs from the dry-run destination.
           cp -r "$H/residency-example" "$A/residency-example"
+          # rc.39 (flow-plan Phase 5): the exposure plane's worked example. The change-example
+          # compiles HIGH and regulated-bank now declares the exposure_control capability at high
+          # tier, so the flag register is MANDATORY-WHEN-COMPILED in this layout — without a real
+          # register the gate could only ever have been exercised against tmp fixtures, which is
+          # the vacuum every *-example/ here exists to fill. The deployment record is the deploy
+          # lane's first subject; the lane had zero controls until rc.39 and its CI invocation was
+          # deleted at rc.33 for exactly that reason.
+          cp -r "$H/exposure-example" "$A/exposure-example"
+          cp "$H/exposure-example/feature-flags.json" "$A/docs/governance/feature-flags.json"
+          mkdir -p "$A/docs/governance/deployments"
+          cp "$H/exposure-example/deployment.json" "$A/docs/governance/deployments/DEP-2026-0042-01.json"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
@@ -180,6 +191,10 @@ jobs:
           t.rollback.last_drilled = observe("rolled back to vN-1 in 6m; limits reconciled", "writes against the rolled-back schema");
           t.kill_switch.last_tested = observe("decisioning drained to the manual queue in 90s", "traffic routed through the killed path");
           t.capacity.last_run = observe("2x peak sustained for 1h; p99 within SLO", "load beyond the declared ceiling");
+          // rc.39 (flow-plan Phase 5.3) — R3b. The change-example compiles exposure_control, so the
+          // progressive_delivery block is REQUIRED here, and its automated-rollback trigger test is a
+          // signed observation on a 90-day window like every other drill.
+          t.progressive_delivery.automated_rollback.last_tested = observe("error-rate breach at 12% traffic auto-reverted to vN-1 in 90s; no manual step", "ramp advanced past the next stage while the trigger SLO was breaching");
           fs.writeFileSync(`${process.env.DEST}/docs/governance/services/credit-origination.json`, JSON.stringify(t, null, 2));
           const regPath = `${process.env.DEST}/docs/governance/attestation-issuers.json`;
           const reg = JSON.parse(fs.readFileSync(regPath));
@@ -230,6 +245,16 @@ jobs:
           # per-run, non-demo key — then commit, so every `git checkout --` restore below recovers
           # the REGENERATED state, and the base commit is a real ancestor of HEAD (D5).
           node evidence-example/regenerate.mjs --dest .
+          # rc.39: regenerate stamps release-subject.json's source.commit to the real base commit,
+          # so the deployment record must name the same one — exactly what an adopter's deploy job
+          # does when it writes the record from what it observed. The DIGEST is untouched: that is
+          # the binding the deploy gate exists to check and it must not be papered over here.
+          node -e '
+            const fs=require("fs");
+            const c=JSON.parse(fs.readFileSync("docs/governance/release-subject.json")).source.commit;
+            const p="docs/governance/deployments/DEP-2026-0042-01.json";
+            const d=JSON.parse(fs.readFileSync(p)); d.release_commit=c; fs.writeFileSync(p,JSON.stringify(d,null,2));
+          '
           git add -A && git commit -qm "seal release evidence at the base commit (rc.36)"
           node scripts/discovery-link-check.mjs
           # ── HG-0007 coverage + nesting (rc.28) ────────────────────────────────────────────
@@ -385,6 +410,108 @@ jobs:
           node scripts/product-approval-check.mjs
           node scripts/architecture-assurance-check.mjs
           node scripts/operational-readiness-check.mjs
+
+          # ── rc.39 · flow-plan Phase 5: exposure is decoupled from deploy ──────────────────
+          # Three new gates, each staged with something real. The register is MANDATORY here (the
+          # change-example compiles HIGH and regulated-bank declares exposure_control at high
+          # tier), so this is the same mandatory-when-compiled derivation the data-risk register
+          # and the provider roles use — the requirement comes from the PROFILE, never a CI flag.
+          #
+          # ① The promotion ladder. The installed template is the Loom's EXAMPLE estate, and the
+          #    gate must say so rather than reading green as somebody's real one.
+          node scripts/environments-check.mjs | tee /tmp/env.txt
+          grep -q "shipped template's placeholder" /tmp/env.txt || {
+            echo "::error::the environment gate passed the shipped example ladder without saying it is the shipped example"; exit 1; }
+          #    …and the two rules that fail closed. Personal data behind an unattended promotion:
+          node -e 'const fs=require("fs"),p="docs/governance/environments.json",s=JSON.parse(fs.readFileSync(p));s.environments.find(e=>e.id==="staging").data_classification="personal";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/environments-check.mjs 2>/tmp/env-p.txt; then
+            echo "::error::an environment holding personal data passed with approval_required false"; exit 1; fi
+          grep -q 'promoted into by decision, not by pipeline' /tmp/env-p.txt || {
+            echo "::error::the personal-data environment was refused, but not for holding personal data"; cat /tmp/env-p.txt; exit 1; }
+          git checkout -- docs/governance/environments.json
+          #    …and a builder waving work into the environment that requires approval:
+          node -e 'const fs=require("fs"),p="docs/governance/environments.json",s=JSON.parse(fs.readFileSync(p));s.environments.find(e=>e.id==="production").identity="eng-omar";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/environments-check.mjs 2>/tmp/env-b.txt; then
+            echo "::error::a builder is the promotion identity for an approval-required environment and the gate passed"; exit 1; fi
+          grep -q 'builders group' /tmp/env-b.txt || {
+            echo "::error::the builder promoter was refused, but not for being a builder"; cat /tmp/env-b.txt; exit 1; }
+          git checkout -- docs/governance/environments.json
+          node scripts/environments-check.mjs > /dev/null
+          #
+          # ② The exposure register. Positive first — it must be COUNTING a real flag, not passing
+          #    over an empty set, and it must say the capability is what makes it mandatory.
+          node scripts/feature-flag-check.mjs | tee /tmp/ff.txt
+          grep -q '1 flag, exposure_control required by a compiled plan' /tmp/ff.txt || {
+            echo "::error::the exposure gate is not reading the staged flag, or not deriving the compiled requirement"; cat /tmp/ff.txt; exit 1; }
+          #    default ON is the whole pattern collapsing:
+          node -e 'const fs=require("fs"),p="docs/governance/feature-flags.json",s=JSON.parse(fs.readFileSync(p));s.flags[0].default=true;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/feature-flag-check.mjs 2>/tmp/ff-d.txt; then
+            echo "::error::a flag defaulting ON passed the exposure gate — that is a deploy, not an exposure control"; exit 1; fi
+          grep -q 'it is a deploy' /tmp/ff-d.txt || {
+            echo "::error::the default-on flag was refused, but not for defaulting on"; cat /tmp/ff-d.txt; exit 1; }
+          git checkout -- docs/governance/feature-flags.json
+          #    the expiry, BOTH directions, restamped per run so no shipped date is load-bearing:
+          node -e 'const fs=require("fs"),p="docs/governance/feature-flags.json",s=JSON.parse(fs.readFileSync(p));s.flags[0].expires=new Date(Date.now()+10*86400000).toISOString().slice(0,10);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          node scripts/feature-flag-check.mjs > /tmp/ff-w.txt || {
+            echo "::error::a flag 10 days from expiry must WARN, never fail — the deadline is unmoved, the surprise is removed"; cat /tmp/ff-w.txt; exit 1; }
+          grep -q '14-day band' /tmp/ff-w.txt || {
+            echo "::error::a flag inside the 14-day band did not warn"; cat /tmp/ff-w.txt; exit 1; }
+          node -e 'const fs=require("fs"),p="docs/governance/feature-flags.json",s=JSON.parse(fs.readFileSync(p));s.flags[0].expires=new Date(Date.now()-86400000).toISOString().slice(0,10);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/feature-flag-check.mjs 2>/tmp/ff-x.txt; then
+            echo "::error::an EXPIRED flag passed — an exposure control past its end date is a permanent branch in production"; exit 1; fi
+          grep -q 'EXPIRED' /tmp/ff-x.txt || {
+            echo "::error::the expired flag was refused, but not for being expired"; cat /tmp/ff-x.txt; exit 1; }
+          git checkout -- docs/governance/feature-flags.json
+          #    and the mandatory-when-compiled derivation itself: remove the register entirely.
+          mv docs/governance/feature-flags.json /tmp/feature-flags.json
+          if node scripts/feature-flag-check.mjs 2>/tmp/ff-m.txt; then
+            echo "::error::a compiled plan requires exposure_control and the missing register passed"; exit 1; fi
+          grep -q 'CHG-2026-0042' /tmp/ff-m.txt || {
+            echo "::error::the missing register was refused without naming the change that requires it"; cat /tmp/ff-m.txt; exit 1; }
+          mv /tmp/feature-flags.json docs/governance/feature-flags.json
+          node scripts/feature-flag-check.mjs > /dev/null
+          #    R3b is mandatory the same way: strip the ramp and readiness must refuse it.
+          node -e 'const fs=require("fs"),p="docs/governance/services/credit-origination.json",s=JSON.parse(fs.readFileSync(p));delete s.progressive_delivery;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operational-readiness-check.mjs 2>/tmp/pd-m.txt; then
+            echo "::error::a service under a change compiling exposure_control passed R3 with no declared ramp"; exit 1; fi
+          grep -q 'progressive_delivery is not an object' /tmp/pd-m.txt || {
+            echo "::error::the missing ramp was refused, but not for being missing"; cat /tmp/pd-m.txt; exit 1; }
+          git checkout -- docs/governance/services/credit-origination.json
+          #
+          # ③ The deploy lane's first control. The lane ran green-about-nothing until rc.33 deleted
+          #    its invocation; it is back because there is now something in it.
+          node scripts/deployed-digest-check.mjs | tee /tmp/dep.txt
+          grep -q '1 deployment record' /tmp/dep.txt || {
+            echo "::error::the deploy gate is not reading the staged deployment record"; cat /tmp/dep.txt; exit 1; }
+          #    a rebuild of the same source is a DIFFERENT artifact and was not the one evaluated:
+          node -e 'const fs=require("fs"),p="docs/governance/deployments/DEP-2026-0042-01.json",s=JSON.parse(fs.readFileSync(p));s.deployed_digest="sha256:"+"b".repeat(64);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/deployed-digest-check.mjs 2>/tmp/dep-d.txt; then
+            echo "::error::a deployment of a digest that is NOT the authorized one passed the deploy gate"; exit 1; fi
+          grep -q 'DEPLOYED DIGEST IS NOT THE AUTHORIZED DIGEST' /tmp/dep-d.txt || {
+            echo "::error::the wrong digest was refused, but not for being the wrong digest"; cat /tmp/dep-d.txt; exit 1; }
+          git checkout -- docs/governance/deployments/DEP-2026-0042-01.json
+          #    …and a canary that jumped to 100% did not go out the way it was approved to:
+          node -e 'const fs=require("fs"),p="docs/governance/deployments/DEP-2026-0042-01.json",s=JSON.parse(fs.readFileSync(p));s.stages_completed=[s.stages_completed[3]];fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/deployed-digest-check.mjs 2>/tmp/dep-s.txt; then
+            echo "::error::a deployment that skipped every declared ramp stage passed the deploy gate"; exit 1; fi
+          grep -q 'exposure that was never baked' /tmp/dep-s.txt || {
+            echo "::error::the skipped ramp was refused, but not for skipping stages"; cat /tmp/dep-s.txt; exit 1; }
+          git checkout -- docs/governance/deployments/DEP-2026-0042-01.json
+          #    …and a stage cut short of its declared bake is an unwatched rollout, not a fast one:
+          node -e 'const fs=require("fs"),p="docs/governance/deployments/DEP-2026-0042-01.json",s=JSON.parse(fs.readFileSync(p));s.stages_completed[1].completed_at=s.stages_completed[1].started_at;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/deployed-digest-check.mjs 2>/tmp/dep-b.txt; then
+            echo "::error::a ramp stage that never baked passed the deploy gate"; exit 1; fi
+          grep -q 'it is an unwatched one' /tmp/dep-b.txt || {
+            echo "::error::the unbaked stage was refused, but not for the bake"; cat /tmp/dep-b.txt; exit 1; }
+          git checkout -- docs/governance/deployments/DEP-2026-0042-01.json
+          node scripts/deployed-digest-check.mjs > /dev/null
+          #    …and the LANE itself: the runner refused an empty deploy lane at rc.33, so proving
+          #    it now selects and passes is what actually retires that guard.
+          node core/gate-runner.mjs --lane deploy --out /tmp/gate-run-deploy.json | tee /tmp/deploy-lane.txt
+          grep -q 'Gate runner \[deploy\] — PASS' /tmp/deploy-lane.txt || {
+            echo "::error::the deploy lane did not run — an empty lane is a hole, not a pass"; cat /tmp/deploy-lane.txt; exit 1; }
+          node -e 'const r=require("/tmp/gate-run-deploy.json");if(!r.executed.some(e=>e.controls.includes("DEPLOYED-DIGEST")))throw new Error("the deploy lane ran without its only control");console.log("deploy lane: DEPLOYED-DIGEST executed")'
+
           node scripts/test-integrity-check.mjs --base main
           node scripts/sast-check.mjs
           node scripts/secrets-scan.mjs

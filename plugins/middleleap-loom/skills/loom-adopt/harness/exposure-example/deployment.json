@@ -1,0 +1,20 @@
+{
+  "_comment": "ADOPTER EXAMPLE (rc.39 · flow-plan Phase 5.4) — one deployment record, mounted as docs/governance/deployments/DEP-2026-0042-01.json and verified by scripts/deployed-digest-check.mjs on the DEPLOY lane. It exists so the lane's first control checks something real: without a record the gate is silent, and a silent gate is exactly the empty lane rc.33 refused. Two bindings make it worth writing. deployed_digest is the digest in docs/governance/release-subject.json — not the same commit, the same ARTIFACT, because a rebuild of the same source is a different thing and it was not the one that was evaluated. And stages_completed replays the service's declared progressive_delivery ramp: same names, same order, same traffic, each having actually baked for at least the declared bake_minutes. In a real adoption this file is WRITTEN BY THE DEPLOY JOB from what it observed, not by a human from what was intended — the same rule the evidence collector follows.",
+  "deployment_id": "DEP-2026-0042-01",
+  "service_id": "credit-origination",
+  "environment": "production",
+  "release_commit": "7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f",
+  "deployed_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "strategy": "canary",
+  "feature_flag_ref": "credit.decisioning.enabled",
+  "stages_completed": [
+    { "name": "internal", "traffic_pct": 1, "started_at": "2026-07-24T06:00:00Z", "completed_at": "2026-07-24T07:05:00Z" },
+    { "name": "capped-cohort", "traffic_pct": 10, "started_at": "2026-07-24T07:05:00Z", "completed_at": "2026-07-24T11:10:00Z" },
+    { "name": "expanded", "traffic_pct": 50, "started_at": "2026-07-24T11:10:00Z", "completed_at": "2026-07-24T23:20:00Z" },
+    { "name": "full", "traffic_pct": 100, "started_at": "2026-07-24T23:20:00Z", "completed_at": "2026-07-24T23:25:00Z" }
+  ],
+  "deployed_by": "ops-dana",
+  "authorized_by": "padmin-zoe",
+  "deployed_at": "2026-07-24T23:25:00Z",
+  "notes": "Exposure remained gated by credit.decisioning.enabled throughout: this record says the ARTIFACT reached 100% of hosts, which is deploy. Turning the flag on for a cohort is exposure, and it is governed separately — that separation is the whole of Phase 5."
+}

@@ -119,6 +119,8 @@ are repo-root-relative.
 | `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | core | Data classification, retention, erasure, residency |
 | `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | governed | The Run→Discovery feedback log |
 | `governance/service-readiness.template.json` | `docs/governance/services/example-service.json` | governed | Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills) |
+| `governance/environments.template.json` | `docs/governance/environments.json` | governed | The promotion ladder (rc.39) — one entry per environment: purpose, data classification, who may promote INTO it, what it promotes FROM. Replaces three unmountable ADOPT comments in the release skill |
+| `governance/feature-flags.template.json` | `docs/governance/feature-flags.json` | governed | The exposure register (rc.39) — flags default OFF, belong to a governed change, name an owner and a kill path, and expire. Mandatory once a compiled plan requires the exposure_control capability |
 | `governance/product-evals.template.json` | `docs/governance/product-evals.json` | governed | Product-outcome evals (discovery-linked, measures scored, commit-bound) |
 | `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | governed | The second-line-owned routine-change envelope (HG-0013) |
 | `governance/config-baseline.template.json` | `docs/governance/config-baseline.json` | full | The approved control-plane configuration reconciled against live observations (rc.12 WS2.4) |

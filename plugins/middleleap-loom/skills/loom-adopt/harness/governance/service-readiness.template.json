@@ -37,6 +37,27 @@
       "attestation": { "issuer": "ADOPT: a registered ed25519 issuer (attestation-issuers.json)", "signature": "ADOPT: base64 ed25519 over drillHash(record)" }
     }
   },
+  "_progressive_delivery_comment": "ADOPT (rc.39 · flow-plan Phase 5.3) — R3b: HOW this service reaches customers. Optional for a service that is not doing staged exposure; MANDATORY the moment a compiled plan requires the exposure_control capability (regulated-bank declares it at high tier). strategy: canary | blue-green | ring. stages: strictly increasing traffic_pct ending at 100, each with a bake_minutes and the slo_refs it watches while baking. automated_rollback.trigger_slo must be one of those SLOs — a trigger on a signal the rollout does not observe never fires — and last_tested is a SIGNED OBSERVATION in the same shape as the drills above, on a 90-day window: an automated rollback nobody has fired is a configuration, not a control. feature_flag_ref must name the same key as the entry in docs/governance/feature-flags.json, so 'we can turn it off' is ONE claim rather than two about two switches.",
+  "progressive_delivery": {
+    "strategy": "canary",
+    "stages": [
+      { "name": "internal", "traffic_pct": 1, "bake_minutes": 60, "slo_refs": ["decision-latency-p99", "decision-error-rate"] },
+      { "name": "capped-cohort", "traffic_pct": 10, "bake_minutes": 240, "slo_refs": ["decision-latency-p99", "decision-error-rate", "manual-referral-rate"] },
+      { "name": "expanded", "traffic_pct": 50, "bake_minutes": 720, "slo_refs": ["decision-latency-p99", "decision-error-rate", "manual-referral-rate"] },
+      { "name": "full", "traffic_pct": 100, "bake_minutes": 0, "slo_refs": ["decision-latency-p99", "decision-error-rate"] }
+    ],
+    "automated_rollback": {
+      "trigger_slo": "decision-error-rate",
+      "last_tested": {
+        "observed_at": "ADOPT: ISO date you last FIRED the automated rollback trigger (90-day window)",
+        "observation": { "note": "ADOPT: what firing it showed (e.g. error-rate breach at 12% traffic auto-reverted to vN-1 in 90s; no manual step)" },
+        "negative_test": { "attempted": "ADOPT: the probe the mechanism must refuse (e.g. ramp advanced past the next stage while the trigger SLO was breaching)", "result": "ADOPT: must be \"rejected\"", "tested_at": "ADOPT: ISO timestamp" },
+        "observer_identity": "ADOPT: a registry identity OUTSIDE the builders group",
+        "attestation": { "issuer": "ADOPT: a registered ed25519 issuer (attestation-issuers.json)", "signature": "ADOPT: base64 ed25519 over drillHash(record)" }
+      }
+    },
+    "feature_flag_ref": "credit.decisioning.enabled"
+  },
   "capacity": {
     "stress_test_ref": "perf/credit-origination-stress.md",
     "last_run": {

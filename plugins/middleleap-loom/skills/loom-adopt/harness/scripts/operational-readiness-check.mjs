@@ -5,7 +5,10 @@
 //
 //   R1 criticality + ownership + on-call · R2 continuity (RTO/RPO, BCP/DR exercised) ·
 //   R3 rollback drilled + kill-switch tested — WITH FRESHNESS WINDOWS (a drill from two
-//   years ago is history, not readiness) · R4 capacity/stress evidence · R5 third-party
+//   years ago is history, not readiness) — and R3b progressive delivery, whose ramp lands on the
+//   environments declared in docs/governance/environments.json (scripts/environments-check.mjs:
+//   a rollback is a promotion in reverse, so R3 means nothing without a declared ladder to go
+//   back down) · R4 capacity/stress evidence · R5 third-party
 //   continuity + exit for critical services · R6 reconciliation, failed-transaction
 //   recovery, complaints readiness, regulatory-notification triggers.
 //
@@ -20,6 +23,17 @@
 // gate still passes and prints a NOTICE naming the days left. The block is unmoved; the surprise
 // is gone. A drill that expires overnight gets run in a panic, and a panicked drill is theatre.
 //
+// rc.39 (flow-plan Phase 5.3): R3 gained PROGRESSIVE DELIVERY. R3 already asked "can you go back?".
+// It never asked "how far forward did you go, and how fast?" — so a service with a perfect rollback
+// drill could still put 100% of customers on a new decision path in one step, which is the case
+// where the rollback is exercised for real, under time pressure, on everybody. `progressive_delivery`
+// declares the ramp (strategy, stages with traffic % and bake time, the SLOs each stage watches),
+// the AUTOMATED rollback trigger, and the flag that gates exposure. The rollback trigger carries its
+// own 90-day freshness window in the same signed-observation shape as the other drills: an automated
+// rollback nobody has fired is a configuration, not a control. OPTIONAL for a service that is not
+// doing staged exposure; REQUIRED the moment a compiled plan asks for the `exposure_control`
+// capability — mandatory-when-compiled, exactly like the register and the provider roles.
+//
 // Freshness is checkable; the shipped template FAILS until adopted (its fields are ADOPT
 // placeholders), like the CODEOWNERS template: a copied-but-never-exercised readiness file must
 // not read green.
@@ -30,11 +44,16 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { loadIssuers, verifySignatureOver } from '../core/attestations.mjs';
+import { aggregateRequirements, capabilityRequired } from '../core/compiled-requirements.mjs';
 
 export const SERVICES_DIR = 'docs/governance/services';
 export const CRITICALITIES = ['critical', 'important', 'standard'];
 // ADOPT: your freshness policy (days). An exercise older than its window blocks production.
-export const WINDOWS = { bcp_dr: 365, rollback: 180, kill_switch: 90, capacity: 365 };
+export const WINDOWS = { bcp_dr: 365, rollback: 180, kill_switch: 90, capacity: 365, progressive_rollback: 90 };
+// rc.39 — the progressive-delivery strategies R3 recognises. Deliberately three and closed: the
+// point of the field is a shared word for "how did this reach customers", and an open vocabulary
+// makes the deploy record's cross-check (scripts/deployed-digest-check.mjs) unenforceable.
+export const STRATEGIES = ['canary', 'blue-green', 'ring'];
 // rc.37 (flow-plan Phase 3.6) — the warning band. At 80% of a window the drill is still VALID and
 // the gate still passes; a NOTICE is printed. The control is unchanged and the block stays exactly
 // where it was: what this removes is the overnight green-to-blocked surprise, which is how a
@@ -117,6 +136,73 @@ export function verifyDrillObservation(rec, { label, windowDays, now = Date.now(
 }
 
 /**
+ * R3b — the progressive-delivery declaration (rc.39 · flow-plan Phase 5.3). Findings only.
+ *
+ * Four things make a ramp a control rather than a diagram: it goes somewhere (strictly increasing
+ * traffic, ending at 100 — a ramp that never completes is a permanent split-brain, and one that
+ * goes backwards is not a ramp); each stage BAKES while watching a named SLO; the automated
+ * rollback fires on one of the SLOs the ramp actually watches (a trigger on a signal nothing in
+ * the rollout observes is a trigger nobody will see); and that rollback has been FIRED inside its
+ * freshness window, recorded as a signed observation like every other drill here.
+ */
+export function verifyProgressiveDelivery(pd, { label, now = Date.now(), registry = null, issuers = null, notices = null } = {}) {
+  const findings = [];
+  if (!pd || typeof pd !== 'object' || Array.isArray(pd)) {
+    return [`${label}: progressive_delivery is not an object — a compiled plan requires exposure_control, so how this service reaches customers is not optional`];
+  }
+  if (!STRATEGIES.includes(pd.strategy)) {
+    findings.push(`${label}: strategy must be ${STRATEGIES.join('|')} (got ${JSON.stringify(pd.strategy)})`);
+  }
+
+  const stages = pd.stages;
+  const declaredSlos = new Set();
+  if (!Array.isArray(stages) || stages.length === 0) {
+    findings.push(`${label}: no stages — a progressive rollout with no stages is a deploy with a nicer name`);
+  } else {
+    let prev = null;
+    stages.forEach((s, i) => {
+      const at = `${label}: stages[${i}]`;
+      if (!(typeof s?.name === 'string' && s.name.trim())) findings.push(`${at} has no name`);
+      const pct = s?.traffic_pct;
+      if (!(Number.isFinite(pct) && pct > 0 && pct <= 100)) findings.push(`${at} traffic_pct must be a number in (0, 100] (got ${JSON.stringify(pct)})`);
+      else {
+        if (prev !== null && pct <= prev) findings.push(`${at} traffic_pct ${pct} does not increase on the previous stage's ${prev} — a ramp that flattens or reverses is not progressive`);
+        prev = pct;
+      }
+      if (!(Number.isFinite(s?.bake_minutes) && s.bake_minutes >= 0)) findings.push(`${at} bake_minutes must be a number — a stage with no bake is a stage nobody watched`);
+      if (!(Array.isArray(s?.slo_refs) && s.slo_refs.length && s.slo_refs.every((r) => typeof r === 'string' && r.trim()))) {
+        findings.push(`${at} slo_refs must name at least one SLO — baking without watching anything is waiting`);
+      } else for (const r of s.slo_refs) declaredSlos.add(r);
+    });
+    const last = stages[stages.length - 1]?.traffic_pct;
+    if (Number.isFinite(last) && last !== 100) {
+      findings.push(`${label}: the final stage reaches ${last}% — a rollout that never reaches 100% is a permanent partial exposure nobody decided to keep. State the last stage, or say the ramp ends here by declaring it 100`);
+    }
+  }
+
+  const ar = pd.automated_rollback;
+  if (!ar || typeof ar !== 'object') {
+    findings.push(`${label}: no automated_rollback — a ramp whose only rollback is a human noticing is a ramp that rolls back at human speed`);
+  } else {
+    if (!(typeof ar.trigger_slo === 'string' && ar.trigger_slo.trim())) findings.push(`${label}: automated_rollback.trigger_slo is missing — name the signal that fires it`);
+    else if (declaredSlos.size && !declaredSlos.has(ar.trigger_slo)) {
+      findings.push(`${label}: automated_rollback.trigger_slo ${JSON.stringify(ar.trigger_slo)} is not among the SLOs the stages watch (${[...declaredSlos].join(', ')}) — a trigger on a signal the rollout does not observe never fires`);
+    }
+    // last_tested is a SIGNED OBSERVATION (rc.36's shape), not a date: an automated rollback
+    // nobody has fired is a configuration, not a control, and a date is what a configuration
+    // claims about itself. Absent → the observation verifier says so, item by item.
+    findings.push(...verifyDrillObservation(ar.last_tested && typeof ar.last_tested === 'object' ? ar.last_tested : {}, {
+      label: `${label}: automated-rollback trigger test`, windowDays: WINDOWS.progressive_rollback, now, registry, issuers, notices,
+    }));
+  }
+
+  if (!(typeof pd.feature_flag_ref === 'string' && pd.feature_flag_ref.trim())) {
+    findings.push(`${label}: no feature_flag_ref — the ramp and the exposure register must name the same switch, or "we can turn it off" is two claims about two different things`);
+  }
+  return findings;
+}
+
+/**
  * Findings for one service-readiness artifact. Empty ⇒ the service is production-ready on paper
  * AND exercised. `ctx` supplies { registry, issuers, notices } for observation-shaped drills and
  * the bare-date deprecation notice; omitted, bare dates behave exactly as before (plus the notice
@@ -145,6 +231,15 @@ export function evaluate(r, now = Date.now(), ctx = {}) {
   drill(findings, `${id}: rollback drill`, r?.rollback?.last_drilled, WINDOWS.rollback, now, ctx);
   if (!(typeof r?.kill_switch?.owner === 'string' && r.kill_switch.owner.trim())) findings.push(`${id}: kill-switch has no owner`);
   drill(findings, `${id}: kill-switch test`, r?.kill_switch?.last_tested, WINDOWS.kill_switch, now, ctx);
+
+  // R3b — progressive delivery (rc.39). Optional unless a compiled plan requires exposure_control:
+  // a service nobody is ramping is not failing, and a change routed for staged exposure against a
+  // service with no declared ramp is exposing everybody at once while claiming otherwise.
+  if (r?.progressive_delivery !== undefined || ctx.exposureRequired) {
+    findings.push(...verifyProgressiveDelivery(r?.progressive_delivery, {
+      label: `${id}: progressive delivery`, now, registry: ctx.registry, issuers: ctx.issuers, notices: ctx.notices,
+    }));
+  }
 
   // R4 — capacity.
   if (!r?.capacity?.stress_test_ref) findings.push(`${id}: no capacity/stress test reference`);
@@ -178,6 +273,9 @@ export function run(cwd = process.cwd()) {
     registry: registryPath ? readJson(registryPath) : null,
     issuers: loadIssuers(cwd) || loadIssuers(`${cwd}/..`),
     notices: [],
+    // rc.39 — mandatory-when-compiled for R3b. The requirement comes from the PROFILE (via every
+    // governed change's compiled plan), never from a flag on this gate.
+    exposureRequired: capabilityRequired(aggregateRequirements(cwd), 'exposure_control'),
   };
   const findings = [];
   let count = 0;

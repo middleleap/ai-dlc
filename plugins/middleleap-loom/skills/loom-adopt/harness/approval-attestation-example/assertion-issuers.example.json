@@ -8,7 +8,7 @@
       "demo": true,
       "description": "DEMO reference issuer standing in for an institution identity provider, so the D2.4 contract is exercised with real ed25519 material. The private key was generated to sign the example and discarded.",
       "verify": {
-        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAaWOrYmZAHu7mbYh1k5bl7/eca9oXvUThK7TJNX/WZlo=\n-----END PUBLIC KEY-----\n",
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAVk/La1r6OVWimwXaBkyVT+YHLojSWahPVHIjowZsHbU=\n-----END PUBLIC KEY-----\n",
         "audience": "loom-approval-surface",
         "required_acr": "urn:mace:incommon:iap:silver"
       }

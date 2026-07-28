@@ -73,17 +73,40 @@ from the repository, which is the question every incident starts with.
 
 ## 2. Promote to pre-production, and smoke
 
-Follow the project's promotion path — dev → staging → prod. **This skill goes as far as
-staging.** The production hop is step 8, and it happens only after a human returns the
-authorization, because the second-line hold exists to stop exactly that hop.
-<!-- ADOPT: name your pre-production promotion command and environment -->
+**Read the ladder; do not invent it.** The promotion path is declared in
+`docs/governance/environments.json` and validated by `scripts/environments-check.mjs` — one entry
+per environment with its purpose, its data classification, the identity entitled to promote into
+it, what it promotes *from*, and its URL. Until rc.39 those three facts lived in `ADOPT` comments
+here, which meant nothing could check them and no deployment record could cite them.
 
-1. Deploy the released commit to the **pre-production** target.
-2. Run the smoke suite **against that live URL**, not against a local build.
-   <!-- ADOPT: name your smoke command and the pre-production URL -->
+```bash
+node -e '
+  const e = require("./docs/governance/environments.json").environments;
+  const sources = new Set(e.map((x) => x.promotion_source).filter(Boolean));
+  const prod = e.find((x) => !sources.has(x.id));               // nothing promotes out of it
+  const pre  = e.find((x) => x.id === prod.promotion_source);   // …and what feeds it
+  console.log(JSON.stringify({ pre, prod }, null, 2));
+'
+```
+
+**This skill goes as far as the pre-production rung** — the one whose `promotion_source` chain
+ends at the terminal environment. The production hop is step 8, and it happens only after a human
+returns the authorization, because the second-line hold exists to stop exactly that hop.
+
+1. Deploy the released commit to that pre-production environment, using **its declared
+   `identity`** — not yours, and not the build agent's.
+2. Run the smoke suite **against that environment's declared `url`**, not against a local build.
+   The URL is read from the ladder for the same reason the commit is fixed in step 1: a smoke
+   suite pointed somewhere by hand is a smoke suite that can be pointed at something green.
 3. A failing smoke suite **fails the deploy**. Execute the rehearsed rollback (R3), record it in
    the build log, and end the release. Do not seal a bundle for a deployment that did not stand
    up.
+
+**Deploy is not exposure.** If the service declares a `progressive_delivery` block (R3b) and the
+change's plan requires the `exposure_control` capability, the artifact ships *dark*: the flag
+named in `docs/governance/feature-flags.json` defaults off, and turning it on for a cohort is a
+separate, later act governed by the same compound authorization. Shipping and exposing on the same
+event is what forces a quarter of work to queue behind one signature.
 
 ## 3. Re-run every gate at the released commit
 
@@ -178,7 +201,10 @@ each, verify each, and present them together:
 1. **PA2** approved, with every section the product profile compiles as required, each approval
    resolving to a human registry identity holding that role.
 2. **R1–R6 readiness green** for every declared service — BCP/DR, rollback, kill switch,
-   capacity, third-party continuity, reconciliation — each inside its freshness window.
+   capacity, third-party continuity, reconciliation — each inside its freshness window. Where the
+   change compiles `exposure_control`, that includes **R3b**: a declared ramp, and an automated
+   rollback trigger fired inside its own 90-day window. What you are authorizing at that point is
+   **exposure**, not the deploy — the artifact may already be running, dark.
 3. **The second-line release hold, RELEASED by a second-line human.** Missing hold = HELD. Fail
    closed.
 4. **Anchored, issuer-verified evidence** at high and critical tiers. Where a platform mechanism
@@ -196,7 +222,10 @@ The loop assembles the case. It does not:
 - release the second-line hold, or sign as a second-line identity;
 - issue, alter or re-date any approval, attestation or readiness record;
 - sign or confirm an assurance-cycle record — that signature is a second-line human's;
-- author an eval result, a drill outcome, or a risk classification.
+- author an eval result, a drill outcome, or a risk classification;
+- **turn a feature flag on, advance a cohort stage, or extend a flag's expiry.** Exposure is the
+  act the authorization authorizes; a loop that could grant itself exposure has made the whole
+  separation decorative. Shipping dark is the loop's job. Turning the light on is not.
 
 Every one of those is a human act performed by a named identity the agent is not. The gates
 already refuse each of them; this skill refuses them one step earlier, so the refusal is a rule
@@ -206,22 +235,46 @@ rather than a rejection.
 
 When, and only when, a human returns all four conditions met:
 
-1. The **human** performs or triggers the production promotion. If your platform requires an
-   agent-run command, it runs under the promotion identity, not the build agent's, and against a
-   ticket that references the authorization.
-   <!-- ADOPT: name your production promotion path and who is entitled to run it -->
-2. Re-run the smoke suite against production.
+1. The **human** performs or triggers the production promotion into the terminal environment
+   declared in `docs/governance/environments.json` — the one nothing promotes out of, which the
+   gate requires to carry `approval_required: true`. It runs under **that environment's declared
+   `identity`**, which `environments-check` has already proven is a human outside the builders
+   group, and against a ticket that references the authorization. The build agent's identity is
+   never the promotion identity.
+2. Re-run the smoke suite against that environment's declared `url`.
 3. A failure here executes the rehearsed rollback (R3) and reopens the release.
+4. **Write the deployment record** — `docs/governance/deployments/<deployment-id>.json`, emitted
+   by the deploy job from what it *observed*, never typed from what was intended:
+
+   ```json
+   {
+     "deployment_id": "DEP-…", "service_id": "…", "environment": "<terminal environment id>",
+     "release_commit": "<the commit fixed in step 1>",
+     "deployed_digest": "<the digest from docs/governance/release-subject.json>",
+     "strategy": "<the service's declared progressive_delivery.strategy>",
+     "feature_flag_ref": "<the service's declared exposure switch>",
+     "stages_completed": [{ "name": "…", "traffic_pct": 1, "started_at": "…", "completed_at": "…" }],
+     "deployed_by": "…", "authorized_by": "<the second-line human who returned the authorization>",
+     "deployed_at": "…"
+   }
+   ```
+
+   `scripts/deployed-digest-check.mjs` (the **deploy** lane) then verifies the two things nothing
+   else in the harness ever checked: that the deployed digest is the *authorized* digest — same
+   artifact, not merely the same source — and that every declared ramp stage actually ran, in
+   order, at its declared traffic, having baked for at least its declared time.
 
 If any of the four is outstanding, this step does not begin. There is no partial promotion, and
 "we will get the hold signed after" is the failure mode the hold was built for.
 
 ## 9. Record
 
-Append to `docs/build-log.md`: the released commit, the deploy target, the smoke result, the
-gate-run summary including every recorded skip and its reason, the nine artifact types with
-their hashes, and the authorization state — which of the four conditions are met, which are
-outstanding, and who holds each outstanding one.
+Append to `docs/build-log.md`: the released commit, the deploy target **as its declared
+environment id**, the smoke result, the gate-run summary including every recorded skip and its
+reason, the nine artifact types with their hashes, the deployment record id written in step 8, the
+exposure state of every flag the change owns (still off, or turned on for which cohort stage), and
+the authorization state — which of the four conditions are met, which are outstanding, and who
+holds each outstanding one.
 
 ## Red flags — stop and re-read this skill
 
@@ -232,3 +285,8 @@ outstanding, and who holds each outstanding one.
 - Setting a production state, releasing the hold, or signing anything
 - Sealing a bundle for a deployment whose smoke suite failed
 - Proceeding on a decision-log chain with gaps in it
+- Naming a promotion target that is not an id in `docs/governance/environments.json`
+- Recording a deployment whose digest is "the build from that commit" rather than the digest in
+  `release-subject.json` — a rebuild is a different artifact and it was not the one evaluated
+- Skipping a declared ramp stage, or cutting its bake short, because the change "looks fine"
+- Turning a flag on as part of assembling the case
