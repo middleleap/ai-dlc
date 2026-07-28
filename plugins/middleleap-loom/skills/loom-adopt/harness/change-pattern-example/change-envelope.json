@@ -1,0 +1,35 @@
+{
+  "_comment": "ADOPTER EXAMPLE (rc.38 · flow-plan Phase 4.3) — a STANDARD change riding a pre-approved pattern, mounted as docs/governance/changes/CHG-2026-0055/. Everything about the route is identical to a normal change: the same profiles, the same compiler, the same plan. What differs is WHEN the approval was given. A second-line human approved the `dependency-patch` pattern in profiles/regulated-bank.json — its matcher, its size ceiling, and the EXACT plan hash a change matching it compiles to — so this change's PA1/PA2 receipts were given once, on the pattern, and this change is enrolled in the pattern's post-hoc sample instead of collecting eight signatures again. Break any one of the pattern's conditions (expire it, widen the diff, touch a path outside the matcher, compile a different plan) and the pre-approval stops applying and this change takes the FULL route. Nothing here is a waiver.",
+  "change_id": "CHG-2026-0055",
+  "product_id": "PRD-017",
+  "change_type": "software-change",
+  "risk_tier": "medium",
+  "change_class": "standard",
+  "pattern_claim": {
+    "pattern_id": "dependency-patch",
+    "changed_paths": ["package-lock.json", "services/credit-origination/package-lock.json"],
+    "diff_lines": 34,
+    "sampling": {
+      "enrolled": true,
+      "rate": 0.1,
+      "selected": false,
+      "_comment": "Enrolment is recorded ON THE CHANGE so the sampled population can be reconstructed from the tree. When `selected` is true this block must also carry reviewed_by (a second-line human) and reviewed_at, or the gate fails: a sample nobody reviews is a sample nobody took."
+    }
+  },
+  "required_profiles": ["regulated-bank"],
+  "flags": { "model_involved": true, "personal_data": true, "islamic": false, "third_party": true },
+  "classification": {
+    "classified_by": "po-fatima",
+    "classified_at": "2026-07-24",
+    "rationale": "Patch-level dependency bump inside the credit-origination service. No contract, schema or control-plane surface moves; the change qualifies for the dependency-patch pattern."
+  },
+  "current_state": "in-delivery",
+  "state_history": [
+    { "state": "classified", "at": "2026-07-24T08:10:00Z", "by": "po-fatima" },
+    { "state": "permission-to-develop", "at": "2026-07-24T08:12:00Z", "by": "risk-lena" },
+    { "state": "in-delivery", "at": "2026-07-24T09:00:00Z", "by": "eng-omar" }
+  ],
+  "control_plan": "control-plan.json",
+  "evidence_bundle": "docs/governance/evidence/",
+  "exemptions": []
+}

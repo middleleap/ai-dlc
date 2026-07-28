@@ -5,6 +5,8 @@
   "requirements": {
     "medium": {
       "approver_roles": ["conduct-risk", "credit-risk"],
+      "_pa1_comment": "rc.38 (flow-plan Phase 4.6) — a retail credit product's conduct objection belongs at permission-to-develop, beside the target-market analysis it reads, not at permission-to-launch beside the disclosures it would then send back.",
+      "pa1_approver_roles": ["conduct-risk", "credit-risk", "data-protection"],
       "pa1_sections": ["target-market-consumer-duty"],
       "pa2_sections": ["affordability-assessment", "responsible-lending-disclosures", "vulnerable-customer-treatment"],
       "capabilities": {

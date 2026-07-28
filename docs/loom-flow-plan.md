@@ -404,6 +404,21 @@ pattern to auto-merge with sampling enrolled; an emergency change reaches
 production with a ticking retrospective gate; a profile comment edit leaves
 existing approvals valid; the flow report shows the difference.
 
+**Status:** items 1–7 landed at rc.38 — the per-role `binding_hash` (bound
+alongside `plan_hash`, not instead of it, so nothing that was in the
+approver's own scope stops invalidating), `change_class` with the
+`emergency-authorized` state and its retrospective deadline, pre-approved
+patterns (`core/change-patterns.mjs` + `change-pattern-example/`), release
+trains (`core/release-trains.mjs` + `release-train-example/`), delegation
+with expiry and role quorum, `pa1_approver_roles` populated for lending and
+consumer-lending (the worked example's plan and passport recompiled to
+match), and flag corroboration against the data lifecycle, model manifest
+and passport. Deferred: the `spec-additive` routine class and the
+discovery-lite tier — both reach outside this phase's surface (the
+spec-change skill and `discovery/gates/validate.mjs`, the latter also
+requiring a booked `discovery-sync --record` divergence), so they are
+carried as their own change rather than smuggled in here.
+
 ### Phase 5 — Decouple exposure from deploy (the biggest structural drag)
 
 1. **Environments as a seam.** `governance/environments.template.json`

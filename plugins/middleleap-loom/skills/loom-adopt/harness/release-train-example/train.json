@@ -1,0 +1,9 @@
+{
+  "_comment": "ADOPTER EXAMPLE (rc.38 · flow-plan Phase 4.4) — a release train, mounted as docs/governance/release-trains/TRAIN-2026-W31.json. It answers ONE question, in writing: what is in this release? Per-change PA2 is untouched — each change here still carries its own permission to launch. What is taken ONCE is the release-level work: this enumeration, one sealed bundle, one anchor, one second-line release decision. Without it an adopter pays those per story, which is what turns a regulated pipeline into per-story releases and then into no releases at all. release_commit is stamped by the release job at the commit actually being released (the bundle's CI dry-run stamps it to HEAD, exactly as a real release job would); a committed placeholder would be evidence bound to a commit nobody ran.",
+  "train_id": "TRAIN-2026-W31",
+  "release_commit": "0000000000000000000000000000000000000000",
+  "changes": ["CHG-2026-0042", "CHG-2026-0055"],
+  "bundle": "docs/governance/evidence/manifest.json",
+  "sealed_at": "2026-07-27T18:00:00Z",
+  "released_by": "risk-lena"
+}

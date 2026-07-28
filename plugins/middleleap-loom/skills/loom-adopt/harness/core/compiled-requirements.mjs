@@ -45,7 +45,7 @@ const touches = (changedPaths, prefix) =>
  * change counts — the fail-open direction. This is what keeps the gate runner's opening promise
  * true: a README-only PR no longer carries an unrelated critical change's full gate set.
  */
-export function aggregateRequirements(cwd = process.cwd(), { changedPaths = null } = {}) {
+export function aggregateRequirements(cwd = process.cwd(), { changedPaths = null, changeIds = null } = {}) {
   const families = new Set();
   const evidence = new Set();
   const capabilities = {}; // rc.13 WS3 — merged required-capability map (name → {required, minimum_version, …})
@@ -61,6 +61,11 @@ export function aggregateRequirements(cwd = process.cwd(), { changedPaths = null
     if (!envelope) continue;
     if (TERMINAL_STATES.has(envelope.current_state)) continue; // closed/superseded: contributes nothing
     if (PRODUCTION_STATES.has(envelope.current_state)) anyInProduction = true;
+    // rc.38 (flow-plan Phase 4.4): a RELEASE TRAIN narrows the aggregate to the changes actually
+    // shipping. This is the release-lane analogue of rc.34's diff scoping and it is the same
+    // fail-open rule: `changeIds === null` counts every non-terminal change, and a train may only
+    // be honoured by a gate that has verified the train itself.
+    if (changeIds instanceof Set && !changeIds.has(envelope.change_id || name)) continue;
     if (scoped) {
       const own = `${CHANGES_DIR}/${name}/`;
       const declared = Array.isArray(envelope.scope_paths) ? envelope.scope_paths : [];

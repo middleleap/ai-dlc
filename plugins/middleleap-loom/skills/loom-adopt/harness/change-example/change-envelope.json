@@ -9,7 +9,7 @@
   "service_ids": ["credit-origination"],
   "model_roles": ["affordability-assessment"],
   "required_profiles": ["regulated-bank", "uae-bank", "lending"],
-  "flags": { "model_involved": true, "personal_data": true, "islamic": false, "third_party": false },
+  "flags": { "model_involved": true, "personal_data": true, "islamic": false, "third_party": true },
   "classification": {
     "classified_by": "po-fatima",
     "classified_at": "2026-07-18",

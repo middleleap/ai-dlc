@@ -4,7 +4,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, run, pa1Roles } from './product-approval-check.mjs';
+import { generateKeyPairSync, sign as edSign } from 'node:crypto';
+import { checkApprovals, evaluate, run, pa1Roles } from './product-approval-check.mjs';
+import { canonicalDecisionPayload, roleBindingHash, sha256 } from '../core/approval-attestations.mjs';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, cpSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -155,10 +157,36 @@ test('run() wires the whole path end to end in a real repo layout', (t) => {
     writeFileSync(join(base, 'control-plan.json'), JSON.stringify(plan));
     writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: 'CHG-2026-0042', control_plan: 'control-plan.json' }));
     cpSync(srcs.passport, join(base, 'product-passport.json'));
-    cpSync(srcs.approval, join(base, 'approvals/pa1-risk-second-line.json'));
     cpSync(srcs.identities, join(gov, 'identities.json'));
     cpSync(srcs.attIssuers, join(gov, 'attestation-issuers.json'));
     cpSync(srcs.asrIssuers, join(gov, 'assertion-issuers.json'));
+    // rc.38 (flow-plan Phase 4.1): this fixture's plan is MUTATED above (approval_attestation is
+    // switched on), and required_capabilities is inside the per-role binding — correctly, because a
+    // capability set is part of the route the approver was shown. So the shipped record's
+    // binding_hash does not describe THIS plan and must be re-derived, which means re-signing.
+    // The issuer ids and their `"demo": true` markings are kept: the point of the assertion below
+    // is that a demo anchor is refused even when the cryptography is perfect, so only the KEY is
+    // fresh, and only its public half is ever written.
+    {
+      const rec = JSON.parse(readFileSync(srcs.approval, 'utf8'));
+      rec.bound_to.binding_hash = roleBindingHash(plan, rec.role, rec.bound_to);
+      const payload = canonicalDecisionPayload(rec);
+      rec.subject.assertion.nonce = sha256(payload);
+      const keys = [['assertion-issuers.json', rec.subject.assertion.issuer], ['attestation-issuers.json', rec.transcription.attestation.issuer]];
+      const signed = keys.map(([file, id]) => {
+        const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+        const p = join(gov, file);
+        const reg = JSON.parse(readFileSync(p, 'utf8'));
+        const entry = (reg.issuers || []).find((e) => e.id === id);
+        entry.verify = { ...entry.verify, public_key: publicKey.export({ type: 'spki', format: 'pem' }).toString() };
+        assert.equal(entry.demo, true, `${id} must stay marked demo — the refusal is what this test asserts`);
+        writeFileSync(p, JSON.stringify(reg, null, 2));
+        return edSign(null, Buffer.from(payload, 'utf8'), privateKey).toString('base64');
+      });
+      rec.subject.assertion.signature = signed[0];
+      rec.transcription.attestation.signature = signed[1];
+      writeFileSync(join(base, 'approvals/pa1-risk-second-line.json'), JSON.stringify(rec, null, 2));
+    }
 
     const { findings, count } = run(dir);
     assert.equal(count, 1);
@@ -263,5 +291,62 @@ test('an islamic change binds the Shariah roles at PA1, not only at PA2', () => 
   for (const r of ['shariah-committee', 'shariah-board', 'shariah-compliance']) {
     assert.ok(pa1Roles(plan).includes(r), `${r} must bind at PA1`);
   }
+});
+
+// --- role quorum and delegation, through the approval path (rc.38 · flow-plan Phase 4.5) ------
+
+const QREG = {
+  groups: { builders: '', 'second-line': '' },
+  identities: [
+    { id: 'risk-a', kind: 'human', roles: ['risk-second-line'], groups: ['second-line'] },
+    { id: 'risk-b', kind: 'human', roles: ['risk-second-line'], groups: ['second-line'] },
+    { id: 'eng-1', kind: 'human', roles: ['engineering'], groups: ['builders'] },
+    { id: 'dep-1', kind: 'human', roles: [], groups: [] },
+  ],
+  quorum: { 'risk-second-line': 2 },
+};
+
+test('a quorum role needs K DISTINCT holders — one name twice is one approval', () => {
+  const one = checkApprovals([{ role: 'risk-second-line', by: 'risk-a' }], ['risk-second-line'], QREG, 'q', 'PA1', {});
+  assert.ok(one.findings.some((f) => /needs a quorum of 2 distinct holders — 1 recorded/.test(f)));
+  assert.deepEqual(one.missing, ['risk-second-line']);
+
+  const twice = checkApprovals(
+    [{ role: 'risk-second-line', by: 'risk-a' }, { role: 'risk-second-line', by: 'risk-a' }],
+    ['risk-second-line'], QREG, 'q', 'PA1', {});
+  assert.ok(twice.findings.some((f) => /1 recorded \(risk-a\)/.test(f)));
+
+  const two = checkApprovals(
+    [{ role: 'risk-second-line', by: 'risk-a' }, { role: 'risk-second-line', by: 'risk-b' }],
+    ['risk-second-line'], QREG, 'q', 'PA1', {});
+  assert.deepEqual(two.findings, []);
+  assert.deepEqual(two.missing, []);
+});
+
+test('EVERY approval in a quorum is resolved, not just the first', () => {
+  const f = checkApprovals(
+    [{ role: 'risk-second-line', by: 'risk-a' }, { role: 'risk-second-line', by: 'eng-1' }],
+    ['risk-second-line'], QREG, 'q', 'PA1', {}).findings;
+  assert.ok(f.some((x) => /eng-1 does not hold the required role/.test(x)));
+  assert.ok(f.some((x) => /eng-1 is in the builders group/.test(x)));
+});
+
+test('a deputy satisfies a required role, and the deputy approval is announced', () => {
+  const reg = structuredClone(QREG);
+  delete reg.quorum;
+  reg.identities.find((i) => i.id === 'risk-a').delegates = [
+    { to: 'dep-1', from: '2026-07-01', until: '2026-12-31', granted_by: 'risk-b' },
+  ];
+  const notices = [];
+  const res = checkApprovals([{ role: 'risk-second-line', by: 'dep-1' }], ['risk-second-line'], reg, 'q', 'PA1',
+    { notices, now: Date.parse('2026-07-28T00:00:00Z') });
+  assert.deepEqual(res.findings, []);
+  assert.ok(notices.some((n) => /BY DELEGATION from risk-a/.test(n)));
+});
+
+test('with no quorum declared the default is 1 — every existing passport is unaffected', () => {
+  const reg = structuredClone(QREG);
+  delete reg.quorum;
+  assert.deepEqual(checkApprovals([{ role: 'risk-second-line', by: 'risk-a' }], ['risk-second-line'], reg, 'q', 'PA1', {}).findings, []);
 });
 }

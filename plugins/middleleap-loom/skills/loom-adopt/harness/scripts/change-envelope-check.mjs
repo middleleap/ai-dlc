@@ -28,11 +28,31 @@
 // Demanding it retroactively would turn every existing tree red for a record nobody can go back
 // and write. A grandfathered high-tier change is NOTICED on every run — never silently excused.
 //
-// Run from the repo root: `node scripts/change-envelope-check.mjs`.
+// CHANGE CLASSES (rc.38 · flow-plan Phase 4.2). `change_class` is standard | normal | emergency,
+// defaulting to normal. It compiles the SAME requirement set in every class — the compiler never
+// reads it — and changes only the SEQUENCING:
+//
+//   normal     the route as it has always been.
+//   standard   rides a second-line-approved PRE-APPROVED PATTERN (core/change-patterns.mjs): the
+//              approval was given once, on the pattern, and this change's PA receipts are
+//              satisfied by it while every one of the pattern's conditions holds.
+//   emergency  may enter `emergency-authorized` — production with receipts still owed — and must
+//              then carry a `retrospective_deadline`. Every deferred receipt is listed on every
+//              run, and the MOMENT the deadline passes with any of them still outstanding, all of
+//              them fire as findings. Nothing is dropped; it is reordered with a hard expiry.
+//
+// FLAG CORROBORATION (rc.38 · flow-plan Phase 4.7). `flags` drive the conditional profile rules,
+// so a flag left false is a tier reduction nobody has to argue for. Each one is now cross-checked
+// against the repository's OWN governance data — the data-lifecycle register, the model manifest,
+// the passport's third-parties section — and a CONTRADICTED flag is a finding.
+//
+// Run from the repo root: `node scripts/change-envelope-check.mjs [--base <ref>]`.
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { compile, loadProfiles, resolveBindings, planHash } from '../core/policy-compiler.mjs';
 import { TERMINAL_STATES } from '../core/compiled-requirements.mjs';
+import { collectPatterns, evaluateClaim } from '../core/change-patterns.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { evaluate as evaluateReadiness, SERVICES_DIR } from './operational-readiness-check.mjs';
 import { loadIssuers, verifyAnchorAttestation } from '../core/attestations.mjs';
@@ -55,9 +75,24 @@ export const ANCHOR_REQUIRED_TIERS = new Set(['high', 'critical']);
 // missing classified_at counts as ON OR AFTER — an unknown input fails toward more control.
 export const STATE_HISTORY_REQUIRED_TIERS = new Set(['high', 'critical']);
 export const STATE_HISTORY_REQUIRED_FROM = '2026-07-28';
+// rc.38 (flow-plan Phase 4.2) — the ITIL change classes. `normal` is the default and the shape of
+// every change that existed before this field; naming a class never compiles a different plan.
+export const CHANGE_CLASSES = ['standard', 'normal', 'emergency'];
+export const DEFAULT_CHANGE_CLASS = 'normal';
+// The emergency state sits at the SAME rank as production-authorized — it IS production
+// authorization, taken with receipts owed rather than receipts held. It is not a ninth step, and
+// it is reachable only by a change that declared change_class "emergency" before it was needed.
+export const EMERGENCY_STATE = 'emergency-authorized';
+// The ceiling on how far out a retrospective may be pushed. Without it, "emergency" plus a
+// deadline in 2099 is a permanent waiver spelled as a deadline.
+export const EMERGENCY_RETROSPECTIVE_MAX_DAYS = 10;
+// The classifications in docs/governance/data-lifecycle.json that contradict personal_data: false.
+export const PERSONAL_CLASSIFICATIONS = new Set(['personal', 'sensitive', 'sensitive-personal', 'special-category']);
 
-const at = (state) => STATES.indexOf(state);
-const known = (state) => STATES.includes(state) || TERMINAL_STATES.has(state);
+const at = (state) => STATES.indexOf(state === EMERGENCY_STATE ? 'production-authorized' : state);
+const known = (state) => STATES.includes(state) || TERMINAL_STATES.has(state) || state === EMERGENCY_STATE;
+const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
+const DAY = 86_400_000;
 
 /** True when this envelope must carry state_history (tier + classified on/after the cutover). */
 export function stateHistoryRequired(envelope, from = STATE_HISTORY_REQUIRED_FROM) {
@@ -98,7 +133,7 @@ export function checkStateHistory(envelope, { registry = null, notices = null } 
     const label = `${id}: state_history[${i}]`;
     if (!e || typeof e !== 'object' || Array.isArray(e)) { findings.push(`${label} must be an object {state, at, by}`); return; }
     if (!known(e.state)) {
-      findings.push(`${label}: state ${JSON.stringify(e.state)} is not one of ${STATES.join('|')}|${[...TERMINAL_STATES].join('|')}`);
+      findings.push(`${label}: state ${JSON.stringify(e.state)} is not one of ${STATES.join('|')}|${EMERGENCY_STATE}|${[...TERMINAL_STATES].join('|')}`);
     }
     const t = Date.parse(e.at);
     if (!(typeof e.at === 'string') || Number.isNaN(t)) {
@@ -137,17 +172,133 @@ export function checkStateHistory(envelope, { registry = null, notices = null } 
 }
 
 /**
+ * rc.38 (flow-plan Phase 4.2) — the emergency route.
+ *
+ * An emergency change reaches production with receipts still owed. That is the ONLY thing this
+ * class buys, and it is bought against a clock: an `emergency` block naming who authorised it,
+ * why, and by when the record will be complete. Every outstanding receipt is listed on every run
+ * as a NOTICE, so the debt is visible while it is being carried — and the instant the deadline
+ * passes with any receipt still owed, EVERY one of them fires as a finding and the build is red.
+ *
+ * Two ceilings keep this from becoming a waiver with a date on it: the authoriser must be a
+ * second-line human (the same rule as the release hold it is standing in for), and the deadline
+ * may not be more than EMERGENCY_RETROSPECTIVE_MAX_DAYS after the authorization.
+ */
+export function checkEmergency(envelope, { registry = null, receipts = [], notices = null, now = Date.now() } = {}) {
+  const findings = [];
+  const id = envelope?.change_id || '(no id)';
+  const em = envelope?.emergency;
+  const label = `${id}: emergency authorization`;
+  if (!em || typeof em !== 'object' || Array.isArray(em)) {
+    // No block at all ⇒ nothing is deferred. The receipts stand exactly as they would have.
+    return [`${label} — state ${EMERGENCY_STATE} requires an \`emergency\` block { authorized_by, authorized_at, rationale, retrospective_deadline }; without one there is no clock, and an emergency with no clock is a waiver`, ...receipts];
+  }
+  for (const f of ['authorized_by', 'authorized_at', 'rationale', 'retrospective_deadline']) {
+    if (!isStr(em[f])) findings.push(`${label} — missing ${f}`);
+  }
+  if (isStr(em.authorized_by) && registry) {
+    const who = identityOf(registry, em.authorized_by);
+    if (!who || who.kind !== 'human' || !(who.groups || []).includes('second-line')) {
+      findings.push(`${label} — authorized_by ${JSON.stringify(em.authorized_by)} is not a second-line HUMAN identity; the emergency authorization stands in for the release hold and is held to the same rule`);
+    }
+  }
+  const authorizedAt = Date.parse(em.authorized_at);
+  const deadline = Date.parse(em.retrospective_deadline);
+  if (isStr(em.authorized_at) && Number.isNaN(authorizedAt)) findings.push(`${label} — authorized_at ${JSON.stringify(em.authorized_at)} is not a parseable ISO-8601 timestamp`);
+  if (isStr(em.retrospective_deadline) && Number.isNaN(deadline)) findings.push(`${label} — retrospective_deadline ${JSON.stringify(em.retrospective_deadline)} is not a parseable ISO-8601 timestamp`);
+  if (Number.isNaN(deadline)) return [...findings, ...receipts]; // no readable clock ⇒ nothing deferred
+  if (!Number.isNaN(authorizedAt)) {
+    if (deadline <= authorizedAt) findings.push(`${label} — retrospective_deadline ${em.retrospective_deadline} does not follow authorized_at ${em.authorized_at}`);
+    else if (deadline - authorizedAt > EMERGENCY_RETROSPECTIVE_MAX_DAYS * DAY) {
+      findings.push(`${label} — retrospective_deadline ${em.retrospective_deadline} is ${Math.round((deadline - authorizedAt) / DAY)} days after the authorization; the ceiling is ${EMERGENCY_RETROSPECTIVE_MAX_DAYS}. A long enough deadline is a waiver spelled as a deadline`);
+    }
+  }
+  if (now > deadline) {
+    if (receipts.length) {
+      findings.push(`${label} — the retrospective deadline ${em.retrospective_deadline} has PASSED with ${receipts.length} receipt(s) still outstanding; the emergency class resequences approvals, it never drops them, and the deferral is now over`);
+      findings.push(...receipts);
+    } else {
+      notices?.push(`${id}: the emergency retrospective is complete and its deadline has passed — move the change to ${'production-authorized'} (or ${[...TERMINAL_STATES][0]}) so it stops being reported as an open emergency`);
+    }
+  } else if (receipts.length) {
+    notices?.push(`${id}: EMERGENCY — ${receipts.length} receipt(s) outstanding, due by ${em.retrospective_deadline} (authorised by ${em.authorized_by}): ${receipts.join(' | ')}`);
+  }
+  return findings;
+}
+
+/**
+ * rc.38 (flow-plan Phase 4.7) — FLAG CORROBORATION.
+ *
+ * The envelope's `flags` decide which conditional profile rules fire, and every one of them only
+ * ever ADDS: `model_involved` pulls in the decision log and model validation, `personal_data`
+ * pulls in data protection, `third_party` pulls in continuity. So a flag left false is a silent
+ * tier reduction, self-declared, requiring no argument and leaving no trace — the one place in
+ * the compiler where a builder's own word narrows the route.
+ *
+ * It cannot be verified in general. It CAN be contradicted, from data the repository already
+ * keeps for other reasons: the data-lifecycle register, the model manifest, and the passport's
+ * own third-parties analysis. A contradiction is a finding. The absence of one is NOT a pass, and
+ * where the corroborating record is missing this says so instead of going quiet.
+ */
+export function corroborateFlags(envelope, { dataLifecycle = null, modelManifest = null, passport = null, notices = null } = {}) {
+  const findings = [];
+  const id = envelope?.change_id || '(no id)';
+  const flags = envelope?.flags || {};
+
+  const personal = (dataLifecycle?.categories || []).filter((c) => PERSONAL_CLASSIFICATIONS.has(c?.classification));
+  if (!flags.personal_data) {
+    if (personal.length) {
+      findings.push(`${id}: flags.personal_data is ${JSON.stringify(flags.personal_data ?? null)} but docs/governance/data-lifecycle.json classifies ${personal.length} categor${personal.length === 1 ? 'y' : 'ies'} as personal (${personal.slice(0, 3).map((c) => c.category).join(', ')}${personal.length > 3 ? ', …' : ''}) — a flag contradicted by the repository's own register is a finding, not a tier reduction`);
+    } else if (!dataLifecycle) {
+      notices?.push(`${id}: flags.personal_data is not set and there is no docs/governance/data-lifecycle.json to corroborate it against — NOT VERIFIED`);
+    }
+  }
+
+  const models = Array.isArray(modelManifest?.models) ? modelManifest.models : [];
+  if (!flags.model_involved) {
+    if (models.length) {
+      findings.push(`${id}: flags.model_involved is ${JSON.stringify(flags.model_involved ?? null)} but docs/governance/model-manifest.json declares ${models.length} model${models.length === 1 ? '' : 's'} (${models.slice(0, 3).map((m) => m.role || m.model_id).join(', ')}) — clear the flag or say which of these the change does not touch`);
+    } else if (!modelManifest) {
+      notices?.push(`${id}: flags.model_involved is not set and there is no docs/governance/model-manifest.json to corroborate it against — NOT VERIFIED`);
+    }
+  }
+
+  const tp = passport?.sections?.['third-parties'];
+  if (!flags.third_party) {
+    const named = tp && typeof tp === 'object' && !Array.isArray(tp)
+      ? Object.entries(tp).filter(([, v]) => Array.isArray(v) && v.length > 0)
+      : [];
+    if (named.length) {
+      findings.push(`${id}: flags.third_party is ${JSON.stringify(flags.third_party ?? null)} but the passport's third-parties section names ${named.map(([k, v]) => `${k}: ${v.length}`).join(', ')} — the analysis and the flag disagree, and the flag is the one that decides the route`);
+    } else if (tp && typeof tp === 'object' && Object.keys(tp).length > 0) {
+      notices?.push(`${id}: flags.third_party is not set and the passport's third-parties section names no parties in a list this gate can read — NOT VERIFIED (declare parties as an array to make the corroboration mechanical)`);
+    }
+  }
+  return findings;
+}
+
+/**
  * Findings for one change. `files` gives the sibling artifacts already parsed:
  * { plan, passport, architecture (booleans/objects) }; `registry` resolves identities.
  */
-export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices } = {}) {
+export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, diff, now = Date.now() } = {}) {
   const findings = [];
   const id = envelope?.change_id || '(no id)';
-  if (!STATES.includes(envelope?.current_state) && !TERMINAL_STATES.has(envelope?.current_state)) {
-    findings.push(`${id}: current_state must be one of ${STATES.join('|')}|${[...TERMINAL_STATES].join('|')} (got ${JSON.stringify(envelope?.current_state)})`);
+  if (!known(envelope?.current_state)) {
+    findings.push(`${id}: current_state must be one of ${STATES.join('|')}|${EMERGENCY_STATE}|${[...TERMINAL_STATES].join('|')} (got ${JSON.stringify(envelope?.current_state)})`);
     return findings;
   }
   const state = envelope.current_state;
+  // rc.38 — the change class. Absent means `normal`, which is what every envelope written before
+  // this field was one. An unknown class is a finding rather than a fallback: quietly reading an
+  // unrecognised class as `normal` would make a typo in "emergency" look like ordinary governance.
+  const changeClass = envelope.change_class ?? DEFAULT_CHANGE_CLASS;
+  if (!CHANGE_CLASSES.includes(changeClass)) {
+    findings.push(`${id}: change_class must be one of ${CHANGE_CLASSES.join('|')} (got ${JSON.stringify(envelope.change_class)})`);
+  }
+  if (state === EMERGENCY_STATE && changeClass !== 'emergency') {
+    findings.push(`${id}: current_state ${EMERGENCY_STATE} is reachable only by a change classified change_class "emergency" (this one is ${JSON.stringify(changeClass)}) — the emergency route is declared, not discovered at the moment it is convenient`);
+  }
 
   // The transition record is validated in EVERY state, terminal included: a closed change's
   // history is exactly the record the flow metrics read, and closure is itself a transition.
@@ -192,29 +343,52 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
     }
   }
 
+  // rc.38 (Phase 4.3) — a `standard` change rides a pre-approved pattern. The claim is evaluated
+  // BEFORE the receipts, because a covered change's PA receipts were given on the pattern. Every
+  // failed condition is a finding AND drops coverage, so the fallback is always toward MORE route.
+  let patternCovered = false;
+  if (changeClass === 'standard') {
+    if (!isStr(envelope.pattern_claim?.pattern_id)) {
+      findings.push(`${id}: change_class "standard" requires pattern_claim.pattern_id — a standard change is one that rides a pre-approved pattern; without one it is a normal change`);
+    } else {
+      const entry = patterns?.get(envelope.pattern_claim.pattern_id) || null;
+      const res = evaluateClaim(envelope, entry, { plan: effective, registry, identityOf, now, diff });
+      findings.push(...res.findings);
+      for (const n of res.notices) notices?.push(n);
+      patternCovered = res.covered;
+    }
+  } else if (envelope.pattern_claim !== undefined) {
+    findings.push(`${id}: pattern_claim is recorded on a ${JSON.stringify(changeClass)} change — only change_class "standard" rides a pattern, and a claim that grants nothing is a claim nobody checks`);
+  }
+
   // State receipts — a state without its gate evidence is a self-declaration.
+  //
+  // rc.38: they are collected rather than pushed, because two mechanisms RESEQUENCE them.
+  // `receipts` is the compound authorization; `deferrable` says whether this change is entitled
+  // to owe them for a stated, bounded period. Neither mechanism removes an entry from this list.
+  const receipts = [];
   if (effective) {
     const gates = new Set(effective.required_gates || []);
-    if (at(state) >= at('permission-to-develop') && gates.has('PA1') && passport?.pa1?.decision !== 'approved') {
-      findings.push(`${id}: state ${state} requires PA1 approved — the product passport says ${JSON.stringify(passport?.pa1?.decision)} (a high-risk change cannot enter Develop without PA1)`);
+    if (at(state) >= at('permission-to-develop') && gates.has('PA1') && passport?.pa1?.decision !== 'approved' && !patternCovered) {
+      receipts.push(`${id}: state ${state} requires PA1 approved — the product passport says ${JSON.stringify(passport?.pa1?.decision)} (a high-risk change cannot enter Develop without PA1)`);
     }
     if (at(state) >= at('in-delivery') && gates.has('A') && !architectureExists) {
-      findings.push(`${id}: state ${state} requires architecture assurance (A1–A5) — architecture-assurance.json is missing (an unresolved A-gate blocks backlog creation)`);
+      receipts.push(`${id}: state ${state} requires architecture assurance (A1–A5) — architecture-assurance.json is missing (an unresolved A-gate blocks backlog creation)`);
     }
-    if (at(state) >= at('permission-to-launch') && gates.has('PA2') && passport?.pa2?.decision !== 'approved') {
-      findings.push(`${id}: state ${state} requires PA2 approved — the product passport says ${JSON.stringify(passport?.pa2?.decision)}`);
+    if (at(state) >= at('permission-to-launch') && gates.has('PA2') && passport?.pa2?.decision !== 'approved' && !patternCovered) {
+      receipts.push(`${id}: state ${state} requires PA2 approved — the product passport says ${JSON.stringify(passport?.pa2?.decision)}`);
     }
 
     // Operational readiness: every declared service must be R-gate green (1.12).
     if (at(state) >= at('operationally-ready')) {
       const services = envelope.service_ids;
       if (!Array.isArray(services) || services.length === 0) {
-        findings.push(`${id}: state ${state} but the envelope declares no service_ids — readiness of nothing is not readiness`);
+        receipts.push(`${id}: state ${state} but the envelope declares no service_ids — readiness of nothing is not readiness`);
       }
       for (const s of readiness?.missing || []) {
-        findings.push(`${id}: state ${state} requires operational readiness for service ${s} — docs/governance/services/${s}.json is missing`);
+        receipts.push(`${id}: state ${state} requires operational readiness for service ${s} — docs/governance/services/${s}.json is missing`);
       }
-      for (const f of readiness?.findings || []) findings.push(`${id}: ${f}`);
+      for (const f of readiness?.findings || []) receipts.push(`${id}: ${f}`);
     }
 
     // Production authorization is COMPOUND (1.12): PA2 + readiness (above) + the second-line
@@ -222,27 +396,37 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
     // "A human approved" is not production authorization.
     if (at(state) >= at('production-authorized')) {
       if (!hold) {
-        findings.push(`${id}: state ${state} with no release-hold.json — a missing hold means HELD (fail closed), and only the second line releases it`);
+        receipts.push(`${id}: state ${state} with no release-hold.json — a missing hold means HELD (fail closed), and only the second line releases it`);
       } else {
         if (hold.status !== 'released') {
-          findings.push(`${id}: state ${state} but the second-line release hold is ${JSON.stringify(hold.status)} — builders and agents cannot release it`);
+          receipts.push(`${id}: state ${state} but the second-line release hold is ${JSON.stringify(hold.status)} — builders and agents cannot release it`);
         }
         if (registry) {
           const who = identityOf(registry, hold.by);
           if (!who || who.kind === 'agent' || !(who.groups || []).includes('second-line')) {
-            findings.push(`${id}: release hold ${hold.status} by ${JSON.stringify(hold.by)} — the hold is operated only by a second-line HUMAN identity`);
+            receipts.push(`${id}: release hold ${hold.status} by ${JSON.stringify(hold.by)} — the hold is operated only by a second-line HUMAN identity`);
           }
         }
       }
       if (ANCHOR_REQUIRED_TIERS.has(envelope.risk_tier)) {
         if (!evidence?.anchor) {
-          findings.push(`${id}: ${envelope.risk_tier}-tier production authorization requires externally-anchored evidence — the evidence manifest has no anchor`);
+          receipts.push(`${id}: ${envelope.risk_tier}-tier production authorization requires externally-anchored evidence — the evidence manifest has no anchor`);
         } else {
-          for (const f of evidence.attestationFindings || []) findings.push(`${id}: ${f}`);
+          for (const f of evidence.attestationFindings || []) receipts.push(`${id}: ${f}`);
         }
       }
     }
   }
+  // The emergency route (Phase 4.2) is the ONLY thing that may hold a receipt back, and only in
+  // the emergency state, only for a declared change, and only until a bounded deadline.
+  if (changeClass === 'emergency' && state === EMERGENCY_STATE) {
+    findings.push(...checkEmergency(envelope, { registry, receipts, notices, now }));
+  } else {
+    findings.push(...receipts);
+  }
+
+  // rc.38 (Phase 4.7) — the flags that decide the route are corroborated against the repo's data.
+  findings.push(...corroborateFlags(envelope, { dataLifecycle, modelManifest, passport, notices }));
 
   // Exemptions: owned, reasoned, compensated, expiring, second-line approved. Expired blocks.
   for (const ex of envelope.exemptions || []) {
@@ -265,12 +449,38 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
 
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 
-export function run(cwd = process.cwd()) {
+/**
+ * rc.38 — the diff a pattern claim is reconciled against, or null when it cannot be computed.
+ * `null` is a real answer here, not a pass: evaluateClaim() records the claim as NOT VERIFIED.
+ */
+export function diffSince(base, cwd = process.cwd()) {
+  if (!isStr(base)) return null;
+  try {
+    const g = (args) => execFileSync('git', args, { cwd, encoding: 'utf8' });
+    const paths = g(['diff', '--name-only', `${base}...HEAD`]).trim().split('\n').filter(Boolean);
+    const stat = g(['diff', '--numstat', `${base}...HEAD`]).trim().split('\n').filter(Boolean);
+    const lines = stat.reduce((n, row) => {
+      const [add, del] = row.split('\t');
+      return n + (Number(add) || 0) + (Number(del) || 0);
+    }, 0);
+    return { paths, lines };
+  } catch { return null; }
+}
+
+export function run(cwd = process.cwd(), { baseRef = null, now = Date.now() } = {}) {
   const dir = `${cwd}/${CHANGES_DIR}`;
   if (!existsSync(dir)) return { findings: [], notices: [], count: 0 }; // no governed changes yet — nothing to check
   const registry = loadRegistry(cwd);
+  // rc.38 — corroboration inputs (Phase 4.7) and the diff a pattern claim is checked against
+  // (Phase 4.3). Both are loaded ONCE: they are repository-wide records, not per-change ones.
+  const dataLifecycle = readJson(`${cwd}/docs/governance/data-lifecycle.json`);
+  const modelManifest = readJson(`${cwd}/docs/governance/model-manifest.json`);
+  const diff = diffSince(baseRef, cwd);
   const findings = [];
   const notices = [];
+  if (isStr(baseRef) && !diff) {
+    notices.push(`--base ${baseRef} was given but the diff could not be computed here (no git history, or an unknown ref) — pattern claims are reported NOT VERIFIED rather than treated as checked`);
+  }
   let count = 0;
   for (const name of readdirSync(dir)) {
     const base = `${dir}/${name}`;
@@ -280,7 +490,7 @@ export function run(cwd = process.cwd()) {
     // Terminal changes are validated for their record only — no fresh compile (their profiles
     // may have moved on or been retired; a closed change must not go red because a profile did).
     if (TERMINAL_STATES.has(envelope.current_state)) {
-      findings.push(...evaluate(envelope, { registry, notices }));
+      findings.push(...evaluate(envelope, { registry, notices, now }));
       continue;
     }
     const plan = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
@@ -288,6 +498,11 @@ export function run(cwd = process.cwd()) {
     const architectureExists = existsSync(`${base}/architecture-assurance.json`);
     const { profiles, findings: pf } = loadProfiles(envelope.required_profiles, cwd);
     findings.push(...pf.map((f) => `${envelope.change_id}: ${f}`));
+    // rc.38 — the pre-approved patterns THIS change's own profiles declare. Scoped to the
+    // envelope's profiles on purpose: a pattern approved for one product line is not a standing
+    // pre-approval across the estate.
+    const { patterns, findings: patf } = collectPatterns(profiles);
+    findings.push(...patf.map((f) => `${envelope.change_id}: ${f}`));
     // rc.8 WS4: recompile with the SAME profile-content bindings the plan was written from, so a
     // revised profile (or a BrainKit that an institution profile pins) makes the stored plan stale.
     const { bindings, findings: bf } = resolveBindings(envelope.required_profiles, cwd);
@@ -309,14 +524,16 @@ export function run(cwd = process.cwd()) {
       anchor: manifest.anchor,
       attestationFindings: verifyAnchorAttestation(manifest, loadIssuers(cwd)),
     };
-    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices }));
+    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, diff, now }));
   }
   return { findings, notices, count };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { findings, notices, count } = run();
+  const argv = process.argv.slice(2);
+  const bi = argv.indexOf('--base');
+  const { findings, notices, count } = run(process.cwd(), { baseRef: bi >= 0 ? argv[bi + 1] : null });
   for (const n of notices) process.stdout.write(`NOTICE: ${n}\n`);
   if (findings.length) {
     process.stderr.write('\nChange-envelope gate — FAIL\n\n');

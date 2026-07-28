@@ -304,6 +304,25 @@
         "Add `caused_by_change` and `resolved_at` to operations signals you can attribute and have closed. Both are optional, and change-failure rate / MTTR are only as good as they are — the report says how many signals are unattributed rather than assuming them away.",
         "Optionally add `node scripts/flow-report.mjs`, `node scripts/approval-status.mjs` and `node scripts/comprehension-report.mjs` (without --check) to a scheduled job so the numbers land in a log a human reads. They exit 0 by design."
       ]
+    },
+    {
+      "version": "2.0.0-rc.38",
+      "headline": "Flow-plan Phase 4 — approvals re-priced, never removed",
+      "notes": [
+        "Narrowed approval binding: an approval attestation now carries a per-role binding_hash over what that role actually saw (its compiled sections, its role entry, the subject digests) alongside the whole-plan plan_hash. An edit elsewhere in the plan — a comment in an unrelated profile, a new section for another function — no longer invalidates every signature on every in-flight change. Anything within the role’s own scope still invalidates: tamper-evidence is unchanged, only its blast radius is.",
+        "Change classes: change_class standard|normal|emergency (default normal). An emergency change compiles the SAME requirements and may reach production through the new emergency-authorized state, but only with a retrospective_deadline; once that deadline passes with receipts still outstanding, the gate fails. Nothing is dropped — it is reordered, with a hard expiry.",
+        "Pre-approved change patterns: a profile may carry patterns (pattern_id, matcher, pre-compiled plan hash, second-line approver, expiry, sampling_rate). A standard-class envelope naming a pattern compiles to the pre-approved plan and is enrolled for post-hoc sampling. Patterns expire, a builder may not approve one, and a matcher miss falls back to the full route.",
+        "Release trains: docs/governance/release-trains/<id>.json names N change_ids against one sealed bundle. Release-level acts (the hold, the anchor, the freshness) are taken once per train; per-change PA2 is untouched.",
+        "Delegation and quorum: an identity may carry delegates [{to, from, until, granted_by}] — a delegate inherits every disjointness rule and the delegation expires. Roles may declare a quorum (any K of the holders) where approvals are checked.",
+        "Objections pulled left: the lending and consumer-lending profiles now bind credit-risk and data-protection at PA1 rather than PA2, so those functions see a change at permission-to-develop instead of at permission-to-launch. Pure profile data — the mechanism has existed since 1.11 and was unused.",
+        "Flag corroboration: an envelope flag contradicted by the repository’s own governance data is a finding — personal_data:false against a personal category in the data lifecycle, model_involved:false against a non-empty model manifest, third_party:false against a populated third-parties passport section."
+      ],
+      "action_required": [
+        "Re-sign nothing: existing approval attestations remain valid. New approvals gain the binding_hash automatically; the whole-plan hash is still recorded.",
+        "If you want the emergency lane, decide who may set change_class: emergency and what retrospective_deadline your policy allows — an emergency change with no deadline is refused.",
+        "Pattern authors: a pattern is itself a governed change. Add patterns to a profile only with second-line approval, an expiry, and a sampling rate you will actually honour.",
+        "Lending adopters: credit-risk and data-protection are now PA1 approvers for lending products. In-flight lending changes past permission-to-develop need those two approvals recorded before their next state transition."
+      ]
     }
   ]
 }

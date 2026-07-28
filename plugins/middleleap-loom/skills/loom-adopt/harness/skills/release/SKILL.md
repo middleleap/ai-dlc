@@ -35,6 +35,42 @@ one commit. **An evidence bundle assembled at a different commit than the one th
 the failure this whole step exists to prevent** — it is how a release comes to be described by
 evidence from a version nobody ran.
 
+### 1b. Enumerate what is in the release — write the train
+
+The step nobody was told to take, and its absence is why adopters drift into releasing one story
+at a time. **Say in writing which governed changes this release carries**, before you seal
+anything:
+
+```bash
+mkdir -p docs/governance/release-trains
+cat > docs/governance/release-trains/TRAIN-$(date +%Y-W%V).json <<JSON
+{
+  "train_id": "TRAIN-$(date +%Y-W%V)",
+  "release_commit": "$RELEASE_COMMIT",
+  "changes": ["CHG-…", "CHG-…"],
+  "bundle": "docs/governance/evidence/manifest.json",
+  "sealed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "released_by": "<the second-line identity releasing this train>"
+}
+JSON
+```
+
+**Per-change PA2 is untouched** — every change in the list still carries its own permission to
+launch, given by its own approvers, and no train grants one. What the train does is let the
+release-*level* acts be taken once: this enumeration, one sealed bundle, one anchor, one
+second-line release decision. `scripts/evidence-seal-check.mjs` then derives the required
+evidence from **the changes actually shipping** rather than from every change in the repository,
+and `scripts/release-attestation-check.mjs` proves the train, the subject and the manifest all
+name the same commit.
+
+A change belongs to at most one train, one commit has at most one train, every named change must
+exist under `docs/governance/changes/`, and `released_by` must be a second-line human. If any of
+that is wrong the gates fall back to the repository-wide union — more evidence, never less.
+
+Releasing a single change? Write a train with one entry, or skip this step entirely; nothing here
+is mandatory. The cost of skipping it is that you cannot later answer "what was in that release?"
+from the repository, which is the question every incident starts with.
+
 ## 2. Promote to pre-production, and smoke
 
 Follow the project's promotion path — dev → staging → prod. **This skill goes as far as

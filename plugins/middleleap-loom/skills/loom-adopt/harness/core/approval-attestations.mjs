@@ -95,6 +95,9 @@ export function canonicalDecisionPayload(rec) {
     rec?.subject?.registry_id ?? '',
     rec?.subject?.idp_subject ?? '',
     b.plan_hash ?? '',
+    // rc.38 (flow-plan Phase 4.1) — the NARROW binding, signed ALONGSIDE the whole-plan hash and
+    // never instead of it. See roleBindingHash() below for what it covers and why.
+    b.binding_hash ?? '',
     b.passport_digest ?? '',
     b.source_sha ?? '',
     b.artifact_digest ?? '',
@@ -173,6 +176,57 @@ export function stableStringify(v) {
   return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stableStringify(v[k])}`).join(',')}}`;
 }
 
+export const BINDING_SCHEMA_ID = 'loom.approval-binding/v1';
+
+/**
+ * The NARROW binding (rc.38 · flow-plan Phase 4.1) — a per-role digest over WHAT THIS ROLE WAS
+ * ACTUALLY SHOWN, computed from the compiled plan rather than hand-picked.
+ *
+ * The problem it solves is an economic one, not a security one. `plan_hash` covers the whole
+ * compiled plan INCLUDING `profile_bindings`, which are content digests of every profile the plan
+ * compiled from. So a comment edit in an unrelated profile — or a BrainKit bump — moves the plan
+ * hash and invalidates every signature on every in-flight change, up to twelve per change. The
+ * approvals were not wrong; nothing an approver read had changed. Re-collecting twelve human
+ * signatures to record that a comment moved is a tax that gets paid by not re-collecting them.
+ *
+ * So the binding covers the ROUTE and the SUBJECT and nothing else: the change and its tier, the
+ * role's own standing in the plan (is it required at all, does it bind at PA1), the compiled gate
+ * families, the section sets the approver reads, the required capabilities, and the content
+ * digests of what was approved. It deliberately EXCLUDES `profile_bindings` and `plan_hash` — the
+ * two fields that move for reasons invisible to an approver.
+ *
+ * Tamper-evidence is unchanged for everything in scope: add a gate, add or drop a section, move a
+ * role from PA2 to PA1, strengthen a capability, or re-point the passport digest, and this hash
+ * moves. What stops moving is the noise. The full `plan_hash` REMAINS in the payload as context,
+ * so an auditor can still see exactly which compiled plan the human was looking at.
+ */
+export function roleBindingHash(plan, role, bound = {}) {
+  if (!plan) return null;
+  const roles = plan.required_approver_roles || [];
+  return sha256(stableStringify({
+    schema: BINDING_SCHEMA_ID,
+    change_id: plan.change_id ?? null,
+    risk_tier: plan.risk_tier ?? null,
+    role: role ?? null,
+    // The role's own entry in the plan: whether it is required at all, and where it binds.
+    role_required: roles.includes(role),
+    binds_at_pa1: (plan.pa1_approver_roles || []).includes(role),
+    // The route and the analysis the approver reads.
+    required_gates: [...(plan.required_gates || [])].sort(),
+    pa1_sections: [...(plan.pa1_sections || [])].sort(),
+    pa2_sections: [...(plan.pa2_sections || [])].sort(),
+    required_capabilities: plan.required_capabilities ?? {},
+    // The subject digests — taken from the record's own `bound_to`, which is separately compared
+    // against the live passport, so a doctored digest is caught by that comparison, not laundered
+    // through this one.
+    subject: {
+      passport_digest: bound.passport_digest ?? null,
+      source_sha: bound.source_sha ?? null,
+      artifact_digest: bound.artifact_digest ?? null,
+    },
+  }));
+}
+
 const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
 /**
  * ISO-8601 timestamps only — the TYPE is part of the check. `Date.parse` coerces non-strings
@@ -223,8 +277,28 @@ export function verifyApprovalAttestation(rec, ctx, label = 'approval') {
 
   // 3 · WHAT — bound to this exact plan and this exact content (nothing may change underneath).
   const b = rec.bound_to || {};
+  // The narrow binding is checked FIRST and on its own terms: if the record carries one it must be
+  // right, whether or not the whole-plan hash still matches. A record whose binding_hash is stale
+  // is a record something inside the approver's own scope moved under — that is the tamper case,
+  // and it stays a finding no matter what the plan hash says.
+  const expectedBinding = ctx.plan ? roleBindingHash(ctx.plan, rec.role, b) : null;
+  const bindingOk = isStr(b.binding_hash) && expectedBinding !== null && b.binding_hash === expectedBinding;
+  if (isStr(b.binding_hash) && expectedBinding !== null && !bindingOk) {
+    findings.push(`${label}: bound_to.binding_hash does not match what this role is shown by the compiled plan — the route, the sections, the capabilities or the approved content moved after the decision`);
+  }
   if (!isStr(b.plan_hash)) findings.push(`${label}: bound_to.plan_hash missing — an approval not bound to a compiled plan approves nothing in particular`);
-  else if (ctx.plan?.plan_hash && b.plan_hash !== ctx.plan.plan_hash) findings.push(`${label}: bound_to.plan_hash does not match the compiled plan — the plan changed after the decision`);
+  else if (ctx.plan?.plan_hash && b.plan_hash !== ctx.plan.plan_hash) {
+    if (bindingOk) {
+      // Re-priced, not weakened (flow-plan Phase 4.1). The plan moved somewhere this approver
+      // could not see — an unrelated profile's content digest, a BrainKit bump — and everything
+      // they DID see still hashes the same. The approval stands, and the narrowing is SAID OUT
+      // LOUD on every run: a silent acceptance would be indistinguishable from no check at all.
+      ctx.notices?.push(`${label}: the compiled plan_hash moved (approved ${String(b.plan_hash).slice(0, 12)}… ≠ compiled ${String(ctx.plan.plan_hash).slice(0, 12)}…) but the per-role binding_hash still matches — nothing inside this approver's scope changed, so the approval stands (flow-plan Phase 4.1)`);
+    } else {
+      findings.push(`${label}: bound_to.plan_hash does not match the compiled plan — the plan changed after the decision`
+        + (isStr(b.binding_hash) ? '' : ' (and the record carries no bound_to.binding_hash, so there is no narrower binding to fall back on — see core/approval-attestations.mjs roleBindingHash)'));
+    }
+  }
   if (!isStr(b.passport_digest)) findings.push(`${label}: bound_to.passport_digest missing — the approved content is not pinned`);
   else if (ctx.passportDigest && b.passport_digest !== ctx.passportDigest) findings.push(`${label}: bound_to.passport_digest does not match the passport — the content changed after the decision was made`);
   if (rec.stage === 'PA1' && !isStr(b.source_sha)) findings.push(`${label}: PA1 requires bound_to.source_sha — permission to develop is granted against a source state`);
@@ -243,7 +317,10 @@ export function verifyApprovalAttestation(rec, ctx, label = 'approval') {
   // one webhook event, one decision nonce — could back product-owner AND second-line AND
   // permission-to-launch at once. Each (directory, stage, role) slot is visited exactly once per
   // run, so keying on all three exempts a re-verification and nothing else.
-  const site = ctx.site ? [ctx.site, rec.stage ?? '', rec.role ?? ''].join(' · ') : label;
+  // rc.38: the SUBJECT joins the slot key. Under a role quorum (Phase 4.5) one role carries two
+  // records in one directory and stage; without the subject they would share a slot and the
+  // second holder's record would be reported as a replay of the first's.
+  const site = ctx.site ? [ctx.site, rec.stage ?? '', rec.role ?? '', rec.subject?.registry_id ?? ''].join(' · ') : label;
   for (const [field, why] of [['nonce', 'a decision nonce is single-use'], ['event_id', 'webhooks are signals, deduplicated on event id']]) {
     if (!ctx.seen || !isStr(o[field])) continue;
     const key = `${o.system}:${field}:${o[field]}`;

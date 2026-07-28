@@ -40,6 +40,23 @@
       "pa2_sections": ["regulatory-clearance"]
     }
   },
+  "_patterns_comment": "PRE-APPROVED CHANGE PATTERNS (rc.38 · flow-plan Phase 4.3), read by core/change-patterns.mjs and enforced by scripts/change-envelope-check.mjs. A pattern moves an approval from per-instance to per-envelope: a second-line human approves the SHAPE of a change once, and every change matching that shape rides it instead of re-collecting the same signatures for the same route. It is not a waiver and it is not a lower tier — the plan a matching change compiles is IDENTICAL, and the pattern names its hash so that this is checkable rather than asserted. Five conditions hold it up and every one fails closed: the pattern EXPIRES; a builder cannot approve one; the compiled plan_hash must equal pre_compiled_plan_hash; a matcher miss (path or size) takes the FULL route; and each riding change enrols in the post-hoc sample, a selected sample owing a completed second-line review. ADOPT: this is a WORKED EXAMPLE. pre_compiled_plan_hash is the hash the bundled CHG-2026-0055 compiles in THIS tree; in your repository the same envelope compiles a different hash because your profiles differ, so recompile the change you intend to pre-approve and paste ITS hash here — or delete this block, which costs you nothing. `patterns` is deliberately excluded from the profile binding digest; see core/policy-compiler.mjs resolveBindings for why a pattern could not otherwise name a real route.",
+  "patterns": [
+    {
+      "pattern_id": "dependency-patch",
+      "objective": "Patch-level dependency bumps inside a service, with no contract, schema, control-plane or auth surface moving",
+      "matcher": {
+        "paths": ["package-lock.json", "services/**/package-lock.json", "services/**/requirements.txt"],
+        "max_diff_lines": 60
+      },
+      "pre_compiled_plan_hash": "882bfd43fc5ee6c134803a80244ba83a8c7a17bb132fa949a6abc758d7ff84b3",
+      "approved_by": "risk-lena",
+      "approved_at": "2026-07-22",
+      "_expires_comment": "ADOPT: a real pattern's window is short — 90 days is normal, and re-reading it is the point. The date here is far out ON PURPOSE: a shipped fixture with a 90-day expiry is a build that turns red on a calendar, and a check that turns red on a calendar gets deleted rather than renewed. The bundle's CI proves BOTH directions per run by restamping this field, so the expiry is exercised without being load-bearing on the date.",
+      "expires": "2030-01-01",
+      "sampling_rate": 0.1
+    }
+  ],
   "conditional": [
     { "when": "model_involved", "adds": { "gates": ["decision-log"], "approver_roles": ["model-validator"], "evidence": ["model-provenance"], "pa2_sections": ["model-validation"] } },
     { "when": "personal_data", "adds": { "approver_roles": ["data-protection"], "pa2_sections": ["security-privacy-residency"] } },

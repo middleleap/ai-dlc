@@ -16,6 +16,7 @@ import {
   passportDigest,
   stableStringify,
   trustAnchors,
+  roleBindingHash,
 } from './approval-attestations.mjs';
 import { resolveApprover, identityOf } from '../scripts/identity-registry-check.mjs';
 import { readFileSync, existsSync } from 'node:fs';
@@ -128,6 +129,93 @@ const failsWith = (rec, re, c = ctx()) => {
   const findings = verifyApprovalAttestation(rec, c);
   assert.ok(findings.some((f) => re.test(f)), `expected a finding matching ${re}\ngot: ${JSON.stringify(findings, null, 2)}`);
 };
+
+
+// --- the narrowed per-role binding (rc.38 · flow-plan Phase 4.1) ------------------------------
+//
+// The whole point is a REPRICING that keeps tamper-evidence exactly where it was: a plan hash that
+// moved for a reason invisible to the approver no longer invalidates their signature, and anything
+// the approver actually saw still does.
+
+const PLAN_FULL = {
+  change_id: 'CHG-2026-0117',
+  risk_tier: 'high',
+  plan_hash: 'plan-hash-abc',
+  required_gates: ['PA1', 'PA2', 'Q'],
+  required_approver_roles: ['risk-second-line', 'product-owner'],
+  pa1_approver_roles: ['risk-second-line'],
+  pa1_sections: ['classification', 'ownership'],
+  pa2_sections: ['disclosures'],
+  required_capabilities: { data_risk_register: { required: true, minimum_version: '3.1' } },
+  profile_bindings: [{ profile: 'regulated-bank', digest: 'sha256:aaa' }],
+};
+const bound = (plan = PLAN_FULL) => {
+  const b = { plan_hash: plan.plan_hash, passport_digest: PASSPORT_DIGEST, source_sha: 'a3f9c21bd4e5f60718293a4b5c6d7e8f90123456' };
+  b.binding_hash = roleBindingHash(plan, 'risk-second-line', b);
+  return b;
+};
+const boundRecord = (plan = PLAN_FULL) => signed(validRecord({ bound_to: bound(plan) }));
+
+test('a record carrying a correct binding_hash verifies exactly as before', () => {
+  assert.deepEqual(verifyApprovalAttestation(boundRecord(), ctx({ plan: PLAN_FULL })), []);
+});
+
+test('a profile comment edit moves plan_hash and the approval SURVIVES — recorded, not silent', () => {
+  const rec = boundRecord();
+  // The one thing that changed: a profile's content digest. Nothing the approver read moved.
+  const moved = { ...PLAN_FULL, plan_hash: 'plan-hash-xyz', profile_bindings: [{ profile: 'regulated-bank', digest: 'sha256:bbb' }] };
+  const notices = [];
+  assert.deepEqual(verifyApprovalAttestation(rec, ctx({ plan: moved, notices })), []);
+  assert.ok(notices.some((n) => /per-role binding_hash still matches/.test(n)),
+    'the narrowing must be SAID; an acceptance nobody can see is no check at all');
+});
+
+test('everything the approver actually saw still invalidates the signature', () => {
+  const rec = boundRecord();
+  const cases = {
+    'a gate added to the route': { required_gates: ['PA1', 'PA2', 'Q', 'R'] },
+    'a PA1 section dropped': { pa1_sections: ['classification'] },
+    'a PA2 section added': { pa2_sections: ['disclosures', 'regulatory-clearance'] },
+    'the role moved out of PA1': { pa1_approver_roles: [] },
+    'the role dropped from the plan': { required_approver_roles: ['product-owner'] },
+    'a capability strengthened': { required_capabilities: { data_risk_register: { required: true, minimum_version: '4.0' } } },
+    'the tier changed': { risk_tier: 'critical' },
+  };
+  for (const [why, over] of Object.entries(cases)) {
+    const moved = { ...PLAN_FULL, ...over, plan_hash: 'plan-hash-xyz' };
+    const findings = verifyApprovalAttestation(rec, ctx({ plan: moved }));
+    assert.ok(findings.some((f) => /binding_hash does not match/.test(f)), `${why} must break the binding: ${JSON.stringify(findings)}`);
+  }
+});
+
+test('the binding is per ROLE — one role\'s binding does not verify for another', () => {
+  const a = roleBindingHash(PLAN_FULL, 'risk-second-line', { passport_digest: PASSPORT_DIGEST });
+  const b = roleBindingHash(PLAN_FULL, 'product-owner', { passport_digest: PASSPORT_DIGEST });
+  assert.notEqual(a, b);
+});
+
+test('re-pointing the approved content breaks the binding as well as the digest comparison', () => {
+  const rec = boundRecord();
+  rec.bound_to.passport_digest = sha256('{"a different analysis":true}');
+  failsWith(rec, /binding_hash does not match/, ctx({ plan: PLAN_FULL }));
+});
+
+test('a record with NO binding_hash still fails on a moved plan — and is told why', () => {
+  const rec = signed(validRecord());
+  failsWith(rec, /no bound_to.binding_hash, so there is no narrower binding/, ctx({ plan: { ...PLAN_FULL, plan_hash: 'plan-hash-xyz' } }));
+});
+
+test('a WRONG binding_hash is a finding even when the plan hash still matches', () => {
+  const rec = signed(validRecord({ bound_to: { plan_hash: 'plan-hash-abc', passport_digest: PASSPORT_DIGEST, source_sha: 'a3f9c21bd4e5f60718293a4b5c6d7e8f90123456', binding_hash: sha256('invented') } }));
+  failsWith(rec, /binding_hash does not match/, ctx({ plan: PLAN_FULL }));
+});
+
+test('the binding_hash is INSIDE the signed payload — editing it breaks the signature', () => {
+  const rec = boundRecord();
+  rec.bound_to.binding_hash = roleBindingHash({ ...PLAN_FULL, required_gates: ['PA1'] }, 'risk-second-line', rec.bound_to);
+  const findings = verifyApprovalAttestation(rec, ctx({ plan: { ...PLAN_FULL, required_gates: ['PA1'] } }));
+  assert.ok(findings.some((f) => /does NOT verify/.test(f)), `expected a signature failure, got ${JSON.stringify(findings)}`);
+});
 
 // --- the happy path --------------------------------------------------------------------------
 

@@ -65,6 +65,12 @@ export function waitingSince(envelope) {
 export function outstanding(envelope, plan, passport, { sla = null, registry = null, now = Date.now() } = {}) {
   const rows = [];
   if (!plan || TERMINAL_STATES.has(envelope?.current_state)) return rows;
+  // rc.38 (flow-plan Phase 4.3): a STANDARD change riding a pre-approved pattern is not waiting on
+  // anybody — its approvals were given once, on the pattern. Reporting its compiled roles as
+  // outstanding would make the queue permanently and wrongly long, and the queue's only job is to
+  // be believed. Whether the claim actually HOLDS is scripts/change-envelope-check.mjs's ruling; a
+  // report does not re-adjudicate a gate, and a change whose claim fails cannot merge anyway.
+  if (envelope?.change_class === 'standard' && envelope?.pattern_claim?.pattern_id) return rows;
   const gates = new Set(plan.required_gates || []);
   const since = waitingSince(envelope);
   const stages = [
@@ -141,15 +147,17 @@ export function collect(cwd = process.cwd(), now = Date.now()) {
   const registry = loadRegistry(cwd);
   const rows = [];
   let changes = 0;
+  let patterned = 0;
   for (const name of readdirSync(dir)) {
     const base = `${dir}/${name}`;
     const envelope = readJson(`${base}/change-envelope.json`);
     if (!envelope) continue;
     changes++;
+    if (envelope.change_class === 'standard' && envelope.pattern_claim?.pattern_id) patterned++;
     const plan = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
     rows.push(...outstanding(envelope, plan, readJson(`${base}/product-passport.json`), { sla, registry, now }));
   }
-  return { sla, rows, changes };
+  return { sla, rows, changes, patterned };
 }
 
 // CLI (skipped when imported by the test suite).
@@ -164,15 +172,18 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.stdout.write('Approval queue — approval-sla.json well-formed (or absent). OK\n');
     process.exit(0);
   }
-  const { sla, rows, changes } = collect();
+  const { sla, rows, changes, patterned } = collect();
   const roles = byRole(rows, sla);
   if (process.argv.includes('--json')) {
-    process.stdout.write(`${JSON.stringify({ changes, rows, by_role: roles }, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify({ changes, patterned, rows, by_role: roles }, null, 2)}\n`);
     process.exit(0);
   }
   const out = process.stdout;
   out.write(`\nApproval queue — ${rows.length} outstanding approval(s) across ${changes} governed change(s)\n\n`);
   if (!sla) out.write('  (no docs/governance/approval-sla.json — targets fall back to the shipped default)\n\n');
+  // Said out loud, never subtracted in silence: these changes are not in the queue because their
+  // approval was given once, in advance, on a second-line-owned pattern.
+  if (patterned) out.write(`  ${patterned} change(s) ride a PRE-APPROVED PATTERN and are queued on nobody (flow-plan Phase 4.3)\n\n`);
   if (!rows.length) out.write('  nothing is waiting on an approver\n');
   for (const r of rows.sort((a, b) => (b.age_days || 0) - (a.age_days || 0))) {
     const age = r.age_days === null ? '  ?' : `${String(r.age_days).padStart(5)}d`;
