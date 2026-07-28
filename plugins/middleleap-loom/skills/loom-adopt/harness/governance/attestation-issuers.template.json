@@ -24,7 +24,7 @@
       "id": "demo-anchor-signer",
       "mechanism": "ed25519",
       "demo": true,
-      "description": "DEMO reference issuer — a real ed25519 key pair; the private key is NOT shipped (regenerate your own; this one signs only the bundled example anchor). `demo: true` is read by core/approval-attestations.mjs, which refuses a demo anchor outright; the older anchor gate does not read it, so REPLACE this entry before you trust the anchor chain.",
+      "description": "DEMO reference issuer — a real ed25519 key pair; the private key is NOT shipped (regenerate your own; this one signs only the bundled example anchor). `demo: true` is refused by the ONE unified attestation stack (core/attestations.mjs, rc.36 D3) — every gate that verifies a signature refuses a demo issuer, the anchor gate included. The entry stays so the refusal is demonstrable; nothing can pass with it. Register your own signer (see evidence-example/regenerate.mjs for the per-run pattern). Issuer entries also honour `valid_from`/`valid_until`/`revoked`, and attestations may carry their own `validity` window.",
       "verify": {
         "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsbjIWdwF4iiTTOfICsqf2J/YWtw4YVRNhXhswb8TAzI=\n-----END PUBLIC KEY-----\n"
       }

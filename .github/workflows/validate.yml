@@ -147,12 +147,40 @@ jobs:
           # digest. Mounts at the top governance level (peer of product-evals.json).
           cp "$H/evidence-example/release-subject.json" "$A/docs/governance/release-subject.json"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
+          # rc.36 (flow-plan Phase 2b): the evidence-example directory itself, so the dry-run can
+          # re-derive + re-sign the bundle at a real commit with regenerate.mjs (the committed
+          # example is demo-signed and bound to a fictional commit ON PURPOSE — the gates now
+          # refuse both, and the dry-run pays the refusal by regenerating).
+          cp -r "$H/evidence-example" "$A/evidence-example"
           # Deliberate ADOPT completions the installer never fakes: the manifest ships
-          # services/example-service.json with unparseable ADOPT dates; the dry-run exercises a
-          # real service (credit-origination) with recorded drill dates and drops the stub.
+          # services/example-service.json with ADOPT placeholders; the dry-run exercises a real
+          # service (credit-origination) and drops the stub. rc.36: a drill is a SIGNED
+          # OBSERVATION (observation + refused negative test + non-builder observer + signature),
+          # generated per run with a fresh ed25519 key exactly like the platform-activation
+          # observer below — a stamped bare date is now the DEPRECATED form.
           rm -f "$A/docs/governance/services/example-service.json"
-          TODAY=$(date +%F)
-          node -e 'const fs=require("fs");const t=JSON.parse(fs.readFileSync(process.argv[1]));const d=process.argv[2];t.bcp_dr.last_exercised=d;t.rollback.last_drilled=d;t.kill_switch.last_tested=d;t.capacity.last_run=d;fs.writeFileSync(process.argv[3],JSON.stringify(t,null,2))' "$H/governance/service-readiness.template.json" "$TODAY" "$A/docs/governance/services/credit-origination.json"
+          TPL="$H/governance/service-readiness.template.json" DEST="$A" node <<'JS'
+          const { generateKeyPairSync, sign, createHash } = require("crypto"), fs = require("fs");
+          const canonical = (v) => Array.isArray(v) ? `[${v.map(canonical).join(",")}]` : (v && typeof v === "object") ? `{${Object.keys(v).sort().map((k) => JSON.stringify(k) + ":" + canonical(v[k])).join(",")}}` : JSON.stringify(v);
+          const t = JSON.parse(fs.readFileSync(process.env.TPL));
+          const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+          const today = new Date().toISOString();
+          const observe = (note, attempted) => {
+            const rec = { observed_at: today, observation: { note }, negative_test: { attempted, result: "rejected", tested_at: today }, observer_identity: "ops-dana" };
+            const h = createHash("sha256").update(canonical(rec)).digest("hex");
+            rec.attestation = { issuer: "ci-drill-observer", signature: sign(null, Buffer.from(h, "utf8"), privateKey).toString("base64") };
+            return rec;
+          };
+          t.bcp_dr.last_exercised = observe("failover to the secondary region in 42m; RPO held at 11m", "promotion of a stale replica");
+          t.rollback.last_drilled = observe("rolled back to vN-1 in 6m; limits reconciled", "writes against the rolled-back schema");
+          t.kill_switch.last_tested = observe("decisioning drained to the manual queue in 90s", "traffic routed through the killed path");
+          t.capacity.last_run = observe("2x peak sustained for 1h; p99 within SLO", "load beyond the declared ceiling");
+          fs.writeFileSync(`${process.env.DEST}/docs/governance/services/credit-origination.json`, JSON.stringify(t, null, 2));
+          const regPath = `${process.env.DEST}/docs/governance/attestation-issuers.json`;
+          const reg = JSON.parse(fs.readFileSync(regPath));
+          reg.issuers.push({ id: "ci-drill-observer", mechanism: "ed25519", verify: { public_key: publicKey.export({ type: "spki", format: "pem" }).toString() } });
+          fs.writeFileSync(regPath, JSON.stringify(reg, null, 2));
+          JS
           cd "$A"
           # Negative test: the unadopted template (placeholder @your-org team) must FAIL the
           # control-plane gate — a copied-but-never-adopted control plane is not a control.
@@ -191,6 +219,13 @@ jobs:
           # Q1b + the secrets history scan diff against git — give the adopted layout a history.
           git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
           git add -A && git commit -qm base
+          # rc.36 (flow-plan Phase 2b / D3+D5): the committed evidence bundle is demo-signed and
+          # bound to a fictional commit, and the gates now refuse BOTH. Re-derive the manifest at
+          # the base commit and re-sign the anchor (and the demo-signed assurance cycle) with a
+          # per-run, non-demo key — then commit, so every `git checkout --` restore below recovers
+          # the REGENERATED state, and the base commit is a real ancestor of HEAD (D5).
+          node evidence-example/regenerate.mjs --dest .
+          git add -A && git commit -qm "seal release evidence at the base commit (rc.36)"
           node scripts/discovery-link-check.mjs
           # ── HG-0007 coverage + nesting (rc.28) ────────────────────────────────────────────
           # The waist gate is the one gate where an inert PASS is worse than an absent gate:
@@ -590,6 +625,31 @@ jobs:
             echo "::error::evidence-seal gate accepted a symbolic release_commit"; exit 1
           fi
           git checkout -- docs/governance/evidence/manifest.json
+          # 15b · rc.36 D4 — a manifest with NO anchor must fail: omitting the field used to skip
+          #       anchor verification entirely, which made the external-anchor control opt-out.
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));delete s.anchor;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/evidence-seal-check.mjs; then
+            echo "::error::evidence-seal gate passed a manifest with NO anchor — D4 is back"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/manifest.json
+          # 15c · rc.36 D5 — a well-formed 40-hex commit that exists NOWHERE in this repository
+          #       must fail, and for that reason (the rc.11 shape check cannot see it).
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));s.release_commit="a".repeat(40);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/evidence-seal-check.mjs 2>/tmp/d5.txt; then
+            echo "::error::evidence-seal gate accepted a release_commit no one ever ran — D5 is back"; exit 1
+          fi
+          grep -q 'does not exist in this repository' /tmp/d5.txt || {
+            echo "::error::the foreign commit was refused, but not for being foreign"; cat /tmp/d5.txt; exit 1; }
+          git checkout -- docs/governance/evidence/manifest.json
+          # 15d · rc.36 D3 — pointing the anchor attestation back at the bundled DEMO key must fail
+          #       the release-attestation gate: one attestation stack, the strong one, everywhere.
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));s.attestation.issuer="demo-anchor-signer";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/release-attestation-check.mjs 2>/tmp/d3.txt; then
+            echo "::error::a demo-signed anchor passed the release-attestation gate — the weak stack is back"; exit 1
+          fi
+          grep -q '"demo": true' /tmp/d3.txt || {
+            echo "::error::the demo anchor was refused, but not for being a demo key"; cat /tmp/d3.txt; exit 1; }
+          git checkout -- docs/governance/evidence/manifest.json
           # 16 · rc.11 WS1 — reusing the evidence for a DIFFERENT artifact digest must fail the
           #      cross-binding (source→artifact no longer agree).
           node -e 'const fs=require("fs");const p="docs/governance/release-subject.json";const s=JSON.parse(fs.readFileSync(p));const d="sha256:"+"a".repeat(64);s.artifact.digest=d;s.artifact.uri="registry.example.invalid/credit-service@"+d;fs.writeFileSync(p,JSON.stringify(s,null,2))'
@@ -694,7 +754,12 @@ jobs:
                    sast.sarif sbom.cdx.json dependency-audit.json provenance.json; do
             cp "$H/evidence-example/$f" "$S/"
           done
-          ( cd "$S" && node "$SEAL" --dir . --commit 7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f --release v-demo )
+          ( cd "$S" && node "$SEAL" --dir . --commit 7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f --release v-demo ) > /tmp/seal-derive.txt
+          cat /tmp/seal-derive.txt
+          # rc.36 D5: outside a git checkout the commit existence/ancestry check CANNOT run, and
+          # the collector must SAY so — a recorded not-performable, never a silent pass.
+          grep -q 'NOT verified' /tmp/seal-derive.txt || {
+            echo "::error::sealing outside a git checkout did not record the commit check as not-performable (D5)"; exit 1; }
           node -e '
             const { readFileSync } = require("node:fs");
             const built = JSON.parse(readFileSync(process.argv[1], "utf8"));

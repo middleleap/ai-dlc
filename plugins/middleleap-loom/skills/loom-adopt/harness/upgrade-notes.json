@@ -263,6 +263,25 @@
         "Stop hand-building docs/governance/evidence/manifest.json: run `node scripts/seal-evidence.mjs --commit <release-sha>` (or `loom seal`) after copying the release artifacts in. Note it drops a pre-existing manifest attestation loudly — the anchor changes when the chain is rebuilt, so re-anchor and re-attest.",
         "Optionally add --emit-dir to your release-lane gate-runner invocation and copy the emitted gate-run.json into the evidence directory so the run record is sealed with the bundle."
       ]
+    },
+    {
+      "version": "2.0.0-rc.36",
+      "headline": "Flow-plan Phase 2 (second half) — signed drills, signed residency, and the deferred D3/D4/D5 closed",
+      "notes": [
+        "ONE attestation stack, the strong one (D3): core/attestations.mjs verifySignatureOver now refuses `demo: true` issuers, honours issuer `valid_from`/`valid_until`/`revoked`, and honours a per-attestation `validity` {issued_at, expires_at, revoked} when present — applied to EVERY signature the harness verifies (evidence anchors, assurance cycles, platform activations, adapter evidence, projections, approval assertions and transcriptions). core/approval-attestations.mjs delegates to it instead of carrying its own copy.",
+        "The evidence anchor is MANDATORY (D4): a manifest that omits the `anchor` field no longer skips anchor verification — it fails. Near-free since rc.35: the collector always writes it.",
+        "release_commit must be REAL (D5): the seal gate verifies it exists in this repository (`git cat-file -e`) and is an ancestor of HEAD (`git merge-base --is-ancestor`). Outside a git checkout the check is recorded as not-performable — a printed note, never a silent pass. scripts/seal-evidence.mjs refuses to seal against a commit that fails the check.",
+        "Drills are SIGNED OBSERVATIONS (Phase 2.4): service-readiness drill fields (bcp_dr.last_exercised, rollback.last_drilled, kill_switch.last_tested, capacity.last_run) take the observation shape proven by platform-activation-example/ — observed_at + observation + a negative_test the mechanism REFUSED + an observer_identity outside the builders group + an ed25519 attestation by a registered issuer over drillHash(record). A bare ISO-date string is accepted for THIS release with a printed deprecation NOTICE.",
+        "Residency joins the signed world (Phase 2.5): docs/governance/residency-approval.json (schema loom.residency-approval/v1; {role, registry_id, verdict, decided_at, assertion} per required role) is verified through the approval-attestation core — canonical payload, nonce binding, assertion-issuer registry, service keys refused, demo keys refused. The markdown-table record remains for THIS release as a deprecated fallback with a printed migration notice.",
+        "The committed evidence-example is now deliberately refusable (demo anchor + fictional commit); evidence-example/regenerate.mjs re-derives and re-signs it per run with a fresh non-demo key, and the repo CI dry-run does exactly that."
+      ],
+      "action_required": [
+        "Replace `demo-anchor-signer` wherever your evidence anchor still relies on it: register your own issuer in docs/governance/attestation-issuers.json and re-sign the anchor (see evidence-example/regenerate.mjs for the per-run pattern). A demo-signed anchor now FAILS release-attestation and change-envelope evidence checks.",
+        "Re-seal any manifest that has no `anchor` field: run `node scripts/seal-evidence.mjs --commit <release-sha>` — the collector writes the anchor and self-verifies.",
+        "Ensure your evidence manifest's release_commit is the commit you actually released from this repository's history; evidence sealed from a foreign or rewritten commit now fails the seal gate.",
+        "Migrate drill records in docs/governance/services/*.json from bare dates to signed observations before the NEXT release — the bare-date form prints a deprecation notice now and is removed in one release.",
+        "Migrate the residency record to docs/governance/residency-approval.json before the NEXT release — the markdown parser prints a migration notice now and is removed in one release."
+      ]
     }
   ]
 }

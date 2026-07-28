@@ -98,6 +98,13 @@ gate-run record when present, and re-verifies its own output with the seal gate'
 node scripts/seal-evidence.mjs --commit "$RELEASE_COMMIT"
 ```
 
+The seal now also demands (rc.36): a **mandatory anchor** (the collector writes it — D4), a
+`release_commit` that **exists in this repository and is an ancestor of HEAD** (D5; outside a git
+checkout the collector says so as a recorded not-performable, never a silent pass), and an anchor
+attestation from a **non-demo** registered issuer — the unified stack refuses `demo: true` keys
+everywhere (D3). Sign the anchor with your institution's registered signer;
+`evidence-example/regenerate.mjs` shows the per-run key pattern CI uses.
+
 Then run the gate itself, as the independent re-verification CI will repeat:
 
 ```bash

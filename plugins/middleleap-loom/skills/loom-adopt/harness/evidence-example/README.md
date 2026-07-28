@@ -1,15 +1,22 @@
 # Evidence bundle — a real worked example (HG-0003)
 
-A **self-contained, tamper-evident release evidence bundle**: a `manifest.json` plus the five
+A **self-contained, tamper-evident release evidence bundle**: a `manifest.json` plus the
 artifacts it seals, with real sha256 hashes and an append-only chain. The delivery loop writes
-this at step ⑧. `scripts/evidence-seal-check.mjs` verifies it — and now **re-reads each artifact
-and fails on any hash mismatch**, so altering an artifact on disk (not just the manifest) is
-caught. Run it:
+this at step ⑧. `scripts/evidence-seal-check.mjs` verifies it — it **re-reads each artifact and
+fails on any hash mismatch**, so altering an artifact on disk (not just the manifest) is caught.
+
+**The committed bundle is deliberately refusable (rc.36).** Its anchor is signed by the bundle's
+`demo-anchor-signer` and its `release_commit` is fictional — and the gates now refuse both: a
+`demo: true` issuer is refused by the one unified attestation stack (D3), and the release commit
+must exist in the repository and be an ancestor of HEAD (D5). The chain and semantics still
+verify (the `evaluate()` half is exercised by the tests and by CI's derive step); what can no
+longer happen is this example passing for a *live* release. That is the point: shipping a bundle
+that could pass would be shipping usable trust material. `regenerate.mjs` shows how CI (and a
+real adopter) re-derives and re-signs it per run — fresh non-demo key, real commit, public half
+into the registry, private half discarded.
 
 ```bash
-cd evidence-example && node ../scripts/evidence-seal-check.mjs
-# → Evidence-seal gate (HG-0003) — OK
-# corrupt any artifact and it fails: "artifact <ref> was altered after sealing"
+node evidence-example/regenerate.mjs --dest <adopted-repo-root>   # re-derive + re-sign for real
 ```
 
 ## What's here

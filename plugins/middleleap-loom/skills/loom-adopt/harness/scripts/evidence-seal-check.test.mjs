@@ -5,7 +5,8 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { evaluate, buildChain, sealOf, REQUIRED_TYPES, SEMANTICS, requiredTypesFor, EVIDENCE_FLOOR } from './evidence-seal-check.mjs';
+import { execFileSync } from 'node:child_process';
+import { evaluate, buildChain, sealOf, REQUIRED_TYPES, SEMANTICS, requiredTypesFor, verifyReleaseCommit, EVIDENCE_FLOOR } from './evidence-seal-check.mjs';
 
 const COMMIT = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678'; // a real 40-hex sha (rc.11: symbolic subjects fail)
 
@@ -22,6 +23,10 @@ const VALID = {
   provenance: { subject: [{ name: 'app', digest: { sha256: 'ab'.repeat(32) } }], predicate: { builder: { id: 'ci://demo' } } },
 };
 
+// rc.36 (D4): the anchor is mandatory, so every fixture carries it — the final seal, exactly as
+// the collector writes it.
+const anchored = (m) => ({ ...m, anchor: m.entries[m.entries.length - 1].seal });
+
 // Build a real on-disk bundle (artifacts + manifest chained over their true hashes) in a tmp dir.
 function realBundle() {
   const dir = mkdtempSync(join(tmpdir(), 'ev-'));
@@ -31,12 +36,12 @@ function realBundle() {
     writeFileSync(join(dir, ref), body);
     return { type, ref, sha256: createHash('sha256').update(body).digest('hex') };
   });
-  return { dir, manifest: { release: 'v', release_commit: COMMIT, entries: buildChain(raw) } };
+  return { dir, manifest: anchored({ release: 'v', release_commit: COMMIT, entries: buildChain(raw) }) };
 }
 
 // A raw, complete evidence set (one entry per required type) — chain-only, no disk.
 const RAW = REQUIRED_TYPES.map((type, i) => ({ type, ref: `evidence/${type}.json`, sha256: `hash${i}` }));
-const sealed = () => ({ release: 'v-test', release_commit: COMMIT, entries: buildChain(RAW) });
+const sealed = () => anchored({ release: 'v-test', release_commit: COMMIT, entries: buildChain(RAW) });
 
 test('a complete, intact chain passes', () => {
   assert.deepEqual(evaluate(sealed()), []);
@@ -247,7 +252,7 @@ function bundleWithGateRun(gateRun) {
     ...REQUIRED_TYPES.map((t) => ({ type: t, ref: `${t}.json`, sha256: createHash('sha256').update(JSON.stringify(VALID[t]) + '\n').digest('hex') })),
     { type: 'gate-run', ref: 'gate-run.json', sha256: createHash('sha256').update(body).digest('hex') },
   ];
-  return { dir, manifest: { release: 'v', release_commit: COMMIT, entries: buildChain(raw) } };
+  return { dir, manifest: anchored({ release: 'v', release_commit: COMMIT, entries: buildChain(raw) }) };
 }
 
 test('a sealed PASSING gate-run record at the release commit verifies clean', () => {
@@ -275,6 +280,82 @@ test('gate-run stays OUT of the required floor — existing bundles keep passing
   assert.ok(!EVIDENCE_FLOOR.includes('gate-run'));
   assert.deepEqual(SEMANTICS['gate-run']({ result: 'pass', commit: null }, { releaseCommit: COMMIT }), [],
     'a record with no commit (no git) is not failed on the binding it cannot state');
+});
+
+/* ---- rc.36 flow-plan D4: the anchor is mandatory ---- */
+
+test('a manifest with NO anchor field fails — omitting the field no longer skips the check (D4)', () => {
+  const m = sealed();
+  delete m.anchor;
+  assert.ok(evaluate(m).some((x) => /manifest has no `anchor`/.test(x)));
+  const empty = { ...sealed(), anchor: '' };
+  assert.ok(evaluate(empty).some((x) => /manifest has no `anchor`/.test(x)), 'an empty-string anchor is no anchor');
+});
+
+/* ---- rc.36 flow-plan D5: release_commit must exist here and be an ancestor of HEAD ---- */
+
+const git = (cwd, ...args) => execFileSync('git', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+
+function scratchRepo() {
+  const dir = mkdtempSync(join(tmpdir(), 'ev-git-'));
+  git(dir, 'init', '-q', '-b', 'main');
+  git(dir, 'config', 'user.email', 'loom@test.invalid');
+  git(dir, 'config', 'user.name', 'loom-test');
+  writeFileSync(join(dir, 'a.txt'), 'one\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'one');
+  const first = git(dir, 'rev-parse', 'HEAD');
+  writeFileSync(join(dir, 'a.txt'), 'two\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'two');
+  return { dir, first, head: git(dir, 'rev-parse', 'HEAD') };
+}
+
+test('a release_commit that exists and is an ancestor of HEAD verifies (HEAD itself included)', () => {
+  const { dir, first, head } = scratchRepo();
+  try {
+    assert.equal(verifyReleaseCommit(first, dir).status, 'verified');
+    assert.equal(verifyReleaseCommit(head, dir).status, 'verified');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a foreign 40-hex commit fails — evidence from a commit nobody ran proves nothing (D5)', () => {
+  const { dir } = scratchRepo();
+  try {
+    const r = verifyReleaseCommit('a'.repeat(40), dir);
+    assert.equal(r.status, 'failed');
+    assert.ok(r.findings.some((x) => /does not exist in this repository/.test(x)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a commit outside the release line (not an ancestor of HEAD) fails', () => {
+  const { dir } = scratchRepo();
+  try {
+    git(dir, 'checkout', '-qb', 'side', 'HEAD~1');
+    writeFileSync(join(dir, 'b.txt'), 'side\n');
+    git(dir, 'add', '-A');
+    git(dir, 'commit', '-qm', 'side');
+    const side = git(dir, 'rev-parse', 'HEAD');
+    git(dir, 'checkout', '-q', 'main');
+    const r = verifyReleaseCommit(side, dir);
+    assert.equal(r.status, 'failed');
+    assert.ok(r.findings.some((x) => /not an ancestor of HEAD/.test(x)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a non-git context is NOT-PERFORMABLE, said aloud — never a silent pass', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ev-nogit-'));
+  try {
+    const r = verifyReleaseCommit('a'.repeat(40), dir);
+    assert.equal(r.status, 'not-performable');
+    assert.deepEqual(r.findings, [], 'not-performable is a recorded skip, not a failure');
+    assert.match(r.note, /NOT verified.*not a git repository/s);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a malformed commit is not re-judged here — its shape is already evaluate()\'s finding', () => {
+  assert.equal(verifyReleaseCommit('release-v-demo', tmpdir()).status, 'not-checked');
+  assert.equal(verifyReleaseCommit(undefined, tmpdir()).status, 'not-checked');
 });
 
 test('a sealed brainkit-provenance record is verified for what it SAYS', () => {

@@ -26,7 +26,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { buildChain, evaluate, requiredTypesFor } from './evidence-seal-check.mjs';
+import { buildChain, evaluate, requiredTypesFor, verifyReleaseCommit } from './evidence-seal-check.mjs';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 
 export const DEFAULT_DIR = 'docs/governance/evidence';
@@ -120,6 +120,14 @@ export function main(argv = process.argv.slice(2), cwd = process.cwd()) {
     process.stderr.write('no release commit: not a git checkout and no --commit given — evidence must be bound to the released commit\n');
     return 2;
   }
+  // rc.36 (D5): a commit this repository never contained must not be sealed against. In a non-git
+  // context the check is NOT performable, and that is said aloud below — never a silent pass.
+  const commitCheck = verifyReleaseCommit(commit, cwd);
+  if (commitCheck.status === 'failed') {
+    process.stderr.write('\nseal-evidence — REFUSED (nothing written)\n\n');
+    for (const f of commitCheck.findings) process.stderr.write(`  - ${f}\n`);
+    return 1;
+  }
 
   // Preserve an existing manifest's release id (the collector derives evidence, it does not
   // rename the release); a stale attestation over the OLD anchor is dropped LOUDLY — carrying it
@@ -148,6 +156,7 @@ export function main(argv = process.argv.slice(2), cwd = process.cwd()) {
     process.stdout.write('note: the previous manifest carried an attestation over the OLD anchor — dropped, not copied.\nRe-anchor the new final seal to your external store and re-attest it.\n');
   }
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+  if (commitCheck.note) process.stdout.write(`NOTE: ${commitCheck.note}\n`);
   const sealedGateRun = manifest.entries.some((e) => e.type === 'gate-run');
   process.stdout.write(
     `\nseal-evidence — sealed ${manifest.entries.length} artifact(s) at ${commit.slice(0, 12)} → ${manifestPath}\n` +

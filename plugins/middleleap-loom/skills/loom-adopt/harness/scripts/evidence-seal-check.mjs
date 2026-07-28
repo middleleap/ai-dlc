@@ -17,6 +17,7 @@
 //
 // Run from the repo root: `node scripts/evidence-seal-check.mjs` (exit 1 on any finding).
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
@@ -184,7 +185,12 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
     }
     prev = expectSeal; // continue from the recomputed seal so errors localise, not cascade
   });
-  if (typeof manifest.anchor === 'string' && manifest.anchor && manifest.anchor !== prev) {
+  // rc.36 (flow-plan D4): the anchor is MANDATORY. A manifest that simply omitted the field used
+  // to skip anchor verification entirely — the one check that makes a fully-recomputed chain
+  // detectable was opt-out by silence. Near-free since rc.35: the collector always writes it.
+  if (!(typeof manifest.anchor === 'string' && manifest.anchor)) {
+    findings.push('manifest has no `anchor` — without the final seal recorded there is nothing to publish externally and nothing to sign, so a fully-recomputed chain would be undetectable (D4; scripts/seal-evidence.mjs writes it)');
+  } else if (manifest.anchor !== prev) {
     findings.push(`external anchor mismatch — the chain resolves to ${prev.slice(0, 12)}… but the anchored seal is ${manifest.anchor.slice(0, 12)}…`);
   }
   const present = new Set(entries.map((e) => e.type));
@@ -192,24 +198,61 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
   return findings;
 }
 
+/**
+ * rc.36 (flow-plan D5): the release_commit must EXIST in this repository and be an ancestor of
+ * HEAD. A 40-hex sha nobody ever ran passes every shape check; evidence from a commit outside the
+ * release line proves nothing about what shipped. Returns { status, findings, note }:
+ *   'verified'        — the commit exists here and HEAD descends from it
+ *   'failed'          — checkable and wrong (findings say why)
+ *   'not-performable' — no git repository at cwd; the check CANNOT run, and that is recorded as
+ *                       a note, never as a silent pass (the run record must state what was not
+ *                       executed and why)
+ *   'not-checked'     — no well-formed commit to check (its absence/shape is evaluate()'s finding)
+ */
+export function verifyReleaseCommit(commit, cwd = process.cwd()) {
+  if (!(typeof commit === 'string' && /^[0-9a-f]{40}$/.test(commit))) return { status: 'not-checked', findings: [] };
+  const git = (args) => execFileSync('git', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+  try { git(['rev-parse', '--git-dir']); }
+  catch {
+    return {
+      status: 'not-performable',
+      findings: [],
+      note: `release_commit existence/ancestry NOT verified — ${cwd} is not a git repository, so the check cannot be performed here (D5). Run the gate in the release checkout; this note is the record of the skip.`,
+    };
+  }
+  try { git(['cat-file', '-e', `${commit}^{commit}`]); }
+  catch {
+    return { status: 'failed', findings: [`manifest release_commit ${commit} does not exist in this repository — evidence sealed at a commit nobody ran proves nothing about what shipped (D5)`] };
+  }
+  try { git(['merge-base', '--is-ancestor', commit, 'HEAD']); }
+  catch {
+    return { status: 'failed', findings: [`manifest release_commit ${commit} is not an ancestor of HEAD — this release line never contained the commit the evidence is bound to (D5)`] };
+  }
+  return { status: 'verified', findings: [] };
+}
+
 function run(cwd = process.cwd()) {
   const path = MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
-  if (!path) return [`no evidence manifest found (looked in ${MANIFEST_LOCATIONS.join(', ')}) — the release is unsealed`];
+  if (!path) return { findings: [`no evidence manifest found (looked in ${MANIFEST_LOCATIONS.join(', ')}) — the release is unsealed`], notes: [] };
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
-  catch (e) { return [`evidence manifest is not valid JSON: ${e.message}`]; }
+  catch (e) { return { findings: [`evidence manifest is not valid JSON: ${e.message}`], notes: [] }; }
   const requiredTypes = requiredTypesFor(aggregateRequirements(cwd));
-  return evaluate(manifest, { baseDir: dirname(path), requiredTypes });
+  const findings = evaluate(manifest, { baseDir: dirname(path), requiredTypes });
+  const commitCheck = verifyReleaseCommit(manifest.release_commit, cwd);
+  findings.push(...commitCheck.findings);
+  return { findings, notes: commitCheck.note ? [commitCheck.note] : [] };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const findings = run();
+  const { findings, notes } = run();
   if (findings.length) {
     process.stderr.write('\nEvidence-seal gate (HG-0003) — FAIL\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);
     process.stderr.write('\nThe release evidence bundle must be a complete, intact, append-only hash chain.\nSee ../loom/references/delivery-harness.md (step ⑧) and governance.md (HG-0003).\n');
     process.exit(1);
   }
+  for (const n of notes) process.stdout.write(`NOTE: ${n}\n`);
   process.stdout.write('Evidence-seal gate (HG-0003) — OK\n');
 }

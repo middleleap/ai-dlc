@@ -214,7 +214,7 @@
     },
     {
       "control_id": "HG-0003",
-      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain (a symbolic release_commit is rejected)",
+      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain with a MANDATORY external anchor; release_commit must be a real commit that exists in this repository and is an ancestor of HEAD (a non-git context records the check as not-performable, never as a pass)",
       "owner_role": "platform-admin",
       "line": 1,
       "state": "mechanically-validated",
@@ -265,7 +265,7 @@
     },
     {
       "control_id": "OPS-READINESS",
-      "objective": "R1–R6 operational readiness with freshness windows: an expired DR exercise, undrilled rollback or untested kill-switch blocks production",
+      "objective": "R1–R6 operational readiness with freshness windows: an expired DR exercise, undrilled rollback or untested kill-switch blocks production; a drill is a signed observation (refused negative test, non-builder observer, registered signature) — bare dates are deprecated",
       "owner_role": "operations",
       "line": 1,
       "state": "mechanically-validated",
@@ -371,7 +371,7 @@
       "test_ref": "core/residency.test.mjs",
       "lane": "pr",
       "always": true,
-      "note": "Factory Floor WS0 · D0.1 / prerequisite P1. `always` because the failure it names is the ABSENCE of a record beside the PRESENCE of a floor — a state no diff announces. The record is the institution's to write and sign (docs/governance/residency-review.md); residency-example/ is the worked instance"
+      "note": "Factory Floor WS0 · D0.1 / prerequisite P1. `always` because the failure it names is the ABSENCE of a record beside the PRESENCE of a floor — a state no diff announces. rc.36: the record of decision is the SIGNED docs/governance/residency-approval.json (verified through the approval-attestation core); the markdown table (docs/governance/residency-review.md) remains one release as a deprecated fallback with a printed migration notice. residency-example/ is the worked instance"
     },
     {
       "control_id": "FLOOR-ONLY",

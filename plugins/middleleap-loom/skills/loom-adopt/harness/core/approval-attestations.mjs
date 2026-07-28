@@ -43,14 +43,15 @@
 // Both are "the approval is authentic and immutable, but its subject is asserted, not proven".
 // Neither is closable here without state this module deliberately does not reach for.
 //
-// A third, smaller one: `demo: true` anchors are refused HERE, but `core/attestations.mjs` — the
-// older evidence-envelope path — does not read the flag, so the bundle's `demo-anchor-signer` is
-// still live for the anchor gate until an adopter replaces it. Flagged in that registry, not fixed.
+// A third residual CLOSED at rc.36 (flow-plan D3): `demo: true` refusal, issuer validity windows
+// and revocation now live in `core/attestations.mjs` and apply to EVERY verifySignatureOver call
+// — including the evidence-anchor path that used to skip them. This module delegates to that one
+// stack rather than carrying its own copy; the bundle's `demo-anchor-signer` is refused everywhere.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { verifySignatureOver } from './attestations.mjs';
+import { issuerPolicyFindings, verifySignatureOver } from './attestations.mjs';
 import { CAPABILITY as MAP_CAPABILITY, verifyMapping } from './identity-map.mjs';
 
 export const SCHEMA_ID = 'loom.approval-attestation/v1';
@@ -360,13 +361,6 @@ export function verifySubjectAssertion(rec, ctx, label) {
     findings.push(`${label}: assertion issuer ${JSON.stringify(a.issuer)} is not in the assertion-issuers registry — an unpinned identity provider is not trusted`);
     return findings;
   }
-  // A DEMO anchor exists so the contract can be exercised end to end in the bundle. It must never
-  // underwrite a real approval: every adopter who copied the file would hold the same key, and its
-  // private half demonstrably exists — it signed the worked example. A `description` saying so is
-  // not a control, because no gate reads prose.
-  if (idp.demo === true) {
-    findings.push(`${label}: assertion issuer ${JSON.stringify(idp.id)} is marked \`"demo": true\` — a reference key shipped with the harness cannot evidence a human decision; register your identity provider's own material`);
-  }
   // What the registry pins, the gate checks. An audience or step-up level carried in the record
   // but never compared is decoration: it reads as a control and enforces nothing. An `ADOPT:`
   // placeholder is worse than absent — it looks configured. So it is reported, not skipped: the
@@ -381,10 +375,15 @@ export function verifySubjectAssertion(rec, ctx, label) {
     if (!isStr(a[claim])) findings.push(`${label}: the registry pins ${claim} for ${idp.id} but the assertion carries none`);
     else if (a[claim] !== pinned) findings.push(`${label}: assertion ${claim} ${JSON.stringify(a[claim])} does not match the ${JSON.stringify(pinned)} pinned for ${idp.id}`);
   }
+  // Issuer policy (demo refusal, revocation, validity window) and the signature both come from
+  // the ONE unified stack in core/attestations.mjs (rc.36, D3) — judged at the SIGNED decision
+  // instant, never at verification time. A demo key exists so the contract can be exercised end
+  // to end in the bundle; it must never underwrite a real approval, and now no path lets it.
   if (a.mechanism === 'ed25519' && idp.mechanism === 'ed25519') {
-    findings.push(...verifySignatureOver(payload, { issuer: a.issuer, signature: a.signature }, reg, 'decision payload')
+    findings.push(...verifySignatureOver(payload, { issuer: a.issuer, signature: a.signature }, reg, 'decision payload', { at: decidedAt ?? undefined })
       .map((f) => `${label}: ${f}`));
   } else {
+    findings.push(...issuerPolicyFindings(idp, { at: decidedAt ?? Date.now(), what: 'decision payload' }).map((f) => `${label}: ${f}`));
     findings.push(`${label}: assertion mechanism ${JSON.stringify(a.mechanism)} is verified against pinned identity-provider metadata by the platform, not by this module — wire it per the registry and record activation evidence; until then this assertion is UNVERIFIED-HERE`);
   }
   return findings;
@@ -415,11 +414,11 @@ export function verifyTranscription(rec, ctx, label) {
     } else if (signer && signer.identity !== t.by) {
       findings.push(`${label}: transcription.by is ${JSON.stringify(t.by)} but issuer ${JSON.stringify(signer.id)} signs for ${JSON.stringify(signer.identity)} — the credited custodian is not the signer`);
     }
-    if (signer?.demo === true) {
-      findings.push(`${label}: transcription issuer ${JSON.stringify(signer.id)} is marked \`"demo": true\` — a reference key shipped with the harness cannot evidence custody either; register your own carrying service`);
-    }
   }
-  findings.push(...verifySignatureOver(canonicalDecisionPayload(rec), t.attestation, ctx.issuers, 'transcribed decision')
+  // Demo refusal, revocation and issuer validity for the carrying service come from the unified
+  // stack (rc.36, D3) — a reference key cannot evidence custody either. Judged at the signed
+  // decision instant when the record declares one.
+  findings.push(...verifySignatureOver(canonicalDecisionPayload(rec), t.attestation, ctx.issuers, 'transcribed decision', { at: parseTime(rec?.validity?.issued_at) ?? undefined })
     .map((f) => `${label}: ${f}`));
   return findings;
 }

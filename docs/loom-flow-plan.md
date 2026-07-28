@@ -170,6 +170,15 @@ lines across three classes.
 D6, D8; a deliberate weakening (3.1-vs-4.0 capability, bak-file path match,
 anchorless manifest, foreign commit) each demonstrably fails.
 
+**Status:** 0.1–0.3 and 0.6–0.8 landed at rc.33. 0.4 (D3) and 0.5 (D4+D5)
+were deferred to the Phase 2 fixture regeneration and landed at rc.36: one
+unified attestation stack (demo refusal, issuer windows, revocation,
+per-attestation validity) in `core/attestations.mjs`; the anchor mandatory;
+`release_commit` verified to exist and be an ancestor of HEAD (not-performable
+recorded aloud outside git). Every weakening in the exit criterion now
+demonstrably fails — the anchorless-manifest and foreign-commit negatives run
+in CI's dry-run (15b/15c) and in the gate's test suite.
+
 ### Phase 1 — Make risk-proportionality true at execution time (F1)
 
 1. **Terminal states.** Add `closed` / `superseded` to `STATES` in
@@ -245,10 +254,22 @@ anchor from the artifacts alone); `core/gate-runner.mjs --emit-dir` emits one
 result record per mechanism plus the run record with captured output; the
 seal gate's semantics verify a sealed `gate-run` artifact (must be a passing
 run at the release commit) without joining the required floor; the release
-skill calls the collector instead of narrating hand-chaining. Items 4–5
-(drills as signed observations; signed residency) and the exit criterion's
-full fixture regeneration — including the D3/D4/D5 fixes deferred from Phase
-0 — remain for the second half (Phase 2b).
+skill calls the collector instead of narrating hand-chaining.
+
+Items 4–5 and the deferred D3/D4/D5 landed at rc.36 (Phase 2b): drills are
+signed observations in the platform-activation shape (refused negative test,
+non-builder observer, registered ed25519 signature; bare dates deprecated one
+release with a printed notice); residency approvals are a signed JSON record
+verified through the approval-attestation core (markdown parser deprecated
+one release with a printed migration notice); and the committed
+evidence-example is now deliberately refusable (demo anchor + fictional
+commit), with `evidence-example/regenerate.mjs` re-deriving and re-signing it
+per run in CI's dry-run — a fresh non-demo key registered into the adopted
+registry, `release_commit` stamped to a real ancestor of HEAD, and the
+demo-signed assurance cycle re-signed with it. The one item deliberately not
+taken further: a real rollback executed on smoke failure appending itself as
+drill evidence (the item-4 tail) — it needs the release skill's R3 smoke path
+to emit an observation, which belongs with Phase 5's exposure work.
 
 ### Phase 3 — Instrument the value stream (F3)
 

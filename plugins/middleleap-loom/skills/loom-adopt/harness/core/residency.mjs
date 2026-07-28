@@ -196,3 +196,115 @@ export function evaluate({ record = null, registry = null, floorArtifacts = [], 
   }
   return findings;
 }
+
+/* ------------------------------------------------------------------------------------------------
+ * rc.36 (flow-plan Phase 2.5): residency joins the SIGNED world. The markdown table above can
+ * confirm a decision was recorded by someone entitled to record it; it cannot confirm the person
+ * signed anything — a name in a table cell is transcription, not signature. The JSON record
+ * (docs/governance/residency-approval.json) carries one entry per required role, each bound by a
+ * REAL assertion verified through the approval-attestation core's one unified stack: the payload
+ * is canonical and order-fixed, the nonce binds it, the issuer comes from the ASSERTION registry
+ * (an identity provider — a SERVICE key never vouches for a human), and demo keys, revoked
+ * issuers and validity windows are refused by core/attestations.mjs. The markdown parser stays
+ * for exactly one release as a deprecated fallback (residency-check.mjs prints the migration
+ * notice); every identity rule above (registry resolution, no agents, no builders, role held,
+ * two different humans) applies to both forms identically.
+ * ---------------------------------------------------------------------------------------------- */
+
+export const APPROVAL_SCHEMA = 'loom.residency-approval/v1';
+
+/**
+ * The exact string a residency assertion binds — deterministic and order-fixed, each field
+ * JSON-encoded before joining so no value can shift a field boundary (the approval core's rule).
+ */
+export function canonicalApprovalPayload(entry) {
+  return [APPROVAL_SCHEMA, entry?.role ?? '', entry?.registry_id ?? '', entry?.verdict ?? '', entry?.decided_at ?? '']
+    .map((v) => JSON.stringify(typeof v === 'string' ? v : String(v ?? ''))).join('\n');
+}
+
+const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
+
+/**
+ * The signed-record gate. `ctx`: { registry, assertionIssuers (IdP material), serviceIssuers
+ * (attestation-issuers — a key from here may NEVER vouch for a human), floorArtifacts, required,
+ * verify (injected verifySignatureOver), sha256 (injected digest fn) }. Findings empty ⇒ both
+ * roles decided, verifiably, by two different qualified humans.
+ */
+export function evaluateApprovals(record, {
+  registry = null, assertionIssuers = null, serviceIssuers = null,
+  floorArtifacts = [], required = false, verify, sha256,
+} = {}) {
+  const findings = [];
+  const floorInUse = floorArtifacts.length > 0;
+  if (record?.schema !== APPROVAL_SCHEMA) {
+    findings.push(`residency-approval record schema ${JSON.stringify(record?.schema)} is not ${APPROVAL_SCHEMA} — an unversioned record cannot be verified`);
+    return findings;
+  }
+  const entries = Array.isArray(record.approvals) ? record.approvals : [];
+  const seen = new Map(); // identity → role, one pair of eyes per role
+  for (const role of REQUIRED_ROLES) {
+    const rows = entries.filter((e) => e?.role === role);
+    if (rows.length === 0) {
+      // Same posture as an AWAITING markdown cell: undecided is the ordinary state of a draft,
+      // and blocks only once something depends on it.
+      if (floorInUse || required) {
+        findings.push(`${role}: no approval entry — undecided, and ${floorInUse ? 'a floor is already in use' : 'a compiled plan requires residency approval'}`);
+      }
+      continue;
+    }
+    if (rows.length > 1) findings.push(`${role}: ${rows.length} approval entries — one role, one decision; a second entry is a contested record, not extra assurance`);
+    const e = rows[0];
+    const label = `${role} (${e.registry_id ?? 'unattributed'})`;
+
+    const verdict = String(e.verdict ?? '').toLowerCase();
+    const matched = [...VERDICTS].sort((a, b) => b.length - a.length).find((v) => verdict === v);
+    if (!matched) { findings.push(`${label}: verdict ${JSON.stringify(e.verdict)} is not one of ${VERDICTS.join(' / ')} — a note is not a decision`); continue; }
+    if (BLOCKING_VERDICTS.includes(matched)) {
+      findings.push(`${label}: REFUSED. This gate is doing its job — a refusal is a signed outcome and it blocks. Only the paper deliverables (D0.2, D0.4, D0.5) may proceed`);
+      continue;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}/.test(String(e.decided_at ?? ''))) {
+      findings.push(`${label}: decided_at ${JSON.stringify(e.decided_at)} is not an ISO date — an undated decision cannot be aged, and §10 requires re-review`);
+    }
+
+    // WHO — identical rules to the markdown path.
+    if (!registry) { findings.push(`${label}: no identity registry to resolve the signer against — a name in a record is not an approver`); continue; }
+    const who = (registry.identities || []).find((i) => i.id === e.registry_id);
+    if (!who) { findings.push(`${label}: ${JSON.stringify(e.registry_id)} is not in the identity registry — unresolvable signatures do not count`); continue; }
+    if (who.kind === 'agent') findings.push(`${label}: ${e.registry_id} is an AGENT — agents prepare evidence, they never approve`);
+    if (!(who.roles || []).includes(role)) findings.push(`${label}: ${e.registry_id} does not hold the role ${role}`);
+    if (groupsOf(who).has('builders')) findings.push(`${label}: ${e.registry_id} is in the builders group — builders may not sign`);
+    const already = seen.get(e.registry_id);
+    if (already) findings.push(`${e.registry_id} signed as both ${already} and ${role} — a two-signature record whose point is a second pair of eyes is not satisfied by one pair wearing two hats`);
+    seen.set(e.registry_id, role);
+
+    // The ASSERTION — the human's proof, through the one unified stack.
+    const a = e.assertion;
+    if (!a) { findings.push(`${label}: no assertion — without it the record proves only that somebody wrote JSON, which is the markdown table with extra steps`); continue; }
+    if ((serviceIssuers?.issuers || []).some((i) => i.id === a.issuer)) {
+      findings.push(`${label}: assertion issuer ${JSON.stringify(a.issuer)} is a registered SERVICE attestation issuer — a service signing for a human authenticates the service, not the approver`);
+    }
+    const payload = canonicalApprovalPayload(e);
+    if (!isStr(a.nonce)) findings.push(`${label}: assertion carries no nonce over the decision payload — binding is what separates an approval from a login`);
+    else if (sha256 && a.nonce !== sha256(payload)) findings.push(`${label}: assertion nonce does not bind the decision payload — the assertion could be replayed onto a different decision`);
+    if (!assertionIssuers) {
+      findings.push(`${label}: no assertion-issuers registry — the identity provider's verification material is not pinned, so the assertion is UNVERIFIED-HERE`);
+    } else if (verify) {
+      findings.push(...verify(payload, { issuer: a.issuer, signature: a.signature }, assertionIssuers, 'residency decision payload')
+        .map((f) => `${label}: ${f}`));
+    }
+  }
+  if (floorInUse && findings.length) {
+    findings.push(`a floor is IN USE while the residency-approval record is not cleanly signed — found ${floorArtifacts.join(', ')}. §11's blocking statement holds for the signed form exactly as for the table`);
+  }
+  return findings;
+}
+
+/** Is the JSON record cleanly decided by both roles with non-blocking verdicts? Pure; no findings. */
+export function approvalsSigned(record) {
+  const entries = Array.isArray(record?.approvals) ? record.approvals : [];
+  return REQUIRED_ROLES.every((role) => {
+    const e = entries.find((x) => x?.role === role);
+    return e && VERDICTS.includes(String(e.verdict ?? '').toLowerCase()) && !BLOCKING_VERDICTS.includes(String(e.verdict).toLowerCase());
+  });
+}

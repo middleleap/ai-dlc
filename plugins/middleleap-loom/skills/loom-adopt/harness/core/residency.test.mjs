@@ -187,3 +187,90 @@ test('a REFUSAL is recorded, blocks, and is reported as the gate working', () =>
   assert.equal(isSigned(parseSignoff(record(no, LENA))), false);
   assert.ok(BLOCKING_VERDICTS.every((v) => VERDICTS.includes(v)), 'a blocking verdict must still be a valid verdict');
 });
+
+/* ---- rc.36 (flow-plan Phase 2.5): the SIGNED residency record ---- */
+
+// Real keys, generated per run and never persisted — the same rule as every other worked signature.
+import { generateKeyPairSync, sign } from 'node:crypto';
+import { APPROVAL_SCHEMA, approvalsSigned, canonicalApprovalPayload, evaluateApprovals } from './residency.mjs';
+import { verifySignatureOver } from './attestations.mjs';
+import { sha256 } from './approval-attestations.mjs';
+
+const idpKey = generateKeyPairSync('ed25519');
+const IDP_PEM = idpKey.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+const ASSERTION_ISSUERS = { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', verify: { public_key: IDP_PEM } }] };
+const SERVICE_ISSUERS = { issuers: [{ id: 'svc-bridge-key', mechanism: 'ed25519', verify: { public_key: IDP_PEM } }] };
+
+function approvalEntry({ role = 'data-protection', id = 'dp-yusuf', verdict = 'approve', issuer = 'bank-idp', mutateAfterSigning = null } = {}) {
+  const e = { role, registry_id: id, verdict, decided_at: '2026-07-26' };
+  const payload = canonicalApprovalPayload(e);
+  e.assertion = { mechanism: 'ed25519', issuer, nonce: sha256(payload), signature: sign(null, Buffer.from(payload, 'utf8'), idpKey.privateKey).toString('base64') };
+  if (mutateAfterSigning) mutateAfterSigning(e);
+  return e;
+}
+
+const approvalRecord = (dp = {}, risk = {}) => ({
+  schema: APPROVAL_SCHEMA,
+  approvals: [
+    approvalEntry({ role: 'data-protection', id: 'dp-yusuf', ...dp }),
+    approvalEntry({ role: 'risk-second-line', id: 'risk-lena', ...risk }),
+  ],
+});
+
+const JSON_CTX = {
+  registry: REGISTRY, assertionIssuers: ASSERTION_ISSUERS, serviceIssuers: SERVICE_ISSUERS,
+  verify: verifySignatureOver, sha256,
+};
+
+test('a record signed by both qualified humans over the canonical payload verifies clean', () => {
+  const rec = approvalRecord();
+  assert.deepEqual(evaluateApprovals(rec, JSON_CTX), []);
+  assert.equal(approvalsSigned(rec), true);
+});
+
+test('editing the verdict after signing breaks both the nonce and the signature', () => {
+  const rec = approvalRecord({ mutateAfterSigning: (e) => { e.verdict = 'approve'; e.decided_at = '2027-01-01'; } });
+  const f = evaluateApprovals(rec, JSON_CTX);
+  assert.ok(f.some((x) => /nonce does not bind/.test(x)), JSON.stringify(f));
+  assert.ok(f.some((x) => /does NOT verify/.test(x)));
+});
+
+test('a SERVICE key may never vouch for a human — the approval-attestation core rule holds here', () => {
+  const rec = approvalRecord({ issuer: 'svc-bridge-key' });
+  assert.ok(evaluateApprovals(rec, JSON_CTX).some((x) => /SERVICE attestation issuer/.test(x)));
+});
+
+test('a demo identity provider is refused by the unified stack (D3)', () => {
+  const demoIdp = { issuers: [{ ...ASSERTION_ISSUERS.issuers[0], demo: true }] };
+  const rec = approvalRecord();
+  assert.ok(evaluateApprovals(rec, { ...JSON_CTX, assertionIssuers: demoIdp }).some((x) => /is marked `"demo": true`/.test(x)));
+});
+
+test('the identity rules hold for the signed form exactly as for the table', () => {
+  const builder = approvalRecord({ id: 'dp-builder' });
+  assert.ok(evaluateApprovals(builder, JSON_CTX).some((x) => /builders group/.test(x)));
+  const onePair = approvalRecord({ id: 'both-sam' }, { id: 'both-sam' });
+  assert.ok(evaluateApprovals(onePair, JSON_CTX).some((x) => /signed as both/.test(x)));
+  const agent = approvalRecord({ id: 'svc-bridge' });
+  assert.ok(evaluateApprovals(agent, JSON_CTX).some((x) => /is an AGENT/.test(x)));
+  const wrongRole = approvalRecord({ id: 'risk-lena' }, { id: 'risk-lena' });
+  assert.ok(evaluateApprovals(wrongRole, JSON_CTX).some((x) => /does not hold the role data-protection/.test(x)));
+});
+
+test('a refusal is a signed outcome and blocks; a missing role blocks only once something depends on it', () => {
+  const no = approvalRecord({ verdict: 'refuse' });
+  assert.ok(evaluateApprovals(no, JSON_CTX).some((x) => /REFUSED/.test(x)));
+  assert.equal(approvalsSigned(no), false);
+  const half = { schema: APPROVAL_SCHEMA, approvals: [approvalEntry()] };
+  assert.deepEqual(evaluateApprovals(half, JSON_CTX), [], 'a draft with nothing depending on it is not a defect');
+  assert.ok(evaluateApprovals(half, { ...JSON_CTX, floorArtifacts: FLOOR }).some((x) => /no approval entry/.test(x)));
+  assert.ok(evaluateApprovals(half, { ...JSON_CTX, required: true }).some((x) => /compiled plan requires residency approval/.test(x)));
+});
+
+test('an unversioned record, an unpinned IdP, or an unregistered issuer cannot be verified', () => {
+  assert.ok(evaluateApprovals({ approvals: [] }, JSON_CTX).some((x) => /is not loom.residency-approval\/v1/.test(x)));
+  const noReg = evaluateApprovals(approvalRecord(), { ...JSON_CTX, assertionIssuers: null });
+  assert.ok(noReg.some((x) => /UNVERIFIED-HERE/.test(x)));
+  const rogue = approvalRecord({ issuer: 'nobody-knows' });
+  assert.ok(evaluateApprovals(rogue, JSON_CTX).some((x) => /not in the allowed-issuers registry/.test(x)));
+});

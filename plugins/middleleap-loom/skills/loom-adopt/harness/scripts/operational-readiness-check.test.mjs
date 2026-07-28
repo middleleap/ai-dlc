@@ -1,7 +1,8 @@
 // Tests for the operational-readiness gate (R1–R6). Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate, WINDOWS } from './operational-readiness-check.mjs';
+import { generateKeyPairSync, sign } from 'node:crypto';
+import { drillHash, evaluate, verifyDrillObservation, WINDOWS } from './operational-readiness-check.mjs';
 
 const NOW = Date.parse('2026-07-22');
 const days = (n) => new Date(NOW - n * 86400000).toISOString().slice(0, 10);
@@ -60,4 +61,79 @@ test('R6 customer/financial fields are required', () => {
   const f = evaluate({ ...READY, reconciliation: '', complaints_readiness: undefined }, NOW);
   assert.ok(f.some((x) => /no reconciliation/.test(x)));
   assert.ok(f.some((x) => /no complaints_readiness/.test(x)));
+});
+
+/* ---- rc.36 (flow-plan Phase 2.4): drills as SIGNED OBSERVATIONS ---- */
+
+const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+const PEM = publicKey.export({ type: 'spki', format: 'pem' }).toString();
+const ISSUERS = { issuers: [{ id: 'drill-observer-key', mechanism: 'ed25519', verify: { public_key: PEM } }] };
+const REGISTRY = {
+  identities: [
+    { id: 'ops-omar', kind: 'human', roles: ['operations'], groups: [] },
+    { id: 'eng-build', kind: 'human', roles: ['engineering'], groups: ['builders'] },
+    { id: 'agent-x', kind: 'agent', roles: [], groups: ['builders'] },
+  ],
+};
+
+function observation({ observedDaysAgo = 5, observer = 'ops-omar', result = 'rejected', mutateAfterSigning = null, ...rest } = {}) {
+  const rec = {
+    observed_at: days(observedDaysAgo),
+    observation: { note: 'rolled back to vN-1 in 6m; limits reconciled' },
+    negative_test: { attempted: 'writes against the rolled-back schema', result, tested_at: days(observedDaysAgo) },
+    observer_identity: observer,
+    ...rest,
+  };
+  rec.attestation = { issuer: 'drill-observer-key', signature: sign(null, Buffer.from(drillHash(rec), 'utf8'), privateKey).toString('base64') };
+  if (mutateAfterSigning) mutateAfterSigning(rec);
+  return rec;
+}
+
+const CTX = { registry: REGISTRY, issuers: ISSUERS };
+const drillOpts = { label: 'svc-x: rollback drill', windowDays: WINDOWS.rollback, now: NOW, ...CTX };
+
+test('a fresh, signed, independently observed drill with a refused negative test passes', () => {
+  assert.deepEqual(verifyDrillObservation(observation(), drillOpts), []);
+  const r = { ...READY, rollback: { procedure_ref: 'rb.md', last_drilled: observation() } };
+  assert.deepEqual(evaluate(r, NOW, CTX), []);
+});
+
+test('a stale observation blocks, same windows as before', () => {
+  const f = verifyDrillObservation(observation({ observedDaysAgo: WINDOWS.rollback + 3 }), drillOpts);
+  assert.ok(f.some((x) => /STALE/.test(x)));
+});
+
+test('a negative test the mechanism did not REFUSE proves nothing', () => {
+  const f = verifyDrillObservation(observation({ result: 'succeeded' }), drillOpts);
+  assert.ok(f.some((x) => /not "rejected"/.test(x)));
+  const none = observation();
+  delete none.negative_test;
+  assert.ok(verifyDrillObservation(none, drillOpts).some((x) => /no negative_test/.test(x)));
+});
+
+test('the observer must be OUTSIDE the builders\' write authority, and must resolve', () => {
+  assert.ok(verifyDrillObservation(observation({ observer: 'eng-build' }), drillOpts).some((x) => /inside the builders' write authority/.test(x)));
+  assert.ok(verifyDrillObservation(observation({ observer: 'agent-x' }), drillOpts).some((x) => /inside the builders' write authority/.test(x)));
+  assert.ok(verifyDrillObservation(observation({ observer: 'nobody' }), drillOpts).some((x) => /does not resolve/.test(x)));
+  assert.ok(verifyDrillObservation(observation(), { ...drillOpts, registry: null }).some((x) => /no identity registry/.test(x)));
+});
+
+test('the signature is real crypto over the whole record — edit anything after signing and it fails', () => {
+  const doctored = observation({ mutateAfterSigning: (r) => { r.observation.note = 'a better story'; } });
+  assert.ok(verifyDrillObservation(doctored, drillOpts).some((x) => /does NOT verify/.test(x)));
+  const unsigned = observation();
+  delete unsigned.attestation;
+  assert.ok(verifyDrillObservation(unsigned, drillOpts).some((x) => /no attestation/.test(x)));
+});
+
+test('a demo-marked issuer cannot witness a drill either — the unified stack refuses it (D3)', () => {
+  const demoReg = { issuers: [{ ...ISSUERS.issuers[0], demo: true }] };
+  assert.ok(verifyDrillObservation(observation(), { ...drillOpts, issuers: demoReg }).some((x) => /is marked `"demo": true`/.test(x)));
+});
+
+test('a bare-date drill still passes THIS release, with a deprecation NOTICE — never silently', () => {
+  const notices = [];
+  assert.deepEqual(evaluate(READY, NOW, { ...CTX, notices }), []);
+  assert.ok(notices.length >= 4, 'each bare-date drill field must say it is deprecated');
+  assert.ok(notices.every((n) => /DEPRECATED \(rc\.36\)/.test(n)));
 });

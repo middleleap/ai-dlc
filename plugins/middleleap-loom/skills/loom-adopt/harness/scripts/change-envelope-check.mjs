@@ -196,7 +196,9 @@ export function run(cwd = process.cwd()) {
     for (const s of envelope.service_ids || []) {
       const sr = readJson(`${cwd}/${SERVICES_DIR}/${s}.json`);
       if (!sr) readiness.missing.push(s);
-      else readiness.findings.push(...evaluateReadiness(sr));
+      // rc.36: observation-shaped drills verify their observer and signature — pass the registry
+      // and issuers so a signed drill judged here is judged by the same stack as the R gate.
+      else readiness.findings.push(...evaluateReadiness(sr, Date.now(), { registry, issuers: loadIssuers(cwd) }));
     }
     const hold = readJson(`${base}/release-hold.json`);
     const manifest = readJson(`${cwd}/docs/governance/evidence/manifest.json`);

@@ -427,7 +427,9 @@ test('an issuer marked demo cannot evidence a decision, in either registry', () 
   failsWith(signed(validRecord()), /is marked `"demo": true`/, ctx({
     assertionIssuers: { issuers: [{ id: 'bank-idp', mechanism: 'ed25519', demo: true, verify: { public_key: pem(IDP) } }] },
   }));
-  failsWith(signed(validRecord()), /transcription issuer .* is marked `"demo": true`/, ctx({
+  // rc.36 (D3): the refusal now comes from the ONE unified stack in core/attestations.mjs — the
+  // message names the transcribed decision the demo key cannot underwrite.
+  failsWith(signed(validRecord()), /issuer .* is marked `"demo": true`.*transcribed decision/, ctx({
     issuers: { issuers: [{ id: 'svc-floor-bridge', mechanism: 'ed25519', identity: 'svc-floor-bridge', demo: true, verify: { public_key: pem(BRIDGE) } }] },
   }));
 });
