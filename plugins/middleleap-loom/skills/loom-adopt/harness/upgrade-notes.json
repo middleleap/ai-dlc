@@ -217,6 +217,166 @@
         "Measured, not asserted: zero false positives across the 61 flag-documenting scripts, and the rule is pinned against the ACTUAL rc.29 blob from git history rather than a synthetic fixture. A negative bypass test in CI mutates the very file the fault shipped in."
       ],
       "action_required": []
+    },
+    {
+      "version": "2.0.0-rc.33",
+      "headline": "Flow-plan Phase 0 — the found defects, fixed",
+      "notes": [
+        "Capability aggregation across governed changes is strongest-wins (it was first-wins by directory order, which could silently weaken a minimum version/tier).",
+        "Gate path scopes match a file exactly or as a directory prefix — docs/backlog.yaml no longer implicates docs/backlog.yaml.bak.",
+        "The gate runner refuses a lane with no runnable catalogued controls (exit 2) — an empty lane was a CI step that structurally could not fail.",
+        "ci-catalog-check fails two controls sharing one mechanism_ref with different mechanism_args (the runner executed only one variant while reporting both), and prints the execute:false inventory on every run.",
+        "evidence-seal-check and release-attestation-check resolve the evidence manifest from one shared list.",
+        "A first adopt.mjs run with no --tier lands core, not full."
+      ],
+      "action_required": [
+        "If your .github/workflows/ci.yml still invokes `gate-runner --lane build` or `--lane deploy`, remove those lines (or catalogue a control for those lanes): the runner now fails an empty lane instead of passing about nothing. The reference ci.yml shows the new shape.",
+        "If you relied on unflagged adopt.mjs runs landing the full tier on a FRESH repo, pass --tier full explicitly (re-runs keep the tier already stamped, as before)."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.34",
+      "headline": "Flow-plan Phase 1 — risk-proportionality made real at execution time",
+      "notes": [
+        "Terminal change states: `closed` and `superseded` end a change. A terminal change stops contributing compiled requirements (the requirement union no longer grows forever), skips plan reconciliation and receipts, and keeps only its classification record.",
+        "Per-diff requirement scoping: the gate runner aggregates requirements from the changes THIS diff implicates (the envelope directory, or the envelope's optional `scope_paths` prefixes). No base means every non-terminal change counts, as before. The run record states the scope, the implicated changes, and the max tier.",
+        "Tier-aware selection: a catalog control may declare `min_tier` — it runs only when the highest implicated change tier reaches it. `always` and plan-mandated controls override upward. The shipped catalog declares none; this is the adopter knob for a genuinely shorter documentation-PR route.",
+        "The reference ci.yml runs the scheduled lane on a cron trigger (plus push-to-main) instead of every PR, and runs the bundle test suite and the two bundle-only gates only where no adoption stamp exists — an adopted repo keeps a compiler/runner/layering smoke instead of the ~1,400-test bundle suite.",
+        "`loom gates` runs the pr-lane gate run locally against the merge base — same runner, catalog, and recorded skips as CI; `loom compile` forwards to the policy compiler."
+      ],
+      "action_required": [
+        "Close finished changes: set `current_state: closed` (or `superseded`) on governed changes that shipped or were abandoned — until you do, their compiled requirements keep mandating gates on every diff-unknown run.",
+        "Optionally declare `scope_paths` on active envelopes so code-only PRs implicate the right change, and `min_tier` on catalog controls you want tier-scoped.",
+        "Adopt the new ci.yml shape (the installer drops it as a .loom-new sidecar if you have edited yours): scheduled lane on cron, bundle-only steps stamped out."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.35",
+      "headline": "Flow-plan Phase 2 (first half) — evidence is derived, not authored",
+      "notes": [
+        "scripts/seal-evidence.mjs (also `loom seal`): the evidence manifest is now DERIVED from the artifacts — it hashes every file in docs/governance/evidence/, orders entries by the seal gate's required-types contract, binds release_commit (git HEAD, or --commit), sets the anchor to the final seal, and re-verifies its own output with the seal gate's evaluate() BEFORE writing. A bundle that would fail verification is never written; files that are not evidence are listed, never silently ignored.",
+        "core/gate-runner.mjs --emit-dir <dir>: the runner captures each mechanism's output (still printed verbatim, so logs read the same) and emits one {gate, controls, result, findings_excerpt, commit, produced_at} record per mechanism plus the run record (gate-run.json) — control-plane-style evidence becomes a gate OUTPUT rather than a human transcription. The run record keeps every rc.34 field and gains produced_at.",
+        "The gate-run record joins the evidence chain: the seal gate's semantics now verify a sealed gate-run artifact (result must be 'pass'; a named commit must be the release commit). Deliberately NOT added to the required floor — existing bundles keep passing without one; the collector seals it whenever the runner's emitted record is present in the evidence directory.",
+        "skills/release/SKILL.md steps 3–4 now run the collector instead of narrating hand-chaining — a hand-typed verdict is exactly the fabricatable evidence the seal was built to refuse."
+      ],
+      "action_required": [
+        "Stop hand-building docs/governance/evidence/manifest.json: run `node scripts/seal-evidence.mjs --commit <release-sha>` (or `loom seal`) after copying the release artifacts in. Note it drops a pre-existing manifest attestation loudly — the anchor changes when the chain is rebuilt, so re-anchor and re-attest.",
+        "Optionally add --emit-dir to your release-lane gate-runner invocation and copy the emitted gate-run.json into the evidence directory so the run record is sealed with the bundle."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.36",
+      "headline": "Flow-plan Phase 2 (second half) — signed drills, signed residency, and the deferred D3/D4/D5 closed",
+      "notes": [
+        "ONE attestation stack, the strong one (D3): core/attestations.mjs verifySignatureOver now refuses `demo: true` issuers, honours issuer `valid_from`/`valid_until`/`revoked`, and honours a per-attestation `validity` {issued_at, expires_at, revoked} when present — applied to EVERY signature the harness verifies (evidence anchors, assurance cycles, platform activations, adapter evidence, projections, approval assertions and transcriptions). core/approval-attestations.mjs delegates to it instead of carrying its own copy.",
+        "The evidence anchor is MANDATORY (D4): a manifest that omits the `anchor` field no longer skips anchor verification — it fails. Near-free since rc.35: the collector always writes it.",
+        "release_commit must be REAL (D5): the seal gate verifies it exists in this repository (`git cat-file -e`) and is an ancestor of HEAD (`git merge-base --is-ancestor`). Outside a git checkout the check is recorded as not-performable — a printed note, never a silent pass. scripts/seal-evidence.mjs refuses to seal against a commit that fails the check.",
+        "Drills are SIGNED OBSERVATIONS (Phase 2.4): service-readiness drill fields (bcp_dr.last_exercised, rollback.last_drilled, kill_switch.last_tested, capacity.last_run) take the observation shape proven by platform-activation-example/ — observed_at + observation + a negative_test the mechanism REFUSED + an observer_identity outside the builders group + an ed25519 attestation by a registered issuer over drillHash(record). A bare ISO-date string is accepted for THIS release with a printed deprecation NOTICE.",
+        "Residency joins the signed world (Phase 2.5): docs/governance/residency-approval.json (schema loom.residency-approval/v1; {role, registry_id, verdict, decided_at, assertion} per required role) is verified through the approval-attestation core — canonical payload, nonce binding, assertion-issuer registry, service keys refused, demo keys refused. The markdown-table record remains for THIS release as a deprecated fallback with a printed migration notice.",
+        "The committed evidence-example is now deliberately refusable (demo anchor + fictional commit); evidence-example/regenerate.mjs re-derives and re-signs it per run with a fresh non-demo key, and the repo CI dry-run does exactly that."
+      ],
+      "action_required": [
+        "Replace `demo-anchor-signer` wherever your evidence anchor still relies on it: register your own issuer in docs/governance/attestation-issuers.json and re-sign the anchor (see evidence-example/regenerate.mjs for the per-run pattern). A demo-signed anchor now FAILS release-attestation and change-envelope evidence checks.",
+        "Re-seal any manifest that has no `anchor` field: run `node scripts/seal-evidence.mjs --commit <release-sha>` — the collector writes the anchor and self-verifies.",
+        "Ensure your evidence manifest's release_commit is the commit you actually released from this repository's history; evidence sealed from a foreign or rewritten commit now fails the seal gate.",
+        "Migrate drill records in docs/governance/services/*.json from bare dates to signed observations before the NEXT release — the bare-date form prints a deprecation notice now and is removed in one release.",
+        "Migrate the residency record to docs/governance/residency-approval.json before the NEXT release — the markdown parser prints a migration notice now and is removed in one release."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.37",
+      "headline": "Flow-plan Phase 3 — the value stream is instrumented (and none of it gates)",
+      "notes": [
+        "state_history on the change envelope (Phase 3.1): an append-only [{state, at, by}] record validated by scripts/change-envelope-check.mjs — states advance in the STATES order, `at` never moves backwards, nothing follows a terminal state, `by` resolves in the identity registry when present, and the LAST entry is current_state (so the history cannot become a parallel account of a change that went somewhere else). It is validated in every state, terminal included. One field makes lead time, stage residency, queue age and deployment frequency computable with zero new ceremony.",
+        "The state_history requirement is SPLIT, not retroactive: optional wherever it is absent today, REQUIRED at high/critical tiers for changes classified on or after 2026-07-28 (STATE_HISTORY_REQUIRED_FROM). A high-tier change from before the cutover with no history prints a grandfathering NOTICE on every run — never a silent excuse. An unparseable or missing classified_at counts as on-or-after: an unknown input fails toward more control.",
+        "scripts/flow-report.mjs (Phase 3.2) — TELEMETRY, NEVER A GATE, in the exact posture of scripts/token-report.mjs. Lead time (classified → in-production), stage-residency histogram, deployment frequency (production transitions plus sealed release records, reported side by side rather than averaged), change-failure rate and MTTR from the operations log, and gate wall-clock per lane from the `ms` the runner has recorded since rc.34 and nothing read. Every figure names its denominator and says when it cannot be computed. `--check` validates INPUT SHAPE only.",
+        "Operations signals link to changes (Phase 3.3): two OPTIONAL fields on each entry, validated by scripts/operations-signal-check.mjs — `caused_by_change` (must resolve to a governed change under docs/governance/changes/; where there is no changes tree the attribution is reported NOT VERIFIED rather than passing quietly) and `resolved_at` (must parse, and may not precede `detected`). Without them change-failure rate and MTTR are not derivable at all.",
+        "scripts/approval-status.mjs (Phase 3.4) — the approval queue / WIP report, also telemetry. Per change, the roles still owed at PA1 and PA2 with their age, read from the same set scripts/product-approval-check.mjs computes (checkApprovals now RETURNS {findings, missing} instead of discarding the set into finding strings — no second, drifting definition of a required role). The age clock starts when the change entered the state it is sitting in; with no state_history it falls back to classified_at and SAYS the age is approximate. docs/governance/approval-sla.json (new governance/approval-sla.template.json, shaped like assurance-sla) states per-stage and per-role targets and a soft WIP limit; breaches are FLAGGED and gate nothing.",
+        "scripts/comprehension-report.mjs (Phase 3.5) — trends `review_minutes` and `pct_agent_generated` per reviewer and over time from the comprehension.json records that have been collected since rc.15 and never read. Fewer than four data points reports `not enough history` rather than a decorated guess. Telemetry; comprehension-check already says these metrics are reported and never gated on their values.",
+        "scripts/exception-register-check.mjs (Phase 3.6) — a new catalogued control (EXCEPTION-REGISTER, scheduled lane) projecting EVERY open exception in the repository into one register: envelope exemptions and assurance risk-acceptances alike. Expiry WARNINGS at 30/14/7 days are notices that never fail a build — the hard block stays exactly where it was, at expiry; what is removed is the overnight green-to-blocked surprise. Per-owner and per-control aggregation. CONCENTRATION FAILS: more than 3 open exceptions against one control is one control the organisation has stopped operating, recorded 3+ times. The limit lives in docs/governance/exception-policy.json (new template) and may be TIGHTENED below the shipped floor and never raised above it — a file asking for 10 is itself a finding.",
+        "Warning bands elsewhere (Phase 3.6): scripts/operational-readiness-check.mjs and scripts/adoption-attest.mjs print a NOTICE at 80% of each freshness window (WARN_AT). Both still pass; both still block at exactly the same place they always did.",
+        "The three reports are wired into ci/ci.yml beside the token report with `--check`, and each is named with its reason in the printed REPORT_ONLY list of scripts/ci-catalog-check.mjs. A merge gated on a duration is a merge gated on the clock; the cheapest way to make that build green is to approve without reading."
+      ],
+      "action_required": [
+        "Start appending to `state_history` when a change moves state — {state, at, by}, in transition order. It is optional on your existing envelopes and stays that way; it becomes REQUIRED for high/critical changes you classify from 2026-07-28 onward. `node scripts/change-envelope-check.mjs` prints a NOTICE naming every grandfathered high-tier change so you can see what will never be measurable.",
+        "Copy governance/approval-sla.template.json to docs/governance/approval-sla.json and set targets your organisation can actually meet (or omit it — targets fall back to the shipped default of 10 days). Nothing fails when a target is missed.",
+        "Copy governance/exception-policy.template.json to docs/governance/exception-policy.json if you want a concentration limit tighter than 3. The scheduled lane now runs the exception register; if you carry more than 3 open exceptions against one control today, that build fails and the register names them.",
+        "Add `caused_by_change` and `resolved_at` to operations signals you can attribute and have closed. Both are optional, and change-failure rate / MTTR are only as good as they are — the report says how many signals are unattributed rather than assuming them away.",
+        "Optionally add `node scripts/flow-report.mjs`, `node scripts/approval-status.mjs` and `node scripts/comprehension-report.mjs` (without --check) to a scheduled job so the numbers land in a log a human reads. They exit 0 by design."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.38",
+      "headline": "Flow-plan Phase 4 — approvals re-priced, never removed",
+      "notes": [
+        "Narrowed approval binding: an approval attestation now carries a per-role binding_hash over what that role actually saw (its compiled sections, its role entry, the subject digests) alongside the whole-plan plan_hash. An edit elsewhere in the plan — a comment in an unrelated profile, a new section for another function — no longer invalidates every signature on every in-flight change. Anything within the role’s own scope still invalidates: tamper-evidence is unchanged, only its blast radius is.",
+        "Change classes: change_class standard|normal|emergency (default normal). An emergency change compiles the SAME requirements and may reach production through the new emergency-authorized state, but only with a retrospective_deadline; once that deadline passes with receipts still outstanding, the gate fails. Nothing is dropped — it is reordered, with a hard expiry.",
+        "Pre-approved change patterns: a profile may carry patterns (pattern_id, matcher, pre-compiled plan hash, second-line approver, expiry, sampling_rate). A standard-class envelope naming a pattern compiles to the pre-approved plan and is enrolled for post-hoc sampling. Patterns expire, a builder may not approve one, and a matcher miss falls back to the full route.",
+        "Release trains: docs/governance/release-trains/<id>.json names N change_ids against one sealed bundle. Release-level acts (the hold, the anchor, the freshness) are taken once per train; per-change PA2 is untouched.",
+        "Delegation and quorum: an identity may carry delegates [{to, from, until, granted_by}] — a delegate inherits every disjointness rule and the delegation expires. Roles may declare a quorum (any K of the holders) where approvals are checked.",
+        "Objections pulled left: the lending and consumer-lending profiles now bind credit-risk and data-protection at PA1 rather than PA2, so those functions see a change at permission-to-develop instead of at permission-to-launch. Pure profile data — the mechanism has existed since 1.11 and was unused.",
+        "Flag corroboration: an envelope flag contradicted by the repository’s own governance data is a finding — personal_data:false against a personal category in the data lifecycle, model_involved:false against a non-empty model manifest, third_party:false against a populated third-parties passport section."
+      ],
+      "action_required": [
+        "Re-sign nothing: existing approval attestations remain valid. New approvals gain the binding_hash automatically; the whole-plan hash is still recorded.",
+        "If you want the emergency lane, decide who may set change_class: emergency and what retrospective_deadline your policy allows — an emergency change with no deadline is refused.",
+        "Pattern authors: a pattern is itself a governed change. Add patterns to a profile only with second-line approval, an expiry, and a sampling rate you will actually honour.",
+        "Lending adopters: credit-risk and data-protection are now PA1 approvers for lending products. In-flight lending changes past permission-to-develop need those two approvals recorded before their next state transition."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.39",
+      "headline": "Flow-plan Phase 5 — exposure decoupled from deploy",
+      "notes": [
+        "Environments are a seam, not prose. docs/governance/environments.json (installed from governance/environments.template.json, `governed` tier) declares the promotion ladder: one entry per environment with its purpose, data_classification, url, the identity entitled to promote INTO it, and what it promotes FROM. scripts/environments-check.mjs (ENVIRONMENTS, pr lane) holds five properties — one root and no cycles, a resolvable promoter who is neither an agent nor a builder wherever approval is required, personal data never behind an unattended promotion, and an always-approval-required terminal environment. This replaces the three <!-- ADOPT --> comments in skills/release/SKILL.md that told you to name your pre-production target and could never be checked; the skill now READS the ladder.",
+        "Exposure is separated from deploy and governed. docs/governance/feature-flags.json (from governance/feature-flags.template.json, `governed` tier) is the exposure register: every flag defaults OFF, belongs to a governed change, names a human registry owner and a kill path, sits at one of the pilot playbook's six cohort stages, and EXPIRES. scripts/feature-flag-check.mjs (EXPOSURE-CONTROL, pr lane) is MANDATORY-WHEN-COMPILED: silent for a repository doing no staged exposure, and required the moment any compiled plan asks for the new `exposure_control` capability — which profiles/regulated-bank.json now declares at HIGH tier. An expired flag fails (30/14/7-day notices precede it) and a flag whose owning change is closed or superseded fails as stale exposure machinery, so flag debt is visible rather than permanent.",
+        "R3b — progressive delivery in service readiness. A service may declare progressive_delivery {strategy: canary|blue-green|ring, stages[{name, traffic_pct, bake_minutes, slo_refs}], automated_rollback{trigger_slo, last_tested}, feature_flag_ref}. The ramp must strictly increase and end at 100, each stage must bake while watching a named SLO, the automated rollback must fire on an SLO the ramp actually observes, and last_tested is a SIGNED OBSERVATION (rc.36's shape) on a 90-day window with the 80% warning band. Optional for a service nobody is ramping; required once a compiled plan asks for exposure_control.",
+        "The deploy lane has its first control. scripts/deployed-digest-check.mjs (DEPLOYED-DIGEST, deploy lane) verifies a docs/governance/deployments/<id>.json record against two things nothing else in the harness ever checked: that the deployed digest IS the release subject's authorized artifact digest — a rebuild of the same source is a different artifact and was not the one evaluated — and that the recorded stages replay the declared progressive-delivery ramp in order, at the declared traffic, each having baked at least its declared time. Promotion into an approval-required environment additionally needs an authorized_by who is a non-builder human and not the deployer.",
+        "ci/ci.yml runs the deploy lane again, gated on release events (a tag push or a published release). rc.33's empty-lane guard is unchanged and still refuses a lane with no runnable control — what changed is that `deploy` now has one. `build` remains deliberately un-invoked: it still carries zero controls.",
+        "Nothing here gates on time, cost or a metric value. The deploy gate reads a clock only to compare the bake a human DECLARED with the bake that was OBSERVED — a control being verified, the same shape as a freshness window, and the opposite of gating a merge on how long something took."
+      ],
+      "action_required": [
+        "Recompile every change whose plan compiles at HIGH tier against the regulated-bank profile: it now carries the exposure_control capability, so its plan_hash has moved and change-envelope-check will report the stored plan as stale until you run `node core/policy-compiler.mjs <envelope> --write`. Approval attestations bound to the old plan_hash must be re-collected or re-signed — the bundled worked example shows the shape (approval-attestation-example/regenerate.mjs).",
+        "Once a plan compiles exposure_control, THREE things become required and each fails closed until you supply it: docs/governance/feature-flags.json with a flag naming that change; a progressive_delivery block on every service the change declares; and (on the deploy lane) a deployment record binding the deployed digest. If you are not doing staged exposure yet, remove `exposure_control` from your own copy of profiles/regulated-bank.json BEFORE upgrading — the capability is profile data, and this is the one honest way to defer it.",
+        "Adopt docs/governance/environments.json. The installed template is the Loom's EXAMPLE ladder and says so: every run prints a NOTICE naming the example.invalid URLs. The gate passes on it, deliberately (a template that fails on install gets deleted), but a deployment record can only cite an environment you have actually declared.",
+        "If your CI copies ci/ci.yml, note the new `on:` triggers (tag pushes matching v*, and published releases) and adjust the tag pattern to yours. Where your platform deploys from a workflow_dispatch or a deployment event, widen the deploy step's `if:` — the rule is that the step runs wherever a docs/governance/deployments/ record is written.",
+        "CODEOWNERS needs no edit: environments.json, feature-flags.json and deployments/ all sit under /docs/governance/, which the shipped template already owns. scripts/control-plane-check.mjs now probes all three plus the two new gate scripts, so a repository that has narrowed that rule will hear about it."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.40",
+      "headline": "Flow-plan Phase 6 — the machinery runs in parallel, and says so",
+      "notes": [
+        "core/gate-runner.mjs executes a BOUNDED-CONCURRENCY POOL instead of a serial spawnSync loop. `--jobs N` (default availableParallelism()-1, floor 1) sizes it; `--timeout-ms N` (default 300000) bounds each gate — a hung gate used to hang CI forever, and is now KILLED and recorded with status `timeout`, which counts as a failure and never as a pass or a skip. Output is captured per gate (rc.35's capture, unchanged) and FLUSHED IN CATALOG ORDER once the pool drains, so a parallel run's log reads exactly like the serial one's. Every rc.34/rc.35 record field survives; `concurrency: {jobs, timeout_ms, waves}` and a `wave` per execution are added.",
+        "Catalog entries may declare `depends_on: [control_id]`, and the runner turns the graph into topological waves. Real ids only, no self-reference, and cycles are refused by BOTH scripts/control-catalog-check.mjs (catalog-wide) and the runner (exit 2) — a cycle is never flattened, because then the declared order would not be the executed order. A dependency on a control THIS run skipped is not a barrier: it was skipped, with its reason already recorded. The shipped catalog declares the two real dependencies: RELEASE-ATTESTATION after RELEASE-SUBJECT + HG-0003, and FLOOR-DRIFT after FREEZE-STAMP.",
+        "core/gate-cache.mjs (GATE-CACHE, pr lane, execute:false) is a content-addressed result cache under .loom/gate-cache/. The key covers the mechanism FILE's digest, its arguments, the canonical catalog entry of every control sharing it, the digest of every file under the control's DECLARED PATH SCOPE, the sorted compiled plan_hash set, and a format version. Four rules keep a hit honest: only controls that DECLARE a path scope are cacheable (that scope is already what decides whether the control runs at all on a diff, so the cache adds no new trust); `always:true` tamper checks and unscoped controls never are; the RELEASE and DEPLOY lanes never are, whatever a control declares; and only PASSES are stored, so a failure always re-runs. A hit is recorded as status `pass-cached` with its `cache_key`, and the stored output is replayed verbatim — as auditable as a skip. `--no-cache` disables it, and the record says which it was.",
+        "core/compiled-requirements.mjs now carries each counted change's `plan_hash` on its aggregate entry — that is what makes recompiling any plan invalidate every cached result in the run.",
+        "ci/ci.yml caches .loom/gate-cache with actions/cache, under a comment stating the trust argument in full. Losing the cache costs time and nothing else: a miss runs the gate.",
+        "skills/next-story and skills/discovery dispatch their reviewers in ONE message, so they run concurrently and blind to each other — the wording already proven in skills/develop. A reviewer that has read the other's verdict was never a second pair of eyes, so this is a wall-clock cut with no control cost.",
+        "skills/next-story gains a documented `--parallel N` lane (§6): up to N pending items that are mutually DAG-independent via depends_on AND disjoint in a new optional `paths:` field on backlog items, each in its own git worktree, branch and PR. An item with NO `paths:` may only run alone — an undeclared scope is not an empty one. Plus a stacked-PR subsection (`stacked_on: <PR#>`) so a dependent story's REVIEW can start while merge order stays human-controlled and follows the stack. Documentation and the backlog example's schema; no new script, and four-eyes is untouched.",
+        "Measured on a staged full-tier adoption (4 cores, 34 mechanisms selected, 2 waves, 21 of them cacheable): serial baseline ~2.35s, cold pooled ~0.98s, warm ~0.45s. Nothing here gates on time, cost or a metric value, and no fail-closed default moved. The timeout is the one new way to fail, and it fails CLOSED: no result inside the bound is a failure, not a pass."
+      ],
+      "action_required": [
+        "Add `.loom/gate-cache/` to your .gitignore, or rely on the one the store writes for itself (the runner drops a `*` .gitignore inside the cache directory the first time it stores an entry). A cached result is a local/CI artifact; the record of record remains gate-run-*.json.",
+        "If your CI copies ci/ci.yml, take the new `Gate result cache` step (actions/cache@v4 on .loom/gate-cache) or drop it — the runner works either way, a cold cache simply misses. Do NOT extend the cache to the release or deploy lanes: the runner refuses to serve them, and it is the release re-running its gates for real that the refusal protects.",
+        "Gate wall-clock in gate-run-*.json is now the CONCURRENT elapsed time per mechanism, so the lane total scripts/flow-report.mjs prints is a sum of overlapping intervals and is no longer the lane's wall-clock. Read `concurrency.waves` and `concurrency.jobs` alongside it.",
+        "A gate of yours that takes longer than 300s now fails as a timeout. Raise `--timeout-ms` for that lane deliberately, in the workflow, where the number is reviewable — do not remove the bound.",
+        "If you add `depends_on` to your own catalog entries, keep the graph acyclic: control-catalog-check fails the build on a cycle and the runner exits 2 rather than running one.",
+        "Adopting the `--parallel` lane is opt-in and needs `paths:` on the backlog items you intend to run together. Until you declare them, every item is treated as touching everything and the lane degrades to one story at a time — which is the current behaviour, and the safe one."
+      ]
+    },
+    {
+      "version": "2.0.0-rc.41",
+      "headline": "The cache-key module is text again — a control-plane source file that no diff could show",
+      "notes": [
+        "core/gate-cache.mjs shipped at rc.40 with LITERAL NUL, 0x01 and 0x02 bytes embedded in the cache-key template literals as field delimiters. They work at runtime, but they made git and ripgrep classify the file as BINARY: `git show` rendered rc.40 as `Bin 0 -> 7746 bytes`, and a directory-wide `rg` sweep skipped the file silently while still matching it when named explicitly. The module that decides which gates may be served from cache — that is, which gates may not run — was invisible to both review and search. Replaced with the \\x00 / \\x01 / \\x02 ESCAPE SEQUENCES.",
+        "The runtime strings are byte-identical, so this is not a cache format change: the pre-change and post-change modules compute the SAME key for the same input (asserted directly, old module vs new module, against a stable mechanism). No stored entry is invalidated and no gate re-runs that would not have. FORMAT is unchanged.",
+        "The file is now 145 lines of text to git and is returned by directory-wide greps. Nothing else moved: no gate, catalog entry, profile, template or default changed at this version."
+      ],
+      "action_required": [
+        "None. If you vendored core/gate-cache.mjs, re-copy it — your cache stays valid either way, because the key is unchanged.",
+        "If you carry your own binary-file policy for source trees, note that this class is worth a check: a .mjs that git reports as Bin is a file your review process cannot show a reviewer."
+      ]
     }
   ]
 }

@@ -1,0 +1,67 @@
+{
+  "change_id": "CHG-2026-0055",
+  "risk_tier": "medium",
+  "profiles": [
+    "regulated-bank"
+  ],
+  "required_gates": [
+    "D",
+    "PA1",
+    "PA2",
+    "Q",
+    "decision-log"
+  ],
+  "required_approver_roles": [
+    "compliance",
+    "data-protection",
+    "engineering",
+    "legal",
+    "model-validator",
+    "operations",
+    "product-owner",
+    "risk-second-line"
+  ],
+  "pa1_approver_roles": [],
+  "required_evidence": [
+    "control-plane",
+    "lineage",
+    "model-provenance",
+    "reviews",
+    "tests"
+  ],
+  "pa1_sections": [
+    "classification",
+    "inherent-risks",
+    "ownership",
+    "regulatory-obligations",
+    "target-market",
+    "third-parties"
+  ],
+  "pa2_sections": [
+    "complaints-remediation",
+    "disclosures",
+    "finance-prudential",
+    "financial-crime",
+    "model-validation",
+    "post-launch-monitoring",
+    "pricing-conduct",
+    "security-privacy-residency",
+    "third-party-continuity"
+  ],
+  "required_capabilities": {
+    "data_risk_register": {
+      "required": true,
+      "minimum_version": "3.1",
+      "institution_owned": true
+    }
+  },
+  "profile_bindings": [
+    {
+      "profile": "regulated-bank",
+      "kind": "base",
+      "version": null,
+      "digest": "sha256:5d39041baaa24afeded181508f81993ffb2c22ae992faffc7ccfad8d80c2ab29"
+    }
+  ],
+  "plan_hash": "af3f4d7658b9e816bbaf7690153b1b798b051fbcea76404faa56db494ba7c6d5"
+}

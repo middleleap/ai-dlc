@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, STATES } from './change-envelope-check.mjs';
+import { CHANGE_CLASSES, EMERGENCY_RETROSPECTIVE_MAX_DAYS, EMERGENCY_STATE, checkStateHistory, corroborateFlags, evaluate, STATES, stateHistoryRequired } from './change-envelope-check.mjs';
+import { collectPatterns } from '../core/change-patterns.mjs';
 import { compile, resolveBindings } from '../core/policy-compiler.mjs';
 
 import { existsSync } from 'node:fs';
@@ -39,8 +40,30 @@ const ok = (over = {}, ctx = {}) => evaluate({ ...ENVELOPE, ...over }, {
   plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY, freshPlan: fresh(), ...ctx,
 });
 
+// rc.37 — moving a change's state means RECORDING the transition: the history's last entry is
+// current_state, so a test that advances the state advances the record with it (exactly what an
+// envelope author now has to do).
+const advance = (state, at = '2026-07-30T10:00:00Z', by = 'po-fatima') => ({
+  current_state: state,
+  state_history: [...ENVELOPE.state_history, { state, at, by }],
+});
+
 test('the shipped worked example passes end to end', () => {
   assert.deepEqual(ok(), []);
+});
+
+test('TERMINAL — a closed change is valid without plan reconciliation or receipts, but keeps its classifier (rc.34)', () => {
+  // A closed change's profiles may have moved on; it must not go red because a profile did,
+  // and it must not demand PA receipts for work it abandoned. It contributes nothing to the
+  // compiled-requirements aggregate (asserted in core/compiled-requirements.test.mjs).
+  const closed = evaluate({ ...ENVELOPE, ...advance('closed') }, { plan: null, freshPlan: null, passport: null, architectureExists: false });
+  assert.deepEqual(closed, [], `a closed change must not be re-litigated:\n${closed.join('\n')}`);
+  const superseded = evaluate({ ...ENVELOPE, ...advance('superseded') }, {});
+  assert.deepEqual(superseded, []);
+  // The record of who judged it survives its closure.
+  const anonymous = evaluate({ ...ENVELOPE, ...advance('closed'), classification: {} }, {});
+  assert.equal(anonymous.length, 1);
+  assert.match(anonymous[0], /classified_by/);
 });
 
 test('RECONCILIATION — a hand-edited plan fails even when it keeps its old hash', () => {
@@ -89,7 +112,7 @@ const PA2_OK = { ...PASSPORT, pa2: { decision: 'approved' } };
 const READY = { missing: [], findings: [] };
 const HOLD_RELEASED = { change_id: 'CHG-2026-0042', status: 'released', by: 'risk-lena', at: '2026-07-21' };
 const EVIDENCE_OK = { anchor: 'abc123', attestationFindings: [] };
-const prod = (ctx = {}) => ok({ current_state: 'production-authorized' }, {
+const prod = (ctx = {}) => ok(advance('production-authorized'), {
   passport: PA2_OK, readiness: READY, hold: HOLD_RELEASED, evidence: EVIDENCE_OK, ...ctx,
 });
 
@@ -135,5 +158,219 @@ test('an unknown state is rejected; the state enum matches the plan', () => {
   assert.ok(ok({ current_state: 'shipped' }).some((x) => /current_state must be one of/.test(x)));
   assert.equal(STATES[0], 'classified');
   assert.equal(STATES[STATES.length - 1], 'in-production');
+});
+
+/* ---- rc.37 · flow-plan Phase 3.1: state_history, the append-only transition record ---- */
+
+const H = ENVELOPE.state_history;
+
+test('STATE-HISTORY — the shipped worked example carries a well-formed history', () => {
+  assert.ok(Array.isArray(H) && H.length >= 3, 'the worked example must demonstrate the field');
+  assert.deepEqual(checkStateHistory(ENVELOPE, { registry: REGISTRY }), []);
+  assert.equal(H[H.length - 1].state, ENVELOPE.current_state);
+});
+
+test('STATE-HISTORY — it must advance in the STATES order; a backwards or repeated state fails', () => {
+  const back = checkStateHistory({ ...ENVELOPE, ...advance('classified') }, {});
+  assert.ok(back.some((x) => /does not advance the lifecycle/.test(x)), back.join('\n'));
+  const repeat = checkStateHistory({ ...ENVELOPE, ...advance('in-delivery') }, {});
+  assert.ok(repeat.some((x) => /does not advance the lifecycle/.test(x)));
+});
+
+test('STATE-HISTORY — APPEND-ONLY: a timestamp earlier than its predecessor fails', () => {
+  const f = checkStateHistory({ ...ENVELOPE, ...advance('delivery-complete', '2026-07-19T00:00:00Z') }, {});
+  assert.ok(f.some((x) => /APPEND-ONLY/.test(x)), f.join('\n'));
+});
+
+test('STATE-HISTORY — nothing follows a terminal state; closure is not a pause', () => {
+  const resumed = {
+    current_state: 'in-production',
+    state_history: [...H, { state: 'closed', at: '2026-08-01T00:00:00Z' }, { state: 'in-production', at: '2026-08-09T00:00:00Z' }],
+  };
+  const f = checkStateHistory({ ...ENVELOPE, ...resumed }, {});
+  assert.ok(f.some((x) => /recorded after the terminal state closed/.test(x)), f.join('\n'));
+});
+
+test('STATE-HISTORY — the history may not be a parallel account: the last entry IS current_state', () => {
+  const f = checkStateHistory({ ...ENVELOPE, current_state: 'in-production' }, {});
+  assert.ok(f.some((x) => /not a parallel account/.test(x)));
+});
+
+test('STATE-HISTORY — an undated transition, an unknown state, and an unresolvable actor all fail', () => {
+  const undated = checkStateHistory({ ...ENVELOPE, state_history: [{ state: 'classified', at: 'soon' }], current_state: 'classified' }, {});
+  assert.ok(undated.some((x) => /is not an ISO-8601 timestamp/.test(x)));
+  const unknown = checkStateHistory({ ...ENVELOPE, state_history: [{ state: 'vibing', at: '2026-07-18T00:00:00Z' }], current_state: 'in-delivery' }, {});
+  assert.ok(unknown.some((x) => /is not one of/.test(x)));
+  const ghost = checkStateHistory({ ...ENVELOPE, state_history: [...H.slice(0, 2), { ...H[2], by: 'nobody-here' }] }, { registry: REGISTRY });
+  assert.ok(ghost.some((x) => /is not in the identity registry/.test(x)), ghost.join('\n'));
+});
+
+test('STATE-HISTORY — it must begin where every governed change begins', () => {
+  const f = checkStateHistory({ ...ENVELOPE, state_history: H.slice(1) }, {});
+  assert.ok(f.some((x) => /begins at "permission-to-develop"/.test(x)), f.join('\n'));
+});
+
+test('STATE-HISTORY — REQUIRED at high/critical from the cutover, OPTIONAL before it (no retroactive red)', () => {
+  const { state_history, ...noHistory } = ENVELOPE;
+  // Classified before the cutover: grandfathered — a NOTICE, never a finding.
+  const notices = [];
+  assert.deepEqual(checkStateHistory(noHistory, { notices }), []);
+  assert.ok(notices.some((n) => /grandfathered/.test(n)), 'a grandfathered high-tier change must be said out loud');
+  assert.equal(stateHistoryRequired(noHistory), false);
+  // Classified on or after it: required.
+  const fresh = { ...noHistory, classification: { ...ENVELOPE.classification, classified_at: '2026-08-01' } };
+  assert.equal(stateHistoryRequired(fresh), true);
+  assert.ok(checkStateHistory(fresh, {}).some((x) => /requires state_history/.test(x)));
+  // A low-tier change is never required to carry one, whenever it was classified.
+  assert.equal(stateHistoryRequired({ ...fresh, risk_tier: 'low' }), false);
+  assert.deepEqual(checkStateHistory({ ...fresh, risk_tier: 'low' }, {}), []);
+  // An unparseable classification date fails toward MORE control, not less.
+  assert.equal(stateHistoryRequired({ ...noHistory, classification: {} }), true);
+});
+
+// --- change classes (rc.38 · flow-plan Phase 4.2) ---------------------------------------------
+
+const NOW = Date.parse('2026-08-05T00:00:00Z');
+const HELD_CTX = { plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY, freshPlan: fresh() };
+// production-authorized with NOTHING released: the full compound authorization is outstanding.
+const PROD = { ...advance('production-authorized', '2026-08-01T10:00:00Z', 'risk-lena') };
+const EMERGENCY = (em, over = {}) => ({
+  ...ENVELOPE,
+  change_class: 'emergency',
+  current_state: EMERGENCY_STATE,
+  state_history: [...ENVELOPE.state_history, { state: EMERGENCY_STATE, at: '2026-08-01T10:00:00Z', by: 'risk-lena' }],
+  emergency: em,
+  ...over,
+});
+const EM_OK = {
+  authorized_by: 'risk-lena',
+  authorized_at: '2026-08-01T10:00:00Z',
+  rationale: 'Live incident: the affordability service is rejecting every application; the fix is the model pin rollback.',
+  retrospective_deadline: '2026-08-08T10:00:00Z',
+};
+
+test('change_class defaults to normal, and an unknown class is a finding rather than a fallback', () => {
+  assert.deepEqual(ok(), []);                       // no change_class on the shipped example
+  assert.deepEqual(ok({ change_class: 'normal' }), []);
+  assert.ok(ok({ change_class: 'emergancy' }).some((f) => new RegExp(`change_class must be one of ${CHANGE_CLASSES.join('\\\\|')}`).test(f)));
+});
+
+test('the emergency STATE is reachable only by a declared emergency change', () => {
+  const f = evaluate({ ...ENVELOPE, current_state: EMERGENCY_STATE, state_history: [...ENVELOPE.state_history, { state: EMERGENCY_STATE, at: '2026-08-01T10:00:00Z', by: 'risk-lena' }] }, HELD_CTX);
+  assert.ok(f.some((x) => /reachable only by a change classified change_class "emergency"/.test(x)));
+});
+
+test('normal production authorization with nothing released still FAILS — the baseline is unmoved', () => {
+  assert.ok(evaluate({ ...ENVELOPE, ...PROD }, HELD_CTX).some((f) => /no release-hold.json/.test(f)));
+});
+
+test('an emergency BEFORE its deadline defers the receipts and lists every one of them', () => {
+  const notices = [];
+  const findings = evaluate(EMERGENCY(EM_OK), { ...HELD_CTX, notices, now: NOW });
+  assert.deepEqual(findings, []);
+  const n = notices.find((x) => /EMERGENCY —/.test(x));
+  assert.ok(n, `expected the outstanding receipts to be reported: ${JSON.stringify(notices)}`);
+  assert.ok(/no release-hold.json/.test(n), 'the deferred receipt must be NAMED, not counted');
+  assert.ok(/due by 2026-08-08T10:00:00Z/.test(n));
+});
+
+test('the MOMENT the deadline passes with receipts owed, every one of them fires', () => {
+  const past = Date.parse('2026-08-09T00:00:00Z');
+  const findings = evaluate(EMERGENCY(EM_OK), { ...HELD_CTX, now: past });
+  assert.ok(findings.some((f) => /retrospective deadline .* has PASSED with \d+ receipt\(s\) still outstanding/.test(f)));
+  assert.ok(findings.some((f) => /no release-hold.json/.test(f)), 'the deferral is over, so the receipts themselves are findings again');
+});
+
+test('an emergency with NO block defers nothing — a clock is what makes it not a waiver', () => {
+  const findings = evaluate(EMERGENCY(undefined), { ...HELD_CTX, now: NOW });
+  assert.ok(findings.some((f) => /requires an `emergency` block/.test(f)));
+  assert.ok(findings.some((f) => /no release-hold.json/.test(f)));
+});
+
+test('an unreadable deadline defers nothing either', () => {
+  const findings = evaluate(EMERGENCY({ ...EM_OK, retrospective_deadline: 'soon' }), { ...HELD_CTX, now: NOW });
+  assert.ok(findings.some((f) => /is not a parseable ISO-8601 timestamp/.test(f)));
+  assert.ok(findings.some((f) => /no release-hold.json/.test(f)));
+});
+
+test('a deadline beyond the ceiling is a waiver spelled as a deadline', () => {
+  const far = new Date(Date.parse(EM_OK.authorized_at) + (EMERGENCY_RETROSPECTIVE_MAX_DAYS + 1) * 86400000).toISOString();
+  assert.ok(evaluate(EMERGENCY({ ...EM_OK, retrospective_deadline: far }), { ...HELD_CTX, now: NOW })
+    .some((f) => `${f}`.includes(`the ceiling is ${EMERGENCY_RETROSPECTIVE_MAX_DAYS}`)));
+});
+
+test('only a second-line HUMAN authorises an emergency — the release hold’s own rule', () => {
+  for (const who of ['eng-omar', 'agent-loom-delivery', 'po-fatima']) {
+    assert.ok(evaluate(EMERGENCY({ ...EM_OK, authorized_by: who }), { ...HELD_CTX, now: NOW })
+      .some((f) => /is not a second-line HUMAN identity/.test(f)), who);
+  }
+});
+
+// --- pre-approved patterns, wired through the gate (rc.38 · Phase 4.3) ------------------------
+
+test('a standard change with no pattern_id is just a normal change, and is told so', () => {
+  assert.ok(ok({ change_class: 'standard' }).some((f) => /requires pattern_claim.pattern_id/.test(f)));
+});
+
+test('a pattern_claim on a non-standard change is a claim nobody checks', () => {
+  assert.ok(ok({ pattern_claim: { pattern_id: 'x' } }).some((f) => /only change_class "standard" rides a pattern/.test(f)));
+});
+
+// The pattern example is a SECOND worked change (CHG-2026-0055), and like the first it is bundle
+// demonstration data the installer does not ship — so in an adopted layout it is absent and this
+// fixture test skips. The pure pattern logic above and in core/change-patterns.test.mjs runs in
+// both layouts; only the "the shipped example is sound" assertion needs the shipped example.
+const PATTERN_EXAMPLE_PRESENT = ['change-pattern-example/change-envelope.json', 'docs/governance/changes/CHG-2026-0055/change-envelope.json']
+  .some((c) => existsSync(`${HARNESS}/${c}`));
+
+test('the shipped pattern example rides its pattern, and loses coverage the moment it expires', { skip: PATTERN_EXAMPLE_PRESENT ? false : 'pattern example is bundle-only — absent in an adopted layout' }, () => {
+  const env = J('change-pattern-example/change-envelope.json', 'docs/governance/changes/CHG-2026-0055/change-envelope.json');
+  const plan = J('change-pattern-example/control-plan.json', 'docs/governance/changes/CHG-2026-0055/control-plan.json');
+  const passport = J('change-pattern-example/product-passport.json', 'docs/governance/changes/CHG-2026-0055/product-passport.json');
+  const base = J('profiles/regulated-bank.json');
+  const ctx = { plan, passport, architectureExists: true, registry: REGISTRY, freshPlan: plan, patterns: collectPatterns([base]).patterns, notices: [] };
+  assert.deepEqual(evaluate(env, ctx), []);
+  assert.ok(ctx.notices.some((n) => /rides PRE-APPROVED pattern/.test(n)));
+
+  // Expire the pattern: coverage drops and the change owes PA1 in full — the FULL route.
+  const expired = structuredClone(base);
+  expired.patterns[0].expires = '2026-01-01';
+  const after = evaluate(env, { ...ctx, patterns: collectPatterns([expired]).patterns, notices: [] });
+  assert.ok(after.some((f) => /EXPIRED/.test(f)));
+  assert.ok(after.some((f) => /requires PA1 approved/.test(f)), 'a lapsed pre-approval means the change owes its approvals again');
+});
+
+// --- flag corroboration (rc.38 · Phase 4.7) ---------------------------------------------------
+
+const LIFECYCLE = { categories: [{ category: 'customer_contact_details', classification: 'personal' }] };
+const MANIFEST = { models: [{ role: 'delivery-loop', model_id: 'x@1' }] };
+
+test('personal_data: false against a register that classifies personal data is a finding', () => {
+  const env = { ...ENVELOPE, flags: { ...ENVELOPE.flags, personal_data: false } };
+  assert.ok(corroborateFlags(env, { dataLifecycle: LIFECYCLE }).some((f) => /classifies 1 category as personal/.test(f)));
+  assert.deepEqual(corroborateFlags(ENVELOPE, { dataLifecycle: LIFECYCLE }), []);
+});
+
+test('model_involved: false against a non-empty model manifest is a finding', () => {
+  const env = { ...ENVELOPE, flags: { ...ENVELOPE.flags, model_involved: false } };
+  assert.ok(corroborateFlags(env, { modelManifest: MANIFEST }).some((f) => /declares 1 model/.test(f)));
+});
+
+test('third_party: false against a passport naming third parties is a finding', () => {
+  const env = { ...ENVELOPE, flags: { ...ENVELOPE.flags, third_party: false } };
+  assert.ok(corroborateFlags(env, { passport: PASSPORT }).some((f) => /the analysis and the flag disagree/.test(f)));
+});
+
+test('an ABSENT flag is corroborated exactly like a false one — the compiler reads both the same', () => {
+  const env = { ...ENVELOPE, flags: {} };
+  const f = corroborateFlags(env, { dataLifecycle: LIFECYCLE, modelManifest: MANIFEST, passport: PASSPORT });
+  assert.equal(f.length, 3);
+});
+
+test('a missing corroborating record is NOT VERIFIED, never a quiet pass', () => {
+  const notices = [];
+  corroborateFlags({ ...ENVELOPE, flags: {} }, { notices });
+  assert.ok(notices.some((n) => /data-lifecycle.json to corroborate it against — NOT VERIFIED/.test(n)));
+  assert.ok(notices.some((n) => /model-manifest.json to corroborate it against — NOT VERIFIED/.test(n)));
 });
 }

@@ -21,7 +21,7 @@
 // Run from the repo root: `node scripts/product-approval-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
-import { loadRegistry, identityOf, resolveApprover } from './identity-registry-check.mjs';
+import { loadRegistry, identityOf, quorumFor, resolveApprover } from './identity-registry-check.mjs';
 import { loadIssuers } from '../core/attestations.mjs';
 import { loadIdentityMap, mapRequired } from '../core/identity-map.mjs';
 import {
@@ -63,15 +63,40 @@ export function pa1Roles(plan) {
   return [...new Set(wanted)].filter((r) => required.includes(r)).sort();
 }
 
-function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
+/**
+ * One stage's approvals against the roles the plan compiled.
+ *
+ * Returns `{ findings, missing }`. `missing` used to be computed here and thrown away into a
+ * finding string, which is why nothing in the harness could answer "who is this change waiting
+ * on?" — the set existed, once per run, and was immediately unreadable. It is now returned, and
+ * scripts/approval-status.mjs (telemetry) reads it rather than reimplementing the derivation
+ * against a second, drifting idea of what a required role is.
+ */
+export function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
   const findings = [];
-  const byRole = new Map((approvals || []).map((a) => [a.role, a]));
+  const missing = [];
+  // rc.38 (flow-plan Phase 4.5): approvals group into a LIST per role, not one entry. A quorum
+  // role needs K distinct holders, and collapsing the list to one would have silently accepted
+  // the first name and discarded the rest — a quorum that reads as configured and counts to one.
+  const byRole = new Map();
+  for (const a of approvals || []) byRole.set(a.role, [...(byRole.get(a.role) || []), a]);
   for (const role of requiredRoles) {
-    const a = byRole.get(role);
-    if (!a) { findings.push(`${label}: no approval for required role ${role}`); continue; }
-    findings.push(...checkOne(a, role, registry, label));
-    if (att?.required) {
-      const rec = (att.records || []).find((r) => r?.stage === stage && r?.role === role);
+    const given = byRole.get(role) || [];
+    const k = quorumFor(registry, role);
+    const distinct = new Set(given.map((a) => a.by).filter((b) => typeof b === 'string' && b.trim()));
+    if (given.length === 0) { missing.push(role); findings.push(`${label}: no approval for required role ${role}`); continue; }
+    if (distinct.size < k) {
+      missing.push(role);
+      findings.push(`${label}: role ${role} needs a quorum of ${k} distinct holders — ${distinct.size} recorded (${[...distinct].join(', ') || 'none resolvable'})`);
+    }
+    for (const a of given) {
+      findings.push(...checkOne(a, role, registry, label, att));
+      if (!att?.required) continue;
+      // The attestation for THIS approver. Matching on (stage, role) alone was sufficient while a
+      // role meant one signature; under quorum it would let one record evidence two people.
+      const forRole = (att.records || []).filter((r) => r?.stage === stage && r?.role === role);
+      const rec = forRole.find((r) => r?.subject?.registry_id === a.by)
+        ?? (forRole.length === 1 && given.length === 1 ? forRole[0] : null);
       findings.push(...verifyApprovalAttestation(rec, {
         stage,
         role,
@@ -86,6 +111,10 @@ function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
         seen: att.seen,
         site: att.site,
         now: att.now,
+        // rc.38 (flow-plan Phase 4.1) — where the narrowed per-role binding lets an approval
+        // survive a plan hash that moved outside the approver's scope, that acceptance is
+        // RECORDED here and printed. A narrowing nobody can see is a narrowing nobody agreed to.
+        notices: att.notices,
         map: att.map,
         mapRequired: att.mapRequired,
       }, `${label} · ${role}`));
@@ -97,16 +126,20 @@ function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
   // including every Shariah role. A recorded approval is a claim the record makes about a person.
   // "Agents approve nothing" is the method's loudest promise, and an agent's name sitting in an
   // approval slot under a green gate contradicts it whether or not this stage asked for it.
-  for (const [role, a] of byRole) {
+  for (const [role, given] of byRole) {
     if (requiredRoles.includes(role)) continue; // checked above
-    findings.push(...checkOne(a, role, registry, `${label} (recorded, not required at this stage)`));
+    for (const a of given) findings.push(...checkOne(a, role, registry, `${label} (recorded, not required at this stage)`, att));
   }
-  return findings;
+  return { findings, missing };
 }
 
-/** One recorded approval: resolves to a human holding the role, and second line ∩ builders = ∅. */
-function checkOne(a, role, registry, label) {
-  const findings = [...resolveApprover(registry, a.by, role, `${label} · ${role}`)];
+/**
+ * One recorded approval: resolves to a human holding the role, and second line ∩ builders = ∅.
+ * A DEPUTY (rc.38) resolves through the same call and inherits both rules — the delegation
+ * supplies the role, and the builders check below is applied to the person actually approving.
+ */
+function checkOne(a, role, registry, label, att) {
+  const findings = [...resolveApprover(registry, a.by, role, `${label} · ${role}`, { notices: att?.notices, now: att?.now })];
   if (registry && SECOND_LINE_ROLES.has(role)) {
     const who = identityOf(registry, a.by);
     if (who && (who.groups || []).includes('builders')) {
@@ -147,7 +180,7 @@ export function evaluate(passport, plan, registry, att = {}) {
   // Ownership is named and resolvable, always.
   const own = passport.sections?.ownership;
   for (const [field, role] of [['product_owner', 'product-owner'], ['accountable_executive', 'accountable-executive']]) {
-    findings.push(...resolveApprover(registry, own?.[field], role, `${id} · ownership.${field}`));
+    findings.push(...resolveApprover(registry, own?.[field], role, `${id} · ownership.${field}`, { notices: attCtx.notices, now: attCtx.now }));
   }
 
   // PA1 — permission to develop.
@@ -159,7 +192,7 @@ export function evaluate(passport, plan, registry, att = {}) {
           findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
         }
       }
-      findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`, 'PA1', attCtx));
+      findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`, 'PA1', attCtx).findings);
     } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
       findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
     }
@@ -172,7 +205,7 @@ export function evaluate(passport, plan, registry, att = {}) {
         findings.push(`${id} · PA2: required section ${section} is missing or empty`);
       }
     }
-    findings.push(...checkApprovals(passport.pa2.approvals, plan.required_approver_roles || [], registry, `${id} · PA2`, 'PA2', attCtx));
+    findings.push(...checkApprovals(passport.pa2.approvals, plan.required_approver_roles || [], registry, `${id} · PA2`, 'PA2', attCtx).findings);
   }
   return findings;
 }
@@ -181,7 +214,7 @@ const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } ca
 
 export function run(cwd = process.cwd()) {
   const dir = `${cwd}/${CHANGES_DIR}`;
-  if (!existsSync(dir)) return { findings: [], count: 0 };
+  if (!existsSync(dir)) return { findings: [], notices: [], count: 0 };
   const registry = loadRegistry(cwd);
   // Attestation material is loaded once; `seen` spans every change, so a decision nonce
   // replayed across changes is caught, not just one replayed within a change.
@@ -190,6 +223,7 @@ export function run(cwd = process.cwd()) {
   const assertionIssuers = loadAssertionIssuers(cwd);
   const seen = new Map();
   const findings = [];
+  const notices = [];
   let count = 0;
   for (const name of readdirSync(dir)) {
     const base = `${dir}/${name}`;
@@ -215,15 +249,17 @@ export function run(cwd = process.cwd()) {
       // and the record's own registry_id is only a claim until the two agree.
       map: identityMap,
       mapRequired: mapRequired(plan),
+      notices,
     };
     findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry, att));
   }
-  return { findings, count };
+  return { findings, notices, count };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { findings, count } = run();
+  const { findings, notices, count } = run();
+  for (const n of notices) process.stdout.write(`NOTICE: ${n}\n`);
   if (findings.length) {
     process.stderr.write('\nProduct-approval gate (PA1/PA2) — FAIL\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);

@@ -9,6 +9,7 @@ import { run as productEvalRun } from './product-eval-check.mjs';
 import { run as decisionLogRun } from './decision-log-check.mjs';
 import { run as assuranceCycleRun } from './assurance-cycle-check.mjs';
 import { run as providerSelectionRun } from './provider-selection-check.mjs';
+import { run as featureFlagRun } from './feature-flag-check.mjs';
 
 // A tmp repo with one governed change whose compiled plan requires `families`.
 function repoRequiring(families, state = 'in-delivery') {
@@ -77,5 +78,20 @@ test('provider-selection: no choice is OK for a generic repo, FAILS when a plan 
   try {
     const { findings } = providerSelectionRun(req);
     assert.ok(findings.some((f) => /PS-R06: a compiled plan requires capability "sca"/.test(f)));
+  } finally { clean(req); }
+});
+
+test('exposure-control: no register is OK for a generic repo, FAILS when a plan requires the capability', () => {
+  // rc.39 (flow-plan Phase 5.2). Most repositories are not doing staged exposure and are not
+  // failing. The moment a compiled plan asks for `exposure_control` — the regulated-bank profile
+  // declares it at HIGH tier — "we have no flag register" stops being a neutral state, and the
+  // change that made it non-neutral is named in the finding. Same shape as the D6 register and
+  // the provider roles: the requirement comes from the profile, never from a CI flag.
+  const generic = mkdtempSync(join(tmpdir(), 'mwc-'));
+  try { assert.deepEqual(featureFlagRun(generic).findings, []); } finally { clean(generic); }
+  const req = repoRequiringCapability('exposure_control');
+  try {
+    const { findings } = featureFlagRun(req);
+    assert.ok(findings.some((f) => /requires the exposure_control capability \[CHG-1\]/.test(f)), findings.join('\n'));
   } finally { clean(req); }
 });

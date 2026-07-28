@@ -95,13 +95,21 @@ jobs:
           # copy list. A new manifest entry now lands in the adopted layout with zero CI edits
           # (scripts/adopt.test.mjs proves this). The generated SKILL copy table is still gated
           # for drift by the doc-integrity step above.
-          node "$H/adopt.mjs" --dest "$A"
+          # --tier full, explicitly: the dry-run exercises governed/full-tier templates (identity
+          # map, routine envelope, service readiness, institution BrainKit …). rc.33 made the
+          # unflagged default `core` — the safe on-ramp for a real adopter, the wrong coverage here.
+          node "$H/adopt.mjs" --dest "$A" --tier full
           # Worked-example fixtures the installer deliberately does NOT ship (they are the Loom's
           # own demonstration data, not adopter machinery, so they are not in the copy manifest).
           mkdir -p "$A/docs/governance/changes" "$A/docs/governance/services" \
                    "$A/docs/governance/evidence" "$A/docs/governance/assurance-cycles" \
                    "$A/docs/governance/adapters"
           cp -r "$H/change-example" "$A/docs/governance/changes/CHG-2026-0042"
+          # rc.37 (flow-plan Phase 3): a change that went all the way and then ended. The flow
+          # instruments need one — change-example is mid-flight, so on its own it yields a stage
+          # histogram and no lead time, and a report that can only print "not computable" proves
+          # nothing. Terminal, so it carries no plan, no passport and no receipts.
+          cp -r "$H/change-closed-example" "$A/docs/governance/changes/CHG-2026-0031"
           cp "$H/evidence-example/"*.json "$A/docs/governance/evidence/"
           cp "$H/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
           cp -r "$H/register-example" "$A/docs/governance/data-risk-register"
@@ -136,6 +144,17 @@ jobs:
           # rc.18 WS0 · D0.1: staged HERE with every other example, because $H is repo-root-relative
           # and everything below `cd "$A"` runs from the dry-run destination.
           cp -r "$H/residency-example" "$A/residency-example"
+          # rc.39 (flow-plan Phase 5): the exposure plane's worked example. The change-example
+          # compiles HIGH and regulated-bank now declares the exposure_control capability at high
+          # tier, so the flag register is MANDATORY-WHEN-COMPILED in this layout — without a real
+          # register the gate could only ever have been exercised against tmp fixtures, which is
+          # the vacuum every *-example/ here exists to fill. The deployment record is the deploy
+          # lane's first subject; the lane had zero controls until rc.39 and its CI invocation was
+          # deleted at rc.33 for exactly that reason.
+          cp -r "$H/exposure-example" "$A/exposure-example"
+          cp "$H/exposure-example/feature-flags.json" "$A/docs/governance/feature-flags.json"
+          mkdir -p "$A/docs/governance/deployments"
+          cp "$H/exposure-example/deployment.json" "$A/docs/governance/deployments/DEP-2026-0042-01.json"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
@@ -144,12 +163,44 @@ jobs:
           # digest. Mounts at the top governance level (peer of product-evals.json).
           cp "$H/evidence-example/release-subject.json" "$A/docs/governance/release-subject.json"
           printf 'milestones: []\n' > "$A/docs/backlog.yaml"
+          # rc.36 (flow-plan Phase 2b): the evidence-example directory itself, so the dry-run can
+          # re-derive + re-sign the bundle at a real commit with regenerate.mjs (the committed
+          # example is demo-signed and bound to a fictional commit ON PURPOSE — the gates now
+          # refuse both, and the dry-run pays the refusal by regenerating).
+          cp -r "$H/evidence-example" "$A/evidence-example"
           # Deliberate ADOPT completions the installer never fakes: the manifest ships
-          # services/example-service.json with unparseable ADOPT dates; the dry-run exercises a
-          # real service (credit-origination) with recorded drill dates and drops the stub.
+          # services/example-service.json with ADOPT placeholders; the dry-run exercises a real
+          # service (credit-origination) and drops the stub. rc.36: a drill is a SIGNED
+          # OBSERVATION (observation + refused negative test + non-builder observer + signature),
+          # generated per run with a fresh ed25519 key exactly like the platform-activation
+          # observer below — a stamped bare date is now the DEPRECATED form.
           rm -f "$A/docs/governance/services/example-service.json"
-          TODAY=$(date +%F)
-          node -e 'const fs=require("fs");const t=JSON.parse(fs.readFileSync(process.argv[1]));const d=process.argv[2];t.bcp_dr.last_exercised=d;t.rollback.last_drilled=d;t.kill_switch.last_tested=d;t.capacity.last_run=d;fs.writeFileSync(process.argv[3],JSON.stringify(t,null,2))' "$H/governance/service-readiness.template.json" "$TODAY" "$A/docs/governance/services/credit-origination.json"
+          TPL="$H/governance/service-readiness.template.json" DEST="$A" node <<'JS'
+          const { generateKeyPairSync, sign, createHash } = require("crypto"), fs = require("fs");
+          const canonical = (v) => Array.isArray(v) ? `[${v.map(canonical).join(",")}]` : (v && typeof v === "object") ? `{${Object.keys(v).sort().map((k) => JSON.stringify(k) + ":" + canonical(v[k])).join(",")}}` : JSON.stringify(v);
+          const t = JSON.parse(fs.readFileSync(process.env.TPL));
+          const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+          const today = new Date().toISOString();
+          const observe = (note, attempted) => {
+            const rec = { observed_at: today, observation: { note }, negative_test: { attempted, result: "rejected", tested_at: today }, observer_identity: "ops-dana" };
+            const h = createHash("sha256").update(canonical(rec)).digest("hex");
+            rec.attestation = { issuer: "ci-drill-observer", signature: sign(null, Buffer.from(h, "utf8"), privateKey).toString("base64") };
+            return rec;
+          };
+          t.bcp_dr.last_exercised = observe("failover to the secondary region in 42m; RPO held at 11m", "promotion of a stale replica");
+          t.rollback.last_drilled = observe("rolled back to vN-1 in 6m; limits reconciled", "writes against the rolled-back schema");
+          t.kill_switch.last_tested = observe("decisioning drained to the manual queue in 90s", "traffic routed through the killed path");
+          t.capacity.last_run = observe("2x peak sustained for 1h; p99 within SLO", "load beyond the declared ceiling");
+          // rc.39 (flow-plan Phase 5.3) — R3b. The change-example compiles exposure_control, so the
+          // progressive_delivery block is REQUIRED here, and its automated-rollback trigger test is a
+          // signed observation on a 90-day window like every other drill.
+          t.progressive_delivery.automated_rollback.last_tested = observe("error-rate breach at 12% traffic auto-reverted to vN-1 in 90s; no manual step", "ramp advanced past the next stage while the trigger SLO was breaching");
+          fs.writeFileSync(`${process.env.DEST}/docs/governance/services/credit-origination.json`, JSON.stringify(t, null, 2));
+          const regPath = `${process.env.DEST}/docs/governance/attestation-issuers.json`;
+          const reg = JSON.parse(fs.readFileSync(regPath));
+          reg.issuers.push({ id: "ci-drill-observer", mechanism: "ed25519", verify: { public_key: publicKey.export({ type: "spki", format: "pem" }).toString() } });
+          fs.writeFileSync(regPath, JSON.stringify(reg, null, 2));
+          JS
           cd "$A"
           # Negative test: the unadopted template (placeholder @your-org team) must FAIL the
           # control-plane gate — a copied-but-never-adopted control plane is not a control.
@@ -188,6 +239,23 @@ jobs:
           # Q1b + the secrets history scan diff against git — give the adopted layout a history.
           git init -q -b main && git config user.email loom@dryrun.invalid && git config user.name loom-dryrun
           git add -A && git commit -qm base
+          # rc.36 (flow-plan Phase 2b / D3+D5): the committed evidence bundle is demo-signed and
+          # bound to a fictional commit, and the gates now refuse BOTH. Re-derive the manifest at
+          # the base commit and re-sign the anchor (and the demo-signed assurance cycle) with a
+          # per-run, non-demo key — then commit, so every `git checkout --` restore below recovers
+          # the REGENERATED state, and the base commit is a real ancestor of HEAD (D5).
+          node evidence-example/regenerate.mjs --dest .
+          # rc.39: regenerate stamps release-subject.json's source.commit to the real base commit,
+          # so the deployment record must name the same one — exactly what an adopter's deploy job
+          # does when it writes the record from what it observed. The DIGEST is untouched: that is
+          # the binding the deploy gate exists to check and it must not be papered over here.
+          node -e '
+            const fs=require("fs");
+            const c=JSON.parse(fs.readFileSync("docs/governance/release-subject.json")).source.commit;
+            const p="docs/governance/deployments/DEP-2026-0042-01.json";
+            const d=JSON.parse(fs.readFileSync(p)); d.release_commit=c; fs.writeFileSync(p,JSON.stringify(d,null,2));
+          '
+          git add -A && git commit -qm "seal release evidence at the base commit (rc.36)"
           node scripts/discovery-link-check.mjs
           # ── HG-0007 coverage + nesting (rc.28) ────────────────────────────────────────────
           # The waist gate is the one gate where an inert PASS is worse than an absent gate:
@@ -342,6 +410,108 @@ jobs:
           node scripts/product-approval-check.mjs
           node scripts/architecture-assurance-check.mjs
           node scripts/operational-readiness-check.mjs
+
+          # ── rc.39 · flow-plan Phase 5: exposure is decoupled from deploy ──────────────────
+          # Three new gates, each staged with something real. The register is MANDATORY here (the
+          # change-example compiles HIGH and regulated-bank declares exposure_control at high
+          # tier), so this is the same mandatory-when-compiled derivation the data-risk register
+          # and the provider roles use — the requirement comes from the PROFILE, never a CI flag.
+          #
+          # ① The promotion ladder. The installed template is the Loom's EXAMPLE estate, and the
+          #    gate must say so rather than reading green as somebody's real one.
+          node scripts/environments-check.mjs | tee /tmp/env.txt
+          grep -q "shipped template's placeholder" /tmp/env.txt || {
+            echo "::error::the environment gate passed the shipped example ladder without saying it is the shipped example"; exit 1; }
+          #    …and the two rules that fail closed. Personal data behind an unattended promotion:
+          node -e 'const fs=require("fs"),p="docs/governance/environments.json",s=JSON.parse(fs.readFileSync(p));s.environments.find(e=>e.id==="staging").data_classification="personal";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/environments-check.mjs 2>/tmp/env-p.txt; then
+            echo "::error::an environment holding personal data passed with approval_required false"; exit 1; fi
+          grep -q 'promoted into by decision, not by pipeline' /tmp/env-p.txt || {
+            echo "::error::the personal-data environment was refused, but not for holding personal data"; cat /tmp/env-p.txt; exit 1; }
+          git checkout -- docs/governance/environments.json
+          #    …and a builder waving work into the environment that requires approval:
+          node -e 'const fs=require("fs"),p="docs/governance/environments.json",s=JSON.parse(fs.readFileSync(p));s.environments.find(e=>e.id==="production").identity="eng-omar";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/environments-check.mjs 2>/tmp/env-b.txt; then
+            echo "::error::a builder is the promotion identity for an approval-required environment and the gate passed"; exit 1; fi
+          grep -q 'builders group' /tmp/env-b.txt || {
+            echo "::error::the builder promoter was refused, but not for being a builder"; cat /tmp/env-b.txt; exit 1; }
+          git checkout -- docs/governance/environments.json
+          node scripts/environments-check.mjs > /dev/null
+          #
+          # ② The exposure register. Positive first — it must be COUNTING a real flag, not passing
+          #    over an empty set, and it must say the capability is what makes it mandatory.
+          node scripts/feature-flag-check.mjs | tee /tmp/ff.txt
+          grep -q '1 flag, exposure_control required by a compiled plan' /tmp/ff.txt || {
+            echo "::error::the exposure gate is not reading the staged flag, or not deriving the compiled requirement"; cat /tmp/ff.txt; exit 1; }
+          #    default ON is the whole pattern collapsing:
+          node -e 'const fs=require("fs"),p="docs/governance/feature-flags.json",s=JSON.parse(fs.readFileSync(p));s.flags[0].default=true;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/feature-flag-check.mjs 2>/tmp/ff-d.txt; then
+            echo "::error::a flag defaulting ON passed the exposure gate — that is a deploy, not an exposure control"; exit 1; fi
+          grep -q 'it is a deploy' /tmp/ff-d.txt || {
+            echo "::error::the default-on flag was refused, but not for defaulting on"; cat /tmp/ff-d.txt; exit 1; }
+          git checkout -- docs/governance/feature-flags.json
+          #    the expiry, BOTH directions, restamped per run so no shipped date is load-bearing:
+          node -e 'const fs=require("fs"),p="docs/governance/feature-flags.json",s=JSON.parse(fs.readFileSync(p));s.flags[0].expires=new Date(Date.now()+10*86400000).toISOString().slice(0,10);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          node scripts/feature-flag-check.mjs > /tmp/ff-w.txt || {
+            echo "::error::a flag 10 days from expiry must WARN, never fail — the deadline is unmoved, the surprise is removed"; cat /tmp/ff-w.txt; exit 1; }
+          grep -q '14-day band' /tmp/ff-w.txt || {
+            echo "::error::a flag inside the 14-day band did not warn"; cat /tmp/ff-w.txt; exit 1; }
+          node -e 'const fs=require("fs"),p="docs/governance/feature-flags.json",s=JSON.parse(fs.readFileSync(p));s.flags[0].expires=new Date(Date.now()-86400000).toISOString().slice(0,10);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/feature-flag-check.mjs 2>/tmp/ff-x.txt; then
+            echo "::error::an EXPIRED flag passed — an exposure control past its end date is a permanent branch in production"; exit 1; fi
+          grep -q 'EXPIRED' /tmp/ff-x.txt || {
+            echo "::error::the expired flag was refused, but not for being expired"; cat /tmp/ff-x.txt; exit 1; }
+          git checkout -- docs/governance/feature-flags.json
+          #    and the mandatory-when-compiled derivation itself: remove the register entirely.
+          mv docs/governance/feature-flags.json /tmp/feature-flags.json
+          if node scripts/feature-flag-check.mjs 2>/tmp/ff-m.txt; then
+            echo "::error::a compiled plan requires exposure_control and the missing register passed"; exit 1; fi
+          grep -q 'CHG-2026-0042' /tmp/ff-m.txt || {
+            echo "::error::the missing register was refused without naming the change that requires it"; cat /tmp/ff-m.txt; exit 1; }
+          mv /tmp/feature-flags.json docs/governance/feature-flags.json
+          node scripts/feature-flag-check.mjs > /dev/null
+          #    R3b is mandatory the same way: strip the ramp and readiness must refuse it.
+          node -e 'const fs=require("fs"),p="docs/governance/services/credit-origination.json",s=JSON.parse(fs.readFileSync(p));delete s.progressive_delivery;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operational-readiness-check.mjs 2>/tmp/pd-m.txt; then
+            echo "::error::a service under a change compiling exposure_control passed R3 with no declared ramp"; exit 1; fi
+          grep -q 'progressive_delivery is not an object' /tmp/pd-m.txt || {
+            echo "::error::the missing ramp was refused, but not for being missing"; cat /tmp/pd-m.txt; exit 1; }
+          git checkout -- docs/governance/services/credit-origination.json
+          #
+          # ③ The deploy lane's first control. The lane ran green-about-nothing until rc.33 deleted
+          #    its invocation; it is back because there is now something in it.
+          node scripts/deployed-digest-check.mjs | tee /tmp/dep.txt
+          grep -q '1 deployment record' /tmp/dep.txt || {
+            echo "::error::the deploy gate is not reading the staged deployment record"; cat /tmp/dep.txt; exit 1; }
+          #    a rebuild of the same source is a DIFFERENT artifact and was not the one evaluated:
+          node -e 'const fs=require("fs"),p="docs/governance/deployments/DEP-2026-0042-01.json",s=JSON.parse(fs.readFileSync(p));s.deployed_digest="sha256:"+"b".repeat(64);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/deployed-digest-check.mjs 2>/tmp/dep-d.txt; then
+            echo "::error::a deployment of a digest that is NOT the authorized one passed the deploy gate"; exit 1; fi
+          grep -q 'DEPLOYED DIGEST IS NOT THE AUTHORIZED DIGEST' /tmp/dep-d.txt || {
+            echo "::error::the wrong digest was refused, but not for being the wrong digest"; cat /tmp/dep-d.txt; exit 1; }
+          git checkout -- docs/governance/deployments/DEP-2026-0042-01.json
+          #    …and a canary that jumped to 100% did not go out the way it was approved to:
+          node -e 'const fs=require("fs"),p="docs/governance/deployments/DEP-2026-0042-01.json",s=JSON.parse(fs.readFileSync(p));s.stages_completed=[s.stages_completed[3]];fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/deployed-digest-check.mjs 2>/tmp/dep-s.txt; then
+            echo "::error::a deployment that skipped every declared ramp stage passed the deploy gate"; exit 1; fi
+          grep -q 'exposure that was never baked' /tmp/dep-s.txt || {
+            echo "::error::the skipped ramp was refused, but not for skipping stages"; cat /tmp/dep-s.txt; exit 1; }
+          git checkout -- docs/governance/deployments/DEP-2026-0042-01.json
+          #    …and a stage cut short of its declared bake is an unwatched rollout, not a fast one:
+          node -e 'const fs=require("fs"),p="docs/governance/deployments/DEP-2026-0042-01.json",s=JSON.parse(fs.readFileSync(p));s.stages_completed[1].completed_at=s.stages_completed[1].started_at;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/deployed-digest-check.mjs 2>/tmp/dep-b.txt; then
+            echo "::error::a ramp stage that never baked passed the deploy gate"; exit 1; fi
+          grep -q 'it is an unwatched one' /tmp/dep-b.txt || {
+            echo "::error::the unbaked stage was refused, but not for the bake"; cat /tmp/dep-b.txt; exit 1; }
+          git checkout -- docs/governance/deployments/DEP-2026-0042-01.json
+          node scripts/deployed-digest-check.mjs > /dev/null
+          #    …and the LANE itself: the runner refused an empty deploy lane at rc.33, so proving
+          #    it now selects and passes is what actually retires that guard.
+          node core/gate-runner.mjs --lane deploy --out /tmp/gate-run-deploy.json | tee /tmp/deploy-lane.txt
+          grep -q 'Gate runner \[deploy\] — PASS' /tmp/deploy-lane.txt || {
+            echo "::error::the deploy lane did not run — an empty lane is a hole, not a pass"; cat /tmp/deploy-lane.txt; exit 1; }
+          node -e 'const r=require("/tmp/gate-run-deploy.json");if(!r.executed.some(e=>e.controls.includes("DEPLOYED-DIGEST")))throw new Error("the deploy lane ran without its only control");console.log("deploy lane: DEPLOYED-DIGEST executed")'
+
           node scripts/test-integrity-check.mjs --base main
           node scripts/sast-check.mjs
           node scripts/secrets-scan.mjs
@@ -480,6 +650,158 @@ jobs:
           node core/gate-runner.mjs --lane pr --base main --out /tmp/gate-run.json
           node -e 'const r=require("/tmp/gate-run.json");if(!r.skipped.length||r.skipped.some(s=>!s.reason))throw new Error("runner must record every skip with a reason");console.log(`gate-runner: ${r.executed.length} run, ${r.skipped.length} skipped — all recorded`)'
 
+          # ── rc.40 · flow-plan Phase 6: the pool, the waves, and the cache, on a REAL lane ───
+          # The unit tests run the pool over synthetic gates. This runs it over the adopted
+          # repository's actual pr lane — the only place the wave structure and the cache meet
+          # the real catalog. Everything asserted here is a PROPERTY, never a duration: a gate
+          # runner that got slower is not a build failure, and never becomes one.
+          rm -rf .loom/gate-cache
+          node core/gate-runner.mjs --lane pr --out /tmp/cold.json | tee /tmp/cold.txt
+          node -e '
+            const r=require("/tmp/cold.json");
+            if(!r.concurrency||!(r.concurrency.jobs>=1)||!(r.concurrency.waves>=1)) throw new Error("the run record does not describe how it was executed");
+            if(r.concurrency.timeout_ms!==300000) throw new Error("the default per-gate timeout is not recorded");
+            if(r.executed.some(e=>typeof e.wave!=="number")) throw new Error("an execution has no wave number");
+            // The two shipped depends_on edges must produce a real ordering, not a single flat wave.
+            const drift=r.executed.find(e=>e.controls.includes("FLOOR-DRIFT")), freeze=r.executed.find(e=>e.controls.includes("FREEZE-STAMP"));
+            if(!drift||!freeze) throw new Error("the drift/freeze pair did not run — the depends_on edge is untested here");
+            if(!(drift.wave>freeze.wave)) throw new Error(`FLOOR-DRIFT (wave ${drift.wave}) did not wait for FREEZE-STAMP (wave ${freeze.wave})`);
+            if(r.cache.stored<1) throw new Error("nothing was cacheable on a full-tier pr lane — the cache is being exercised against nothing");
+            if(!r.cache.not_cacheable.length||r.cache.not_cacheable.some(x=>!x.reason)) throw new Error("a mechanism was excluded from the cache without a recorded reason");
+            if(!r.cache.not_cacheable.some(x=>/always:true/.test(x.reason))) throw new Error("the always-on tamper core is not being excluded from the cache");
+            console.log(`gate-runner: ${r.concurrency.waves} wave(s), ${r.concurrency.jobs} job(s), ${r.cache.stored} result(s) cached, ${r.cache.not_cacheable.length} never cacheable`);
+          '
+          # The warm run: hits are recorded as pass-cached WITH the key, and the log still says
+          # what the cold run said — a cached run is not a quieter run.
+          node core/gate-runner.mjs --lane pr --out /tmp/warm.json | tee /tmp/warm.txt
+          node -e '
+            const c=require("/tmp/cold.json"), w=require("/tmp/warm.json");
+            const hits=w.executed.filter(e=>e.status==="pass-cached");
+            if(!hits.length) throw new Error("a second run with no input change served nothing from cache");
+            if(hits.some(e=>!/^[0-9a-f]{64}$/.test(e.cache_key||""))) throw new Error("a pass-cached execution carries no key — a hit must be as auditable as a skip");
+            if(hits.some(e=>c.cache.not_cacheable.find(x=>x.mechanism===e.mechanism))) throw new Error("a mechanism declared never-cacheable was served from cache");
+            if(w.result!=="pass"||c.result!=="pass") throw new Error("the benchmark lane is not green — the cache is being measured against a red run");
+            if(c.executed.map(e=>e.mechanism).join()!==w.executed.map(e=>e.mechanism).join()) throw new Error("the cached run reports a different set of mechanisms, in a different order");
+            console.log(`gate-runner: ${hits.length} pass-cached, each with its key`);
+          '
+          # NEGATIVE ① a failing gate is never cached — the failure must be re-discovered, not
+          #            remembered as absent. Break a scoped gate's input and run twice.
+          cp docs/governance/data-lifecycle.json /tmp/dl.json
+          node -e 'const fs=require("fs"),p="docs/governance/data-lifecycle.json",s=JSON.parse(fs.readFileSync(p));s.categories[0].retention={period:"soon"};fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node core/gate-runner.mjs --lane pr --out /tmp/red1.json > /dev/null 2>&1; then
+            echo "::error::a broken data-lifecycle input did not fail the pr lane"; exit 1; fi
+          if node core/gate-runner.mjs --lane pr --out /tmp/red2.json > /dev/null 2>&1; then
+            echo "::error::a FAILING gate was served from cache on the second run — there is no such thing as a cached red"; exit 1; fi
+          node -e '
+            const r=require("/tmp/red2.json"), e=r.executed.find(x=>x.mechanism==="scripts/data-lifecycle-check.mjs");
+            if(!e||e.status!=="fail") throw new Error("the broken gate did not re-run as a failure on the second pass");
+          '
+          cp /tmp/dl.json docs/governance/data-lifecycle.json
+          # NEGATIVE ② --no-cache means no cache, and the record says which it was.
+          node core/gate-runner.mjs --lane pr --no-cache --out /tmp/nocache.json | tee /tmp/nc.txt
+          grep -q 'cache OFF' /tmp/nc.txt || { echo "::error::--no-cache did not report the cache as off"; exit 1; }
+          node -e 'const r=require("/tmp/nocache.json");if(r.cache.enabled!==false||r.cache.hits!==0||r.executed.some(e=>e.status==="pass-cached"))throw new Error("--no-cache still served a cached result")'
+          # NEGATIVE ③ a hung gate is KILLED and recorded as a timeout — a timeout is a failure.
+          #            Run the lane with an impossible bound; every gate must be recorded, none passed.
+          if node core/gate-runner.mjs --lane pr --no-cache --timeout-ms 1 --out /tmp/to.json > /dev/null 2>&1; then
+            echo "::error::a 1ms per-gate timeout produced a PASSING run — a timeout is not a pass"; exit 1; fi
+          node -e '
+            const r=require("/tmp/to.json");
+            if(!r.executed.some(e=>e.status==="timeout")) throw new Error("no execution was recorded as a timeout");
+            if(r.executed.some(e=>e.status==="pass-cached")) throw new Error("a timeout run served a cached pass");
+            if(r.result!=="fail") throw new Error("a run containing a timeout was reported as passing");
+            console.log(`gate-runner: ${r.executed.filter(e=>e.status==="timeout").length} timeout(s), recorded as failures`);
+          '
+          rm -rf .loom/gate-cache
+
+          # ── rc.37 · flow-plan Phase 3: the flow instruments measure something REAL ──────────
+          # The failure mode for a report is not a wrong answer, it is a confident answer about an
+          # empty set — the same vacuum freeze-stamp, drift and approval-surface each had. So the
+          # figures are asserted, not just the exit codes. The gate-run record written above is
+          # copied in so the wall-clock section has a lane to read.
+          cp /tmp/gate-run.json gate-run-pr.json
+          node scripts/flow-report.mjs --check
+          node scripts/flow-report.mjs | tee /tmp/flow.txt
+          grep -q '1 completed' /tmp/flow.txt || {
+            echo "::error::flow-report computed no lead time from a change that reached in-production"; exit 1; }
+          grep -q 'permission-to-launch' /tmp/flow.txt || {
+            echo "::error::flow-report printed no stage-residency histogram"; exit 1; }
+          grep -q 'GATE WALL-CLOCK' /tmp/flow.txt && grep -q 'pr  *1 run' /tmp/flow.txt || {
+            echo "::error::flow-report did not read the runner's own per-lane wall-clock"; exit 1; }
+          rm -f gate-run-pr.json
+          # The approval queue names WHO the change is waiting on. PA2 compiles twelve roles here;
+          # asserting a count rather than a name keeps this honest if the profiles move.
+          node scripts/approval-status.mjs --check
+          node scripts/approval-status.mjs | tee /tmp/queue.txt
+          grep -qE '1[0-9] outstanding approval' /tmp/queue.txt || {
+            echo "::error::the approval queue reports nothing outstanding on a change with a pending PA2"; exit 1; }
+          grep -q 'risk-second-line' /tmp/queue.txt || {
+            echo "::error::the approval queue does not name the roles a change is waiting on"; exit 1; }
+          node scripts/comprehension-report.mjs --check
+          node scripts/comprehension-report.mjs | tee /tmp/comp.txt
+          grep -q '95min' /tmp/comp.txt || {
+            echo "::error::the comprehension trend is not reading the metrics comprehension-check collects"; exit 1; }
+          # ── The exception register, both directions ───────────────────────────────────────
+          # The expiry dates are COMPUTED per run, never committed: a fixture with a fixed date is
+          # a build that goes red on a calendar, which is how a check like this gets deleted.
+          node scripts/exception-register-check.mjs   # nothing excepted yet — and it says so
+          cp docs/governance/changes/CHG-2026-0042/change-envelope.json "$RUNNER_TEMP/pristine-envelope.json"
+          # Arguments travel by ENV, not argv: `node -e … -2` makes node try to parse -2 as a flag.
+          except() { DAYS=$1 N=$2 CONTROL=$3 node -e '
+            const fs = require("fs"), p = "docs/governance/changes/CHG-2026-0042/change-envelope.json";
+            const days = Number(process.env.DAYS), n = Number(process.env.N), control = process.env.CONTROL;
+            const s = JSON.parse(fs.readFileSync(p));
+            const expires = new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+            s.exemptions = Array.from({ length: n }, () => ({ control, owner: "eng-omar",
+              rationale: "The pre-launch penetration test slot is booked for the next window.",
+              compensating_control: "Q2-SAST plus an external scan of the exposed surface",
+              expires, approved_by: "risk-lena" }));
+            fs.writeFileSync(p, JSON.stringify(s, null, 2));'; }
+          #   ① well inside its window: counted, no warning, green — the non-vacuous positive.
+          except 120 1 DAST-PENTEST
+          node scripts/exception-register-check.mjs | tee /tmp/exc.txt
+          grep -q '1 exception(s) projected (1 open)' /tmp/exc.txt || {
+            echo "::error::the exception register is not projecting a real open exception"; exit 1; }
+          if grep -q 'WARNING' /tmp/exc.txt; then
+            echo "::error::an exception 120 days from expiry warned — the bands are firing on everything"; exit 1; fi
+          #   ② inside the 30-day band: WARNS and still PASSES. This is the whole point — the
+          #      deadline does not move, the surprise does.
+          except 20 1 DAST-PENTEST
+          node scripts/exception-register-check.mjs > /tmp/exc20.txt || {
+            echo "::error::an expiry WARNING failed the build — warning bands must never gate"; cat /tmp/exc20.txt; exit 1; }
+          cat /tmp/exc20.txt
+          grep -q '30-day band' /tmp/exc20.txt || {
+            echo "::error::an exception 20 days from expiry did not warn — the overnight surprise is back"; exit 1; }
+          #   ③ expired: blocked, exactly as before the bands existed.
+          except -2 1 DAST-PENTEST
+          if node scripts/exception-register-check.mjs 2>/tmp/exc-x.txt; then
+            echo "::error::the exception register passed an EXPIRED exception"; exit 1; fi
+          grep -q 'EXPIRED' /tmp/exc-x.txt || {
+            echo "::error::the expired exception was refused, but not for being expired"; cat /tmp/exc-x.txt; exit 1; }
+          #   ④ concentration: four open against ONE control fails; the same four spread across
+          #      four controls do not. A limit that fires on any four exceptions is not a limit.
+          except 120 4 DAST-PENTEST
+          if node scripts/exception-register-check.mjs 2>/tmp/exc-c.txt; then
+            echo "::error::four open exceptions against one control passed the concentration limit"; exit 1; fi
+          grep -q 'CONCENTRATION: 4 open exceptions' /tmp/exc-c.txt || {
+            echo "::error::the pile-up was refused, but not for being a concentration"; cat /tmp/exc-c.txt; exit 1; }
+          node -e '
+            const fs = require("fs"), p = "docs/governance/changes/CHG-2026-0042/change-envelope.json";
+            const s = JSON.parse(fs.readFileSync(p));
+            s.exemptions = s.exemptions.map((e, i) => ({ ...e, control: `SPREAD-${i}` }));
+            fs.writeFileSync(p, JSON.stringify(s, null, 2));'
+          node scripts/exception-register-check.mjs > /dev/null || {
+            echo "::error::four exceptions against four DIFFERENT controls tripped the concentration limit"; exit 1; }
+          #   ⑤ the limit may be tightened and never loosened — the monotonicity rule, on this knob.
+          node -e 'require("fs").writeFileSync("docs/governance/exception-policy.json", JSON.stringify({ concentration_limit: 10 }, null, 2))'
+          if node scripts/exception-register-check.mjs 2>/tmp/exc-p.txt; then
+            echo "::error::a policy raising the concentration limit above the shipped floor was obeyed"; exit 1; fi
+          grep -q 'may TIGHTEN and never loosen' /tmp/exc-p.txt || {
+            echo "::error::the loosening policy was refused, but not for loosening"; cat /tmp/exc-p.txt; exit 1; }
+          git checkout -- docs/governance/exception-policy.json
+          cp "$RUNNER_TEMP/pristine-envelope.json" docs/governance/changes/CHG-2026-0042/change-envelope.json
+          node scripts/exception-register-check.mjs > /dev/null   # green again after the restores
+
       - name: Loom bundle — negative bypass tests (a bypassed control must be SEEN failing)
         run: |
           A="$RUNNER_TEMP/loom-adopt-dryrun"
@@ -541,10 +863,15 @@ jobs:
           git checkout -- docs/governance/services/credit-origination.json
           # 9 · Held release: production-authorized with the second-line hold still held must
           #     block — and the silence-after-launch rule must fire on the empty ops log.
-          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/change-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.current_state="production-authorized";fs.writeFileSync(p,JSON.stringify(s,null,2))'
-          if node scripts/change-envelope-check.mjs; then
+          #     rc.37: the transition is APPENDED to state_history as an author now has to, so the
+          #     rejection is still the HOLD and not the history mismatch — a negative test that
+          #     fails for a new reason has quietly stopped testing the old one.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/change-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.current_state="production-authorized";s.state_history.push({state:"production-authorized",at:new Date().toISOString(),by:"risk-lena"});fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs 2>/tmp/hold.txt; then
             echo "::error::a production authorization passed with the second-line hold still HELD"; exit 1
           fi
+          grep -q 'release hold is "held"' /tmp/hold.txt || {
+            echo "::error::the production authorization was refused, but not for the hold"; cat /tmp/hold.txt; exit 1; }
           node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals=[];fs.writeFileSync(p,JSON.stringify(s,null,2))'
           if node scripts/operations-signal-check.mjs; then
             echo "::error::an EMPTY operations log passed while a change claims production — silence after launch must fail"; exit 1
@@ -586,6 +913,31 @@ jobs:
           if node scripts/evidence-seal-check.mjs; then
             echo "::error::evidence-seal gate accepted a symbolic release_commit"; exit 1
           fi
+          git checkout -- docs/governance/evidence/manifest.json
+          # 15b · rc.36 D4 — a manifest with NO anchor must fail: omitting the field used to skip
+          #       anchor verification entirely, which made the external-anchor control opt-out.
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));delete s.anchor;fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/evidence-seal-check.mjs; then
+            echo "::error::evidence-seal gate passed a manifest with NO anchor — D4 is back"; exit 1
+          fi
+          git checkout -- docs/governance/evidence/manifest.json
+          # 15c · rc.36 D5 — a well-formed 40-hex commit that exists NOWHERE in this repository
+          #       must fail, and for that reason (the rc.11 shape check cannot see it).
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));s.release_commit="a".repeat(40);fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/evidence-seal-check.mjs 2>/tmp/d5.txt; then
+            echo "::error::evidence-seal gate accepted a release_commit no one ever ran — D5 is back"; exit 1
+          fi
+          grep -q 'does not exist in this repository' /tmp/d5.txt || {
+            echo "::error::the foreign commit was refused, but not for being foreign"; cat /tmp/d5.txt; exit 1; }
+          git checkout -- docs/governance/evidence/manifest.json
+          # 15d · rc.36 D3 — pointing the anchor attestation back at the bundled DEMO key must fail
+          #       the release-attestation gate: one attestation stack, the strong one, everywhere.
+          node -e 'const fs=require("fs");const p="docs/governance/evidence/manifest.json";const s=JSON.parse(fs.readFileSync(p));s.attestation.issuer="demo-anchor-signer";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/release-attestation-check.mjs 2>/tmp/d3.txt; then
+            echo "::error::a demo-signed anchor passed the release-attestation gate — the weak stack is back"; exit 1
+          fi
+          grep -q '"demo": true' /tmp/d3.txt || {
+            echo "::error::the demo anchor was refused, but not for being a demo key"; cat /tmp/d3.txt; exit 1; }
           git checkout -- docs/governance/evidence/manifest.json
           # 16 · rc.11 WS1 — reusing the evidence for a DIFFERENT artifact digest must fail the
           #      cross-binding (source→artifact no longer agree).
@@ -675,7 +1027,77 @@ jobs:
           fi
           grep -q 'adoption is not complete' /tmp/aa.txt || {
             echo "::error::the adoption gate refused, but not for being adopt-pending"; cat /tmp/aa.txt; exit 1; }
+          # 27 · rc.37 (flow-plan Phase 3.1) — a REWRITTEN state history must fail. The whole value
+          #      of an append-only record is that it cannot be re-authored after the fact, so the
+          #      three ways to re-author it are each asserted: reorder the states, back-date a
+          #      transition, and record a state the change never reached.
+          cp docs/governance/changes/CHG-2026-0042/change-envelope.json /tmp/sh-pristine.json
+          for MUT in reorder backdate parallel; do
+            MUT=$MUT node -e '
+              const fs=require("fs"), p="docs/governance/changes/CHG-2026-0042/change-envelope.json";
+              const s=JSON.parse(fs.readFileSync("/tmp/sh-pristine.json"));
+              if (process.env.MUT === "reorder") s.state_history.reverse();
+              if (process.env.MUT === "backdate") s.state_history[2].at = "2026-01-01T00:00:00Z";
+              if (process.env.MUT === "parallel") s.current_state = "in-production";
+              fs.writeFileSync(p, JSON.stringify(s, null, 2));'
+            if node scripts/change-envelope-check.mjs > /dev/null 2>&1; then
+              echo "::error::a $MUT-ed state_history passed the change-envelope gate — the record is not append-only"; exit 1
+            fi
+          done
+          cp /tmp/sh-pristine.json docs/governance/changes/CHG-2026-0042/change-envelope.json
+          node scripts/change-envelope-check.mjs > /dev/null
+          # 28 · rc.37 (flow-plan Phase 3.3) — an operations signal attributed to a change that does
+          #      not exist must fail. Without this the change-failure rate is computed over links
+          #      nobody can follow, which is worse than not computing it.
+          cp docs/governance/operations-signal.json /tmp/ops-pristine.json
+          node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals[0].caused_by_change="CHG-2026-0042";s.signals[0].resolved_at="2026-07-15T02:00:00Z";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          node scripts/operations-signal-check.mjs > /dev/null || {
+            echo "::error::a signal attributed to a REAL governed change failed the ops gate"; exit 1; }
+          node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals[0].caused_by_change="CHG-9999-0001";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operations-signal-check.mjs 2>/tmp/ops.txt; then
+            echo "::error::a signal attributed to a change that does not exist passed the ops gate"; exit 1
+          fi
+          grep -q 'does not resolve to a governed change' /tmp/ops.txt || {
+            echo "::error::the ghost attribution was refused, but not for being a ghost"; cat /tmp/ops.txt; exit 1; }
+          cp /tmp/ops-pristine.json docs/governance/operations-signal.json
           echo "all negative bypass tests rejected, as required"
+
+      - name: Loom — evidence is derived, not authored (rc.35, flow-plan Phase 2)
+        run: |
+          # The collector must reproduce the hand-built worked example FROM THE ARTIFACTS ALONE —
+          # same entry order (the seal gate's required-types contract), same seals, same anchor,
+          # zero hand-computed digests. Run in a scratch dir with no governed changes so the
+          # required-types contract is the fixed baseline the example was sealed under.
+          H=plugins/middleleap-loom/skills/loom-adopt/harness
+          SEAL="$PWD/$H/scripts/seal-evidence.mjs"
+          S="$RUNNER_TEMP/seal-derive"
+          mkdir -p "$S"
+          for f in tests.json reviews.json lineage.json model-provenance.json control-plane.json \
+                   sast.sarif sbom.cdx.json dependency-audit.json provenance.json; do
+            cp "$H/evidence-example/$f" "$S/"
+          done
+          ( cd "$S" && node "$SEAL" --dir . --commit 7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f --release v-demo ) > /tmp/seal-derive.txt
+          cat /tmp/seal-derive.txt
+          # rc.36 D5: outside a git checkout the commit existence/ancestry check CANNOT run, and
+          # the collector must SAY so — a recorded not-performable, never a silent pass.
+          grep -q 'NOT verified' /tmp/seal-derive.txt || {
+            echo "::error::sealing outside a git checkout did not record the commit check as not-performable (D5)"; exit 1; }
+          node -e '
+            const { readFileSync } = require("node:fs");
+            const built = JSON.parse(readFileSync(process.argv[1], "utf8"));
+            const shipped = JSON.parse(readFileSync(process.argv[2], "utf8"));
+            if (built.anchor !== shipped.anchor) {
+              console.error(`::error::the derived chain resolves to ${built.anchor}, not the sealed example anchor ${shipped.anchor} — the collector no longer derives what the gate verifies`); process.exit(1); }
+            console.log("seal-evidence reproduced the worked-example anchor from the artifacts alone:", built.anchor);
+          ' "$S/manifest.json" "$H/evidence-example/manifest.json"
+          # The refusal, both halves: a bundle of failing tests must not seal, and the refusal
+          # must write NOTHING — the previous manifest stays byte-for-byte intact.
+          sed -i 's/"failed": 0/"failed": 3/' "$S/tests.json"
+          BEFORE=$(sha256sum "$S/manifest.json")
+          if ( cd "$S" && node "$SEAL" --dir . --commit 7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f ); then
+            echo "::error::the collector sealed a bundle of FAILING tests — derived evidence just laundered a failure"; exit 1; fi
+          [ "$BEFORE" = "$(sha256sum "$S/manifest.json")" ] || {
+            echo "::error::a refused seal still rewrote the manifest — refusal must write nothing"; exit 1; }
 
       - name: Loom — operations-signal adopter example stays green
         run: |

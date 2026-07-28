@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, gatesInWorkflow, main, REPORT_ONLY, CI_LOCATIONS, CATALOG_LOCATIONS } from './ci-catalog-check.mjs';
+import { evaluate, gatesInWorkflow, main, mechanismArgCollisions, REPORT_ONLY, CI_LOCATIONS, CATALOG_LOCATIONS } from './ci-catalog-check.mjs';
 import { select } from '../core/gate-runner.mjs';
 
 // These tests run in BOTH layouts — the bundle (where the reference workflow is `ci/ci.yml` and
@@ -76,6 +76,38 @@ test('the nine Factory Floor gates are specifically covered', () => {
   ]) {
     assert.ok(mechanisms.has(gate), `${gate} lost its catalog entry — the gate runner would stop running it`);
   }
+});
+
+test('the shipped catalog has no mechanism-args collisions, and a collision fails (rc.33)', () => {
+  // The runner de-duplicates executions by mechanism_ref and keeps the FIRST control's args —
+  // two controls sharing a mechanism with different args means one control's arguments silently
+  // never run while both are reported executed. The shipped catalog must be clean, and the rule
+  // must bite on a forged collision.
+  assert.deepEqual(mechanismArgCollisions(readCatalog()), []);
+  const collided = { controls: [
+    { control_id: 'X-1', mechanism_ref: 'scripts/x.mjs', mechanism_args: ['--strict'] },
+    { control_id: 'X-2', mechanism_ref: 'scripts/x.mjs' },
+    { control_id: 'Y-1', mechanism_ref: 'scripts/y.mjs', mechanism_args: ['--same'] },
+    { control_id: 'Y-2', mechanism_ref: 'scripts/y.mjs', mechanism_args: ['--same'] },
+  ] };
+  const findings = mechanismArgCollisions(collided);
+  assert.equal(findings.length, 1, 'identical args must not collide; differing args must');
+  assert.match(findings[0], /scripts\/x\.mjs/);
+  assert.match(findings[0], /only one variant/);
+});
+
+test('the execute:false inventory is PRINTED, so the escape hatch cannot go quiet (rc.33)', () => {
+  const chunks = [];
+  const write = process.stdout.write.bind(process.stdout);
+  process.stdout.write = (s) => { chunks.push(s); return true; };
+  try {
+    main(['--ci', CI]);
+  } finally {
+    process.stdout.write = write;
+  }
+  const out = chunks.join('');
+  assert.match(out, /execute:false — the runner never spawns these/);
+  assert.match(out, /test-integrity-check\.mjs/);
 });
 
 test('NEGATIVE — an uncatalogued gate fails, and the finding names the runner consequence', () => {

@@ -1,0 +1,19 @@
+{
+  "_comment": "The passport for a STANDARD change. Ownership is named and resolvable exactly as it always is — a pattern re-prices the APPROVAL, never the accountability. `pa1.decision` and `pa2.decision` stay `pending` on purpose: the decision was not taken on this change, it was taken on the pattern, and writing `approved` here would be a claim nobody made. scripts/change-envelope-check.mjs is what reads the pattern and satisfies the state receipts; the record of who approved WHAT is the pattern's own `approved_by` and `expires`.",
+  "change_id": "CHG-2026-0055",
+  "product_id": "PRD-017",
+  "sections": {
+    "ownership": {
+      "product_owner": "po-fatima",
+      "accountable_executive": "exec-rashid"
+    }
+  },
+  "pa1": {
+    "decision": "pending",
+    "_comment": "Covered by pre-approved pattern `dependency-patch` (profiles/regulated-bank.json), approved by risk-lena, expiring, sampled at 10%."
+  },
+  "pa2": {
+    "decision": "pending",
+    "_comment": "Same pattern. If the pattern expires or the claim stops matching, this change owes both stages in full — and the gate says so on the next run."
+  }
+}

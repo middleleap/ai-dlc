@@ -90,11 +90,21 @@ export function resolveBindings(names, baseDir = process.cwd()) {
     try { data = JSON.parse(readFileSync(hit.path, 'utf8')); }
     catch (e) { findings.push(`profile ${name} is not valid JSON: ${e.message}`); continue; }
     const kind = typeof data.kind === 'string' ? data.kind : (KIND_BY_DIR[hit.dir] || 'base');
+    // rc.38 (flow-plan Phase 4.3): `patterns` is EXCLUDED from the binding digest, and this is a
+    // deliberate, load-bearing exclusion rather than an oversight. A pre-approved pattern names
+    // the plan hash it pre-approves; that hash is computed over the bindings; the bindings would
+    // otherwise be computed over the pattern. There is no fixed point, so a pattern could never
+    // name a real route. Patterns are also not REQUIREMENTS — the compiler never reads them, and
+    // nothing in a compiled plan derives from them, so excluding them cannot change what a change
+    // must do. They carry their own controls instead: a second-line approver, an expiry, a
+    // sampling rate and a matcher, all re-verified by scripts/change-envelope-check.mjs on every
+    // run, on top of the CODEOWNERS ownership of profiles/ that every other profile field has.
+    const { patterns: _patterns, ...bindable } = data;
     const binding = {
       profile: name,
       kind,
       version: typeof data.version === 'string' ? data.version : null,
-      digest: 'sha256:' + createHash('sha256').update(canonical(data)).digest('hex'),
+      digest: 'sha256:' + createHash('sha256').update(canonical(bindable)).digest('hex'),
     };
     // rc.8 WS7: an institution profile pins a BrainKit. Fold the LIVE package digest into the
     // binding, so a one-byte BrainKit edit changes the plan hash and makes a stored plan stale —

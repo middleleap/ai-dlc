@@ -15,17 +15,29 @@
 // makes a fully-recomputed chain detectable too — that anchor is the adopter's, and if recorded
 // as `manifest.anchor` this gate checks the chain resolves to it.
 //
+// RELEASE TRAINS (rc.38 · flow-plan Phase 4.4). Where a train under docs/governance/release-trains/
+// names this bundle's release commit, the required evidence is derived from the changes the train
+// ACTUALLY CARRIES rather than from every non-terminal change in the repository — the release-level
+// act is taken once per train, and the enumeration is a governed artifact instead of a question
+// asked in a channel. Per-change PA2 is untouched. A train is honoured only when EVERY train in
+// the repository validates; anything else and the derivation falls back to the repo-wide union.
+//
 // Run from the repo root: `node scripts/evidence-seal-check.mjs` (exit 1 on any finding).
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { evaluate as evaluateSarif } from './sast-check.mjs';
 import { checkAudit } from './supply-chain-check.mjs';
-import { aggregateRequirements } from '../core/compiled-requirements.mjs';
+import { CHANGES_DIR, aggregateRequirements } from '../core/compiled-requirements.mjs';
+import { TRAINS_DIR, evaluateTrains, trainForCommit } from '../core/release-trains.mjs';
+import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { pathToFileURL } from 'node:url';
 
-const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
+// Exported (rc.33): release-attestation-check reads the SAME list, so the two gates can never
+// again resolve DIFFERENT manifests in one repo — the lists had quietly diverged.
+export const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json'];
 const GENESIS = 'GENESIS';
 
 // ADOPT: the evidence every release must carry. Add yours (smoke results, attestations).
@@ -77,6 +89,19 @@ export const SEMANTICS = {
   'dependency-audit': (a) => checkAudit(a).map((f) => `sealed dependency audit: ${f}`),
   provenance: (a) => (Array.isArray(a.subject) && a.subject.length > 0 && a.subject.every((s) => s?.digest?.sha256)
     && (a.predicate?.builder?.id || a.builder?.id)) ? [] : ['sealed provenance lacks subject digests or a builder'],
+  // rc.35 (flow-plan Phase 2): the gate runner's own record joins the chain — the most
+  // trustworthy artifact CI produces is sealed instead of expiring as a CI artifact. A sealed
+  // gate-run must record a PASSING run (sealing a failing run would launder the failure into
+  // release evidence), and when it names a commit, that commit must be the release commit.
+  // Deliberately NOT in REQUIRED_TYPES or EVIDENCE_FLOOR: demanding it today would break every
+  // existing bundle. scripts/seal-evidence.mjs seals it whenever the runner's --emit-dir record
+  // is present in the evidence directory.
+  'gate-run': (a, ctx) => {
+    const f = [];
+    if (a.result !== 'pass') f.push(`sealed gate-run record is not a passing run (result=${JSON.stringify(a.result)}) — a failed run is not release evidence`);
+    if (ctx.releaseCommit && a.commit && a.commit !== ctx.releaseCommit) f.push(`sealed gate-run record was produced at ${JSON.stringify(a.commit)}, not the release commit ${JSON.stringify(ctx.releaseCommit)}`);
+    return f;
+  },
   // rc.8 hardening: a sealed brainkit-provenance record must NAME the BrainKit it claims (id,
   // version, sha256 package digest) and LIST the artifacts it covers. Whether that digest is the
   // LIVE BrainKit's — and whether each listed artifact actually embeds it — is brainkit-check's
@@ -169,7 +194,12 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
     }
     prev = expectSeal; // continue from the recomputed seal so errors localise, not cascade
   });
-  if (typeof manifest.anchor === 'string' && manifest.anchor && manifest.anchor !== prev) {
+  // rc.36 (flow-plan D4): the anchor is MANDATORY. A manifest that simply omitted the field used
+  // to skip anchor verification entirely — the one check that makes a fully-recomputed chain
+  // detectable was opt-out by silence. Near-free since rc.35: the collector always writes it.
+  if (!(typeof manifest.anchor === 'string' && manifest.anchor)) {
+    findings.push('manifest has no `anchor` — without the final seal recorded there is nothing to publish externally and nothing to sign, so a fully-recomputed chain would be undetectable (D4; scripts/seal-evidence.mjs writes it)');
+  } else if (manifest.anchor !== prev) {
     findings.push(`external anchor mismatch — the chain resolves to ${prev.slice(0, 12)}… but the anchored seal is ${manifest.anchor.slice(0, 12)}…`);
   }
   const present = new Set(entries.map((e) => e.type));
@@ -177,24 +207,101 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
   return findings;
 }
 
+/**
+ * rc.36 (flow-plan D5): the release_commit must EXIST in this repository and be an ancestor of
+ * HEAD. A 40-hex sha nobody ever ran passes every shape check; evidence from a commit outside the
+ * release line proves nothing about what shipped. Returns { status, findings, note }:
+ *   'verified'        — the commit exists here and HEAD descends from it
+ *   'failed'          — checkable and wrong (findings say why)
+ *   'not-performable' — no git repository at cwd; the check CANNOT run, and that is recorded as
+ *                       a note, never as a silent pass (the run record must state what was not
+ *                       executed and why)
+ *   'not-checked'     — no well-formed commit to check (its absence/shape is evaluate()'s finding)
+ */
+export function verifyReleaseCommit(commit, cwd = process.cwd()) {
+  if (!(typeof commit === 'string' && /^[0-9a-f]{40}$/.test(commit))) return { status: 'not-checked', findings: [] };
+  const git = (args) => execFileSync('git', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+  try { git(['rev-parse', '--git-dir']); }
+  catch {
+    return {
+      status: 'not-performable',
+      findings: [],
+      note: `release_commit existence/ancestry NOT verified — ${cwd} is not a git repository, so the check cannot be performed here (D5). Run the gate in the release checkout; this note is the record of the skip.`,
+    };
+  }
+  try { git(['cat-file', '-e', `${commit}^{commit}`]); }
+  catch {
+    return { status: 'failed', findings: [`manifest release_commit ${commit} does not exist in this repository — evidence sealed at a commit nobody ran proves nothing about what shipped (D5)`] };
+  }
+  try { git(['merge-base', '--is-ancestor', commit, 'HEAD']); }
+  catch {
+    return { status: 'failed', findings: [`manifest release_commit ${commit} is not an ancestor of HEAD — this release line never contained the commit the evidence is bound to (D5)`] };
+  }
+  return { status: 'verified', findings: [] };
+}
+
+/** Every train in the repository: [{ file, train }]. Empty where there are none. */
+export function loadTrains(cwd = process.cwd()) {
+  const dir = `${cwd}/${TRAINS_DIR}`;
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).filter((n) => n.endsWith('.json')).sort().map((n) => {
+    try { return { file: n, train: JSON.parse(readFileSync(`${dir}/${n}`, 'utf8')) }; }
+    catch { return { file: n, train: null }; }
+  });
+}
+
+/** The governed change ids in this repository, or null where there is no changes tree. */
+export function governedChangeIds(cwd = process.cwd()) {
+  const dir = `${cwd}/${CHANGES_DIR}`;
+  if (!existsSync(dir)) return null;
+  const ids = new Set();
+  for (const name of readdirSync(dir)) {
+    try { ids.add(JSON.parse(readFileSync(`${dir}/${name}/change-envelope.json`, 'utf8')).change_id || name); }
+    catch { ids.add(name); }
+  }
+  return ids;
+}
+
 function run(cwd = process.cwd()) {
   const path = MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
-  if (!path) return [`no evidence manifest found (looked in ${MANIFEST_LOCATIONS.join(', ')}) — the release is unsealed`];
+  if (!path) return { findings: [`no evidence manifest found (looked in ${MANIFEST_LOCATIONS.join(', ')}) — the release is unsealed`], notes: [] };
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
-  catch (e) { return [`evidence manifest is not valid JSON: ${e.message}`]; }
-  const requiredTypes = requiredTypesFor(aggregateRequirements(cwd));
-  return evaluate(manifest, { baseDir: dirname(path), requiredTypes });
+  catch (e) { return { findings: [`evidence manifest is not valid JSON: ${e.message}`], notes: [] }; }
+  // rc.38 (flow-plan Phase 4.4) — a RELEASE TRAIN. Every train is validated whether or not it
+  // names this bundle: a malformed or double-claiming train is a broken enumeration wherever it
+  // sits. Only a VALID train binding this exact release commit narrows the required evidence, and
+  // the narrowing is stated in the run's notes — an enumeration nobody can read is not one.
+  const notes = [];
+  const findings = [];
+  const trains = loadTrains(cwd);
+  const registry = loadRegistry(cwd);
+  const trainFindings = evaluateTrains(trains, { changeIds: governedChangeIds(cwd), registry, identityOf, notices: notes });
+  findings.push(...trainFindings);
+  const train = trainFindings.length === 0 ? trainForCommit(trains, manifest.release_commit) : null;
+  const changeIds = train ? new Set(train.changes) : null;
+  if (train) {
+    notes.push(`release train ${train.train_id} carries ${train.changes.length} change(s) (${train.changes.join(', ')}) into commit ${String(train.release_commit).slice(0, 12)}… — the release-level acts are taken ONCE for this bundle, and the required evidence below is derived from these changes rather than from every change in the repository. Per-change PA2 is untouched.`);
+  } else if (trains.length) {
+    notes.push(`${trains.length} release train(s) present, none of them binding this bundle's release_commit — required evidence is derived from EVERY non-terminal change (the fail-open posture)`);
+  }
+  const requiredTypes = requiredTypesFor(aggregateRequirements(cwd, { changeIds }));
+  findings.push(...evaluate(manifest, { baseDir: dirname(path), requiredTypes }));
+  const commitCheck = verifyReleaseCommit(manifest.release_commit, cwd);
+  findings.push(...commitCheck.findings);
+  if (commitCheck.note) notes.push(commitCheck.note);
+  return { findings, notes };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const findings = run();
+  const { findings, notes } = run();
   if (findings.length) {
     process.stderr.write('\nEvidence-seal gate (HG-0003) — FAIL\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);
     process.stderr.write('\nThe release evidence bundle must be a complete, intact, append-only hash chain.\nSee ../loom/references/delivery-harness.md (step ⑧) and governance.md (HG-0003).\n');
     process.exit(1);
   }
+  for (const n of notes) process.stdout.write(`NOTE: ${n}\n`);
   process.stdout.write('Evidence-seal gate (HG-0003) — OK\n');
 }

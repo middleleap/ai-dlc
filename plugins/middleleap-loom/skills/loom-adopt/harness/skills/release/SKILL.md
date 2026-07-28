@@ -35,19 +35,78 @@ one commit. **An evidence bundle assembled at a different commit than the one th
 the failure this whole step exists to prevent** — it is how a release comes to be described by
 evidence from a version nobody ran.
 
+### 1b. Enumerate what is in the release — write the train
+
+The step nobody was told to take, and its absence is why adopters drift into releasing one story
+at a time. **Say in writing which governed changes this release carries**, before you seal
+anything:
+
+```bash
+mkdir -p docs/governance/release-trains
+cat > docs/governance/release-trains/TRAIN-$(date +%Y-W%V).json <<JSON
+{
+  "train_id": "TRAIN-$(date +%Y-W%V)",
+  "release_commit": "$RELEASE_COMMIT",
+  "changes": ["CHG-…", "CHG-…"],
+  "bundle": "docs/governance/evidence/manifest.json",
+  "sealed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "released_by": "<the second-line identity releasing this train>"
+}
+JSON
+```
+
+**Per-change PA2 is untouched** — every change in the list still carries its own permission to
+launch, given by its own approvers, and no train grants one. What the train does is let the
+release-*level* acts be taken once: this enumeration, one sealed bundle, one anchor, one
+second-line release decision. `scripts/evidence-seal-check.mjs` then derives the required
+evidence from **the changes actually shipping** rather than from every change in the repository,
+and `scripts/release-attestation-check.mjs` proves the train, the subject and the manifest all
+name the same commit.
+
+A change belongs to at most one train, one commit has at most one train, every named change must
+exist under `docs/governance/changes/`, and `released_by` must be a second-line human. If any of
+that is wrong the gates fall back to the repository-wide union — more evidence, never less.
+
+Releasing a single change? Write a train with one entry, or skip this step entirely; nothing here
+is mandatory. The cost of skipping it is that you cannot later answer "what was in that release?"
+from the repository, which is the question every incident starts with.
+
 ## 2. Promote to pre-production, and smoke
 
-Follow the project's promotion path — dev → staging → prod. **This skill goes as far as
-staging.** The production hop is step 8, and it happens only after a human returns the
-authorization, because the second-line hold exists to stop exactly that hop.
-<!-- ADOPT: name your pre-production promotion command and environment -->
+**Read the ladder; do not invent it.** The promotion path is declared in
+`docs/governance/environments.json` and validated by `scripts/environments-check.mjs` — one entry
+per environment with its purpose, its data classification, the identity entitled to promote into
+it, what it promotes *from*, and its URL. Until rc.39 those three facts lived in `ADOPT` comments
+here, which meant nothing could check them and no deployment record could cite them.
 
-1. Deploy the released commit to the **pre-production** target.
-2. Run the smoke suite **against that live URL**, not against a local build.
-   <!-- ADOPT: name your smoke command and the pre-production URL -->
+```bash
+node -e '
+  const e = require("./docs/governance/environments.json").environments;
+  const sources = new Set(e.map((x) => x.promotion_source).filter(Boolean));
+  const prod = e.find((x) => !sources.has(x.id));               // nothing promotes out of it
+  const pre  = e.find((x) => x.id === prod.promotion_source);   // …and what feeds it
+  console.log(JSON.stringify({ pre, prod }, null, 2));
+'
+```
+
+**This skill goes as far as the pre-production rung** — the one whose `promotion_source` chain
+ends at the terminal environment. The production hop is step 8, and it happens only after a human
+returns the authorization, because the second-line hold exists to stop exactly that hop.
+
+1. Deploy the released commit to that pre-production environment, using **its declared
+   `identity`** — not yours, and not the build agent's.
+2. Run the smoke suite **against that environment's declared `url`**, not against a local build.
+   The URL is read from the ladder for the same reason the commit is fixed in step 1: a smoke
+   suite pointed somewhere by hand is a smoke suite that can be pointed at something green.
 3. A failing smoke suite **fails the deploy**. Execute the rehearsed rollback (R3), record it in
    the build log, and end the release. Do not seal a bundle for a deployment that did not stand
    up.
+
+**Deploy is not exposure.** If the service declares a `progressive_delivery` block (R3b) and the
+change's plan requires the `exposure_control` capability, the artifact ships *dark*: the flag
+named in `docs/governance/feature-flags.json` defaults off, and turning it on for a cohort is a
+separate, later act governed by the same compound authorization. Shipping and exposing on the same
+event is what forces a quarter of work to queue behind one signature.
 
 ## 3. Re-run every gate at the released commit
 
@@ -55,13 +114,16 @@ In the clean worktree, run the full gate set — not a summary of the last CI ru
 green badge. Re-run them.
 
 ```bash
-node core/gate-runner.mjs --lane release --out /tmp/release-gates.json
+node core/gate-runner.mjs --lane release --out /tmp/release-gates.json --emit-dir /tmp/release-emitted
 ```
 
 The release lane runs more than the PR lane by design. Any gate the runner skips must appear in
 `/tmp/release-gates.json` with its reason; **a skip with no reason is a stop**, not a note.
 
-Capture each gate's raw output as a file. These are the artifacts, not your summary of them.
+`--emit-dir` makes the runner capture each mechanism's output and write one result record per
+mechanism plus the run record (`gate-run.json`) — gate-emitted artifacts carrying the commit and
+timestamp, not your summary of them. Do not transcribe a verdict by hand: a hand-typed "PASS" is
+exactly the fabricatable evidence the seal gate exists to refuse.
 
 ## 4. Assemble the bundle — nine required types
 
@@ -82,11 +144,27 @@ table ever disagrees with the gate, the gate is right:
 | `provenance` | Build provenance for the artifacts themselves |
 
 The **token ledger** seals into the same bundle but is not one of the nine: it is telemetry, and
-it must never become a pass/fail input. Copy the artifacts back into the repository checkout's
-`docs/governance/evidence/` — the worktree is for running gates, not for holding the record.
+it must never become a pass/fail input. Copy the artifacts — including the runner's
+`gate-run.json` from step 3's `--emit-dir` — back into the repository checkout's
+`docs/governance/evidence/`; the worktree is for running gates, not for holding the record.
 
-Set `release_commit` in the manifest to the commit from step 1. Then hash-chain the manifest and
-run its gate:
+Then **derive** the manifest; never hand-chain it. The collector hashes every artifact, orders
+the entries by the seal gate's required-types contract, binds `release_commit`, seals the
+gate-run record when present, and re-verifies its own output with the seal gate's `evaluate()`
+**before** writing — a bundle that would fail verification is never written at all:
+
+```bash
+node scripts/seal-evidence.mjs --commit "$RELEASE_COMMIT"
+```
+
+The seal now also demands (rc.36): a **mandatory anchor** (the collector writes it — D4), a
+`release_commit` that **exists in this repository and is an ancestor of HEAD** (D5; outside a git
+checkout the collector says so as a recorded not-performable, never a silent pass), and an anchor
+attestation from a **non-demo** registered issuer — the unified stack refuses `demo: true` keys
+everywhere (D3). Sign the anchor with your institution's registered signer;
+`evidence-example/regenerate.mjs` shows the per-run key pattern CI uses.
+
+Then run the gate itself, as the independent re-verification CI will repeat:
 
 ```bash
 node scripts/evidence-seal-check.mjs
@@ -123,7 +201,10 @@ each, verify each, and present them together:
 1. **PA2** approved, with every section the product profile compiles as required, each approval
    resolving to a human registry identity holding that role.
 2. **R1–R6 readiness green** for every declared service — BCP/DR, rollback, kill switch,
-   capacity, third-party continuity, reconciliation — each inside its freshness window.
+   capacity, third-party continuity, reconciliation — each inside its freshness window. Where the
+   change compiles `exposure_control`, that includes **R3b**: a declared ramp, and an automated
+   rollback trigger fired inside its own 90-day window. What you are authorizing at that point is
+   **exposure**, not the deploy — the artifact may already be running, dark.
 3. **The second-line release hold, RELEASED by a second-line human.** Missing hold = HELD. Fail
    closed.
 4. **Anchored, issuer-verified evidence** at high and critical tiers. Where a platform mechanism
@@ -141,7 +222,10 @@ The loop assembles the case. It does not:
 - release the second-line hold, or sign as a second-line identity;
 - issue, alter or re-date any approval, attestation or readiness record;
 - sign or confirm an assurance-cycle record — that signature is a second-line human's;
-- author an eval result, a drill outcome, or a risk classification.
+- author an eval result, a drill outcome, or a risk classification;
+- **turn a feature flag on, advance a cohort stage, or extend a flag's expiry.** Exposure is the
+  act the authorization authorizes; a loop that could grant itself exposure has made the whole
+  separation decorative. Shipping dark is the loop's job. Turning the light on is not.
 
 Every one of those is a human act performed by a named identity the agent is not. The gates
 already refuse each of them; this skill refuses them one step earlier, so the refusal is a rule
@@ -151,22 +235,46 @@ rather than a rejection.
 
 When, and only when, a human returns all four conditions met:
 
-1. The **human** performs or triggers the production promotion. If your platform requires an
-   agent-run command, it runs under the promotion identity, not the build agent's, and against a
-   ticket that references the authorization.
-   <!-- ADOPT: name your production promotion path and who is entitled to run it -->
-2. Re-run the smoke suite against production.
+1. The **human** performs or triggers the production promotion into the terminal environment
+   declared in `docs/governance/environments.json` — the one nothing promotes out of, which the
+   gate requires to carry `approval_required: true`. It runs under **that environment's declared
+   `identity`**, which `environments-check` has already proven is a human outside the builders
+   group, and against a ticket that references the authorization. The build agent's identity is
+   never the promotion identity.
+2. Re-run the smoke suite against that environment's declared `url`.
 3. A failure here executes the rehearsed rollback (R3) and reopens the release.
+4. **Write the deployment record** — `docs/governance/deployments/<deployment-id>.json`, emitted
+   by the deploy job from what it *observed*, never typed from what was intended:
+
+   ```json
+   {
+     "deployment_id": "DEP-…", "service_id": "…", "environment": "<terminal environment id>",
+     "release_commit": "<the commit fixed in step 1>",
+     "deployed_digest": "<the digest from docs/governance/release-subject.json>",
+     "strategy": "<the service's declared progressive_delivery.strategy>",
+     "feature_flag_ref": "<the service's declared exposure switch>",
+     "stages_completed": [{ "name": "…", "traffic_pct": 1, "started_at": "…", "completed_at": "…" }],
+     "deployed_by": "…", "authorized_by": "<the second-line human who returned the authorization>",
+     "deployed_at": "…"
+   }
+   ```
+
+   `scripts/deployed-digest-check.mjs` (the **deploy** lane) then verifies the two things nothing
+   else in the harness ever checked: that the deployed digest is the *authorized* digest — same
+   artifact, not merely the same source — and that every declared ramp stage actually ran, in
+   order, at its declared traffic, having baked for at least its declared time.
 
 If any of the four is outstanding, this step does not begin. There is no partial promotion, and
 "we will get the hold signed after" is the failure mode the hold was built for.
 
 ## 9. Record
 
-Append to `docs/build-log.md`: the released commit, the deploy target, the smoke result, the
-gate-run summary including every recorded skip and its reason, the nine artifact types with
-their hashes, and the authorization state — which of the four conditions are met, which are
-outstanding, and who holds each outstanding one.
+Append to `docs/build-log.md`: the released commit, the deploy target **as its declared
+environment id**, the smoke result, the gate-run summary including every recorded skip and its
+reason, the nine artifact types with their hashes, the deployment record id written in step 8, the
+exposure state of every flag the change owns (still off, or turned on for which cohort stage), and
+the authorization state — which of the four conditions are met, which are outstanding, and who
+holds each outstanding one.
 
 ## Red flags — stop and re-read this skill
 
@@ -177,3 +285,8 @@ outstanding, and who holds each outstanding one.
 - Setting a production state, releasing the hold, or signing anything
 - Sealing a bundle for a deployment whose smoke suite failed
 - Proceeding on a decision-log chain with gaps in it
+- Naming a promotion target that is not an id in `docs/governance/environments.json`
+- Recording a deployment whose digest is "the build from that commit" rather than the digest in
+  `release-subject.json` — a rebuild is a different artifact and it was not the one evaluated
+- Skipping a declared ramp stage, or cutting its bake short, because the change "looks fine"
+- Turning a flag on as part of assembling the case

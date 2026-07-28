@@ -33,6 +33,28 @@ test('capabilities aggregate across changes; capabilityRequired reflects "requir
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('capability attributes aggregate STRONGEST-WINS in either read order (rc.33 — the first-wins weakening)', () => {
+  // Two plans require the same capability at different strengths. Whichever directory is read
+  // first, the aggregate must report the STRONGER attributes — a first-wins merge silently
+  // weakened the requirement to whichever change happened to sort first.
+  const lowFirst = repo([
+    { id: 'CHG-A', capabilities: { data_risk_register: { required: true, minimum_version: '3.1', minimum_tier: 'low' } } },
+    { id: 'CHG-B', capabilities: { data_risk_register: { required: true, minimum_version: '4.0', minimum_tier: 'high' } } },
+  ]);
+  const highFirst = repo([
+    { id: 'CHG-A', capabilities: { data_risk_register: { required: true, minimum_version: '4.0', minimum_tier: 'high' } } },
+    { id: 'CHG-B', capabilities: { data_risk_register: { required: true, minimum_version: '3.1', minimum_tier: 'low' } } },
+  ]);
+  try {
+    for (const dir of [lowFirst, highFirst]) {
+      const cap = aggregateRequirements(dir).capabilities.data_risk_register;
+      assert.equal(cap.minimum_version, '4.0', 'the weaker minimum_version must never survive the merge');
+      assert.equal(cap.minimum_tier, 'high', 'the weaker minimum_tier must never survive the merge');
+      assert.equal(cap.required, true);
+    }
+  } finally { rmSync(lowFirst, { recursive: true, force: true }); rmSync(highFirst, { recursive: true, force: true }); }
+});
+
 test('a change that does NOT require a capability leaves it unrequired (generic repo)', () => {
   const dir = repo([{ id: 'CHG-1', gates: ['D', 'Q'] }]);
   try {
@@ -72,6 +94,72 @@ test('anyInProduction flips when a change holds a production state', () => {
   } finally { rmSync(inProd, { recursive: true, force: true }); rmSync(notProd, { recursive: true, force: true }); }
 });
 
+test('a TERMINAL change (closed/superseded) contributes nothing — the union stops growing with repo age (rc.34)', () => {
+  const dir = repo([
+    { id: 'CHG-LIVE', state: 'in-delivery', gates: ['D', 'Q'], evidence: ['tests'] },
+    { id: 'CHG-DONE', state: 'closed', gates: ['PA1', 'PA2', 'R'], evidence: ['sast'], capabilities: { model_risk: { required: true } } },
+    { id: 'CHG-OLD', state: 'superseded', gates: ['A'] },
+  ]);
+  try {
+    const agg = aggregateRequirements(dir);
+    assert.deepEqual([...agg.families].sort(), ['D', 'Q'], 'terminal changes must not mandate families');
+    assert.deepEqual([...agg.evidence].sort(), ['tests']);
+    assert.equal(capabilityRequired(agg, 'model_risk'), false, 'a closed change must not keep a capability mandatory');
+    assert.deepEqual(agg.changes.map((c) => c.change_id), ['CHG-LIVE']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('changedPaths scopes the aggregate to the changes the diff implicates (rc.34)', () => {
+  const dir = repo([
+    { id: 'CHG-A', gates: ['PA1'], evidence: ['sast'] },
+    { id: 'CHG-B', gates: ['R'], evidence: ['provenance'] },
+  ]);
+  try {
+    // A diff inside CHG-A's envelope directory implicates CHG-A only.
+    const scoped = aggregateRequirements(dir, { changedPaths: ['docs/governance/changes/CHG-A/product-passport.json', 'src/app.mjs'] });
+    assert.equal(scoped.scoped, true);
+    assert.deepEqual([...scoped.families], ['PA1'], 'only the implicated change mandates families');
+    assert.deepEqual(scoped.changes.map((c) => c.change_id), ['CHG-A']);
+    // A diff touching neither implicates nothing — the light path, with the reason recorded upstream.
+    const none = aggregateRequirements(dir, { changedPaths: ['README.md'] });
+    assert.equal(none.families.size, 0);
+    // Unknown diff (null) fails open: every non-terminal change counts.
+    const all = aggregateRequirements(dir, { changedPaths: null });
+    assert.equal(all.scoped, false);
+    assert.deepEqual([...all.families].sort(), ['PA1', 'R']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('an envelope scope_paths prefix implicates its change from a code diff (rc.34)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cr-'));
+  try {
+    const base = join(dir, 'docs/governance/changes/CHG-S');
+    mkdirSync(base, { recursive: true });
+    writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: 'CHG-S', current_state: 'in-delivery', control_plan: 'control-plan.json', scope_paths: ['services/credit/'] }));
+    writeFileSync(join(base, 'control-plan.json'), JSON.stringify({ required_gates: ['Q'] }));
+    const hit = aggregateRequirements(dir, { changedPaths: ['services/credit/handler.mjs'] });
+    assert.deepEqual([...hit.families], ['Q']);
+    const miss = aggregateRequirements(dir, { changedPaths: ['services/payments/handler.mjs'] });
+    assert.equal(miss.families.size, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('maxTier is the highest risk_tier among counted changes, and scoping narrows it (rc.34)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cr-'));
+  try {
+    for (const [id, tier] of [['CHG-LOW', 'low'], ['CHG-CRIT', 'critical']]) {
+      const base = join(dir, 'docs/governance/changes', id);
+      mkdirSync(base, { recursive: true });
+      writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: id, current_state: 'in-delivery', risk_tier: tier, control_plan: 'control-plan.json' }));
+      writeFileSync(join(base, 'control-plan.json'), JSON.stringify({ required_gates: [] }));
+    }
+    assert.equal(aggregateRequirements(dir).maxTier, 'critical');
+    const scoped = aggregateRequirements(dir, { changedPaths: ['docs/governance/changes/CHG-LOW/change-envelope.json'] });
+    assert.equal(scoped.maxTier, 'low', 'a diff implicating only the low change must not carry the critical tier');
+    assert.equal(aggregateRequirements(dir, { changedPaths: ['README.md'] }).maxTier, null);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('a change with no plan contributes nothing — it never lowers a requirement', () => {
   const dir = mkdtempSync(join(tmpdir(), 'cr-'));
   try {
@@ -81,5 +169,22 @@ test('a change with no plan contributes nothing — it never lowers a requiremen
     // no control-plan.json written
     const agg = aggregateRequirements(dir);
     assert.equal(agg.families.size, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+/* ---- rc.40 (flow-plan Phase 6.2): plan_hash travels with the change, for the result cache ---- */
+
+test('each counted change carries its plan_hash — the cache keys on the set of them', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cr-ph-'));
+  try {
+    const base = `${dir}/docs/governance/changes/CHG-9`;
+    mkdirSync(base, { recursive: true });
+    writeFileSync(`${base}/change-envelope.json`, JSON.stringify({ change_id: 'CHG-9', current_state: 'proposed', risk_tier: 'high' }));
+    writeFileSync(`${base}/control-plan.json`, JSON.stringify({ required_gates: ['Q'], plan_hash: 'abc123' }));
+    const agg = aggregateRequirements(dir);
+    assert.equal(agg.changes.find((c) => c.change_id === 'CHG-9').plan_hash, 'abc123');
+    // A plan with no stored hash reports null rather than inventing one.
+    writeFileSync(`${base}/control-plan.json`, JSON.stringify({ required_gates: ['Q'] }));
+    assert.equal(aggregateRequirements(dir).changes[0].plan_hash, null);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

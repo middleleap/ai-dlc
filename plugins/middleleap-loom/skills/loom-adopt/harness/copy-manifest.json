@@ -230,6 +230,22 @@
       "tier": "governed"
     },
     {
+      "source": "governance/environments.template.json",
+      "dest": "docs/governance/environments.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The promotion ladder (rc.39) — one entry per environment: purpose, data classification, who may promote INTO it, what it promotes FROM. Replaces three unmountable ADOPT comments in the release skill",
+      "tier": "governed"
+    },
+    {
+      "source": "governance/feature-flags.template.json",
+      "dest": "docs/governance/feature-flags.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The exposure register (rc.39) — flags default OFF, belong to a governed change, name an owner and a kill path, and expire. Mandatory once a compiled plan requires the exposure_control capability",
+      "tier": "governed"
+    },
+    {
       "source": "governance/product-evals.template.json",
       "dest": "docs/governance/product-evals.json",
       "kind": "file",
@@ -260,6 +276,22 @@
       "adopt": "template",
       "seam": "Service-level expectations for continuous-assurance cases (rc.14 WS6)",
       "tier": "full"
+    },
+    {
+      "source": "governance/approval-sla.template.json",
+      "dest": "docs/governance/approval-sla.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Approval service-level EXPECTATIONS (rc.37) — read by scripts/approval-status.mjs, which flags a breach and gates nothing",
+      "tier": "full"
+    },
+    {
+      "source": "governance/exception-policy.template.json",
+      "dest": "docs/governance/exception-policy.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Exception-register policy (rc.37) — the concentration limit, which may be tightened below the shipped floor of 3 and never raised above it",
+      "tier": "governed"
     },
     {
       "source": "governance/token-ledger.template.json",

@@ -1,7 +1,14 @@
 // Tests for the gate runner's selection logic. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { select, LANES } from './gate-runner.mjs';
+
+const RUNNER = resolve(dirname(fileURLToPath(import.meta.url)), 'gate-runner.mjs');
 
 const CAT = { controls: [
   { control_id: 'CORE-1', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true },
@@ -45,6 +52,29 @@ test('lanes separate: a release run skips pr controls (recorded) and runs releas
 test('a control with no path scope runs by default — declaring a scope is the opt-in', () => {
   const r = select(CAT, { lane: 'pr', changedPaths: ['nothing/relevant.txt'] });
   assert.ok(ids(r).includes('UNSCOPED'));
+});
+
+test('a file scope matches the file and its children, never a sibling that shares the prefix (rc.33)', () => {
+  // SCOPED-2 is scoped to the exact file docs/governance/model-manifest.json. A raw prefix
+  // match also implicated docs/governance/model-manifest.json.bak — a sibling, not the file.
+  const exact = select(CAT, { lane: 'pr', changedPaths: ['docs/governance/model-manifest.json'] });
+  assert.ok(ids(exact).includes('SCOPED-2'), 'the exact file must implicate its control');
+  const sibling = select(CAT, { lane: 'pr', changedPaths: ['docs/governance/model-manifest.json.bak'] });
+  assert.ok(!ids(sibling).includes('SCOPED-2'), 'a shared-prefix sibling must NOT implicate the control');
+  const dirLike = select(CAT, { lane: 'pr', changedPaths: ['docs/governance/changesets/x.json'] });
+  assert.ok(!ids(dirLike).includes('SCOPED-1'), 'changesets/ must not satisfy a changes/ scope');
+});
+
+test('the CLI refuses a lane with no runnable catalogued controls — an empty lane is a hole (rc.33)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-'));
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'PR-1', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'build'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 2, `an empty build lane must exit 2, got ${r.status}\n${r.stderr}`);
+    assert.match(r.stderr, /empty lane is a hole/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('two controls sharing one mechanism dedupe into a single execution', () => {
@@ -92,4 +122,364 @@ test('lane separation still holds — a required release-family control does not
 
 test('the lanes cover the artifact life: pr, build, release, deploy, scheduled (rc.11 WS1.4)', () => {
   assert.deepEqual(LANES, ['pr', 'build', 'release', 'deploy', 'scheduled']);
+});
+
+/* ---- rc.34: tier-aware selection — min_tier is opt-in, and always/mandated override upward ---- */
+
+const TIERCAT = { controls: [
+  { control_id: 'HI-ONLY', mechanism_ref: 'scripts/h.mjs', lane: 'pr', min_tier: 'high' },
+  { control_id: 'HI-ALWAYS', mechanism_ref: 'scripts/ha.mjs', lane: 'pr', min_tier: 'high', always: true },
+  { control_id: 'HI-FAM', mechanism_ref: 'scripts/hf.mjs', lane: 'pr', min_tier: 'high', gate_family: 'PA2', paths: ['nothing/'] },
+  { control_id: 'ANY', mechanism_ref: 'scripts/any.mjs', lane: 'pr' },
+] };
+
+test('a min_tier control skips below its tier WITH a recorded reason, and runs at or above it', () => {
+  const low = { families: new Set(), changes: [], maxTier: 'low' };
+  const rLow = select(TIERCAT, { lane: 'pr', changedPaths: null, requirements: low });
+  const s = rLow.skipped.find((x) => x.id === 'HI-ONLY');
+  assert.ok(s && /min_tier:high/.test(s.reason), 'the skip must name the tier rule');
+  assert.ok(ids(rLow).includes('ANY'), 'controls without min_tier are untouched');
+  const high = { families: new Set(), changes: [], maxTier: 'high' };
+  assert.ok(ids(select(TIERCAT, { lane: 'pr', changedPaths: null, requirements: high })).includes('HI-ONLY'));
+});
+
+test('always and plan-mandated controls IGNORE min_tier — the override goes upward, never downward', () => {
+  const low = { families: new Set(['PA2']), changes: [{ change_id: 'CHG-1', families: ['PA2'] }], maxTier: 'low' };
+  const r = select(TIERCAT, { lane: 'pr', changedPaths: ['README.md'], requirements: low });
+  assert.ok(ids(r).includes('HI-ALWAYS'), 'always beats min_tier');
+  assert.ok(ids(r).includes('HI-FAM'), 'a plan-mandated family beats min_tier');
+});
+
+test('with no aggregated requirements at all, min_tier does not apply — fail open', () => {
+  const r = select(TIERCAT, { lane: 'pr', changedPaths: null });
+  assert.ok(ids(r).includes('HI-ONLY'));
+});
+
+/* ---- rc.35 (flow-plan Phase 2): the runner EMITS evidence instead of a human transcribing it ---- */
+
+import { mkdirSync, readFileSync, existsSync } from 'node:fs';
+
+// A runnable layout: two tiny mechanisms and a catalog naming them.
+function emitFixture() {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-emit-'));
+  mkdirSync(join(dir, 'scripts'));
+  writeFileSync(join(dir, 'scripts', 'ok.mjs'), 'console.log("ok-gate stdout line"); process.exit(0);\n');
+  writeFileSync(join(dir, 'scripts', 'bad.mjs'), 'console.error("bad-gate: a real finding"); process.exit(1);\n');
+  return dir;
+}
+
+test('--emit-dir writes one result record per mechanism plus the run record; the log still streams', () => {
+  const dir = emitFixture();
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'OK-1', mechanism_ref: 'scripts/ok.mjs', lane: 'pr', always: true },
+      { control_id: 'OK-2', mechanism_ref: 'scripts/ok.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr', '--emit-dir', 'emitted', '--out', 'record.json'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    // Capture must not eat the log: the mechanism's own output still reaches the runner's stdout.
+    assert.match(r.stdout, /ok-gate stdout line/);
+    const emitted = JSON.parse(readFileSync(join(dir, 'emitted', 'scripts-ok.json'), 'utf8'));
+    assert.equal(emitted.gate, 'scripts/ok.mjs');
+    assert.deepEqual(emitted.controls.sort(), ['OK-1', 'OK-2']);
+    assert.equal(emitted.result, 'pass');
+    assert.match(emitted.findings_excerpt, /ok-gate stdout line/);
+    assert.ok(!Number.isNaN(Date.parse(emitted.produced_at)), 'produced_at must be a timestamp');
+    assert.ok('commit' in emitted, 'the record must carry the commit (null where there is no git)');
+    // The run record is itself emitted, under the name the evidence collector seals (gate-run*),
+    // byte-identical to --out — one record, two homes.
+    assert.equal(readFileSync(join(dir, 'emitted', 'gate-run.json'), 'utf8'), readFileSync(join(dir, 'record.json'), 'utf8'));
+    const rec = JSON.parse(readFileSync(join(dir, 'record.json'), 'utf8'));
+    assert.equal(rec.result, 'pass');
+    assert.ok(!Number.isNaN(Date.parse(rec.produced_at)), 'the rc.34 record fields gain produced_at');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a failing mechanism is emitted as result:fail with its findings excerpt, and the run fails', () => {
+  const dir = emitFixture();
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'BAD-1', mechanism_ref: 'scripts/bad.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr', '--emit-dir', 'emitted'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /bad-gate: a real finding/, 'the failing gate\'s output still reaches the log');
+    const emitted = JSON.parse(readFileSync(join(dir, 'emitted', 'scripts-bad.json'), 'utf8'));
+    assert.equal(emitted.result, 'fail');
+    assert.match(emitted.findings_excerpt, /a real finding/);
+    assert.equal(JSON.parse(readFileSync(join(dir, 'emitted', 'gate-run.json'), 'utf8')).result, 'fail');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('without --emit-dir nothing is emitted and the captured output still streams (no behaviour change)', () => {
+  const dir = emitFixture();
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'OK-1', mechanism_ref: 'scripts/ok.mjs', lane: 'pr', always: true },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /ok-gate stdout line/);
+    assert.ok(!existsSync(join(dir, 'emitted')));
+    assert.ok(!existsSync(join(dir, 'gate-run.json')));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+/* ---- rc.40 (flow-plan Phase 6): waves, the pool, the timeout, and the cache ---- */
+
+import { planWaves, defaultJobs, runMechanism } from './gate-runner.mjs';
+
+const WAVECAT = { controls: [
+  { control_id: 'A', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true },
+  { control_id: 'B', mechanism_ref: 'scripts/b.mjs', lane: 'pr', always: true, depends_on: ['A'] },
+  { control_id: 'C', mechanism_ref: 'scripts/c.mjs', lane: 'pr', always: true, depends_on: ['A', 'B'] },
+  { control_id: 'D', mechanism_ref: 'scripts/d.mjs', lane: 'pr', always: true },
+] };
+
+test('depends_on becomes topological waves; independents share a wave', () => {
+  const { run } = select(WAVECAT, { lane: 'pr', changedPaths: null });
+  const waves = planWaves(run, WAVECAT).map((w) => w.map((g) => g.mechanism));
+  assert.deepEqual(waves, [['scripts/a.mjs', 'scripts/d.mjs'], ['scripts/b.mjs'], ['scripts/c.mjs']]);
+});
+
+test('a dependency on a control this run SKIPPED is not a barrier — it was skipped, with a reason', () => {
+  // A is scoped away; B depends on it. B must not wait on something that is not running.
+  const cat = { controls: [
+    { control_id: 'A', mechanism_ref: 'scripts/a.mjs', lane: 'pr', paths: ['nothing/'] },
+    { control_id: 'B', mechanism_ref: 'scripts/b.mjs', lane: 'pr', always: true, depends_on: ['A'] },
+  ] };
+  const r = select(cat, { lane: 'pr', changedPaths: ['README.md'] });
+  assert.ok(r.skipped.some((s) => s.id === 'A' && s.reason.length > 0));
+  assert.deepEqual(planWaves(r.run, cat).map((w) => w.map((g) => g.mechanism)), [['scripts/b.mjs']]);
+});
+
+test('a depends_on CYCLE is refused, never flattened — the declared order would not be the executed one', () => {
+  const cat = { controls: [
+    { control_id: 'A', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true, depends_on: ['B'] },
+    { control_id: 'B', mechanism_ref: 'scripts/b.mjs', lane: 'pr', always: true, depends_on: ['A'] },
+  ] };
+  const { run } = select(cat, { lane: 'pr', changedPaths: null });
+  assert.throws(() => planWaves(run, cat), /cycle/);
+});
+
+test('two controls sharing a mechanism collapse to one node — a self-edge is not a cycle', () => {
+  const cat = { controls: [
+    { control_id: 'A', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true },
+    { control_id: 'A2', mechanism_ref: 'scripts/a.mjs', lane: 'pr', always: true, depends_on: ['A'] },
+  ] };
+  const { run } = select(cat, { lane: 'pr', changedPaths: null });
+  assert.deepEqual(planWaves(run, cat).length, 1);
+});
+
+test('the default pool leaves a core for the machine that is watching, and never drops below 1', () => {
+  assert.ok(Number.isInteger(defaultJobs()) && defaultJobs() >= 1);
+});
+
+test('a hung gate is KILLED and recorded as a timeout — a timeout is a failure, never a pass', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-hang-'));
+  try {
+    mkdirSync(join(dir, 'scripts'));
+    writeFileSync(join(dir, 'scripts', 'hang.mjs'), 'setTimeout(() => {}, 600000);\n');
+    const r = await runMechanism({ mechanism: 'scripts/hang.mjs', args: [] }, { timeoutMs: 300, cwd: dir });
+    assert.equal(r.status, 'timeout');
+    assert.match(r.stderr, /TIMEOUT/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// A layout whose gates SLEEP, so a serial run and a pooled run are distinguishable by wall-clock,
+// and whose output order is checked against the catalog rather than the scheduler.
+function poolFixture(n, ms) {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-pool-'));
+  mkdirSync(join(dir, 'scripts'));
+  const controls = [];
+  for (let i = 0; i < n; i++) {
+    writeFileSync(join(dir, 'scripts', `s${i}.mjs`), `setTimeout(() => { console.log("gate-${i}"); }, ${ms});\n`);
+    controls.push({ control_id: `S-${i}`, mechanism_ref: `scripts/s${i}.mjs`, lane: 'pr', always: true });
+  }
+  writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls }));
+  return dir;
+}
+
+test('the pool runs a wave concurrently, and flushes output in CATALOG order, not finish order', () => {
+  const dir = poolFixture(4, 400);
+  try {
+    const t0 = Date.now();
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr', '--jobs', '4', '--out', 'rec.json'], { cwd: dir, encoding: 'utf8' });
+    const elapsed = Date.now() - t0;
+    assert.equal(r.status, 0, r.stderr);
+    assert.ok(elapsed < 4 * 400, `4x400ms of gates at --jobs 4 took ${elapsed}ms — the pool is not running them concurrently`);
+    const order = [...r.stdout.matchAll(/gate-(\d)/g)].map((m) => m[1]);
+    assert.deepEqual(order, ['0', '1', '2', '3'], 'the log is ordered by the catalog, not by which gate finished first');
+    const rec = JSON.parse(readFileSync(join(dir, 'rec.json'), 'utf8'));
+    assert.equal(rec.concurrency.jobs, 4);
+    assert.equal(rec.concurrency.waves, 1);
+    assert.equal(rec.concurrency.timeout_ms, 300000);
+    for (const e of rec.executed) assert.equal(e.wave, 0, 'every execution records its wave');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('--jobs 1 still passes and still records the rc.34/rc.35 fields (nothing was traded for the pool)', () => {
+  const dir = poolFixture(2, 10);
+  try {
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr', '--jobs', '1', '--out', 'rec.json'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    const rec = JSON.parse(readFileSync(join(dir, 'rec.json'), 'utf8'));
+    for (const f of ['lane', 'base', 'commit', 'changed_paths', 'requirements_scope', 'implicated_changes', 'max_implicated_tier', 'required_families', 'executed', 'skipped', 'result', 'produced_at']) {
+      assert.ok(f in rec, `the rc.34/rc.35 record field ${f} survived the parallel runner`);
+    }
+    for (const e of rec.executed) assert.ok(Number.isFinite(e.ms), 'flow-report reads ms — it must stay numeric');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the CLI refuses a catalogued depends_on cycle with exit 2 rather than running it', () => {
+  const dir = poolFixture(2, 5);
+  try {
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'S-0', mechanism_ref: 'scripts/s0.mjs', lane: 'pr', always: true, depends_on: ['S-1'] },
+      { control_id: 'S-1', mechanism_ref: 'scripts/s1.mjs', lane: 'pr', always: true, depends_on: ['S-0'] },
+    ] }));
+    const r = spawnSync(process.execPath, [RUNNER, '--lane', 'pr'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 2);
+    assert.match(r.stderr, /cycle/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+/* ---- the cache, end to end through the CLI ---- */
+
+// A scoped control over a real input file: the only shape the cache will ever serve.
+function cacheFixture() {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-cache-'));
+  mkdirSync(join(dir, 'scripts'));
+  mkdirSync(join(dir, 'src'));
+  writeFileSync(join(dir, 'src', 'a.txt'), 'one\n');
+  writeFileSync(join(dir, 'scripts', 'scoped.mjs'), 'console.log("scoped-gate ran"); process.exit(0);\n');
+  writeFileSync(join(dir, 'scripts', 'core.mjs'), 'console.log("core-gate ran"); process.exit(0);\n');
+  writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+    { control_id: 'SCOPED', mechanism_ref: 'scripts/scoped.mjs', lane: 'pr', paths: ['src/'] },
+    { control_id: 'CORE', mechanism_ref: 'scripts/core.mjs', lane: 'pr', always: true },
+  ] }));
+  return dir;
+}
+
+const runIn = (dir, args) => spawnSync(process.execPath, [RUNNER, ...args], { cwd: dir, encoding: 'utf8' });
+
+test('a warm run serves the scoped control as pass-cached WITH its key; the always control never caches', () => {
+  const dir = cacheFixture();
+  try {
+    const cold = runIn(dir, ['--lane', 'pr', '--out', 'cold.json']);
+    assert.equal(cold.status, 0, cold.stderr);
+    const c = JSON.parse(readFileSync(join(dir, 'cold.json'), 'utf8'));
+    assert.equal(c.cache.enabled, true);
+    assert.equal(c.cache.hits, 0);
+    assert.equal(c.cache.stored, 1, 'only the scoped control is storable');
+    assert.ok(c.cache.not_cacheable.some((x) => /always:true/.test(x.reason)), 'the always control says WHY it is never cached');
+
+    const warm = runIn(dir, ['--lane', 'pr', '--out', 'warm.json']);
+    assert.equal(warm.status, 0, warm.stderr);
+    const w = JSON.parse(readFileSync(join(dir, 'warm.json'), 'utf8'));
+    assert.equal(w.cache.hits, 1);
+    const scoped = w.executed.find((e) => e.mechanism === 'scripts/scoped.mjs');
+    assert.equal(scoped.status, 'pass-cached');
+    assert.match(scoped.cache_key, /^[0-9a-f]{64}$/);
+    assert.match(scoped.cached_from, /\.loom\/gate-cache\//);
+    assert.equal(w.executed.find((e) => e.mechanism === 'scripts/core.mjs').status, 'pass');
+    // The log of a cached run says what the uncached one said — replayed verbatim.
+    assert.match(warm.stdout, /scoped-gate ran/);
+    assert.match(warm.stdout, /pass-cached scripts\/scoped\.mjs — key/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('touching a file INSIDE the declared scope busts the key', () => {
+  const dir = cacheFixture();
+  try {
+    runIn(dir, ['--lane', 'pr']);
+    writeFileSync(join(dir, 'src', 'a.txt'), 'two\n');
+    const r = runIn(dir, ['--lane', 'pr', '--out', 'r.json']);
+    const rec = JSON.parse(readFileSync(join(dir, 'r.json'), 'utf8'));
+    assert.equal(rec.cache.hits, 0, 'a changed input must re-run the gate');
+    assert.equal(r.status, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('editing the MECHANISM busts the key — the gate itself is part of the input', () => {
+  const dir = cacheFixture();
+  try {
+    runIn(dir, ['--lane', 'pr']);
+    writeFileSync(join(dir, 'scripts', 'scoped.mjs'), 'console.log("scoped-gate ran (v2)"); process.exit(0);\n');
+    const rec = JSON.parse(readFileSync(join(dir, (runIn(dir, ['--lane', 'pr', '--out', 'r.json']), 'r.json')), 'utf8'));
+    assert.equal(rec.cache.hits, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('re-scoping the CONTROL busts the key — the catalog entry is part of the input', () => {
+  const dir = cacheFixture();
+  try {
+    runIn(dir, ['--lane', 'pr']);
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'SCOPED', mechanism_ref: 'scripts/scoped.mjs', lane: 'pr', paths: ['src/', 'docs/'] },
+      { control_id: 'CORE', mechanism_ref: 'scripts/core.mjs', lane: 'pr', always: true },
+    ] }));
+    runIn(dir, ['--lane', 'pr', '--out', 'r.json']);
+    assert.equal(JSON.parse(readFileSync(join(dir, 'r.json'), 'utf8')).cache.hits, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a FAILING gate is never cached — a failure always re-runs (cache poisoning negative test)', () => {
+  const dir = cacheFixture();
+  try {
+    writeFileSync(join(dir, 'scripts', 'scoped.mjs'), 'console.error("scoped-gate: a real finding"); process.exit(1);\n');
+    const first = runIn(dir, ['--lane', 'pr', '--out', 'a.json']);
+    assert.equal(first.status, 1);
+    assert.equal(JSON.parse(readFileSync(join(dir, 'a.json'), 'utf8')).cache.stored, 0, 'there is no such thing as a cached red');
+    const second = runIn(dir, ['--lane', 'pr', '--out', 'b.json']);
+    assert.equal(second.status, 1, 'the failure must be re-discovered, not remembered as absent');
+    assert.match(second.stderr, /a real finding/);
+    assert.equal(JSON.parse(readFileSync(join(dir, 'b.json'), 'utf8')).cache.hits, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a poisoned cache entry claiming a pass for a failing gate is REFUSED — the key is content-addressed', () => {
+  const dir = cacheFixture();
+  try {
+    runIn(dir, ['--lane', 'pr', '--out', 'a.json']);
+    const key = JSON.parse(readFileSync(join(dir, 'a.json'), 'utf8')).executed.find((e) => e.mechanism === 'scripts/scoped.mjs').cache_key;
+    // Now break the gate. The attacker's entry still sits in the store under the OLD key.
+    writeFileSync(join(dir, 'scripts', 'scoped.mjs'), 'console.error("scoped-gate: a real finding"); process.exit(1);\n');
+    assert.ok(existsSync(join(dir, '.loom', 'gate-cache', `${key}.json`)), 'the pass entry is still on disk');
+    const r = runIn(dir, ['--lane', 'pr', '--out', 'b.json']);
+    assert.equal(r.status, 1, 'the stale pass must not be served for a changed mechanism');
+    assert.equal(JSON.parse(readFileSync(join(dir, 'b.json'), 'utf8')).cache.hits, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('--no-cache disables it and says so in the record', () => {
+  const dir = cacheFixture();
+  try {
+    runIn(dir, ['--lane', 'pr']);
+    const r = runIn(dir, ['--lane', 'pr', '--no-cache', '--out', 'r.json']);
+    const rec = JSON.parse(readFileSync(join(dir, 'r.json'), 'utf8'));
+    assert.equal(rec.cache.enabled, false);
+    assert.equal(rec.cache.hits, 0);
+    assert.match(r.stdout, /cache OFF/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the RELEASE lane is never cached, whatever the control declares', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-rel-'));
+  try {
+    mkdirSync(join(dir, 'scripts'));
+    mkdirSync(join(dir, 'src'));
+    writeFileSync(join(dir, 'src', 'a.txt'), 'one\n');
+    writeFileSync(join(dir, 'scripts', 'rel.mjs'), 'console.log("release gate ran"); process.exit(0);\n');
+    writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [
+      { control_id: 'REL', mechanism_ref: 'scripts/rel.mjs', lane: 'release', paths: ['src/'] },
+    ] }));
+    runIn(dir, ['--lane', 'release', '--out', 'a.json']);
+    const r = runIn(dir, ['--lane', 'release', '--out', 'b.json']);
+    const rec = JSON.parse(readFileSync(join(dir, 'b.json'), 'utf8'));
+    assert.equal(rec.cache.hits, 0);
+    assert.equal(rec.cache.stored, 0);
+    assert.ok(rec.cache.not_cacheable.some((x) => /lane:release is never cached/.test(x.reason)));
+    assert.match(r.stdout, /release gate ran/, 'the release re-runs its gates, for real');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

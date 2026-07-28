@@ -23,8 +23,13 @@ name: loom-gates
 on:
   push:
     branches: [main]
+    tags: ['v*']   # rc.39 — a release event: the deploy lane's trigger (ADOPT your tag pattern)
+  release:
+    types: [published]
   pull_request:
   merge_group:   # the routine auto-merge lane runs in the merge-queue context
+  schedule:
+    - cron: '17 5 * * 1'   # rc.34 — the scheduled lane runs on a SCHEDULE, as its name promises
 
 jobs:
   gates:
@@ -37,33 +42,92 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Bundled test suites (discovery gates + renderer + the gate tests)
-        run: node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+      # rc.40 (flow-plan Phase 6.2) — the gate result cache, persisted across runs.
+      #
+      # THE TRUST ARGUMENT, because a cache is the obvious place to launder a control. An entry is
+      # served only when the key matches, and the key covers the mechanism FILE's digest, its
+      # arguments, the canonical catalog entry of every control sharing it, the digest of every
+      # file under the control's DECLARED PATH SCOPE, the sorted set of compiled plan_hashes, and
+      # the cache format version. That path scope is not new trust: it is already what decides
+      # whether the control runs at all on a diff. Three hard rules on top: `always: true`
+      # tamper checks and unscoped controls are never cached; the RELEASE and DEPLOY lanes are
+      # never cached (the release re-runs its gates at the released commit, for real); and only
+      # PASSES are stored, so a failure always re-runs. Every hit is recorded as `pass-cached`
+      # with its key in gate-run-*.json — as auditable as a skip, and never silent.
+      #
+      # Losing the cache costs time and nothing else: a miss runs the gate. `--no-cache` on the
+      # runner turns it off entirely, and the run record says which it was.
+      - name: Gate result cache
+        uses: actions/cache@v4
+        with:
+          path: .loom/gate-cache
+          key: loom-gate-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            loom-gate-cache-${{ runner.os }}-
+
+      - name: Test suites — machinery smoke in an adoption, the full suite in the bundle
+        # rc.34: an adopted repository no longer runs the harness's own ~1,400-test regression
+        # suite on every PR — that is the BUNDLE'S suite, billed to the adopter's cycle time.
+        # The adopted path keeps a machinery-integrity smoke (the compiler, the runner, and the
+        # layering invariant — the three modules every gate trusts); the stamp is what tells the
+        # two contexts apart, because only a real adoption has one.
+        run: |
+          if [ -f .loom/adoption.json ]; then
+            node --test core/policy-compiler.test.mjs core/gate-runner.test.mjs core/layering.test.mjs
+          else
+            node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+          fi
 
       - name: Control catalog is complete and honest
         # Run before the runner, because the runner TRUSTS the catalog: these two gates are what
         # make that trust earned. The catalog may not overstate a control's state, and it may not
         # omit a gate this workflow runs — the second is what stops the list-vs-runner divergence
-        # from coming back in a new form.
+        # from coming back in a new form. The two bundle-only gates run only where there is no
+        # adoption stamp (rc.34) — in an adopted tree they were two inert process spawns per PR.
         run: |
           node scripts/control-catalog-check.mjs
           node scripts/ci-catalog-check.mjs
-          node scripts/self-claims-check.mjs      # bundle-only; inert in an adopted tree
-          node scripts/discovery-sync-check.mjs   # bundle-only; the ofbo back-port debt, counted
+          if [ ! -f .loom/adoption.json ]; then
+            node scripts/self-claims-check.mjs      # bundle-only; inert in an adopted tree
+            node scripts/discovery-sync-check.mjs   # bundle-only; the ofbo back-port debt, counted
+          fi
 
       - name: Gates — pr lane (risk-proportionate; every skip recorded)
         run: node core/gate-runner.mjs --lane pr --base origin/main --out gate-run-pr.json
 
-      - name: Gates — scheduled lane (runtime assurance; safe to run per PR)
+      - name: Gates — scheduled lane
+        # rc.34: runs on the cron trigger (and the push-to-main build as a backstop), not on
+        # every PR — with no diff to scope by, this lane fails open to running everything in it,
+        # which made "scheduled" a per-PR cost. The lane's own controls are freshness checks;
+        # they do not need a PR to have moved.
+        if: github.event_name == 'schedule' || github.event_name == 'push'
         run: node core/gate-runner.mjs --lane scheduled --out gate-run-scheduled.json
 
-      - name: Gates — build · release · deploy lanes
+      - name: Gates — release lane
         # rc.11 WS1: release-evidence checks stopped masquerading as PR-source checks. On a PR
         # these mostly find nothing to check and say so; on a release build they are the gate.
-        run: |
-          node core/gate-runner.mjs --lane build   --out gate-run-build.json
-          node core/gate-runner.mjs --lane release --out gate-run-release.json
-          node core/gate-runner.mjs --lane deploy  --out gate-run-deploy.json
+        #
+        # rc.33: the build and deploy lane invocations are GONE, deliberately. The shipped catalog
+        # carries zero controls in either lane, so both steps were CI checks that structurally
+        # could not fail — two green lights about nothing. The runner now refuses an empty lane
+        # (exit 2: "an empty lane is a hole, not a pass"); re-add an invocation only together with
+        # the catalog entry that gives its lane a control (deploy's first is the deployed-digest
+        # verification, see the flow plan).
+        #
+        # rc.39: DEPLOY is back, below, because it now has one — DEPLOYED-DIGEST. `build` stays
+        # gone: it still carries zero controls, and the guard is what says so out loud.
+        run: node core/gate-runner.mjs --lane release --out gate-run-release.json
+
+      - name: Gates — deploy lane (rc.39 · flow-plan Phase 5.4)
+        # The lane that verifies what actually went out: the deployed digest IS the authorized
+        # digest, and it reached customers under the progressive strategy the service declared.
+        # Gated on RELEASE EVENTS — a tag push or a published release — because that is when a
+        # deployment record exists to check. On an ordinary PR there is nothing deployed and the
+        # step would be the empty green light rc.33 removed. ADOPT: if your platform deploys from
+        # a workflow_dispatch or a deployment event, add it to this condition; the rule is that
+        # this step runs wherever a docs/governance/deployments/ record is written.
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'release'
+        run: node core/gate-runner.mjs --lane deploy --out gate-run-deploy.json
 
       # ── The four the runner structurally cannot drive, each for a stated reason ──────────────
       # This list is short ON PURPOSE and every entry is `execute: false` in the catalog with an
@@ -92,6 +156,21 @@ jobs:
         # Not a control, so deliberately not in the catalog: cost is a signal for humans and must
         # never block a merge. `ci-catalog-check` exempts it by name, in a printed list.
         run: node scripts/token-report.mjs --check
+
+      - name: Flow telemetry (reports, never gates — rc.37, flow-plan Phase 3)
+        # Lead time, stage residency, deployment frequency, change-failure rate, MTTR and gate
+        # wall-clock; the approval queue and its SLA; the comprehension trend. NONE of these is a
+        # control and none may become one — a merge gated on a duration is a merge gated on the
+        # clock, and the cheapest way to make that build green is to approve without reading.
+        # Each is exempted BY NAME in scripts/ci-catalog-check.mjs, in a list printed on every run.
+        #
+        # `--check` validates the INPUT SHAPES only (a malformed state_history or SLA is caught);
+        # no duration, rate or count is judged. To read the numbers, drop --check and run them
+        # locally — or add `|| true`-free steps here if you want them in the log; they exit 0.
+        run: |
+          node scripts/flow-report.mjs --check
+          node scripts/approval-status.mjs --check
+          node scripts/comprehension-report.mjs --check
 
       - name: Gate-run records (what ran, what skipped, and why)
         if: always()

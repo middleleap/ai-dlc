@@ -1,0 +1,32 @@
+{
+  "_comment": "ADOPTER EXAMPLE (rc.37 · flow-plan Phase 3) — a governed change that went ALL THE WAY and then ended. It exists so the flow instruments have something real to measure: change-example is mid-flight, so on its own it yields a stage histogram and no lead time, and a report that can only ever print 'not computable' proves nothing. This one is TERMINAL (superseded by a later change), which is also why it is cheap: a terminal change ships nothing, so it carries no control plan, no passport and no receipts — the envelope gate stops re-litigating it and keeps only the record of who judged it, plus the state_history that says how it moved. Mounted by the CI dry-run as docs/governance/changes/CHG-2026-0031/. Not in the copy manifest: it is the Loom's own demonstration data, not adopter machinery.",
+  "change_id": "CHG-2026-0031",
+  "product_id": "PRD-017",
+  "change_type": "material-product-change",
+  "risk_tier": "medium",
+  "product_profile": "uae-retail-credit",
+  "service_ids": ["credit-origination"],
+  "required_profiles": ["regulated-bank", "uae-bank"],
+  "flags": { "model_involved": false, "personal_data": true, "islamic": false, "third_party": false },
+  "classification": {
+    "classified_by": "po-fatima",
+    "classified_at": "2026-04-02",
+    "rationale": "Adds the affordability disclosure to the existing limit-review letter. Personal data in scope; no model in the decision path, so medium."
+  },
+  "current_state": "superseded",
+  "state_history": [
+    { "state": "classified", "at": "2026-04-02T10:00:00Z", "by": "po-fatima" },
+    { "state": "permission-to-develop", "at": "2026-04-09T15:30:00Z", "by": "risk-lena" },
+    { "state": "in-delivery", "at": "2026-04-10T08:00:00Z", "by": "eng-omar" },
+    { "state": "delivery-complete", "at": "2026-04-24T17:10:00Z", "by": "eng-omar" },
+    { "state": "permission-to-launch", "at": "2026-05-06T11:00:00Z", "by": "risk-lena" },
+    { "state": "operationally-ready", "at": "2026-05-08T09:45:00Z", "by": "ops-dana" },
+    { "state": "production-authorized", "at": "2026-05-11T13:20:00Z", "by": "risk-lena" },
+    { "state": "in-production", "at": "2026-05-12T06:05:00Z", "by": "ops-dana" },
+    { "state": "superseded", "at": "2026-07-18T09:25:00Z", "by": "po-fatima" }
+  ],
+  "control_plan": "control-plan.json",
+  "evidence_bundle": "docs/governance/evidence/",
+  "exemptions": [],
+  "_flow_note": "40 days classified → in-production, of which 12 sat in permission-to-launch waiting on approvals and 14 were actual delivery. That ratio is the entire argument of the flow plan, and until state_history existed nobody could compute it from the artifacts."
+}

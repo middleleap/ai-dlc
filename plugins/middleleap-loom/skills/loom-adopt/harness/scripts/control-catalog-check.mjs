@@ -62,6 +62,22 @@ export function evaluate(catalog, exists = existsSync) {
     if (c.paths !== undefined && !(Array.isArray(c.paths) && c.paths.every((p) => typeof p === 'string' && p.trim()))) {
       findings.push(`${id}: paths must be an array of non-empty path prefixes`);
     }
+    // min_tier (rc.34) opts a control into tier-aware selection: it runs only when the highest
+    // implicated change tier reaches it. `always` and plan-mandated controls override upward.
+    if (c.min_tier !== undefined && !['low', 'medium', 'high', 'critical'].includes(c.min_tier)) {
+      findings.push(`${id}: min_tier must be low|medium|high|critical (got ${JSON.stringify(c.min_tier)})`);
+    }
+    // depends_on (rc.40) orders the runner's parallel pool: "do not start me until these controls
+    // have finished". Real ids only, no self-reference — a dependency on a control that does not
+    // exist is a barrier that can never be satisfied. Cycles are rejected below, across the whole
+    // catalog, because a cycle is not visible from one entry.
+    if (c.depends_on !== undefined) {
+      if (!(Array.isArray(c.depends_on) && c.depends_on.every((d) => typeof d === 'string' && d.trim()))) {
+        findings.push(`${id}: depends_on must be an array of control_ids`);
+      } else if (c.depends_on.includes(id)) {
+        findings.push(`${id}: depends_on names itself`);
+      }
+    }
     // gate_family (W1) binds a control to the compiler family it implements, so the runner can
     // make a plan-required control unskippable. The vocabulary is the compiler's plan families.
     if (c.gate_family !== undefined && !GATE_FAMILIES.has(c.gate_family)) {
@@ -76,6 +92,27 @@ export function evaluate(catalog, exists = existsSync) {
       }
     }
   }
+  // depends_on, catalog-wide (rc.40): every edge must resolve to a real control, and the graph
+  // must be acyclic. The runner refuses to execute a cycle rather than flatten it, so a cycle
+  // here is a build that cannot run — caught at the catalog, where it is fixable.
+  const byId = new Map(controls.filter((c) => c && c.control_id).map((c) => [c.control_id, c]));
+  for (const c of controls) {
+    if (!c || !Array.isArray(c.depends_on)) continue;
+    for (const dep of c.depends_on) {
+      if (typeof dep === 'string' && dep.trim() && !byId.has(dep)) {
+        findings.push(`${c.control_id}: depends_on ${dep} — no such control_id in the catalog`);
+      }
+    }
+  }
+  const state = new Map(); // id → 0 unvisited, 1 on stack, 2 done
+  const visit = (id, trail) => {
+    if (state.get(id) === 2) return;
+    if (state.get(id) === 1) { findings.push(`depends_on cycle: ${[...trail, id].join(' → ')}`); return; }
+    state.set(id, 1);
+    for (const dep of byId.get(id)?.depends_on || []) if (byId.has(dep)) visit(dep, [...trail, id]);
+    state.set(id, 2);
+  };
+  for (const id of byId.keys()) visit(id, []);
   return findings;
 }
 

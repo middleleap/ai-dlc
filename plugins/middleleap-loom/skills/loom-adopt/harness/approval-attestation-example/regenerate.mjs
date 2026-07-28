@@ -26,7 +26,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
-import { canonicalDecisionPayload, passportDigest, sha256 } from '../core/approval-attestations.mjs';
+import { canonicalDecisionPayload, passportDigest, roleBindingHash, sha256 } from '../core/approval-attestations.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const H = resolve(HERE, '..');
@@ -74,6 +74,9 @@ const rec = {
     source_sha: '4b0bc5c1e2f3a495867d0c1b2a3948576e8f9012',
     control_plan_path: 'control-plan.json',
   },
+  // rc.38 (flow-plan Phase 4.1): the narrow binding is added AFTER bound_to exists, because it
+  // hashes the subject digests that live there. Generated from the compiled plan — never
+  // hand-picked — so it cannot quietly cover less than the role was shown.
   origin: {
     system: 'notion',
     workspace_id: 'ws_3f9a2c',
@@ -92,6 +95,7 @@ const rec = {
 // Both signatures are over the SAME canonical payload and mean different things: the human's
 // assertion says a person decided; the bridge's attestation says only that it carried the decision
 // faithfully. The nonce binds the assertion to this decision so it cannot be replayed onto another.
+rec.bound_to.binding_hash = roleBindingHash(plan, rec.role, rec.bound_to);
 const payload = canonicalDecisionPayload(rec);
 rec.subject.assertion.nonce = sha256(payload);
 rec.subject.assertion.signature = edSign(null, Buffer.from(payload, 'utf8'), assertionKey.privateKey).toString('base64');

@@ -64,9 +64,10 @@ Pick a slug. Create `discovery/runs/<slug>/` and copy each `discovery/templates/
 
 1. `node discovery/gates/validate.mjs discovery/runs/<slug>` — all applicable gates D1–D9 must
    pass. Fix artifacts until green; never weaken a gate to pass.
-2. Spawn the reviewers (Agent tool): `data-governance-reviewer` (control coverage / residual
-   soundness) and `discovery-boundary-reviewer` (no-solutioning / prototype fidelity). Resolve
-   any FAIL.
+2. Spawn the reviewers (Agent tool) **in ONE message** (so they run concurrently and blind to
+   each other — one reviewer reading the other's verdict is not a second pair of eyes):
+   `data-governance-reviewer` (control coverage / residual soundness) and
+   `discovery-boundary-reviewer` (no-solutioning / prototype fidelity). Resolve any FAIL.
 3. `handoff.md`: the boundary object — problem, success measures, out-of-scope, the
    data-governance verdict + inherited conditions, and the prototype as *direction, not
    specification*. No delivery design in it. Optionally render a stakeholder-facing

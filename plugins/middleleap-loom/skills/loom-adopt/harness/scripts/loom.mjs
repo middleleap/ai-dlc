@@ -5,6 +5,10 @@
 //   loom adopt                     install the machinery (adopt.mjs, idempotent)
 //   loom configure                 list what is still adopt-pending (unresolved markers to fill)
 //   loom verify                    run the bundled gates → mechanically-validated
+//   loom gates                     the pr-lane gate run CI would do, locally, against the merge
+//                                  base (rc.34) — same runner, same catalog, same recorded skips
+//   loom compile <envelope-path>   the policy compiler, forwarded (rc.34)
+//   loom seal                      derive + verify the evidence manifest (rc.35, seal-evidence.mjs)
 //   loom activate --platform …     observe the live platform → platform-activated (WS2)
 //   loom attest-adoption           sign the adoption report (fails while anything is adopt-pending)
 //   loom status                    the five-stage matrix + unresolved inventory (machine or human)
@@ -20,6 +24,16 @@ import { STAMP_PATH } from '../core/adoption-stamp.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const node = (script, args = []) => spawnSync(process.execPath, [resolve(HERE, script), ...args], { stdio: 'inherit' }).status ?? 1;
+
+// The merge base the CI workflow supplies to the runner, computed locally: origin/main first,
+// a local main as the fallback. Null (no git, no such ref) means the diff is unknown.
+function mergeBase() {
+  for (const ref of ['origin/main', 'main']) {
+    const r = spawnSync('git', ['merge-base', ref, 'HEAD'], { encoding: 'utf8' });
+    if (r.status === 0 && r.stdout.trim()) return r.stdout.trim();
+  }
+  return null;
+}
 
 /**
  * Which Loom is installed here, and which managed files the adopter has since made their own.
@@ -77,9 +91,26 @@ export const COMMANDS = {
     // The mechanically-validated stage: the state-of-record gates must be green.
     let rc = 0;
     for (const g of ['control-catalog-check.mjs', 'control-plane-check.mjs', 'guardrail-policy-check.mjs']) rc |= node(g, []);
-    process.stdout.write('\nverify ran the state-of-record gates; run the full CI workflow (.github/workflows/ci.yml) for every gate.\n');
+    process.stdout.write('\nverify ran the state-of-record gates; `loom gates` runs the full pr lane locally.\n');
     return rc ? 1 : 0;
   },
+  gates: (args) => {
+    // rc.34 — the local loop that matches CI. Same runner, same catalog, same recorded skips;
+    // the merge base is computed the way the workflow supplies it. No base found means an
+    // unknown diff, and the runner fails open to running everything in the lane — said aloud.
+    const extra = [...args];
+    if (!extra.includes('--lane')) extra.unshift('--lane', 'pr');
+    if (!extra.includes('--base')) {
+      const base = mergeBase();
+      if (base) extra.push('--base', base);
+      else process.stdout.write('no merge base found (origin/main or main) — unknown diff, so everything in the lane runs\n');
+    }
+    return node('../core/gate-runner.mjs', extra);
+  },
+  compile: (args) => node('../core/policy-compiler.mjs', args),
+  // rc.35 (flow-plan Phase 2) — the evidence collector: derive the manifest from the artifacts,
+  // verified by the seal gate's own evaluate() before anything is written. Never hand-chain.
+  seal: (args) => node('seal-evidence.mjs', args),
   activate: (args) => {
     process.stdout.write('Activation — observe the live platform and record signed evidence, then verify it:\n');
     return node('platform-activation-check.mjs', args.filter((a) => a !== '--platform' && !a.startsWith('github')));

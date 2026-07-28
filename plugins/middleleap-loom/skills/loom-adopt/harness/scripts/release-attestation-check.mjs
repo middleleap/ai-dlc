@@ -10,6 +10,9 @@
 //   artifact binds    the sealed provenance's subject digest == release-subject.artifact.digest
 //   evals bind        every product eval names release-subject.artifact.digest (evaluated_artifact)
 //   anchor is signed  the evidence anchor verifies against an approved registry issuer
+//   the TRAIN binds    (rc.38 · Phase 4.4) where a release train names this commit, its
+//                      enumeration is valid and names the same commit the subject and the
+//                      manifest do — one release, one enumeration, one bundle
 //
 // Release lane. Absence of a release-subject is OK for a generic repo, but once any governed change
 // is in production a production release MUST be artifact-bound (mandatory-when-compiled).
@@ -26,10 +29,16 @@ import process from 'node:process';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 import { verifyAnchorAttestation, loadIssuers } from '../core/attestations.mjs';
 import { evaluate as evaluateSubject } from './release-subject-check.mjs';
+import { MANIFEST_LOCATIONS as SEAL_MANIFEST_LOCATIONS, governedChangeIds, loadTrains } from './evidence-seal-check.mjs';
+import { evaluateTrains, trainForCommit } from '../core/release-trains.mjs';
+import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { pathToFileURL } from 'node:url';
 
 const SUBJECT_LOCATIONS = ['docs/governance/release-subject.json', 'release-subject.json'];
-const MANIFEST_LOCATIONS = ['docs/governance/evidence/manifest.json', 'evidence-manifest.json', 'evidence-example/manifest.json'];
+// The adopter-facing locations are the SEAL GATE'S list, imported — a locally-kept copy had
+// diverged, so the two gates could resolve different manifests in one repo (rc.33). The single
+// extra fallback is the bundle's own worked example, which only exists in the bundle tree.
+const MANIFEST_LOCATIONS = [...SEAL_MANIFEST_LOCATIONS, 'evidence-example/manifest.json'];
 const PRODUCT_LOCATIONS = ['docs/governance/product-evals.json', 'product-evals.json', 'product-eval-example/product-evals.json'];
 
 const bare = (d) => (typeof d === 'string' ? d.replace(/^sha256:/, '') : d);
@@ -40,7 +49,7 @@ const find = (cwd, locs) => locs.map((p) => `${cwd}/${p}`).find(existsSync) || n
  * Cross-binding findings. Empty ⇒ source, artifact, evals and the anchor all name one digest.
  * Pure over already-loaded records so it is unit-testable without a filesystem.
  */
-export function evaluate({ subject, manifest, provenanceArtifact, productEvals, issuers, anyInProduction = false }) {
+export function evaluate({ subject, manifest, provenanceArtifact, productEvals, issuers, anyInProduction = false, trains = [], changeIds = null, registry = null, notices = null }) {
   const findings = [];
   if (!subject) {
     if (anyInProduction) findings.push('no release-subject.json, but a governed change is in production — a production release must be bound to an immutable artifact (rc.11)');
@@ -82,6 +91,22 @@ export function evaluate({ subject, manifest, provenanceArtifact, productEvals, 
   // 4. the anchor is authentically signed by an approved issuer.
   if (manifest) for (const f of verifyAnchorAttestation(manifest, issuers)) findings.push(f);
 
+  // 5. rc.38 (Phase 4.4) — the release train. The train is the enumeration of what is in this
+  //    release; if one claims this commit it must be internally sound AND agree with the subject.
+  //    A train that named a different commit from the subject would let "what shipped" and "what
+  //    was enumerated" drift apart, which is the whole failure the enumeration exists to prevent.
+  const trainFindings = evaluateTrains(trains, { changeIds, registry, identityOf, notices });
+  findings.push(...trainFindings);
+  const train = trainFindings.length === 0 ? trainForCommit(trains, subject.source?.commit) : null;
+  if (train) {
+    notices?.push(`release train ${train.train_id}: ${train.changes.length} change(s) bound to ${String(train.release_commit).slice(0, 12)}…, released by ${train.released_by}`);
+    if (manifest && manifest.release_commit !== train.release_commit) {
+      findings.push(`release train ${train.train_id} names release_commit ${String(train.release_commit).slice(0, 12)}… but the sealed evidence names ${String(manifest.release_commit).slice(0, 12)}… — the enumeration and the bundle describe different releases`);
+    }
+  } else if (trains.length && trainFindings.length === 0 && anyInProduction) {
+    notices?.push(`${trains.length} release train(s) present, none binding this subject's commit — this release is enumerated per change, not as a train`);
+  }
+
   return findings;
 }
 
@@ -101,13 +126,18 @@ export function run(cwd = process.cwd()) {
   const productPath = find(cwd, PRODUCT_LOCATIONS);
   const productEvals = productPath ? readJson(productPath) : null;
   const issuers = loadIssuers(cwd) || loadIssuers(`${cwd}/..`);
-
-  return { present: true, findings: evaluate({ subject, manifest, provenanceArtifact, productEvals, issuers, anyInProduction }) };
+  const notices = [];
+  const findings = evaluate({
+    subject, manifest, provenanceArtifact, productEvals, issuers, anyInProduction,
+    trains: loadTrains(cwd), changeIds: governedChangeIds(cwd), registry: loadRegistry(cwd), notices,
+  });
+  return { present: true, findings, notices };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { present, findings } = run();
+  const { present, findings, notices = [] } = run();
+  for (const n of notices) process.stdout.write(`NOTE: ${n}\n`);
   if (!present && findings.length === 0) {
     process.stdout.write('Release-attestation gate — no release-subject.json; nothing to cross-bind. OK\n');
     process.exit(0);

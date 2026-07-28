@@ -9,6 +9,11 @@
 //   · the attester must resolve to a non-agent identity (an agent cannot certify its own adoption),
 //   · the attestation must be fresh.
 //
+// rc.37 (flow-plan Phase 3.6): the freshness window gained a WARNING BAND. At WARN_AT (80%) of the
+// window the attestation is still valid and this gate still passes — a NOTICE is printed naming
+// the days left. The block is unmoved. What is removed is the overnight green-to-blocked surprise
+// on a control whose remedy (re-run the adoption status, re-sign) takes a human and a key.
+//
 // Honesty (rc.2 invariant): the bundle ships the verifier; the signature is produced adopter-side by
 // the adopter's key when they run `attest-adoption` on a fully-configured repo.
 //
@@ -23,6 +28,8 @@ import { pathToFileURL } from 'node:url';
 const ATTEST_LOCATIONS = ['docs/governance/adoption-attestation.json', 'adoption-attestation.json'];
 const IDENTITY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
 const DAY = 86_400_000;
+// The fraction of a freshness window at which a NOTICE is printed (never a finding).
+export const WARN_AT = 0.8;
 
 function canonical(v) {
   if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
@@ -35,7 +42,7 @@ export function attestationHash(record) {
 }
 
 /** Findings ([] ⇒ the adoption is fully configured and authentically attested). */
-export function evaluate(status, attestation, { issuers, registry, now = Date.now(), maxAgeDays = 365 } = {}) {
+export function evaluate(status, attestation, { issuers, registry, now = Date.now(), maxAgeDays = 365, notices = null } = {}) {
   const findings = [];
   // The gate's reason for being: no signature over an adopt-pending repo.
   if (status?.adoptPending) {
@@ -45,7 +52,13 @@ export function evaluate(status, attestation, { issuers, registry, now = Date.no
   if (!attestation) { findings.push('no adoption-attestation.json — run `attest-adoption` on a fully-configured repo to produce one'); return findings; }
 
   if (!attestation.attested_at || Number.isNaN(Date.parse(attestation.attested_at))) findings.push('attestation has no ISO-8601 attested_at');
-  else if (now - Date.parse(attestation.attested_at) > maxAgeDays * DAY) findings.push('adoption attestation is stale — re-attest');
+  else {
+    const ageDays = Math.floor((now - Date.parse(attestation.attested_at)) / DAY);
+    if (ageDays > maxAgeDays) findings.push('adoption attestation is stale — re-attest');
+    else if (ageDays >= Math.floor(maxAgeDays * WARN_AT)) {
+      notices?.push(`adoption attestation is ${ageDays}d old of a ${maxAgeDays}d window — ${maxAgeDays - ageDays}d left. Re-run \`adoption-status --run\` and re-attest before it BLOCKS`);
+    }
+  }
 
   const who = (registry?.identities || []).find((i) => i.id === attestation.attested_by);
   if (!attestation.attested_by) findings.push('attestation names no attested_by');
@@ -62,12 +75,14 @@ export function run(cwd = process.cwd()) {
   const issuers = loadIssuers(cwd) || loadIssuers(`${cwd}/..`);
   const idPath = IDENTITY_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
   const registry = idPath ? JSON.parse(readFileSync(idPath, 'utf8')) : null;
-  return evaluate(status, attestation, { issuers, registry });
+  const notices = [];
+  return { findings: evaluate(status, attestation, { issuers, registry, notices }), notices };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const findings = run();
+  const { findings, notices } = run();
+  for (const n of notices) process.stdout.write(`NOTICE: ${n}\n`);
   if (findings.length) {
     process.stderr.write('\nAdoption-attestation gate (rc.14 · WS5) — NOT ATTESTED\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);

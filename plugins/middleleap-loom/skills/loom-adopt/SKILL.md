@@ -55,10 +55,13 @@ A full adoption lands 133 ADOPT markers across 28 files to fill in, which is a c
 an on-ramp — and it grows every release. `--tier` stages it:
 
 ```bash
-node harness/adopt.mjs --dest . --tier core       # the warp: 12 markers in 9 files
+node harness/adopt.mjs --dest . --tier core       # the warp: 12 markers in 9 files (the default)
 node harness/adopt.mjs --dest . --tier governed   # + product governance: 44 in 16
-node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution: 133 in 28 (default)
+node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution: 133 in 28
 ```
+
+A first run with no `--tier` lands `core` (rc.33 — it used to land `full`, handing every
+unflagged first-timer the cliff this section exists to remove).
 
 Two things make this safe rather than merely smaller:
 
@@ -116,10 +119,14 @@ are repo-root-relative.
 | `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | core | Data classification, retention, erasure, residency |
 | `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | governed | The Run→Discovery feedback log |
 | `governance/service-readiness.template.json` | `docs/governance/services/example-service.json` | governed | Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills) |
+| `governance/environments.template.json` | `docs/governance/environments.json` | governed | The promotion ladder (rc.39) — one entry per environment: purpose, data classification, who may promote INTO it, what it promotes FROM. Replaces three unmountable ADOPT comments in the release skill |
+| `governance/feature-flags.template.json` | `docs/governance/feature-flags.json` | governed | The exposure register (rc.39) — flags default OFF, belong to a governed change, name an owner and a kill path, and expire. Mandatory once a compiled plan requires the exposure_control capability |
 | `governance/product-evals.template.json` | `docs/governance/product-evals.json` | governed | Product-outcome evals (discovery-linked, measures scored, commit-bound) |
 | `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | governed | The second-line-owned routine-change envelope (HG-0013) |
 | `governance/config-baseline.template.json` | `docs/governance/config-baseline.json` | full | The approved control-plane configuration reconciled against live observations (rc.12 WS2.4) |
 | `governance/assurance-sla.template.json` | `docs/governance/assurance-sla.json` | full | Service-level expectations for continuous-assurance cases (rc.14 WS6) |
+| `governance/approval-sla.template.json` | `docs/governance/approval-sla.json` | full | Approval service-level EXPECTATIONS (rc.37) — read by scripts/approval-status.mjs, which flags a breach and gates nothing |
+| `governance/exception-policy.template.json` | `docs/governance/exception-policy.json` | governed | Exception-register policy (rc.37) — the concentration limit, which may be tightened below the shipped floor of 3 and never raised above it |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | full | Token-spend ledger (a report, never a merge gate) |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | full | The neutral adapter contract |
 | `adapters/providers` | `docs/governance/adapters/providers` | full | The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it |

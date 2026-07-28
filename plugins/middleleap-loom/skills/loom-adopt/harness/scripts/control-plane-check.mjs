@@ -76,6 +76,16 @@ export const CONTROL_TARGETS = [
   'docs/governance/changes/any/change-envelope.json', // ownership probe: the whole changes/ tree must be owned (by the second line, not builders)
   'docs/governance/changes/any/release-hold.json',    // ownership probe: only the second line can touch the hold
   'docs/governance/services/any.json',                // ownership probe: readiness declarations are owned
+  // rc.39 (flow-plan Phase 5) — the exposure plane. The estate says which environments hold
+  // personal data and who may promote into them; the flag register is the exposure control
+  // itself; the deployment records are what the deploy gate compares against the authorized
+  // digest. An agent that could write any of the three could expose customers to its own work.
+  'scripts/environments-check.mjs',
+  'scripts/feature-flag-check.mjs',
+  'scripts/deployed-digest-check.mjs',
+  'docs/governance/environments.json',
+  'docs/governance/feature-flags.json',
+  'docs/governance/deployments/any.json',             // ownership probe: the deploy record is owned
   'CODEOWNERS',
 ];
 

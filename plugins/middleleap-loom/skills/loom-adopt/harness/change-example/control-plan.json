@@ -30,7 +30,10 @@
     "product-owner",
     "risk-second-line"
   ],
-  "pa1_approver_roles": [],
+  "pa1_approver_roles": [
+    "credit-risk",
+    "data-protection"
+  ],
   "required_evidence": [
     "control-plane",
     "dependency-audit",
@@ -73,6 +76,7 @@
     "pricing-conduct",
     "responsible-lending-disclosures",
     "security-privacy-residency",
+    "third-party-continuity",
     "vulnerable-customer-treatment"
   ],
   "required_capabilities": {
@@ -90,6 +94,9 @@
     },
     "hardened_runtime": {
       "required": true
+    },
+    "exposure_control": {
+      "required": true
     }
   },
   "profile_bindings": [
@@ -97,13 +104,13 @@
       "profile": "lending",
       "kind": "product",
       "version": null,
-      "digest": "sha256:9de297256658c3a7ccc4c7431b5dde97f872eaa5fac923714130c1e9d0c27803"
+      "digest": "sha256:d44ff6b5021ed04df82333a6b1d8ef8beda67fb659f09de410326142bba82985"
     },
     {
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:117a30fc6c551582cdc868f13a8e5dc9c3b03d96c8d5485b148722bbb0417a3d"
+      "digest": "sha256:5d39041baaa24afeded181508f81993ffb2c22ae992faffc7ccfad8d80c2ab29"
     },
     {
       "profile": "uae-bank",
@@ -112,5 +119,5 @@
       "digest": "sha256:d9145e558c731bc6b2f703ae8da44e4a8453a8fec49d1bd2cdd65c88eb50c624"
     }
   ],
-  "plan_hash": "dfac91a2da0c21da741e8cd469f82fe27b78aee94c5889c86193a54e98f1b061"
+  "plan_hash": "be3f03718a19100a96b8fdf5b29966af25b01a0ae26a82d2aa1f08ab48b5620b"
 }
