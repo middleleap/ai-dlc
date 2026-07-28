@@ -41,6 +41,13 @@ export const CATALOG_LOCATIONS = [
 // name and the reason are printed on every run.
 export const REPORT_ONLY = new Map([
   ['scripts/token-report.mjs', 'cost telemetry — a report, never a merge gate (delivery-harness.md §Record)'],
+  // rc.37 (flow-plan Phase 3) — the flow instruments. Same rule, same reason: a merge gated on a
+  // duration is a merge gated on the clock, and the cheapest way to make that build green is to
+  // stop reading before approving. They create pressure by being VISIBLE, which is the only kind
+  // of pressure that does not corrupt the number it measures.
+  ['scripts/flow-report.mjs', 'flow telemetry (lead time, stage residency, deployment frequency, CFR, MTTR, gate wall-clock) — a report, never a merge gate'],
+  ['scripts/approval-status.mjs', 'approval queue / WIP telemetry — an approval SLA breach is FLAGGED, never gated (flow-plan §1: nothing gates on time or cost)'],
+  ['scripts/comprehension-report.mjs', 'comprehension telemetry — the metrics comprehension-check already declares "REPORTED, never gated on their values"'],
 ]);
 
 /** Every `node <path>.mjs` invocation in a workflow, in file order, de-duplicated. */

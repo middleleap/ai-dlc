@@ -137,3 +137,37 @@ test('a bare-date drill still passes THIS release, with a deprecation NOTICE —
   assert.ok(notices.length >= 4, 'each bare-date drill field must say it is deprecated');
   assert.ok(notices.every((n) => /DEPRECATED \(rc\.36\)/.test(n)));
 });
+
+/* ---- rc.37 · flow-plan Phase 3.6: freshness WARNING BANDS ---- */
+
+test('WARNING BAND — at 80% of a window the gate still PASSES and says how long is left', () => {
+  const now = Date.parse('2026-08-01T00:00:00Z');
+  const daysAgo = (n) => new Date(now - n * 86_400_000).toISOString().slice(0, 10);
+  const findings = [];
+  const notices = [];
+  // The kill-switch window is 90d: 75d in is inside the band, still valid.
+  verifyDrillObservationBand(findings, notices, daysAgo(75), now);
+  assert.deepEqual(findings, [], 'a drill inside its window must not fail');
+  assert.equal(notices.length, 1);
+  assert.match(notices[0], /75d of the 90d window used, 15d left/);
+  assert.match(notices[0], /BLOCKS production/);
+  // 60d in (below 72d = 80% of 90) is silent.
+  const quiet = { findings: [], notices: [] };
+  verifyDrillObservationBand(quiet.findings, quiet.notices, daysAgo(60), now);
+  assert.deepEqual(quiet.notices, []);
+  // 91d in is the block, unmoved.
+  const blocked = { findings: [], notices: [] };
+  verifyDrillObservationBand(blocked.findings, blocked.notices, daysAgo(91), now);
+  assert.ok(blocked.findings.some((f) => /STALE/.test(f)));
+  assert.deepEqual(blocked.notices, [], 'a stale drill is a finding, not a warning');
+});
+
+// Exercise the band through the public observation verifier, ignoring the signature findings
+// (this test is about the clock, and the signature path is covered above).
+function verifyDrillObservationBand(findings, notices, observed_at, now) {
+  const f = verifyDrillObservation(
+    { observed_at, observation: { note: 'x' }, negative_test: { attempted: 'y', result: 'rejected', tested_at: observed_at }, observer_identity: 'ops-dana' },
+    { label: 'svc: kill-switch test', windowDays: WINDOWS.kill_switch, now, registry: { identities: [{ id: 'ops-dana', kind: 'human' }] }, issuers: null, notices },
+  );
+  findings.push(...f.filter((x) => /window|STALE/.test(x)));
+}

@@ -117,6 +117,21 @@ jobs:
         # never block a merge. `ci-catalog-check` exempts it by name, in a printed list.
         run: node scripts/token-report.mjs --check
 
+      - name: Flow telemetry (reports, never gates — rc.37, flow-plan Phase 3)
+        # Lead time, stage residency, deployment frequency, change-failure rate, MTTR and gate
+        # wall-clock; the approval queue and its SLA; the comprehension trend. NONE of these is a
+        # control and none may become one — a merge gated on a duration is a merge gated on the
+        # clock, and the cheapest way to make that build green is to approve without reading.
+        # Each is exempted BY NAME in scripts/ci-catalog-check.mjs, in a list printed on every run.
+        #
+        # `--check` validates the INPUT SHAPES only (a malformed state_history or SLA is caught);
+        # no duration, rate or count is judged. To read the numbers, drop --check and run them
+        # locally — or add `|| true`-free steps here if you want them in the log; they exit 0.
+        run: |
+          node scripts/flow-report.mjs --check
+          node scripts/approval-status.mjs --check
+          node scripts/comprehension-report.mjs --check
+
       - name: Gate-run records (what ran, what skipped, and why)
         if: always()
         uses: actions/upload-artifact@v4

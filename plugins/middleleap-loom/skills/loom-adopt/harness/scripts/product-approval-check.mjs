@@ -63,12 +63,22 @@ export function pa1Roles(plan) {
   return [...new Set(wanted)].filter((r) => required.includes(r)).sort();
 }
 
-function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
+/**
+ * One stage's approvals against the roles the plan compiled.
+ *
+ * Returns `{ findings, missing }`. `missing` used to be computed here and thrown away into a
+ * finding string, which is why nothing in the harness could answer "who is this change waiting
+ * on?" — the set existed, once per run, and was immediately unreadable. It is now returned, and
+ * scripts/approval-status.mjs (telemetry) reads it rather than reimplementing the derivation
+ * against a second, drifting idea of what a required role is.
+ */
+export function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
   const findings = [];
+  const missing = [];
   const byRole = new Map((approvals || []).map((a) => [a.role, a]));
   for (const role of requiredRoles) {
     const a = byRole.get(role);
-    if (!a) { findings.push(`${label}: no approval for required role ${role}`); continue; }
+    if (!a) { missing.push(role); findings.push(`${label}: no approval for required role ${role}`); continue; }
     findings.push(...checkOne(a, role, registry, label));
     if (att?.required) {
       const rec = (att.records || []).find((r) => r?.stage === stage && r?.role === role);
@@ -101,7 +111,7 @@ function checkApprovals(approvals, requiredRoles, registry, label, stage, att) {
     if (requiredRoles.includes(role)) continue; // checked above
     findings.push(...checkOne(a, role, registry, `${label} (recorded, not required at this stage)`));
   }
-  return findings;
+  return { findings, missing };
 }
 
 /** One recorded approval: resolves to a human holding the role, and second line ∩ builders = ∅. */
@@ -159,7 +169,7 @@ export function evaluate(passport, plan, registry, att = {}) {
           findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
         }
       }
-      findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`, 'PA1', attCtx));
+      findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`, 'PA1', attCtx).findings);
     } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
       findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
     }
@@ -172,7 +182,7 @@ export function evaluate(passport, plan, registry, att = {}) {
         findings.push(`${id} · PA2: required section ${section} is missing or empty`);
       }
     }
-    findings.push(...checkApprovals(passport.pa2.approvals, plan.required_approver_roles || [], registry, `${id} · PA2`, 'PA2', attCtx));
+    findings.push(...checkApprovals(passport.pa2.approvals, plan.required_approver_roles || [], registry, `${id} · PA2`, 'PA2', attCtx).findings);
   }
   return findings;
 }

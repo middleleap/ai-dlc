@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, STATES } from './change-envelope-check.mjs';
+import { checkStateHistory, evaluate, STATES, stateHistoryRequired } from './change-envelope-check.mjs';
 import { compile, resolveBindings } from '../core/policy-compiler.mjs';
 
 import { existsSync } from 'node:fs';
@@ -39,6 +39,14 @@ const ok = (over = {}, ctx = {}) => evaluate({ ...ENVELOPE, ...over }, {
   plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY, freshPlan: fresh(), ...ctx,
 });
 
+// rc.37 — moving a change's state means RECORDING the transition: the history's last entry is
+// current_state, so a test that advances the state advances the record with it (exactly what an
+// envelope author now has to do).
+const advance = (state, at = '2026-07-30T10:00:00Z', by = 'po-fatima') => ({
+  current_state: state,
+  state_history: [...ENVELOPE.state_history, { state, at, by }],
+});
+
 test('the shipped worked example passes end to end', () => {
   assert.deepEqual(ok(), []);
 });
@@ -47,12 +55,12 @@ test('TERMINAL — a closed change is valid without plan reconciliation or recei
   // A closed change's profiles may have moved on; it must not go red because a profile did,
   // and it must not demand PA receipts for work it abandoned. It contributes nothing to the
   // compiled-requirements aggregate (asserted in core/compiled-requirements.test.mjs).
-  const closed = evaluate({ ...ENVELOPE, current_state: 'closed' }, { plan: null, freshPlan: null, passport: null, architectureExists: false });
+  const closed = evaluate({ ...ENVELOPE, ...advance('closed') }, { plan: null, freshPlan: null, passport: null, architectureExists: false });
   assert.deepEqual(closed, [], `a closed change must not be re-litigated:\n${closed.join('\n')}`);
-  const superseded = evaluate({ ...ENVELOPE, current_state: 'superseded' }, {});
+  const superseded = evaluate({ ...ENVELOPE, ...advance('superseded') }, {});
   assert.deepEqual(superseded, []);
   // The record of who judged it survives its closure.
-  const anonymous = evaluate({ ...ENVELOPE, current_state: 'closed', classification: {} }, {});
+  const anonymous = evaluate({ ...ENVELOPE, ...advance('closed'), classification: {} }, {});
   assert.equal(anonymous.length, 1);
   assert.match(anonymous[0], /classified_by/);
 });
@@ -103,7 +111,7 @@ const PA2_OK = { ...PASSPORT, pa2: { decision: 'approved' } };
 const READY = { missing: [], findings: [] };
 const HOLD_RELEASED = { change_id: 'CHG-2026-0042', status: 'released', by: 'risk-lena', at: '2026-07-21' };
 const EVIDENCE_OK = { anchor: 'abc123', attestationFindings: [] };
-const prod = (ctx = {}) => ok({ current_state: 'production-authorized' }, {
+const prod = (ctx = {}) => ok(advance('production-authorized'), {
   passport: PA2_OK, readiness: READY, hold: HOLD_RELEASED, evidence: EVIDENCE_OK, ...ctx,
 });
 
@@ -149,5 +157,73 @@ test('an unknown state is rejected; the state enum matches the plan', () => {
   assert.ok(ok({ current_state: 'shipped' }).some((x) => /current_state must be one of/.test(x)));
   assert.equal(STATES[0], 'classified');
   assert.equal(STATES[STATES.length - 1], 'in-production');
+});
+
+/* ---- rc.37 · flow-plan Phase 3.1: state_history, the append-only transition record ---- */
+
+const H = ENVELOPE.state_history;
+
+test('STATE-HISTORY — the shipped worked example carries a well-formed history', () => {
+  assert.ok(Array.isArray(H) && H.length >= 3, 'the worked example must demonstrate the field');
+  assert.deepEqual(checkStateHistory(ENVELOPE, { registry: REGISTRY }), []);
+  assert.equal(H[H.length - 1].state, ENVELOPE.current_state);
+});
+
+test('STATE-HISTORY — it must advance in the STATES order; a backwards or repeated state fails', () => {
+  const back = checkStateHistory({ ...ENVELOPE, ...advance('classified') }, {});
+  assert.ok(back.some((x) => /does not advance the lifecycle/.test(x)), back.join('\n'));
+  const repeat = checkStateHistory({ ...ENVELOPE, ...advance('in-delivery') }, {});
+  assert.ok(repeat.some((x) => /does not advance the lifecycle/.test(x)));
+});
+
+test('STATE-HISTORY — APPEND-ONLY: a timestamp earlier than its predecessor fails', () => {
+  const f = checkStateHistory({ ...ENVELOPE, ...advance('delivery-complete', '2026-07-19T00:00:00Z') }, {});
+  assert.ok(f.some((x) => /APPEND-ONLY/.test(x)), f.join('\n'));
+});
+
+test('STATE-HISTORY — nothing follows a terminal state; closure is not a pause', () => {
+  const resumed = {
+    current_state: 'in-production',
+    state_history: [...H, { state: 'closed', at: '2026-08-01T00:00:00Z' }, { state: 'in-production', at: '2026-08-09T00:00:00Z' }],
+  };
+  const f = checkStateHistory({ ...ENVELOPE, ...resumed }, {});
+  assert.ok(f.some((x) => /recorded after the terminal state closed/.test(x)), f.join('\n'));
+});
+
+test('STATE-HISTORY — the history may not be a parallel account: the last entry IS current_state', () => {
+  const f = checkStateHistory({ ...ENVELOPE, current_state: 'in-production' }, {});
+  assert.ok(f.some((x) => /not a parallel account/.test(x)));
+});
+
+test('STATE-HISTORY — an undated transition, an unknown state, and an unresolvable actor all fail', () => {
+  const undated = checkStateHistory({ ...ENVELOPE, state_history: [{ state: 'classified', at: 'soon' }], current_state: 'classified' }, {});
+  assert.ok(undated.some((x) => /is not an ISO-8601 timestamp/.test(x)));
+  const unknown = checkStateHistory({ ...ENVELOPE, state_history: [{ state: 'vibing', at: '2026-07-18T00:00:00Z' }], current_state: 'in-delivery' }, {});
+  assert.ok(unknown.some((x) => /is not one of/.test(x)));
+  const ghost = checkStateHistory({ ...ENVELOPE, state_history: [...H.slice(0, 2), { ...H[2], by: 'nobody-here' }] }, { registry: REGISTRY });
+  assert.ok(ghost.some((x) => /is not in the identity registry/.test(x)), ghost.join('\n'));
+});
+
+test('STATE-HISTORY — it must begin where every governed change begins', () => {
+  const f = checkStateHistory({ ...ENVELOPE, state_history: H.slice(1) }, {});
+  assert.ok(f.some((x) => /begins at "permission-to-develop"/.test(x)), f.join('\n'));
+});
+
+test('STATE-HISTORY — REQUIRED at high/critical from the cutover, OPTIONAL before it (no retroactive red)', () => {
+  const { state_history, ...noHistory } = ENVELOPE;
+  // Classified before the cutover: grandfathered — a NOTICE, never a finding.
+  const notices = [];
+  assert.deepEqual(checkStateHistory(noHistory, { notices }), []);
+  assert.ok(notices.some((n) => /grandfathered/.test(n)), 'a grandfathered high-tier change must be said out loud');
+  assert.equal(stateHistoryRequired(noHistory), false);
+  // Classified on or after it: required.
+  const fresh = { ...noHistory, classification: { ...ENVELOPE.classification, classified_at: '2026-08-01' } };
+  assert.equal(stateHistoryRequired(fresh), true);
+  assert.ok(checkStateHistory(fresh, {}).some((x) => /requires state_history/.test(x)));
+  // A low-tier change is never required to carry one, whenever it was classified.
+  assert.equal(stateHistoryRequired({ ...fresh, risk_tier: 'low' }), false);
+  assert.deepEqual(checkStateHistory({ ...fresh, risk_tier: 'low' }, {}), []);
+  // An unparseable classification date fails toward MORE control, not less.
+  assert.equal(stateHistoryRequired({ ...noHistory, classification: {} }), true);
 });
 }

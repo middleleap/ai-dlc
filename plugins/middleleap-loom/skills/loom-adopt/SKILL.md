@@ -123,6 +123,8 @@ are repo-root-relative.
 | `governance/routine-envelope.template.json` | `docs/governance/routine-envelope.json` | governed | The second-line-owned routine-change envelope (HG-0013) |
 | `governance/config-baseline.template.json` | `docs/governance/config-baseline.json` | full | The approved control-plane configuration reconciled against live observations (rc.12 WS2.4) |
 | `governance/assurance-sla.template.json` | `docs/governance/assurance-sla.json` | full | Service-level expectations for continuous-assurance cases (rc.14 WS6) |
+| `governance/approval-sla.template.json` | `docs/governance/approval-sla.json` | full | Approval service-level EXPECTATIONS (rc.37) — read by scripts/approval-status.mjs, which flags a breach and gates nothing |
+| `governance/exception-policy.template.json` | `docs/governance/exception-policy.json` | governed | Exception-register policy (rc.37) — the concentration limit, which may be tightened below the shipped floor of 3 and never raised above it |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | full | Token-spend ledger (a report, never a merge gate) |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | full | The neutral adapter contract |
 | `adapters/providers` | `docs/governance/adapters/providers` | full | The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it |

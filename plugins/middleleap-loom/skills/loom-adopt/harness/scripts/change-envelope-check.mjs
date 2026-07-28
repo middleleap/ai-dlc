@@ -12,7 +12,21 @@
 //   readiness for every declared service + the second-line release hold RELEASED by a
 //   second-line human (missing hold = held, fail closed) + externally-anchored, issuer-
 //   verified evidence at high/critical tiers ·
-//   exemptions have an owner, rationale, compensating control, expiry, second-line approval.
+//   exemptions have an owner, rationale, compensating control, expiry, second-line approval ·
+//   state_history (rc.37) is an APPEND-ONLY record of the transitions that got the change here.
+//
+// STATE_HISTORY (flow-plan Phase 3.1). The lifecycle had eight states and no timestamps, so the
+// value stream was unmeasurable from its own artifacts: no lead time, no stage residency, no
+// queue age. One field fixes that with zero new ceremony — `[{state, at, by}]`, appended as the
+// change moves. This gate validates it: states advance in the STATES order (a history that goes
+// backwards is not a history), `at` never moves backwards, nothing follows a terminal state,
+// `by` resolves in the registry when present, and the last entry IS current_state — so the
+// history cannot become a parallel account of a change that went somewhere else.
+//
+// The requirement is split rather than retroactive: OPTIONAL wherever it is absent today, and
+// REQUIRED at high/critical tiers for changes classified on or after STATE_HISTORY_REQUIRED_FROM.
+// Demanding it retroactively would turn every existing tree red for a record nobody can go back
+// and write. A grandfathered high-tier change is NOTICED on every run — never silently excused.
 //
 // Run from the repo root: `node scripts/change-envelope-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -35,14 +49,98 @@ export const STATES = ['classified', 'permission-to-develop', 'in-delivery', 'de
 export { TERMINAL_STATES };
 export const CLASSIFIER_ROLES = ['product-owner', 'risk-second-line'];
 export const ANCHOR_REQUIRED_TIERS = new Set(['high', 'critical']);
+// rc.37 — the tiers that must carry state_history, and the version cutover that makes it
+// required. A change classified BEFORE this date keeps passing without one (grandfathered, and
+// said out loud); one classified on or after it must record how it moved. An unparseable or
+// missing classified_at counts as ON OR AFTER — an unknown input fails toward more control.
+export const STATE_HISTORY_REQUIRED_TIERS = new Set(['high', 'critical']);
+export const STATE_HISTORY_REQUIRED_FROM = '2026-07-28';
 
 const at = (state) => STATES.indexOf(state);
+const known = (state) => STATES.includes(state) || TERMINAL_STATES.has(state);
+
+/** True when this envelope must carry state_history (tier + classified on/after the cutover). */
+export function stateHistoryRequired(envelope, from = STATE_HISTORY_REQUIRED_FROM) {
+  if (!STATE_HISTORY_REQUIRED_TIERS.has(envelope?.risk_tier)) return false;
+  const t = Date.parse(envelope?.classification?.classified_at);
+  return Number.isNaN(t) || t >= Date.parse(from);
+}
+
+/**
+ * The append-only transition record. Findings ([] ⇒ well-formed, or absent where it may be);
+ * `notices` collects the grandfathering notice — a high-tier change from before the cutover with
+ * no history is not a failure, but it is not measurable either, and silence about that is how a
+ * "temporary" exemption becomes permanent.
+ */
+export function checkStateHistory(envelope, { registry = null, notices = null } = {}) {
+  const findings = [];
+  const id = envelope?.change_id || '(no id)';
+  const history = envelope?.state_history;
+  const required = stateHistoryRequired(envelope);
+
+  if (history === undefined || history === null) {
+    if (required) {
+      findings.push(`${id}: ${envelope.risk_tier}-tier change classified on/after ${STATE_HISTORY_REQUIRED_FROM} requires state_history — an append-only [{state, at, by}] record of how it reached ${JSON.stringify(envelope.current_state)} (flow-plan Phase 3.1)`);
+    } else if (STATE_HISTORY_REQUIRED_TIERS.has(envelope?.risk_tier)) {
+      notices?.push(`${id}: no state_history — grandfathered (classified ${JSON.stringify(envelope?.classification?.classified_at)}, before the ${STATE_HISTORY_REQUIRED_FROM} cutover). Lead time and stage residency are NOT measurable for this change`);
+    }
+    return findings;
+  }
+  if (!Array.isArray(history)) return [`${id}: state_history must be an ARRAY of {state, at, by} entries (got ${typeof history})`];
+  if (history.length === 0) {
+    return required ? [`${id}: state_history is empty — a classified change has at least its own classification transition`] : [];
+  }
+
+  let prevIdx = -1;
+  let prevAt = -Infinity;
+  let terminal = null;
+  history.forEach((e, i) => {
+    const label = `${id}: state_history[${i}]`;
+    if (!e || typeof e !== 'object' || Array.isArray(e)) { findings.push(`${label} must be an object {state, at, by}`); return; }
+    if (!known(e.state)) {
+      findings.push(`${label}: state ${JSON.stringify(e.state)} is not one of ${STATES.join('|')}|${[...TERMINAL_STATES].join('|')}`);
+    }
+    const t = Date.parse(e.at);
+    if (!(typeof e.at === 'string') || Number.isNaN(t)) {
+      findings.push(`${label}: at ${JSON.stringify(e.at)} is not an ISO-8601 timestamp — an undated transition cannot be ordered or measured`);
+    } else {
+      if (t < prevAt) findings.push(`${label}: at ${e.at} precedes the previous entry — state_history is APPEND-ONLY, in transition order`);
+      prevAt = Math.max(prevAt, t);
+    }
+    if (terminal) {
+      findings.push(`${label}: ${JSON.stringify(e.state)} recorded after the terminal state ${terminal} — a closed change is closed; resuming work takes a NEW envelope from ${STATES[0]}`);
+    }
+    if (known(e.state)) {
+      if (TERMINAL_STATES.has(e.state)) terminal = e.state;
+      else {
+        const idx = at(e.state);
+        if (idx <= prevIdx) {
+          findings.push(`${label}: ${e.state} does not advance the lifecycle (previous ${STATES[prevIdx]}) — the history records forward transitions in the STATES order, never a re-entry or a rewrite`);
+        }
+        prevIdx = Math.max(prevIdx, idx);
+      }
+    }
+    if (e.by !== undefined) {
+      if (!(typeof e.by === 'string' && e.by.trim())) findings.push(`${label}: by must be an identity id from the registry`);
+      else if (registry && !identityOf(registry, e.by)) findings.push(`${label}: by ${JSON.stringify(e.by)} is not in the identity registry — an unresolvable actor is not an actor`);
+    }
+  });
+
+  if (history[0] && history[0].state !== STATES[0]) {
+    findings.push(`${id}: state_history begins at ${JSON.stringify(history[0].state)} — every governed change begins at ${STATES[0]}`);
+  }
+  const last = history[history.length - 1];
+  if (last && last.state !== envelope.current_state) {
+    findings.push(`${id}: state_history ends at ${JSON.stringify(last.state)} but current_state is ${JSON.stringify(envelope.current_state)} — the history is the record of how the change reached its state, not a parallel account of a different one`);
+  }
+  return findings;
+}
 
 /**
  * Findings for one change. `files` gives the sibling artifacts already parsed:
  * { plan, passport, architecture (booleans/objects) }; `registry` resolves identities.
  */
-export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence } = {}) {
+export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices } = {}) {
   const findings = [];
   const id = envelope?.change_id || '(no id)';
   if (!STATES.includes(envelope?.current_state) && !TERMINAL_STATES.has(envelope?.current_state)) {
@@ -50,6 +148,10 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
     return findings;
   }
   const state = envelope.current_state;
+
+  // The transition record is validated in EVERY state, terminal included: a closed change's
+  // history is exactly the record the flow metrics read, and closure is itself a transition.
+  findings.push(...checkStateHistory(envelope, { registry, notices }));
 
   // A terminal change (closed/superseded) ships nothing: no plan reconciliation (profiles move
   // on), no state receipts, no exemption clock. What it must keep is the record of who judged
@@ -165,9 +267,10 @@ const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } ca
 
 export function run(cwd = process.cwd()) {
   const dir = `${cwd}/${CHANGES_DIR}`;
-  if (!existsSync(dir)) return { findings: [], count: 0 }; // no governed changes yet — nothing to check
+  if (!existsSync(dir)) return { findings: [], notices: [], count: 0 }; // no governed changes yet — nothing to check
   const registry = loadRegistry(cwd);
   const findings = [];
+  const notices = [];
   let count = 0;
   for (const name of readdirSync(dir)) {
     const base = `${dir}/${name}`;
@@ -177,7 +280,7 @@ export function run(cwd = process.cwd()) {
     // Terminal changes are validated for their record only — no fresh compile (their profiles
     // may have moved on or been retired; a closed change must not go red because a profile did).
     if (TERMINAL_STATES.has(envelope.current_state)) {
-      findings.push(...evaluate(envelope, { registry }));
+      findings.push(...evaluate(envelope, { registry, notices }));
       continue;
     }
     const plan = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
@@ -206,14 +309,15 @@ export function run(cwd = process.cwd()) {
       anchor: manifest.anchor,
       attestationFindings: verifyAnchorAttestation(manifest, loadIssuers(cwd)),
     };
-    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence }));
+    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices }));
   }
-  return { findings, count };
+  return { findings, notices, count };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { findings, count } = run();
+  const { findings, notices, count } = run();
+  for (const n of notices) process.stdout.write(`NOTICE: ${n}\n`);
   if (findings.length) {
     process.stderr.write('\nChange-envelope gate — FAIL\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);

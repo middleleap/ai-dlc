@@ -142,3 +142,24 @@ test('attestationHash is canonical — key order does not change it, content doe
   assert.equal(attestationHash(a), attestationHash(b));
   assert.notEqual(attestationHash(a), attestationHash({ ...a, stage: 'platform' }));
 });
+
+/* ---- rc.37 · flow-plan Phase 3.6: the freshness WARNING BAND ---- */
+
+test('WARNING BAND — at 80% of the window the attestation still PASSES, with a NOTICE naming the days left', () => {
+  const now = Date.now();
+  const daysAgo = (n) => new Date(now - n * 86_400_000).toISOString();
+  const notices = [];
+  // 300d of a 365d window: valid, inside the band (0.8 × 365 = 292).
+  assert.deepEqual(evaluate(CLEAN, attest({ attested_at: daysAgo(300) }), { ...opts, now, notices }), []);
+  assert.equal(notices.length, 1);
+  assert.match(notices[0], /300d old of a 365d window — 65d left/);
+  // 200d: below the band, silent.
+  const quiet = [];
+  assert.deepEqual(evaluate(CLEAN, attest({ attested_at: daysAgo(200) }), { ...opts, now, notices: quiet }), []);
+  assert.deepEqual(quiet, []);
+  // 400d: the block, exactly where it was — and a stale attestation is a finding, never a warning.
+  const blocked = [];
+  const findings = evaluate(CLEAN, attest({ attested_at: daysAgo(400) }), { ...opts, now, notices: blocked });
+  assert.ok(findings.some((f) => /stale — re-attest/.test(f)));
+  assert.deepEqual(blocked, []);
+});

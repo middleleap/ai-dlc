@@ -16,6 +16,10 @@
 // issuer over the record's canonical hash. The bare-date form is accepted for ONE release with a
 // printed deprecation NOTICE (never a silent downgrade); freshness applies to both forms.
 //
+// rc.37 (flow-plan Phase 3.6): freshness windows gained a WARNING BAND. At 80% of a window the
+// gate still passes and prints a NOTICE naming the days left. The block is unmoved; the surprise
+// is gone. A drill that expires overnight gets run in a panic, and a panicked drill is theatre.
+//
 // Freshness is checkable; the shipped template FAILS until adopted (its fields are ADOPT
 // placeholders), like the CODEOWNERS template: a copied-but-never-exercised readiness file must
 // not read green.
@@ -31,15 +35,23 @@ export const SERVICES_DIR = 'docs/governance/services';
 export const CRITICALITIES = ['critical', 'important', 'standard'];
 // ADOPT: your freshness policy (days). An exercise older than its window blocks production.
 export const WINDOWS = { bcp_dr: 365, rollback: 180, kill_switch: 90, capacity: 365 };
+// rc.37 (flow-plan Phase 3.6) — the warning band. At 80% of a window the drill is still VALID and
+// the gate still passes; a NOTICE is printed. The control is unchanged and the block stays exactly
+// where it was: what this removes is the overnight green-to-blocked surprise, which is how a
+// kill-switch drill ends up being run in a panic on the morning it expired.
+export const WARN_AT = 0.8;
 const IDENTITY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
 
 const DAY = 24 * 60 * 60 * 1000;
 
-function freshDate(findings, label, dateStr, windowDays, now, what = 'last exercised') {
+function freshDate(findings, label, dateStr, windowDays, now, what = 'last exercised', notices = null) {
   const t = Date.parse(dateStr);
   if (Number.isNaN(t)) { findings.push(`${label}: ${JSON.stringify(dateStr)} is not a date (unadopted template?)`); return; }
   const age = Math.floor((now - t) / DAY);
   if (age > windowDays) findings.push(`${label}: ${what} ${dateStr} — ${age}d ago exceeds the ${windowDays}d freshness window (STALE)`);
+  else if (age >= Math.floor(windowDays * WARN_AT)) {
+    notices?.push(`${label}: ${what} ${dateStr} — ${age}d of the ${windowDays}d window used, ${windowDays - age}d left. Schedule the next one now; at ${windowDays}d it BLOCKS production`);
+  }
 }
 
 /** Recursive canonical serialisation (assurance-cycle's) — the signature covers every nested field. */
@@ -63,12 +75,12 @@ const identityOf = (registry, id) => (registry?.identities || []).find((i) => i.
  */
 function drill(findings, label, value, windowDays, now, ctx = {}) {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
-    findings.push(...verifyDrillObservation(value, { label, windowDays, now, registry: ctx.registry, issuers: ctx.issuers }));
+    findings.push(...verifyDrillObservation(value, { label, windowDays, now, registry: ctx.registry, issuers: ctx.issuers, notices: ctx.notices }));
     return;
   }
   if (!(typeof value === 'string' && value.trim())) { findings.push(`${label}: no drill recorded — unexercised is not ready`); return; }
   (ctx.notices || []).push(`${label}: a bare-date drill record is DEPRECATED (rc.36) — record a signed observation {observed_at, observation, negative_test, observer_identity, attestation}; the bare date is accepted for this release only`);
-  freshDate(findings, label, value, windowDays, now);
+  freshDate(findings, label, value, windowDays, now, 'last exercised', ctx.notices || null);
 }
 
 /**
@@ -76,10 +88,10 @@ function drill(findings, label, value, windowDays, now, ctx = {}) {
  * test the mechanism refused, an independent observer, a real signature. Findings; empty ⇒ the
  * drill is observed, refused a bypass, independently witnessed, freshly and authentically signed.
  */
-export function verifyDrillObservation(rec, { label, windowDays, now = Date.now(), registry = null, issuers = null } = {}) {
+export function verifyDrillObservation(rec, { label, windowDays, now = Date.now(), registry = null, issuers = null, notices = null } = {}) {
   const findings = [];
   if (!(typeof rec.observed_at === 'string' && rec.observed_at.trim())) findings.push(`${label}: observation has no observed_at — an undated drill cannot be aged`);
-  else freshDate(findings, label, rec.observed_at, windowDays, now, 'observed');
+  else freshDate(findings, label, rec.observed_at, windowDays, now, 'observed', notices);
   if (!rec.observation || typeof rec.observation !== 'object' || Object.keys(rec.observation).length === 0) {
     findings.push(`${label}: no observation object — what did the drill actually show?`);
   }

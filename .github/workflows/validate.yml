@@ -105,6 +105,11 @@ jobs:
                    "$A/docs/governance/evidence" "$A/docs/governance/assurance-cycles" \
                    "$A/docs/governance/adapters"
           cp -r "$H/change-example" "$A/docs/governance/changes/CHG-2026-0042"
+          # rc.37 (flow-plan Phase 3): a change that went all the way and then ended. The flow
+          # instruments need one — change-example is mid-flight, so on its own it yields a stage
+          # histogram and no lead time, and a report that can only print "not computable" proves
+          # nothing. Terminal, so it carries no plan, no passport and no receipts.
+          cp -r "$H/change-closed-example" "$A/docs/governance/changes/CHG-2026-0031"
           cp "$H/evidence-example/"*.json "$A/docs/governance/evidence/"
           cp "$H/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
           cp -r "$H/register-example" "$A/docs/governance/data-risk-register"
@@ -518,6 +523,94 @@ jobs:
           node core/gate-runner.mjs --lane pr --base main --out /tmp/gate-run.json
           node -e 'const r=require("/tmp/gate-run.json");if(!r.skipped.length||r.skipped.some(s=>!s.reason))throw new Error("runner must record every skip with a reason");console.log(`gate-runner: ${r.executed.length} run, ${r.skipped.length} skipped — all recorded`)'
 
+          # ── rc.37 · flow-plan Phase 3: the flow instruments measure something REAL ──────────
+          # The failure mode for a report is not a wrong answer, it is a confident answer about an
+          # empty set — the same vacuum freeze-stamp, drift and approval-surface each had. So the
+          # figures are asserted, not just the exit codes. The gate-run record written above is
+          # copied in so the wall-clock section has a lane to read.
+          cp /tmp/gate-run.json gate-run-pr.json
+          node scripts/flow-report.mjs --check
+          node scripts/flow-report.mjs | tee /tmp/flow.txt
+          grep -q '1 completed' /tmp/flow.txt || {
+            echo "::error::flow-report computed no lead time from a change that reached in-production"; exit 1; }
+          grep -q 'permission-to-launch' /tmp/flow.txt || {
+            echo "::error::flow-report printed no stage-residency histogram"; exit 1; }
+          grep -q 'GATE WALL-CLOCK' /tmp/flow.txt && grep -q 'pr  *1 run' /tmp/flow.txt || {
+            echo "::error::flow-report did not read the runner's own per-lane wall-clock"; exit 1; }
+          rm -f gate-run-pr.json
+          # The approval queue names WHO the change is waiting on. PA2 compiles twelve roles here;
+          # asserting a count rather than a name keeps this honest if the profiles move.
+          node scripts/approval-status.mjs --check
+          node scripts/approval-status.mjs | tee /tmp/queue.txt
+          grep -qE '1[0-9] outstanding approval' /tmp/queue.txt || {
+            echo "::error::the approval queue reports nothing outstanding on a change with a pending PA2"; exit 1; }
+          grep -q 'risk-second-line' /tmp/queue.txt || {
+            echo "::error::the approval queue does not name the roles a change is waiting on"; exit 1; }
+          node scripts/comprehension-report.mjs --check
+          node scripts/comprehension-report.mjs | tee /tmp/comp.txt
+          grep -q '95min' /tmp/comp.txt || {
+            echo "::error::the comprehension trend is not reading the metrics comprehension-check collects"; exit 1; }
+          # ── The exception register, both directions ───────────────────────────────────────
+          # The expiry dates are COMPUTED per run, never committed: a fixture with a fixed date is
+          # a build that goes red on a calendar, which is how a check like this gets deleted.
+          node scripts/exception-register-check.mjs   # nothing excepted yet — and it says so
+          cp docs/governance/changes/CHG-2026-0042/change-envelope.json "$RUNNER_TEMP/pristine-envelope.json"
+          # Arguments travel by ENV, not argv: `node -e … -2` makes node try to parse -2 as a flag.
+          except() { DAYS=$1 N=$2 CONTROL=$3 node -e '
+            const fs = require("fs"), p = "docs/governance/changes/CHG-2026-0042/change-envelope.json";
+            const days = Number(process.env.DAYS), n = Number(process.env.N), control = process.env.CONTROL;
+            const s = JSON.parse(fs.readFileSync(p));
+            const expires = new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+            s.exemptions = Array.from({ length: n }, () => ({ control, owner: "eng-omar",
+              rationale: "The pre-launch penetration test slot is booked for the next window.",
+              compensating_control: "Q2-SAST plus an external scan of the exposed surface",
+              expires, approved_by: "risk-lena" }));
+            fs.writeFileSync(p, JSON.stringify(s, null, 2));'; }
+          #   ① well inside its window: counted, no warning, green — the non-vacuous positive.
+          except 120 1 DAST-PENTEST
+          node scripts/exception-register-check.mjs | tee /tmp/exc.txt
+          grep -q '1 exception(s) projected (1 open)' /tmp/exc.txt || {
+            echo "::error::the exception register is not projecting a real open exception"; exit 1; }
+          if grep -q 'WARNING' /tmp/exc.txt; then
+            echo "::error::an exception 120 days from expiry warned — the bands are firing on everything"; exit 1; fi
+          #   ② inside the 30-day band: WARNS and still PASSES. This is the whole point — the
+          #      deadline does not move, the surprise does.
+          except 20 1 DAST-PENTEST
+          node scripts/exception-register-check.mjs > /tmp/exc20.txt || {
+            echo "::error::an expiry WARNING failed the build — warning bands must never gate"; cat /tmp/exc20.txt; exit 1; }
+          cat /tmp/exc20.txt
+          grep -q '30-day band' /tmp/exc20.txt || {
+            echo "::error::an exception 20 days from expiry did not warn — the overnight surprise is back"; exit 1; }
+          #   ③ expired: blocked, exactly as before the bands existed.
+          except -2 1 DAST-PENTEST
+          if node scripts/exception-register-check.mjs 2>/tmp/exc-x.txt; then
+            echo "::error::the exception register passed an EXPIRED exception"; exit 1; fi
+          grep -q 'EXPIRED' /tmp/exc-x.txt || {
+            echo "::error::the expired exception was refused, but not for being expired"; cat /tmp/exc-x.txt; exit 1; }
+          #   ④ concentration: four open against ONE control fails; the same four spread across
+          #      four controls do not. A limit that fires on any four exceptions is not a limit.
+          except 120 4 DAST-PENTEST
+          if node scripts/exception-register-check.mjs 2>/tmp/exc-c.txt; then
+            echo "::error::four open exceptions against one control passed the concentration limit"; exit 1; fi
+          grep -q 'CONCENTRATION: 4 open exceptions' /tmp/exc-c.txt || {
+            echo "::error::the pile-up was refused, but not for being a concentration"; cat /tmp/exc-c.txt; exit 1; }
+          node -e '
+            const fs = require("fs"), p = "docs/governance/changes/CHG-2026-0042/change-envelope.json";
+            const s = JSON.parse(fs.readFileSync(p));
+            s.exemptions = s.exemptions.map((e, i) => ({ ...e, control: `SPREAD-${i}` }));
+            fs.writeFileSync(p, JSON.stringify(s, null, 2));'
+          node scripts/exception-register-check.mjs > /dev/null || {
+            echo "::error::four exceptions against four DIFFERENT controls tripped the concentration limit"; exit 1; }
+          #   ⑤ the limit may be tightened and never loosened — the monotonicity rule, on this knob.
+          node -e 'require("fs").writeFileSync("docs/governance/exception-policy.json", JSON.stringify({ concentration_limit: 10 }, null, 2))'
+          if node scripts/exception-register-check.mjs 2>/tmp/exc-p.txt; then
+            echo "::error::a policy raising the concentration limit above the shipped floor was obeyed"; exit 1; fi
+          grep -q 'may TIGHTEN and never loosen' /tmp/exc-p.txt || {
+            echo "::error::the loosening policy was refused, but not for loosening"; cat /tmp/exc-p.txt; exit 1; }
+          git checkout -- docs/governance/exception-policy.json
+          cp "$RUNNER_TEMP/pristine-envelope.json" docs/governance/changes/CHG-2026-0042/change-envelope.json
+          node scripts/exception-register-check.mjs > /dev/null   # green again after the restores
+
       - name: Loom bundle — negative bypass tests (a bypassed control must be SEEN failing)
         run: |
           A="$RUNNER_TEMP/loom-adopt-dryrun"
@@ -579,10 +672,15 @@ jobs:
           git checkout -- docs/governance/services/credit-origination.json
           # 9 · Held release: production-authorized with the second-line hold still held must
           #     block — and the silence-after-launch rule must fire on the empty ops log.
-          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/change-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.current_state="production-authorized";fs.writeFileSync(p,JSON.stringify(s,null,2))'
-          if node scripts/change-envelope-check.mjs; then
+          #     rc.37: the transition is APPENDED to state_history as an author now has to, so the
+          #     rejection is still the HOLD and not the history mismatch — a negative test that
+          #     fails for a new reason has quietly stopped testing the old one.
+          node -e 'const fs=require("fs");const p="docs/governance/changes/CHG-2026-0042/change-envelope.json";const s=JSON.parse(fs.readFileSync(p));s.current_state="production-authorized";s.state_history.push({state:"production-authorized",at:new Date().toISOString(),by:"risk-lena"});fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/change-envelope-check.mjs 2>/tmp/hold.txt; then
             echo "::error::a production authorization passed with the second-line hold still HELD"; exit 1
           fi
+          grep -q 'release hold is "held"' /tmp/hold.txt || {
+            echo "::error::the production authorization was refused, but not for the hold"; cat /tmp/hold.txt; exit 1; }
           node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals=[];fs.writeFileSync(p,JSON.stringify(s,null,2))'
           if node scripts/operations-signal-check.mjs; then
             echo "::error::an EMPTY operations log passed while a change claims production — silence after launch must fail"; exit 1
@@ -738,6 +836,39 @@ jobs:
           fi
           grep -q 'adoption is not complete' /tmp/aa.txt || {
             echo "::error::the adoption gate refused, but not for being adopt-pending"; cat /tmp/aa.txt; exit 1; }
+          # 27 · rc.37 (flow-plan Phase 3.1) — a REWRITTEN state history must fail. The whole value
+          #      of an append-only record is that it cannot be re-authored after the fact, so the
+          #      three ways to re-author it are each asserted: reorder the states, back-date a
+          #      transition, and record a state the change never reached.
+          cp docs/governance/changes/CHG-2026-0042/change-envelope.json /tmp/sh-pristine.json
+          for MUT in reorder backdate parallel; do
+            MUT=$MUT node -e '
+              const fs=require("fs"), p="docs/governance/changes/CHG-2026-0042/change-envelope.json";
+              const s=JSON.parse(fs.readFileSync("/tmp/sh-pristine.json"));
+              if (process.env.MUT === "reorder") s.state_history.reverse();
+              if (process.env.MUT === "backdate") s.state_history[2].at = "2026-01-01T00:00:00Z";
+              if (process.env.MUT === "parallel") s.current_state = "in-production";
+              fs.writeFileSync(p, JSON.stringify(s, null, 2));'
+            if node scripts/change-envelope-check.mjs > /dev/null 2>&1; then
+              echo "::error::a $MUT-ed state_history passed the change-envelope gate — the record is not append-only"; exit 1
+            fi
+          done
+          cp /tmp/sh-pristine.json docs/governance/changes/CHG-2026-0042/change-envelope.json
+          node scripts/change-envelope-check.mjs > /dev/null
+          # 28 · rc.37 (flow-plan Phase 3.3) — an operations signal attributed to a change that does
+          #      not exist must fail. Without this the change-failure rate is computed over links
+          #      nobody can follow, which is worse than not computing it.
+          cp docs/governance/operations-signal.json /tmp/ops-pristine.json
+          node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals[0].caused_by_change="CHG-2026-0042";s.signals[0].resolved_at="2026-07-15T02:00:00Z";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          node scripts/operations-signal-check.mjs > /dev/null || {
+            echo "::error::a signal attributed to a REAL governed change failed the ops gate"; exit 1; }
+          node -e 'const fs=require("fs");const p="docs/governance/operations-signal.json";const s=JSON.parse(fs.readFileSync(p));s.signals[0].caused_by_change="CHG-9999-0001";fs.writeFileSync(p,JSON.stringify(s,null,2))'
+          if node scripts/operations-signal-check.mjs 2>/tmp/ops.txt; then
+            echo "::error::a signal attributed to a change that does not exist passed the ops gate"; exit 1
+          fi
+          grep -q 'does not resolve to a governed change' /tmp/ops.txt || {
+            echo "::error::the ghost attribution was refused, but not for being a ghost"; cat /tmp/ops.txt; exit 1; }
+          cp /tmp/ops-pristine.json docs/governance/operations-signal.json
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — evidence is derived, not authored (rc.35, flow-plan Phase 2)

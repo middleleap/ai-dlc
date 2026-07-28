@@ -262,6 +262,22 @@
       "tier": "full"
     },
     {
+      "source": "governance/approval-sla.template.json",
+      "dest": "docs/governance/approval-sla.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Approval service-level EXPECTATIONS (rc.37) — read by scripts/approval-status.mjs, which flags a breach and gates nothing",
+      "tier": "full"
+    },
+    {
+      "source": "governance/exception-policy.template.json",
+      "dest": "docs/governance/exception-policy.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Exception-register policy (rc.37) — the concentration limit, which may be tightened below the shipped floor of 3 and never raised above it",
+      "tier": "governed"
+    },
+    {
       "source": "governance/token-ledger.template.json",
       "dest": "docs/governance/token-ledger.json",
       "kind": "file",

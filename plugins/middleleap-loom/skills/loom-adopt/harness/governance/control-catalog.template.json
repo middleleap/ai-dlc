@@ -880,6 +880,22 @@
       "lane": "pr",
       "always": true,
       "note": "rc.29, corrected rc.31. The discovery machinery exists twice — here as the generic harness, in ofbo as the instantiation it was extracted from — and CLAUDE.md carried a standing 'must track upstream fixes (no automated sync)' note with nothing behind it. The adoption dry-run proves the tree still WORKS, never that it still MATCHES; seven files had diverged across four workstreams before anyone measured it. This counts the debt instead of remembering it. HONEST LIMIT, printed on every run including a clean one: it can only see THIS side, and never reports the trees as agreeing. Only `--upstream <checkout> --reconcile`, which has actually seen ofbo, may record an upstream digest, move a shared base, or set a seen-only state. That rule is CONDITIONAL and enforced by checkClaims: rc.29 shipped it as a fixed assertion that last_reconciled is null, which would have turned the build red the first time anyone did the reconciliation correctly. Bundle-only and inert in an adopted tree"
+    },
+    {
+      "control_id": "EXCEPTION-REGISTER",
+      "objective": "Every open exception to a control — envelope exemptions and assurance risk-acceptances alike — is projected into ONE register: expiry warnings at 30/14/7 days ahead of the existing hard block, aggregation per owner and per control, and a build failure on an expired exception or on more than the limit open against a single control",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/exception-register-check.mjs",
+      "test_ref": "scripts/exception-register-check.test.mjs",
+      "lane": "scheduled",
+      "paths": [
+        "docs/governance/changes/",
+        "docs/governance/assurance-cycles/",
+        "docs/governance/exception-policy.json"
+      ],
+      "note": "The individual blocks already existed (the envelope gate blocks an expired exemption, the assurance gate an expired risk-acceptance); what did not exist was the VIEW, so nobody could see what was about to expire or where exceptions were piling up. Warnings NEVER fail — the deadline is unmoved, only the surprise is removed. Concentration DOES fail: 4 open exceptions against one control is one control the organisation has stopped operating, recorded 4 times. The limit ships at 3 and docs/governance/exception-policy.json may lower it, never raise it"
     }
   ]
 }

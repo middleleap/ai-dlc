@@ -16,6 +16,11 @@
     "rationale": "Material change to an existing retail credit product: new affordability model in the decision path, personal data in scope."
   },
   "current_state": "in-delivery",
+  "state_history": [
+    { "state": "classified", "at": "2026-07-18T09:20:00Z", "by": "po-fatima" },
+    { "state": "permission-to-develop", "at": "2026-07-21T14:05:00Z", "by": "risk-lena" },
+    { "state": "in-delivery", "at": "2026-07-22T08:30:00Z", "by": "eng-omar" }
+  ],
   "control_plan": "control-plan.json",
   "evidence_bundle": "docs/governance/evidence/",
   "exemptions": []

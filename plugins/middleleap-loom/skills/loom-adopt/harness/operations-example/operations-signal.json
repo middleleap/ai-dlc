@@ -1,5 +1,5 @@
 {
-  "_comment": "ADOPTER EXAMPLE — Meridian Trust (DEMO, synthetic, non-production). A worked operations-signal log showing the Run -> Discovery loop close: every production signal is triaged (routed) and traceable, so nothing falls on the floor. Verified by scripts/operations-signal-check.mjs. See README.md. Replace with your own signals; keep the shape.",
+  "_comment": "ADOPTER EXAMPLE — Meridian Trust (DEMO, synthetic, non-production). A worked operations-signal log showing the Run -> Discovery loop close: every production signal is triaged (routed) and traceable, so nothing falls on the floor. Verified by scripts/operations-signal-check.mjs. rc.37: three signals carry the optional flow fields — caused_by_change (attribution, which makes change-failure rate derivable) and resolved_at (which makes MTTR derivable); scripts/flow-report.mjs reads them and never gates on them. See README.md. Replace with your own signals; keep the shape.",
   "entity": "Meridian Trust (DEMO instance)",
   "signals": [
     {
@@ -11,7 +11,9 @@
       "summary": "Consent-revoke acknowledgement lagged 9s p95 in prod after a deploy; within SLA but user-visible. The build is wrong, the problem is fine.",
       "evidence_ref": "incident/OPS-2411.md",
       "route": "spec-fix",
-      "link": "PR-482"
+      "link": "PR-482",
+      "caused_by_change": "CHG-2026-0042",
+      "resolved_at": "2026-07-15T11:40:00Z"
     },
     {
       "id": "OPS-2418",
@@ -42,7 +44,8 @@
       "detected": "2026-07-17",
       "summary": "Consent API error budget burned 18% in a transient spike; recovered, still within the quarterly budget.",
       "route": "accepted",
-      "justification": "Within the error budget; no line change warranted this window. Re-assess if the next window also spikes."
+      "justification": "Within the error budget; no line change warranted this window. Re-assess if the next window also spikes.",
+      "resolved_at": "2026-07-17T16:05:00Z"
     },
     {
       "id": "OPS-2430",
@@ -63,7 +66,9 @@
       "detected": "2026-07-19",
       "summary": "Classifier confidence drifted on the revoke-reason field; a bounded prompt/patch restores it without touching the problem.",
       "route": "spec-fix",
-      "link": "PR-490"
+      "link": "PR-490",
+      "caused_by_change": "CHG-2026-0042",
+      "resolved_at": "2026-07-21T09:15:00Z"
     },
     {
       "id": "OPS-2440",
@@ -74,7 +79,8 @@
       "summary": "A previously-inherent access-scope risk materialised in a near-miss; residual position updated in the register with a compensating control.",
       "evidence_ref": "incident/OPS-2440.md",
       "route": "register",
-      "link": "DR-1.1-001"
+      "link": "DR-1.1-001",
+      "resolved_at": "2026-07-24T13:00:00Z"
     }
   ]
 }

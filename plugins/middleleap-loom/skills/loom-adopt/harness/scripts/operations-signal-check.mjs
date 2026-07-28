@@ -13,6 +13,23 @@
 //   - discovery  → a discovery run (link its slug), or status:triaging — re-enters Discovery
 //   - accepted   → a stated justification (a conscious no-op)          — closed with a reason
 //
+// rc.37 (flow-plan Phase 3.3) — TWO OPTIONAL FIELDS THAT MAKE RUN MEASURABLE. Change-failure
+// rate and MTTR are not derivable from a log that never says which change caused a signal or
+// when the signal stopped:
+//
+//   caused_by_change  the change_id this signal is attributed to. Optional — most signals are
+//                     not attributable — but when present it must RESOLVE to a governed change
+//                     under docs/governance/changes/. A link to a change that does not exist is
+//                     a citation of a ghost, which is the failure mode the whole traceability
+//                     chain exists to refuse.
+//   resolved_at       when the signal was closed out. Optional (an open signal has none), and
+//                     when present it must be a real timestamp at or after `detected` — a signal
+//                     that resolved before it was detected is a typo that would silently poison
+//                     every MTTR figure computed from it.
+//
+// Neither field gates anything on its VALUE: scripts/flow-report.mjs reads them, and telemetry
+// never blocks a merge. What this gate refuses is a malformed or unresolvable link.
+//
 // An empty log is valid (operations may not have started). A signal with no route is the
 // failure this gate exists to prevent. Run from repo root:
 //   `node scripts/operations-signal-check.mjs` (exit 1 on any finding).
@@ -35,7 +52,7 @@ const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
  * EMPTY log is itself a finding (1.12): a live product that has never produced one incident,
  * complaint, drift or SLO measurement means the sensing is missing, not that Run is perfect.
  */
-export function evaluate(manifest, { inProduction = false } = {}) {
+export function evaluate(manifest, { inProduction = false, changeIds = null, notices = null } = {}) {
   const signals = manifest && manifest.signals;
   if (!Array.isArray(signals)) return ['operations-signal manifest has no `signals` array'];
   if (signals.length === 0) {
@@ -52,6 +69,28 @@ export function evaluate(manifest, { inProduction = false } = {}) {
     // high/critical signals must carry evidence so a reviewer can reconstruct them.
     if ((s.severity === 'high' || s.severity === 'critical') && !nonEmpty(s.evidence_ref)) {
       findings.push(`${id}: ${s.severity} signal needs an evidence_ref`);
+    }
+    // rc.37 — the two flow fields. Optional; malformed or unresolvable is a finding.
+    if (s.caused_by_change !== undefined) {
+      if (!nonEmpty(s.caused_by_change)) {
+        findings.push(`${id}: caused_by_change must be a change_id string (got ${JSON.stringify(s.caused_by_change)})`);
+      } else if (changeIds instanceof Set) {
+        if (!changeIds.has(s.caused_by_change)) {
+          findings.push(`${id}: caused_by_change ${JSON.stringify(s.caused_by_change)} does not resolve to a governed change under docs/governance/changes/ — a signal cannot be attributed to a change that does not exist`);
+        }
+      } else {
+        // No governed-change tree to resolve against: say so rather than pass quietly. The
+        // attribution is unverified, which is a different thing from verified-good.
+        notices?.push(`${id}: caused_by_change ${JSON.stringify(s.caused_by_change)} NOT verified — no docs/governance/changes/ tree here to resolve it against`);
+      }
+    }
+    if (s.resolved_at !== undefined) {
+      const r = Date.parse(s.resolved_at);
+      if (Number.isNaN(r)) findings.push(`${id}: resolved_at ${JSON.stringify(s.resolved_at)} is not a timestamp — an unparseable resolution time makes MTTR fiction`);
+      else {
+        const d = Date.parse(s.detected);
+        if (!Number.isNaN(d) && r < d) findings.push(`${id}: resolved_at ${s.resolved_at} precedes detected ${s.detected} — a signal cannot close before it opens`);
+      }
     }
     if (!ROUTES.has(s.route)) {
       findings.push(`${id}: not triaged — route must be spec-fix|register|discovery|accepted (got ${JSON.stringify(s.route)}); a signal must not fall on the floor`);
@@ -91,23 +130,46 @@ export function anyChangeInProduction(cwd = process.cwd()) {
   return false;
 }
 
+/**
+ * Every governed change id in the tree — the directory name AND the declared change_id, because
+ * a change may be filed under either. Returns null when there is no changes tree at all, which
+ * `evaluate` reports as an unverified attribution rather than treating as "no such change".
+ */
+export function governedChangeIds(cwd = process.cwd()) {
+  const dir = `${cwd}/docs/governance/changes`;
+  if (!existsSync(dir)) return null;
+  const ids = new Set();
+  for (const name of readdirSync(dir)) {
+    ids.add(name);
+    try { ids.add(JSON.parse(readFileSync(`${dir}/${name}/change-envelope.json`, 'utf8')).change_id); }
+    catch { /* the envelope gate reports unparseable envelopes */ }
+  }
+  ids.delete(undefined);
+  return ids;
+}
+
 function run(cwd = process.cwd()) {
   const inProduction = anyChangeInProduction(cwd);
+  const notices = [];
   const path = MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
   if (!path) {
-    return inProduction
-      ? ['no operations-signal manifest while a governed change is in production — the feedback seam is MANDATORY after launch']
-      : []; // operations not yet wired — the feedback seam is optional until Run begins
+    return {
+      notices,
+      findings: inProduction
+        ? ['no operations-signal manifest while a governed change is in production — the feedback seam is MANDATORY after launch']
+        : [], // operations not yet wired — the feedback seam is optional until Run begins
+    };
   }
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
-  catch (e) { return [`operations-signal manifest is not valid JSON: ${e.message}`]; }
-  return evaluate(manifest, { inProduction });
+  catch (e) { return { notices, findings: [`operations-signal manifest is not valid JSON: ${e.message}`] }; }
+  return { notices, findings: evaluate(manifest, { inProduction, changeIds: governedChangeIds(cwd), notices }) };
 }
 
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const findings = run();
+  const { findings, notices } = run();
+  for (const n of notices) process.stdout.write(`NOTICE: ${n}\n`);
   if (findings.length) {
     process.stderr.write('\nOperations → Discovery feedback gate — FAIL\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);

@@ -62,3 +62,30 @@ test('an empty log is valid before launch — and a finding once anything is in 
   assert.equal(f.length, 1);
   assert.match(f[0], /EMPTY while a governed change is in production/);
 });
+
+/* ---- rc.37 · flow-plan Phase 3.3: the two fields that make Run measurable ---- */
+
+test('FLOW — caused_by_change must resolve to a governed change; a ghost id fails', () => {
+  const ids = new Set(['CHG-2026-0042']);
+  assert.deepEqual(evaluate(one({ caused_by_change: 'CHG-2026-0042' }), { changeIds: ids }), []);
+  const f = evaluate(one({ caused_by_change: 'CHG-9999-0001' }), { changeIds: ids });
+  assert.ok(f.some((x) => /does not resolve to a governed change/.test(x)), f.join('\n'));
+  assert.ok(evaluate(one({ caused_by_change: 42 }), { changeIds: ids }).some((x) => /must be a change_id string/.test(x)));
+});
+
+test('FLOW — with no changes tree the attribution is NOT verified, and says so (never a silent pass)', () => {
+  const notices = [];
+  assert.deepEqual(evaluate(one({ caused_by_change: 'CHG-2026-0042' }), { changeIds: null, notices }), []);
+  assert.ok(notices.some((n) => /NOT verified/.test(n)), notices.join('\n'));
+});
+
+test('FLOW — resolved_at must parse, and may not precede detection', () => {
+  const withDates = (over) => one({ detected: '2026-07-14T00:00:00Z', ...over });
+  assert.deepEqual(evaluate(withDates({ resolved_at: '2026-07-14T04:00:00Z' })), []);
+  assert.ok(evaluate(withDates({ resolved_at: 'later' })).some((x) => /is not a timestamp/.test(x)));
+  assert.ok(evaluate(withDates({ resolved_at: '2026-07-13T00:00:00Z' })).some((x) => /precedes detected/.test(x)));
+});
+
+test('FLOW — both fields stay OPTIONAL: a signal without them is unchanged', () => {
+  assert.deepEqual(evaluate(one(), { changeIds: new Set() }), []);
+});

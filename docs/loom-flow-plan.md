@@ -314,6 +314,39 @@ and a stage histogram; `approval-status` names who a change is waiting on
 and for how long; an exemption 20 days from expiry warns instead of
 surprising.
 
+**Status:** items 1–6 landed at rc.37; the exit criterion is met and asserted
+in CI's dry-run. `state_history` is validated by `change-envelope-check`
+(forward in the `STATES` order, never back-dated, nothing after a terminal
+state, `by` resolves, last entry *is* `current_state`) with the required/
+optional split done by cutover date — `STATE_HISTORY_REQUIRED_FROM =
+2026-07-28`, high/critical only, and a grandfathered high-tier change prints a
+NOTICE rather than being silently excused. `flow-report.mjs`,
+`approval-status.mjs` (+ `governance/approval-sla.template.json`) and
+`comprehension-report.mjs` are telemetry in `token-report.mjs`'s posture,
+exempted by name in `ci-catalog-check`'s printed REPORT_ONLY list and run with
+`--check` in `ci.yml`; `approval-status` imports the missing-approvals set
+from `product-approval-check.checkApprovals`, which now returns it instead of
+discarding it. Operations signals gained optional `caused_by_change` (must
+resolve to a governed change; unresolvable where there is no changes tree is
+reported NOT VERIFIED, never passed quietly) and `resolved_at`.
+`exception-register-check.mjs` is a catalogued scheduled-lane control
+(`EXCEPTION-REGISTER`) projecting envelope exemptions and assurance
+risk-acceptances into one register: 30/14/7-day warnings that never fail, and
+failures on an expired exception or on >3 open against one control, the limit
+being lowerable-only via `exception-policy.template.json`. Warning bands at
+80% of the window were added to `operational-readiness-check` and
+`adoption-attest`. A second worked example (`change-closed-example/`, staged
+by the dry-run as CHG-2026-0031) supplies the completed lifecycle the flow
+figures need — without it the report could only ever say "not computable".
+
+**Deferred:** the centralized `freshness-policy.json` and the `loom observe
+--all` refresh command (the tail of item 6). Both are genuinely nice-to-have —
+the four windows they would unify are already declared as exported constants
+(`WINDOWS`, `WARN_AT`, the drift gate's 7 days, the adoption window) and now
+all warn before they block, which was the painful half. Centralizing them is a
+mechanical refactor with a CODEOWNERS story attached, and it is better done
+with Phase 6's `core/governance-io.mjs` than bolted on here.
+
 ### Phase 4 — Re-price approvals without weakening them
 
 1. **Narrow the approval binding hash.** Add a per-role `binding_hash` over
