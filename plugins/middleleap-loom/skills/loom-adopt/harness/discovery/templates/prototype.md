@@ -10,13 +10,14 @@ wireframe: "wireframe.html"
 # Prototype brief — <slug>
 
 > Define (*make tangible*). A **disposable, low-fidelity** wireframe that visualises how the
-> direction *could* look, to test the framing before delivery. Gates D8 (this brief + a
+> direction *could* look, to test the framing before delivery. Gates D8 — Tangibility (this brief + a
 > brand-conformant `wireframe.html` exist) and D4/§4 (validation fidelity, not a delivery
 > spec). The wireframe renders against `design.md` (D7).
 
 ## What this prototype tests
 
-The framing hypotheses (from `problem-statement.md`) this wireframe makes tangible:
+The framing hypotheses (`H1`, `H2`, … — "H" for hypothesis) from `problem-statement.md` that
+this wireframe makes tangible:
 
 | Hypothesis | Screen/region that tests it | What a positive reaction looks like |
 |---|---|---|
