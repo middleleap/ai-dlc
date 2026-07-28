@@ -1,5 +1,8 @@
 # Branded renderers — zero dependency
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 Two renderers turn structured JSON specs into on-brand artifacts, using **only** the design
 tokens in a mounted brand profile (`discovery/brand/design.md`). No external service, no
 design tool, no libraries — pure Node (`node:fs`, and a hand-rolled ZIP; not even `node:zlib`).

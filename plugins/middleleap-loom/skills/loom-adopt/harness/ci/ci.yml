@@ -90,6 +90,7 @@ jobs:
           if [ ! -f .loom/adoption.json ]; then
             node scripts/self-claims-check.mjs      # bundle-only; inert in an adopted tree
             node scripts/discovery-sync-check.mjs   # bundle-only; the ofbo back-port debt, counted
+            node scripts/id-legibility-check.mjs    # bundle-only; Loom-owned docs, ids resolvable
           fi
 
       - name: Gates — pr lane (risk-proportionate; every skip recorded)

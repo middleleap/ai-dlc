@@ -6,6 +6,9 @@ stage: define
 
 # Data-governance feasibility — accounts-elsewhere
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 > Define (converge). Asked in discovery, not retrofitted in delivery. Gate D6.
 
 ## Data the direction would touch

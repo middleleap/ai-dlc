@@ -1,5 +1,8 @@
 # The Factory Floor — canon
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 The Loom's harnesses are operated from a repository. Most of the people a regulated build depends
 on — the product manager who owns the problem, the stakeholder who reacts to a prototype, the
 second-line approver who clears a release, the architect wearing a governance hat — do not open

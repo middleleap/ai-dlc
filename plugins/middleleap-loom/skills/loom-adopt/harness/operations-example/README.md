@@ -1,5 +1,8 @@
 # Operations-signal — a worked adopter example (Meridian Trust)
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 This is a **worked example** of the operations-signal seam: a realistic, triaged, traceable log
 of production signals for the DEMO entity *Meridian Trust*, shipped so an adopter can see the
 **Run → Discovery loop close** end to end before wiring their own operation. It is synthetic and

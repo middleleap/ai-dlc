@@ -1,5 +1,8 @@
 # Product-eval — worked example
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 The Loom-native shape of "evals are the new product management": a discovery hand-off's
 success measures become the eval a release is scored against.
 

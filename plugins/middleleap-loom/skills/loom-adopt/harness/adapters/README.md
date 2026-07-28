@@ -1,5 +1,8 @@
 # Enterprise adapters — the neutral contract (Loom 2.0 §16)
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 The Loom integrates with, but does not own, a bank's platforms: source-control branch
 protection, CI/CD, IAM/PAM, secrets vaults, GRC/control registers, model inventories,
 incident management, observability, and the evidence/WORM store. Adapters keep the **core

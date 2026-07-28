@@ -1,5 +1,8 @@
 # Bank-grade gap — the Loom's honest self-grade
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 The Loom is a strong **build-time** control frame. "Bank-grade" — acceptable to a regulated
 institution's risk function and an examiner — is a higher bar in three specific ways, and
 this file grades the harness against all three, honestly. It is the method's own scorecard,

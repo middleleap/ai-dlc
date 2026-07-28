@@ -1,5 +1,8 @@
 # The enterprise rings — where the Loom sits, and where it stops
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 The Loom is a build-time control frame. A whole AI-native operating model is a larger thing:
 the same mechanism of continuous, governed feedback repeated at three scales — a **fractal**,
 not a stack of tools. This file names the three rings, states which one the Loom *is*, and —

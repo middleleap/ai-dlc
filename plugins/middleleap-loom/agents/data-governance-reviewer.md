@@ -1,6 +1,6 @@
 ---
 name: data-governance-reviewer
-description: Reviews a discovery run's data-governance.md against the data-risk register for control coverage and residual-risk soundness. Use after authoring or changing a discovery run's data-governance artifact, before the hand-off. Complements gate D6 (which checks referential integrity mechanically) with coverage judgement the validator can't make.
+description: Reviews a discovery run's data-governance.md against the data-risk register for control coverage and residual-risk soundness. Use after authoring or changing a discovery run's data-governance artifact, before the hand-off. Complements gate D6 — Data-governance feasibility (which checks referential integrity mechanically) — with coverage judgement the validator can't make.
 tools: Read, Grep, Glob, Bash
 ---
 

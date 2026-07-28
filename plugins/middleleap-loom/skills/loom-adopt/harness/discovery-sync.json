@@ -13,15 +13,17 @@
   "files": {
     "discovery/brand/design.md": {
       "base": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
-      "bundle": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
+      "bundle": "sha256:c1f80a5126f4be747003cdc6f8790ebe73dc2188f0ecbbb07a55ee6c5e7cee7b",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
     },
     "discovery/brand/examples/meridian-trust.design.md": {
       "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
-      "bundle": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
+      "bundle": "sha256:ede29da50af55711ae657ea3ba46b4eed9e3892e784acc0deda1576f45fa425f",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
     },
     "discovery/gates/brand.mjs": {
       "base": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
@@ -57,9 +59,10 @@
     },
     "discovery/render/README.md": {
       "base": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
-      "bundle": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
+      "bundle": "sha256:44656b93d87569355313b0c0998fbbf17dffcd3fd537ef53485a9165c05308ba",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
     },
     "discovery/render/brainkit-provenance.test.mjs": {
       "base": null,
