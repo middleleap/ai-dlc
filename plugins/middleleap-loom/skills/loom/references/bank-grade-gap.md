@@ -1,5 +1,8 @@
 # Bank-grade gap — the Loom's honest self-grade
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `glossary.md`.
+
 The Loom is a strong **build-time** control frame. "Bank-grade" — acceptable to a regulated
 institution's risk function and an examiner — is a higher bar in three specific ways, and
 this file grades the harness against all three, honestly. It is the method's own scorecard,
@@ -54,9 +57,9 @@ bundle's reach, is in one place.
 <!-- LOOM:SCORECARD:START -->
 | Mechanically validated | Defined | Absent | Platform enforced | Organisationally enforced |
 |---|---|---|---|---|
-| 57 | 7 | 7 | 0 | 0 |
+| 58 | 7 | 7 | 0 | 0 |
 
-_Generated from the control catalog (71 controls; 13 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
+_Generated from the control catalog (72 controls; 13 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
 <!-- LOOM:SCORECARD:END -->
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot

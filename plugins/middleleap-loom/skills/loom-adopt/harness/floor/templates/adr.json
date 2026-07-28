@@ -6,11 +6,13 @@
   "stage": "deliver",
   "write_class": "decision-routed",
   "source": "delivery/templates/adr.md",
-  "source_digest": "sha256:c5e2bb4892e500c538dacb1840e75f4b283dfa7491cf4ded19b57d0551ba902d",
+  "source_digest": "sha256:c50427c726dc49af30601f5a9cc6ff75a6057b210594ab3f8b8e1499240f6295",
   "gates": [
-    "D6"
+    "D1",
+    "D6",
+    "D9"
   ],
-  "guidance": "Deliver. An architecture decision the build loop may **not** make for itself. The loop drafts this record, sets the story `blocked` with its path, and stops; a human with architecture authority decides and merges. An ADR is never self-merged by the agent (HG-0001), and a `proposed` ADR unblocks nothing.",
+  "guidance": "**Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal, `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.",
   "properties": [
     {
       "name": "Run",

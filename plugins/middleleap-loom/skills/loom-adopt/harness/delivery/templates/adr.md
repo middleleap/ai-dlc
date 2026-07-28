@@ -8,6 +8,9 @@ story: "<backlog item id>"
 
 # ADR-<NNNN> — <decision, stated as a choice made>
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 > Deliver. An architecture decision the build loop may **not** make for itself. The loop drafts
 > this record, sets the story `blocked` with its path, and stops; a human with architecture
 > authority decides and merges. An ADR is never self-merged by the agent (HG-0001), and a

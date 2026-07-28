@@ -8,6 +8,9 @@ banner: "DEMO — synthetic data, non-production"
 
 # Brand profile — the single source of visual truth
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 This file is the **brand seam** for the discovery harness (canon §5.2). **Every** artifact a
 human looks at — markdown rendered to HTML, generated documents, slide decks, spreadsheets,
 and prototype wireframes — is produced **against this file**, using its **tokens**, never

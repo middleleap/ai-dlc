@@ -6,12 +6,13 @@
   "stage": "develop",
   "write_class": "decision-routed",
   "source": "delivery/templates/solution-direction-record.md",
-  "source_digest": "sha256:c1333c0fec99feda7e8658804df97347bd0a93a553fda675277e835da1c81923",
+  "source_digest": "sha256:a3c520a5fd222b04af1a41dc180d59431aa5d89f2410a935df3407e7d6506d2f",
   "gates": [
     "D1",
-    "D6"
+    "D6",
+    "D9"
   ],
-  "guidance": "Develop (diverge, then converge). The right diamond's first half explores **N solution directions** and judges them; this record is the convergence. It is the boundary object between \"we agreed the problem\" and \"we are building this\" — written once per discovery hand-off, before the first backlog item is appended (HG-0009).",
+  "guidance": "**Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal, `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.",
   "properties": [
     {
       "name": "Run",

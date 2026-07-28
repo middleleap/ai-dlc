@@ -1,5 +1,8 @@
 # Data-risk register — the D6 seam
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 This is a **minimal example register**, shipped so a fresh Loom adoption sees gate D6 pass
 end-to-end before the real register is mounted. It is one complete chain:
 

@@ -1,5 +1,8 @@
 # Data protection — the real-PII control surface (cluster D)
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 The Loom is **synthetic-only by design**. The `pii-guard.sh` hook denies any build-time write
 that introduces a real-shaped Emirates ID (`784…`) or UAE IBAN (bank code other than the
 synthetic `000`); the `data-lifecycle-check.mjs` gate refuses a merge unless every data category

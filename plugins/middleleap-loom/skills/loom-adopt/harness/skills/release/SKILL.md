@@ -5,6 +5,9 @@ description: Use to take a merged commit through delivery steps ⑦ DEPLOY and �
 
 # Release — deploy, then seal the record
 
+> **Identifiers.** Gate ids (`D1`–`D9`, `Q1`–`Q5`) and run-level ids (`S-001` signal,
+> `T-1` theme, `H1` hypothesis) are expanded in `discovery/GLOSSARY.md`.
+
 One invocation = one release, end to end. This skill exists because `evidence-seal-check`,
 `decision-log-check`, `assurance-cycle-check` and `product-eval-check` all judge artifacts that
 nothing else in the harness produces. A gate guarding an artifact with no author is a gate that

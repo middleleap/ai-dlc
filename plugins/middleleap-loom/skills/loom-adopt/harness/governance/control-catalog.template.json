@@ -790,6 +790,24 @@
       "lane": "pr"
     },
     {
+      "control_id": "ID-LEGIBILITY",
+      "objective": "A reader never meets an identifier they cannot resolve: a Loom-owned markdown file expands the first use of each id family or links the glossary, and a Factory Floor decision id carries the word Decision so it cannot be misread as a discovery gate",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/id-legibility-check.mjs",
+      "test_ref": "scripts/id-legibility-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "discovery/",
+        "delivery/",
+        "floor/",
+        "docs/governance/",
+        ".claude/skills/"
+      ],
+      "note": "Scoped to Loom-owned trees on purpose — an adopter's own docs never opted into this vocabulary and must not fail their build for labelling a diagram D1. Checks the FIRST use per file, not every use: expanding all of them would bloat the prose, which is the opposite of the point"
+    },
+    {
       "control_id": "COMPILED-REQUIREMENTS",
       "objective": "The compiler's per-change requirements are aggregated as one source of truth the runner and gates read",
       "owner_role": "risk-second-line",
