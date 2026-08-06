@@ -22,6 +22,9 @@ import {
 } from './profit-distribution-check.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// Resolved across the BUNDLE and ADOPTED layouts: scripts/ is copied into an adopted tree, so this
+// suite runs there too, where the template has been installed with its `.template` suffix dropped.
+const PROFIT_TEMPLATE_PATH = [join(H, 'governance/profit-distribution.template.json'), join(H, 'docs/governance/profit-distribution.json')].find(existsSync);
 
 const REGISTRY = {
   groups: { builders: '', 'second-line': '' },
@@ -69,8 +72,8 @@ test('a structure-conformant run passes clean', () => {
   assert.equal(r.counted, true);
 });
 
-test('the shipped template reads as NO run — a fresh adoption has made no record, not a bad one', () => {
-  const template = JSON.parse(readFileSync(`${H}/governance/profit-distribution.template.json`, 'utf8'));
+test('the shipped template reads as NO run — a fresh adoption has made no record, not a bad one', { skip: !PROFIT_TEMPLATE_PATH && 'profit-distribution template not present in this layout' }, () => {
+  const template = JSON.parse(readFileSync(PROFIT_TEMPLATE_PATH, 'utf8'));
   assert.ok(Array.isArray(template.runs) && template.runs.length > 0, 'the template ships at least one example row');
   for (const row of template.runs) {
     const r = evaluate(row, { registry: REGISTRY });

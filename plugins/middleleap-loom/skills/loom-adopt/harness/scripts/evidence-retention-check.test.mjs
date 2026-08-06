@@ -8,7 +8,7 @@
 // dormant, each of them is a notice, and the dormant-vs-armed pair is asserted explicitly.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +16,10 @@ import { CAPABILITY, evaluate, isPlaceholder, producedTypes, requiringChanges, r
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// Resolved across the BUNDLE and ADOPTED layouts: scripts/ is copied into an adopted tree, so this
+// suite runs there too, where the template has been installed as docs/governance/evidence-retention.json.
+const RETENTION_PATH = [join(H, 'governance/evidence-retention.template.json'), join(H, 'docs/governance/evidence-retention.json')].find(existsSync);
+const SKIP_NO_TEMPLATE = !RETENTION_PATH && 'evidence-retention template not present in this layout';
 const clean = (d) => rmSync(d, { recursive: true, force: true });
 
 const policy = (types, over = {}) => ({
@@ -146,8 +150,8 @@ test('commentary keys are not retention entries', () => {
   assert.equal(count, 1);
 });
 
-test('the SHIPPED template is notices-only for a repository that compiles nothing', () => {
-  const doc = JSON.parse(readFileSync(join(H, 'governance/evidence-retention.template.json'), 'utf8'));
+test('the SHIPPED template is notices-only for a repository that compiles nothing', { skip: SKIP_NO_TEMPLATE }, () => {
+  const doc = JSON.parse(readFileSync(RETENTION_PATH, 'utf8'));
   const archived = Object.entries(doc.types).filter(([, e]) => e.immutable_archive === true);
   assert.ok(archived.length >= 8, 'the template pins most evidence to an immutable archive');
   const dormant = evaluate(doc);
@@ -160,8 +164,8 @@ test('the SHIPPED template is notices-only for a repository that compiles nothin
   assert.deepEqual(evaluate({ ...doc, immutable_archive_ref: WORM }, { enforced: true }).findings, []);
 });
 
-test('the shipped template covers every evidence type the seal knows how to verify', async () => {
-  const doc = JSON.parse(readFileSync(join(H, 'governance/evidence-retention.template.json'), 'utf8'));
+test('the shipped template covers every evidence type the seal knows how to verify', { skip: SKIP_NO_TEMPLATE }, async () => {
+  const doc = JSON.parse(readFileSync(RETENTION_PATH, 'utf8'));
   const seal = await import('./evidence-seal-check.mjs');
   const produced = new Map([...seal.REQUIRED_TYPES, ...seal.PLAN_ONLY_TYPES].map((t) => [t, 'sealed']));
   const { findings } = evaluate({ ...doc, immutable_archive_ref: WORM }, { produced, enforced: true });
@@ -256,9 +260,9 @@ test('run() — a compiled plan\'s required_evidence counts as produced before a
 // tier. No shipped profile declares evidence_retention, so presence-arming could only ever fail
 // adopters who never asked for it — a conventional repository sealing a penetration test, a DPIA
 // or a UAT sign-off took a hard PR-lane failure from a Shari'ah-adjacent template it was given.
-test('DORMANT ADOPTER — the mounted template plus an unlisted sealed evidence type is notices, exit 0', () => {
+test('DORMANT ADOPTER — the mounted template plus an unlisted sealed evidence type is notices, exit 0', { skip: SKIP_NO_TEMPLATE }, () => {
   const dir = repo({
-    retention: JSON.parse(readFileSync(join(H, 'governance/evidence-retention.template.json'), 'utf8')),
+    retention: JSON.parse(readFileSync(RETENTION_PATH, 'utf8')),
     bundleTypes: ['tests', 'reviews', 'penetration-test', 'dpia', 'uat-signoff'],
   });
   try {
@@ -271,10 +275,10 @@ test('DORMANT ADOPTER — the mounted template plus an unlisted sealed evidence 
   } finally { clean(dir); }
 });
 
-test('ARMED ADOPTER — the same tree fails once a compiled plan requires the capability', () => {
+test('ARMED ADOPTER — the same tree fails once a compiled plan requires the capability', { skip: SKIP_NO_TEMPLATE }, () => {
   const dir = repo({
     requires: true,
-    retention: JSON.parse(readFileSync(join(H, 'governance/evidence-retention.template.json'), 'utf8')),
+    retention: JSON.parse(readFileSync(RETENTION_PATH, 'utf8')),
     bundleTypes: ['tests', 'reviews', 'penetration-test', 'dpia', 'uat-signoff'],
   });
   try {
@@ -312,8 +316,8 @@ test('run() — a mounted policy that is not JSON fails once armed, and is repor
   } finally { clean(dormant); }
 });
 
-test('run() — the SHIPPED template mounted into a dormant repository does not fail it', () => {
-  const doc = JSON.parse(readFileSync(join(H, 'governance/evidence-retention.template.json'), 'utf8'));
+test('run() — the SHIPPED template mounted into a dormant repository does not fail it', { skip: SKIP_NO_TEMPLATE }, () => {
+  const doc = JSON.parse(readFileSync(RETENTION_PATH, 'utf8'));
   const dir = repo({ retention: doc, bundleTypes: ['tests', 'reviews', 'sbom'] });
   try {
     const r = run(dir);

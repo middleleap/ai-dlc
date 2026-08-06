@@ -339,6 +339,14 @@
       "tier": "full"
     },
     {
+      "source": "governance/shariah-surfaces.template.json",
+      "dest": "docs/governance/shariah-surfaces.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "WHERE this institution's Islamic data contracts, fixtures and customer copy live — the declaration the product-substance gate reads. It ships DECLARING NOTHING and that is deliberate: the harness cannot tell an Islamic fixture tree from a conventional one, so a template that guessed a path would either scan the wrong tree or fail a bank with no Islamic product. Declaring a surface is the institution's act. Mandatory once a compiled plan requires the shariah_governance capability — without this entry the gate would fail an adopter with nothing to copy, which is the defect it exists to prevent",
+      "tier": "full"
+    },
+    {
       "source": "governance/issc-register.template.json",
       "dest": "docs/governance/issc-register.json",
       "kind": "file",

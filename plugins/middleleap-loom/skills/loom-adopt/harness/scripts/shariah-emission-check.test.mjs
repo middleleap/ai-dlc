@@ -15,9 +15,10 @@
 // Worked names are fictional throughout (Alpha Islamic Bank, Meridian Trust).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   CAPABILITY,
   DEFAULT_RULES,
@@ -679,9 +680,15 @@ test('run() reads a mounted structure_enum — a revised standard is DATA, not a
 
 /* ── the shipped template ─────────────────────────────────────────────────────────────────── */
 
-const TEMPLATE = JSON.parse(readFileSync(new URL('../governance/shariah-surfaces.template.json', import.meta.url), 'utf8'));
+// Resolved across the BUNDLE and ADOPTED layouts (scripts/ ships into an adopted tree and the suite
+// runs there, where this template is installed as docs/governance/shariah-surfaces.json).
+const TEMPLATE_PATH = [
+  fileURLToPath(new URL('../governance/shariah-surfaces.template.json', import.meta.url)),
+  fileURLToPath(new URL('../docs/governance/shariah-surfaces.json', import.meta.url)),
+].find(existsSync);
+const TEMPLATE = TEMPLATE_PATH ? JSON.parse(readFileSync(TEMPLATE_PATH, 'utf8')) : null;
 
-test('the shipped template declares NO surfaces — a conventional adopter holding it is never failed', () => {
+test('the shipped template declares NO surfaces — a conventional adopter holding it is never failed', { skip: !TEMPLATE_PATH && 'shariah-surfaces template not present in this layout' }, () => {
   // The file is mandatory-when-compiled, so it must ship something to copy. What it ships must be
   // INERT: the harness cannot tell an Islamic fixture tree from a conventional one, so a template
   // that guessed a path would either read the wrong tree or fail a bank with no Islamic product.
@@ -697,7 +704,7 @@ test('the shipped template declares NO surfaces — a conventional adopter holdi
   } finally { clean(dir); }
 });
 
-test('the template mounts the shipped enum default under the name it quotes, and its rules block is clean', () => {
+test('the template mounts the shipped enum default under the name it quotes, and its rules block is clean', { skip: !TEMPLATE_PATH && 'shariah-surfaces template not present in this layout' }, () => {
   const { structureEnum, findings } = mergeStructureEnum(TEMPLATE.structure_enum);
   assert.deepEqual(findings, [], findings.join('\n'));
   assert.deepEqual(structureEnum.values, DEFAULT_STRUCTURE_ENUM.values);

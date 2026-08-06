@@ -1,13 +1,16 @@
 // Tests for the assurance-case gate (rc.14 · WS6). Node runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluate } from './assurance-case-check.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TEMPLATE = JSON.parse(readFileSync(join(H, 'governance/assurance-sla.template.json'), 'utf8'));
+// Resolved across the BUNDLE and ADOPTED layouts: scripts/ is copied into an adopted tree, so this
+// suite runs there too, where the template has been installed as docs/governance/assurance-sla.json.
+const TEMPLATE_PATH = [join(H, 'governance/assurance-sla.template.json'), join(H, 'docs/governance/assurance-sla.json')].find(existsSync);
+const TEMPLATE = TEMPLATE_PATH ? JSON.parse(readFileSync(TEMPLATE_PATH, 'utf8')) : null;
 
 const SLA = {
   sources: ['siem', 'model-monitoring'],
@@ -106,7 +109,7 @@ test('a low-severity signal needs no containment', () => {
 
 /* ---- rc.46: the SLA is VOCABULARY. Sources and containments extend by data, never by code ---- */
 
-test('the shipped SLA template declares the continuous-monitoring source and the two value-side containments', () => {
+test('the shipped SLA template declares the continuous-monitoring source and the two value-side containments', { skip: !TEMPLATE_PATH && 'assurance-sla not present in this layout' }, () => {
   assert.ok(TEMPLATE.sources.includes('shariah-compliance-monitoring'), 'a continuous Shari\'ah compliance monitoring feed has somewhere to open a case');
   assert.ok(TEMPLATE.containment_actions.includes('quarantine-income'));
   assert.ok(TEMPLATE.containment_actions.includes('suspend-product-offering'));
@@ -114,7 +117,7 @@ test('the shipped SLA template declares the continuous-monitoring source and the
   for (const a of ['suspend-autonomy', 'block-release', 'rollback', 'model-fallback']) assert.ok(TEMPLATE.containment_actions.includes(a));
 });
 
-test('a case on the shipped vocabulary passes with no code change — the gate reads the SLA', () => {
+test('a case on the shipped vocabulary passes with no code change — the gate reads the SLA', { skip: !TEMPLATE_PATH && 'assurance-sla not present in this layout' }, () => {
   const k = kase();
   k.signal.source = 'shariah-compliance-monitoring';
   k.steps.remediation.containment = ['quarantine-income', 'suspend-product-offering'];

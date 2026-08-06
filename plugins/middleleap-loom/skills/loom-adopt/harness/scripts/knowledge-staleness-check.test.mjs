@@ -6,7 +6,7 @@
 // notices rather than findings until a compiled plan asks for the capability.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +14,9 @@ import { CAPABILITY, ageDays, evaluate, isPlaceholder, knownCapabilityNames, req
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// Resolved across the BUNDLE and ADOPTED layouts: scripts/ is copied into an adopted tree, so this
+// suite runs there too, where the template has been installed with its `.template` suffix dropped.
+const KNOWLEDGE_PINS_PATH = [join(H, 'governance/knowledge-pins.template.json'), join(H, 'docs/governance/knowledge-pins.json')].find(existsSync);
 const NOW = Date.parse('2026-08-01T00:00:00Z');
 const daysAgo = (n) => new Date(NOW - n * 86_400_000).toISOString().slice(0, 10);
 
@@ -186,8 +189,8 @@ test('knownCapabilityNames reads the ADOPTER\'S tree — shipped profiles and co
   } finally { clean(dir); }
 });
 
-test('the SHIPPED template is notices-only for a repository that compiles nothing, and all findings once it does', () => {
-  const doc = JSON.parse(readFileSync(join(H, 'governance/knowledge-pins.template.json'), 'utf8'));
+test('the SHIPPED template is notices-only for a repository that compiles nothing, and all findings once it does', { skip: !KNOWLEDGE_PINS_PATH && 'knowledge-pins not present in this layout' }, () => {
+  const doc = JSON.parse(readFileSync(KNOWLEDGE_PINS_PATH, 'utf8'));
   assert.ok(doc.pins.length >= 4);
   const dormant = evaluate(doc, { requiredCapabilities: new Set(), now: NOW });
   assert.deepEqual(dormant.findings, [], dormant.findings.join('\n'));

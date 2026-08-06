@@ -1,7 +1,8 @@
 // Tests for the control-plane integrity gate. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { evaluate, ownersFor, ruleMatches, parseCodeowners, CONTROL_TARGETS } from './control-plane-check.mjs';
 
 const TARGETS = [
@@ -17,8 +18,20 @@ const SHARIAH_TARGETS = ['docs/governance/shariah-rulings.json', 'docs/governanc
 // The shipped template, with the placeholder owner swapped for a real one — the placeholder
 // failing is a separate, deliberate control (see the PLACEHOLDER_OWNER tests below), and we
 // are asking a different question here: does an adopter get these paths owned for free?
-const TEMPLATE = readFileSync(new URL('../governance/CODEOWNERS.template', import.meta.url), 'utf8')
-  .replaceAll('@your-org/', '@acme-bank/');
+// Resolved across the BUNDLE and ADOPTED layouts: scripts/ ships into an adopted tree and this suite
+// runs there, where the template has been installed as the repository-root CODEOWNERS.
+const TEMPLATE_PATH = [
+  fileURLToPath(new URL('../governance/CODEOWNERS.template', import.meta.url)),
+  fileURLToPath(new URL('../CODEOWNERS', import.meta.url)),
+].find(existsSync);
+// The org prefix is whatever the layout carries: `@your-org/` in the bundle template, and in an
+// adopted tree whatever that adopter substituted. Normalise BOTH so the assertions below can name
+// one owner — what is being tested is that the dedicated lines exist and resolve to the right TEAM,
+// never which organisation happens to own them.
+const ORG = /@[A-Za-z0-9._-]+\//g;
+const TEMPLATE = TEMPLATE_PATH
+  ? readFileSync(TEMPLATE_PATH, 'utf8').replace(ORG, '@acme-bank/')
+  : null;
 
 const withoutLines = (text, drop) => text.split('\n').filter((l) => !drop.some((re) => re.test(l))).join('\n');
 
