@@ -7,17 +7,17 @@
   "types": {
     "provenance": {
       "retention_years": 7,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: the trail from a shipped artifact back to the commit, the change and the approvals. If anything is retained, this is — every other record is read through it."
     },
     "control-plane": {
       "retention_years": 7,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: proof of what the guardrails were at the time. A control-plane record dropped means a past change can no longer be judged against the rules it was actually built under, only against today's."
     },
     "reviews": {
       "retention_years": 7,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: who reviewed, and what they saw. Personal data by construction — reconcile against data-lifecycle.json and name the statutory hold that keeps it."
     },
     "tests": {
@@ -32,7 +32,7 @@
     },
     "sbom": {
       "retention_years": 7,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: what was actually in the artifact. Needed years later when a component's vulnerability is disclosed and the question is which releases carried it — the one evidence type whose value INCREASES with age."
     },
     "dependency-audit": {
@@ -42,12 +42,12 @@
     },
     "lineage": {
       "retention_years": 7,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: where data came from and where it went. Retention here is usually set by the data regulator, not by the delivery process."
     },
     "model-provenance": {
       "retention_years": 7,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: which model and prompt version decided, and against which evaluation. A model decision challenged years later is unanswerable without this."
     },
     "product-eval": {
@@ -57,23 +57,24 @@
     },
     "external-anchor": {
       "retention_years": 10,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: the third-party time-stamp or anchor that makes the seal examinable by someone outside the institution. It must OUTLIVE what it anchors — an anchor that expires before its evidence leaves a chain nobody external can attest to."
     },
     "brainkit-provenance": {
       "retention_years": 7,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: which institutional context version a change was built against, and from which approved sources. Answers 'what did the agent believe was policy at the time'."
     },
     "sharia-structure-mapping": {
       "retention_years": 10,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: the mapping from the implemented product to the approved contract structure. Long, because a Shari'ah examination reaches back over the LIFE OF THE FACILITY — an Ijara or diminishing-Musharaka arrangement can run for decades, and the mapping is what shows the executed structure was the approved one. Delete this row and shariah-attestation if you run no Islamic product."
     },
     "shariah-attestation": {
       "retention_years": 10,
-      "immutable_archive": true,
+      "immutable_archive": false,
       "justification": "ADOPT: the approval assertions of the Shari'ah committee, the compliance function and internal Shari'ah audit, bound to the plan hash they signed. THE LONGEST HOLD IN THE FILE, and the reason this template exists: the question an examiner asks is which committee, under what approval, ruled on the structure a customer is still paying for — and the answer is only as durable as this row. It names people and must therefore be reconciled against data-lifecycle.json; the statutory hold is what keeps it."
     }
-  }
+  },
+  "_immutable_archive_ships_false": "Every type ships `immutable_archive: false`, and that is a statement about THIS FILE rather than advice about your archive. The gate refuses a true claim that names no archive, on the ground that a claim about a store nobody located is not a control — so a template shipping `true` with no ref would assert, on every adopter's behalf and before they had read a line, that ten kinds of evidence sit in a WORM store the harness has never reached. Set it true on the entries you can actually name, and add `archive_ref` there or `immutable_archive_ref` once for the whole file. Retention years are shipped as a starting point; the archive claim is yours to earn."
 }

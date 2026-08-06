@@ -150,18 +150,25 @@ test('commentary keys are not retention entries', () => {
   assert.equal(count, 1);
 });
 
-test('the SHIPPED template is notices-only for a repository that compiles nothing', { skip: SKIP_NO_TEMPLATE }, () => {
+// The shipped template must be GREEN when armed, and this test used to assert the opposite: that
+// most entries claimed an immutable archive. They did, and they named none — so the moment a profile
+// made the capability reachable, the bundle's own template failed the bundle's own gate. An untouched
+// template that asserts on the adopter's behalf that ten kinds of evidence sit in a WORM store the
+// harness has never reached is the same unearned-claim defect the rest of this release removed. It
+// ships claiming nothing; the adopter makes the claim when they can say where.
+test('the SHIPPED template claims no archive it cannot name, and passes its own gate armed', { skip: SKIP_NO_TEMPLATE }, () => {
   const doc = JSON.parse(readFileSync(RETENTION_PATH, 'utf8'));
   const archived = Object.entries(doc.types).filter(([, e]) => e.immutable_archive === true);
-  assert.ok(archived.length >= 8, 'the template pins most evidence to an immutable archive');
-  const dormant = evaluate(doc);
-  assert.deepEqual(dormant.findings, [], dormant.findings.join('\n'));
-  assert.equal(dormant.notices.length, archived.length, dormant.notices.join('\n'));
-  // Once a compiled plan requires the capability, every unlocated archive claim blocks…
-  const live = evaluate(doc, { enforced: true });
-  assert.equal(live.findings.length, archived.length, live.findings.join('\n'));
-  // …and naming the store once, for the file, clears all of them.
-  assert.deepEqual(evaluate({ ...doc, immutable_archive_ref: WORM }, { enforced: true }).findings, []);
+  assert.deepEqual(archived, [], 'no shipped entry may claim an archive the template does not name');
+  assert.deepEqual(evaluate(doc).findings, []);
+  assert.deepEqual(evaluate(doc, { enforced: true }).findings, [], 'the shipped template is green when armed');
+
+  // And the rule still bites the moment a claim IS made without a location…
+  const claimed = { ...doc, types: { ...doc.types, provenance: { ...doc.types.provenance, immutable_archive: true } } };
+  assert.equal(evaluate(claimed, { enforced: true }).findings.length, 1);
+  assert.equal(evaluate(claimed).notices.length, 1, 'dormant, the same claim is only reported');
+  // …and naming the store once, for the file, clears it.
+  assert.deepEqual(evaluate({ ...claimed, immutable_archive_ref: WORM }, { enforced: true }).findings, []);
 });
 
 test('the shipped template covers every evidence type the seal knows how to verify', { skip: SKIP_NO_TEMPLATE }, async () => {

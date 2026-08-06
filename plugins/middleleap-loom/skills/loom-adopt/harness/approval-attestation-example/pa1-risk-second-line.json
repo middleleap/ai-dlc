@@ -17,7 +17,7 @@
       "issued_at": "2026-07-19T11:04:00Z",
       "expires_at": "2026-07-19T11:09:00Z",
       "nonce": "sha256:70e25031c2762f0d5e89424f521939477dfe13ff2fd9b909266a48e99c3f3b78",
-      "signature": "OKTztnr82DqEjYxQ9s6RYJtHduif1MXt4aHD1cBvS0gZwhR3uoK4w0gFMJNewnnmSW73Oc2solXpoue4sn78BA=="
+      "signature": "Q9c7GeRuuXjfQ1tIP/vzcNFFdxGcW5eq9oz92o2tnZwTPpx1Abc6J/BgUMZtBmYYReDCLYUNnmOJPyWxipcwCg=="
     }
   },
   "bound_to": {
@@ -46,7 +46,7 @@
     "transcribed_at": "2026-07-19T11:04:09Z",
     "attestation": {
       "issuer": "demo-floor-bridge",
-      "signature": "aXyIuV5I7kc5YmJ92VoyH6xOKCypP07WksEFgKVL5D0tcMtnlrGvMeMcwMuoTjAFuhVHjwYnz5VKg7dcYBTFDQ=="
+      "signature": "Hv9jQ27fs3+4OVE3uI23x6F06SQIIeemV3WUC+bglJrqCjJt+H5xUN6VrpqR6ehA17mw00UzGAMfY/ILi+VaAA=="
     }
   }
 }
