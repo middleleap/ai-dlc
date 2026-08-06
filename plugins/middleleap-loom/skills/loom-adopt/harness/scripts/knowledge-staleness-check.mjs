@@ -50,10 +50,18 @@
 //   KP-R08  a non-null `check_ref` that does not exist on disk — a control citing a ghost. `null`
 //           is a legitimate answer (a human's calendar entry); an ADOPT placeholder is not
 //   KP-R09  no owner_role — a bound nobody is accountable for is a bound nobody keeps
+//   KP-R10  a `required_by_capability` NO compiled plan and NO shipped profile declares. This
+//           field is the only thing that downgrades KP-R07 from a finding to a notice, so an
+//           unvalidated one is a staleness failure disabled by a typo: write `knowledge_currncy`
+//           and the pin's bound stops blocking, silently and forever. The recognised set is read
+//           from the ADOPTER'S OWN TREE (their plans, their profiles) rather than baked in here,
+//           so an institution that invents a capability is recognised the moment it declares one.
+//           An unrecognised name is a finding AND the row is treated as unqualified — i.e.
+//           unconditionally owned — because the downgrade is exactly what the typo bought.
 //
 // Lane: pr. Run from the repo root: `node scripts/knowledge-staleness-check.mjs` (exit 1 on a
 // finding).
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
@@ -61,6 +69,9 @@ import { aggregateRequirements, capabilityRequired, requiredBy } from '../core/c
 
 export const PIN_LOCATIONS = ['docs/governance/knowledge-pins.json', 'knowledge-pins.json'];
 export const CAPABILITY = 'knowledge_currency';
+// Where profiles declare capabilities. Mirrors the compiler's profile dirs; a name only has to
+// appear in one of them to be a name this repository recognises.
+export const PROFILE_DIRS = ['profiles', 'profiles/jurisdictions', 'profiles/products', 'profiles/institutions'];
 // The compiler family the pins ride with. Used only to NAME the changes when a per-change
 // capability record is unavailable — never to decide whether this gate applies.
 export const GATE_FAMILY = 'assurance-cadence';
@@ -70,6 +81,39 @@ const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
 /** An untouched template field. A shipped template must never read as a decision. */
 export const isPlaceholder = (v) => typeof v === 'string' && /^ADOPT[\s:—-]/i.test(v.trim());
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
+
+/**
+ * Capability names anywhere inside a profile, added to `into`. Profiles hang a `capabilities`
+ * block off each tier and may add another under a conditional, so this WALKS rather than assuming
+ * a shape — a name missed here would read as unrecognised and fail a legitimate pin.
+ */
+function collectCapabilityNames(node, into) {
+  if (Array.isArray(node)) { for (const v of node) collectCapabilityNames(v, into); return; }
+  if (!node || typeof node !== 'object') return;
+  for (const [k, v] of Object.entries(node)) {
+    if (k === 'capabilities' && v && typeof v === 'object' && !Array.isArray(v)) for (const n of Object.keys(v)) into.add(n);
+    collectCapabilityNames(v, into);
+  }
+}
+
+/**
+ * The capability names this repository actually uses: every name its compiled plans carry, every
+ * name its profiles declare, and this gate's own. NOT a taxonomy baked into the harness — it is
+ * read from the adopter's tree, so an institution profile that invents a capability is recognised
+ * as soon as it declares one, and a jurisdiction the harness has never heard of needs no patch.
+ */
+export function knownCapabilityNames(cwd = process.cwd(), agg = null) {
+  const names = new Set([CAPABILITY, ...Object.keys(agg?.capabilities || {})]);
+  for (const c of agg?.changes || []) for (const n of Object.keys(c?.capabilities || {})) names.add(n);
+  for (const d of PROFILE_DIRS) {
+    const abs = join(cwd, d);
+    if (!existsSync(abs)) continue;
+    for (const f of readdirSync(abs)) {
+      if (f.endsWith('.json')) collectCapabilityNames(readJson(join(abs, f)), names);
+    }
+  }
+  return names;
+}
 
 /** Age of a pin in whole days at `now`, or null when the date is unusable. */
 export function ageDays(last_verified, now = Date.now()) {
@@ -81,13 +125,18 @@ export function ageDays(last_verified, now = Date.now()) {
  * Findings (fail) and notices (never do) over a parsed pins register.
  *
  * `requiredCapabilities` is the set of capability names some compiled plan demands — the ONLY
- * thing that decides finding-vs-notice for a row's currency. `exists(path)` resolves a
- * `check_ref` against the repo (injected so the rule is testable without a filesystem); its
- * default answers yes, so a caller that cannot check the tree never invents a ghost.
+ * thing that decides finding-vs-notice for a row's currency. `knownCapabilities` is the set of
+ * names this repository RECOGNISES (knownCapabilityNames); a row naming anything outside it is
+ * KP-R10 and is not downgraded. Its default — this gate's capability plus everything a plan
+ * requires — is the smallest set that is true by construction, so the validation is never
+ * silently off. `exists(path)` resolves a `check_ref` against the repo (injected so the rule is
+ * testable without a filesystem); its default answers yes, so a caller that cannot check the
+ * tree never invents a ghost.
  */
-export function evaluate(doc, { requiredCapabilities = new Set(), exists = () => true, now = Date.now() } = {}) {
+export function evaluate(doc, { requiredCapabilities = new Set(), knownCapabilities = null, exists = () => true, now = Date.now() } = {}) {
   const findings = [];
   const notices = [];
+  const known = knownCapabilities instanceof Set ? knownCapabilities : new Set([CAPABILITY, ...requiredCapabilities]);
   const pins = doc?.pins;
   if (!Array.isArray(pins)) {
     return { findings: [`KP-R01: knowledge-pins.json has no \`pins\` array — a register of external rule bases with no register in it pins nothing`], notices, count: 0 };
@@ -109,8 +158,17 @@ export function evaluate(doc, { requiredCapabilities = new Set(), exists = () =>
     // Whose problem is this row? A row naming a capability nobody compiles still reports, but as
     // a notice: it is a pin kept for a product this repository does not currently build. A row
     // naming NO capability is unconditionally owned — the adopter wrote it with no qualifier.
+    //
+    // KP-R10 first, because this field is the ONLY thing that can downgrade a staleness failure
+    // and free text validated against nothing is a control with an off switch nobody guards.
     const cap = pin?.required_by_capability;
-    const required = !nonEmpty(cap) || requiredCapabilities.has(cap);
+    const qualified = nonEmpty(cap);
+    if (qualified && !known.has(cap)) {
+      findings.push(`KP-R10: pin ${JSON.stringify(label)} claims required_by_capability ${JSON.stringify(cap)}, which no compiled plan and no profile in this repository declares — this pin says it is required by a capability nothing here has ever heard of, and since that field is what decides whether a stale pin blocks, an unrecognised one would turn this pin's bound off. The row is treated as unconditionally owned until the name is one this repository uses`);
+    }
+    // An unrecognised name is treated as UNQUALIFIED, not dormant: the downgrade is the thing the
+    // typo bought, so it is the thing that must not be granted.
+    const required = !qualified || !known.has(cap) || requiredCapabilities.has(cap);
     const say = (m) => (required ? findings : notices).push(m);
 
     // KP-R03 / KP-R04 — the template row, whole or half. Only the three fields the ADOPTER must
@@ -207,6 +265,7 @@ export function run(cwd = process.cwd(), { now = Date.now() } = {}) {
   const requiredCapabilities = new Set([...names].filter((n) => capabilityRequired(agg, n)));
   const { findings, notices, count } = evaluate(doc, {
     requiredCapabilities,
+    knownCapabilities: knownCapabilityNames(cwd, agg),
     exists: (p) => existsSync(join(cwd, p)),
     now,
   });

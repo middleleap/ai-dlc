@@ -15,16 +15,18 @@
 // Worked names are fictional throughout (Alpha Islamic Bank, Meridian Trust).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import {
   CAPABILITY,
   DEFAULT_RULES,
-  SHARIA_STRUCTURE_ENUM,
+  DEFAULT_STRUCTURE_ENUM,
+  SUBTRACTIVE_RULES,
   evaluate,
   globBase,
   mergeRules,
+  mergeStructureEnum,
   normalizeKey,
   populated,
   rebateDefect,
@@ -141,9 +143,10 @@ test('SE-R02 does not fire on nodes that are not products', () => {
 
 /* ── SE-R03 — the enum is a quotation, never an invention ─────────────────────────────────── */
 
-test('SE-R03: every enum value passes, and the enum is exactly the five the Standard carries', () => {
-  assert.deepEqual(SHARIA_STRUCTURE_ENUM, ['Ijara', 'ServiceIjara', 'Murabaha', 'Musharaka', 'Tawarruq']);
-  for (const v of SHARIA_STRUCTURE_ENUM) {
+test('SE-R03: every enum value passes, and the shipped default is the five that standard carries', () => {
+  assert.deepEqual(DEFAULT_STRUCTURE_ENUM.values, ['Ijara', 'ServiceIjara', 'Murabaha', 'Musharaka', 'Tawarruq']);
+  assert.ok(DEFAULT_STRUCTURE_ENUM.regime.trim().length > 0, 'the shipped default records WHICH standard it quotes');
+  for (const v of DEFAULT_STRUCTURE_ENUM.values) {
     const { findings } = check({ ProductType: 'X', IsShariaCompliant: true, ShariaStructure: v });
     assert.deepEqual(findings, [], `${v}: ${findings.join('\n')}`);
   }
@@ -165,6 +168,75 @@ test('SE-R03: a value that is not a structure at all, and a non-string', () => {
     const { findings } = check({ ProductType: 'X', IsShariaCompliant: true, ShariaStructure: v });
     assert.ok(has(findings, 'SE-R03'), `${JSON.stringify(v)}: ${findings.join('\n')}`);
   }
+});
+
+/* ── SE-R03 — the enum is MOUNTED DATA, and the quotation is pinned ───────────────────────── */
+
+const REGIME_B = { regime: 'Meridian Market Standards', edition: 'v3.0', values: ['Ijara', 'Murabaha', 'Mudarabah'] };
+
+test('the shipped enum is a documented DEFAULT with its provenance recorded beside it', () => {
+  const { structureEnum, findings } = mergeStructureEnum();
+  assert.deepEqual(findings, []);
+  assert.equal(structureEnum.shipped, true);
+  assert.deepEqual(structureEnum.values, DEFAULT_STRUCTURE_ENUM.values);
+  assert.ok(/v2\.1/.test(structureEnum.regime), 'the edition the default quotes is named, not implied');
+});
+
+test('an adopter under another standard mounts their own enum — no code change', () => {
+  const body = { ProductType: 'X', IsShariaCompliant: true, ShariaStructure: 'Mudarabah' };
+  assert.ok(has(check(body).findings, 'SE-R03'), 'the shipped default does not carry it');
+  const { findings } = evaluate({ documents: doc(body), structureEnum: REGIME_B });
+  assert.deepEqual(findings, [], findings.join('\n'));
+  // and the enum in force is the one a finding names
+  const other = evaluate({ documents: doc({ ...body, ShariaStructure: 'Tawarruq' }), structureEnum: REGIME_B }).findings;
+  assert.ok(has(other, 'SE-R03'), other.join('\n'));
+  assert.match(other.find((f) => f.startsWith('SE-R03')), /Meridian Market Standards · v3\.0/);
+});
+
+test('values from one standard may not travel under another standard\'s name', () => {
+  for (const over of [
+    { values: ['Ijara', 'Mudarabah'] },                                      // no provenance at all
+    { regime: 'ADOPT: the standard and edition', values: ['Ijara', 'Mudarabah'] }, // unfilled marker
+    { regime: DEFAULT_STRUCTURE_ENUM.regime, values: ['Ijara', 'Mudarabah'] },     // the shipped name
+  ]) {
+    const { findings } = mergeStructureEnum(over);
+    assert.equal(findings.length, 1, JSON.stringify(over));
+    assert.match(findings[0], /SE-R00: structure_enum\.values differ from the shipped default/);
+    assert.match(findings[0], /the harness never fetches it/);
+  }
+  // Declaring the shipped values under the shipped name is not a replacement and needs nothing.
+  assert.deepEqual(mergeStructureEnum({ regime: DEFAULT_STRUCTURE_ENUM.regime, values: [...DEFAULT_STRUCTURE_ENUM.values] }).findings, []);
+});
+
+test('a malformed or unfilled structure_enum leaves the shipped default in force and says so', () => {
+  for (const bad of ['five of them', { values: [] }, { values: ['ADOPT: your structures'] }, { values: [1, 2] }]) {
+    const { structureEnum, findings } = mergeStructureEnum(bad);
+    assert.equal(findings.length, 1, JSON.stringify(bad));
+    assert.deepEqual(structureEnum.values, DEFAULT_STRUCTURE_ENUM.values, 'the default stays in force');
+  }
+  assert.match(mergeStructureEnum({ regimen: 'typo' }).findings[0], /structure_enum\.regimen is not a field this gate reads/);
+  assert.deepEqual(mergeStructureEnum({ _comment: 'documentation' }).findings, []);
+});
+
+test('the DOCUMENTED GAP list is a fact about ONE standard and is not carried onto another', () => {
+  const { structureEnum } = mergeStructureEnum(REGIME_B);
+  assert.deepEqual(structureEnum.documented_gap, [], 'the shipped gap is not asserted of a standard nobody read');
+  const wakala = evaluate({ documents: doc({ ProductType: 'X', IsShariaCompliant: true, ShariaStructure: 'Wakala' }), structureEnum: REGIME_B }).findings;
+  assert.ok(has(wakala, 'SE-R03'), wakala.join('\n'));
+  assert.ok(!/DOCUMENTED GAP/.test(wakala[0]), 'it claims no gap it cannot know about');
+  // A regime that declares its own gap gets the WHY back.
+  const own = evaluate({
+    documents: doc({ ProductType: 'X', IsShariaCompliant: true, ShariaStructure: 'Salam' }),
+    structureEnum: { ...REGIME_B, documented_gap: ['Salam'] },
+  }).findings;
+  assert.match(own[0], /DOCUMENTED GAP/);
+});
+
+test('mounting an enum never licenses a local value — the routing stays a spec change', () => {
+  const f = evaluate({ documents: doc({ ProductType: 'X', IsShariaCompliant: true, ShariaStructure: 'Mudarabah' }) }).findings[0];
+  assert.match(f, /never edited into this gate/);
+  assert.match(f, /spec change/);
+  assert.match(f, /interoperable with nobody/);
 });
 
 /* ── SE-R04 — diminishing ownership with no steps ─────────────────────────────────────────── */
@@ -360,6 +432,51 @@ test('an adopter-declared participatory value and rebate key are honoured end to
   assert.ok(has(findings, 'SE-R06'), findings.join('\n'));
 });
 
+test('the merge is MONOTONE: no declarable rule addition can produce fewer findings than none', () => {
+  // The claim the header makes, checked rather than asserted. Every declarable list gets a junk
+  // entry; a config that made the gate say LESS than the shipped floor would be an exception the
+  // adopter granted themselves, which is the defect this test exists to catch.
+  const bodies = [MURABAHA, MUSHARAKA, MUDARABAH,
+    { ...MURABAHA, InterestRate: 4.5, ibra: { discretionary: true } },
+    { ProductType: 'X', IsShariaCompliant: true, deposit_structure: 'Mudarabah', GuaranteedReturn: '2' }];
+  const proseFiles = [{ label: 'docs/x.md', text: 'Your account earns interest every month.' }];
+  const floor = bodies.map((b) => evaluate({ documents: doc(b), prose: proseFiles }).findings.length);
+  for (const key of Object.keys(DEFAULT_RULES)) {
+    if (Object.hasOwn(SUBTRACTIVE_RULES, key)) continue;
+    const rules = { [key]: key === 'prose_extensions' ? ['.rst'] : ['zzz-adopter-value'] };
+    bodies.forEach((b, i) => {
+      const n = evaluate({ documents: doc(b), prose: proseFiles, rules }).findings.length;
+      assert.ok(n >= floor[i], `rules.${key} narrowed body ${i}: ${floor[i]} -> ${n}`);
+    });
+  }
+});
+
+test('the SUBTRACTIVE lists are refused by name — an allow-phrase is an exception, not a config', () => {
+  const line = [{ label: 'docs/products/islamic/summary.md', text: 'Your account earns interest every month.' }];
+  // Before this refusal existed, one entry took SE-R07 from one finding to zero on this same line.
+  const off = evaluate({ prose: line, rules: { prose_allow_phrases: ['interest'] } });
+  assert.ok(has(off.findings, 'SE-R07'), 'the shipped floor still fires');
+  assert.ok(off.findings.some((f) => /SE-R00: rules\.prose_allow_phrases is not adopter-configurable/.test(f)), off.findings.join('\n'));
+
+  // And a decision-ref pattern can no longer make any populated key the committee's decision.
+  const untraceable = { ...MURABAHA, ibra: { discretionary: true, note: 'n/a' } };
+  const widened = evaluate({ documents: doc(untraceable), rules: { rebate_decision_ref_patterns: ['[a-z]+'] } });
+  assert.ok(widened.findings.some((f) => /SE-R05:.*names no approving decision/.test(f)), widened.findings.join('\n'));
+  assert.ok(widened.findings.some((f) => /SE-R00: rules\.rebate_decision_ref_patterns is not adopter-configurable/.test(f)));
+
+  for (const key of Object.keys(SUBTRACTIVE_RULES)) {
+    const { rules, findings } = mergeRules({ [key]: ['anything'] });
+    assert.deepEqual(rules[key], DEFAULT_RULES[key], `${key}: the shipped floor is untouched`);
+    assert.equal(findings.length, 1, key);
+    assert.match(findings[0], /exception/, `${key} names where an exception belongs`);
+  }
+});
+
+test('a `_`-prefixed key in a rules block is documentation, not a typo', () => {
+  const { findings } = mergeRules({ _comment: 'why these are here', participatory_values: ['qard-investment'] });
+  assert.deepEqual(findings, []);
+});
+
 test('a mistyped rule name is refused, never silently ignored', () => {
   const { findings } = mergeRules({ participatory_value: ['mudarabah'] });
   assert.equal(findings.length, 1);
@@ -544,6 +661,60 @@ test('run() honours a config `rules` block', () => {
   try {
     put(dir, 'tests/fixtures/islamic/qard.json', { ProductType: 'X', IsShariaCompliant: true, account_structure: 'Qard-Investment', GuaranteedReturn: '2.0' });
     assert.ok(has(run(dir).findings, 'SE-R06'), 'the declared value is read from the mounted config');
+  } finally { clean(dir); }
+});
+
+test('run() reads a mounted structure_enum — a revised standard is DATA, not a code change', () => {
+  const dir = repo({
+    config: {
+      fixture_globs: ['tests/fixtures/islamic/*.json'],
+      structure_enum: { regime: 'Meridian Market Standards', edition: 'v3.0', values: ['Ijara', 'Murabaha', 'Mudarabah'] },
+    },
+  });
+  try {
+    put(dir, 'tests/fixtures/islamic/pool.json', { ProductType: 'X', IsShariaCompliant: true, ShariaStructure: 'Mudarabah' });
+    assert.deepEqual(run(dir).findings, [], 'the enum in force is the one the adopter mounted');
+  } finally { clean(dir); }
+});
+
+/* ── the shipped template ─────────────────────────────────────────────────────────────────── */
+
+const TEMPLATE = JSON.parse(readFileSync(new URL('../governance/shariah-surfaces.template.json', import.meta.url), 'utf8'));
+
+test('the shipped template declares NO surfaces — a conventional adopter holding it is never failed', () => {
+  // The file is mandatory-when-compiled, so it must ship something to copy. What it ships must be
+  // INERT: the harness cannot tell an Islamic fixture tree from a conventional one, so a template
+  // that guessed a path would either read the wrong tree or fail a bank with no Islamic product.
+  for (const key of ['fixture_globs', 'spec_paths', 'content_roots']) {
+    assert.deepEqual(TEMPLATE[key], [], `${key} ships empty`);
+  }
+  const dir = repo({ requires: false, config: TEMPLATE });
+  try {
+    const r = run(dir);
+    assert.deepEqual(r.findings, [], r.findings.join('\n'));
+    assert.deepEqual(r.notices, []);
+    assert.equal(r.documents, 0);
+  } finally { clean(dir); }
+});
+
+test('the template mounts the shipped enum default under the name it quotes, and its rules block is clean', () => {
+  const { structureEnum, findings } = mergeStructureEnum(TEMPLATE.structure_enum);
+  assert.deepEqual(findings, [], findings.join('\n'));
+  assert.deepEqual(structureEnum.values, DEFAULT_STRUCTURE_ENUM.values);
+  assert.deepEqual(mergeRules(TEMPLATE.rules).findings, [], 'the documented block is not a pile of typos');
+  for (const key of Object.keys(SUBTRACTIVE_RULES)) {
+    assert.ok(!Object.hasOwn(TEMPLATE.rules, key), `${key} is not offered as a knob`);
+  }
+});
+
+test('an EMPTY declaration fails once a plan compiles the capability — a gate that read nothing is not a pass', () => {
+  const dir = repo({ config: TEMPLATE });
+  try {
+    const r = run(dir);
+    assert.equal(r.present, true);
+    assert.equal(r.findings.length, 1, r.findings.join('\n'));
+    assert.match(r.findings[0], /declares no surfaces at all/);
+    assert.match(r.findings[0], /\[CHG-ALPHA-0011\]/);
   } finally { clean(dir); }
 });
 

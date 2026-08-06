@@ -13,7 +13,8 @@
 // THE SHARI'AH LANE (see `shariahLane` below). Where a plan compiles `shariah-committee`, PA1 has
 // two routes and the change says which one it takes: a change that creates or modifies a product
 // STRUCTURE binds the full committee; a change that CONFORMS to a structure the committee already
-// ruled on is cleared by the Shari'ah Compliance Function against the named ruling. The gate checks
+// ruled on is cleared by the Shari'ah Compliance Function against a ruling that must RESOLVE — in
+// this repository's decision register — to an active, non-template row. The gate checks
 // composition, provenance and binding. It never rules on Shari'ah — scholars do that.
 //
 // MANDATORY-WHEN-COMPILED (Factory Floor WS2 · D2.5). When the compiled plan requires the
@@ -88,6 +89,84 @@ export function pa1Roles(plan) {
 const isNamedRef = (v) => typeof v === 'string' && v.trim() !== ''
   && !/^(ADOPT[\s:—-]|TODO|TBD|N\/?A$|none$|<)/i.test(v.trim());
 
+const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
+
+// Where the Shari'ah DECISION register lives, and the one status that counts as standing. Declared
+// here, as scripts/shariah-governance-check.mjs and scripts/profit-distribution-check.mjs each
+// declare them, so a gate does not fail to load because a sibling gate was refactored. The strings
+// are the register's schema and are asserted identical by the cross-gate test below.
+export const RULINGS_LOCATIONS = ['docs/governance/shariah-rulings.json', 'shariah-rulings.json'];
+export const ACTIVE_STATUS = 'active';
+
+// The fields that make a rulings row a DECISION rather than a shipped example. governance/
+// shariah-rulings.template.json ships three rows with `"status": "active"` and ADOPT markers in
+// exactly these fields; without this list, an adopter who mounts that template unedited unlocks the
+// quorum relaxation by citing SR-0001.
+const RULING_PROVENANCE_FIELDS = ['issued_by', 'issued_at', 'evidence_path'];
+
+/**
+ * The decision register as a three-state handle: `{ present, doc }`.
+ *
+ * Absent, present-but-unreadable and readable are three different answers, and the lane treats
+ * them differently — collapsing them to `doc || null` is how "nothing checked it" comes to look
+ * like "it checked out". Reading the file is inert: a repository with no register and no compiled
+ * `shariah-committee` never reaches any of this.
+ */
+export function loadRulings(cwd = process.cwd()) {
+  const rel = RULINGS_LOCATIONS.find((p) => existsSync(`${cwd}/${p}`));
+  if (!rel) return { present: false, doc: null, path: null };
+  return { present: true, doc: readJson(`${cwd}/${rel}`), path: rel };
+}
+
+/**
+ * Does `ref` name a ruling this repository can actually produce, and does it still stand?
+ *
+ * Returns `{ bound, ruling, why, coverage }`. `why` is the reason fragment the caller puts in a
+ * finding, because "the register has no such row", "it was withdrawn" and "that row is still the
+ * shipped template" are three different problems with three different fixes.
+ *
+ * THE DEFECT THIS EXISTS TO PREVENT. The conforming lane drops the committee's whole PA1 quorum
+ * in favour of one compliance signature. The whole test on the ruling that buys that
+ * relaxation used to be "a non-empty string that is not an ADOPT marker" — so a typo, a ruling
+ * withdrawn last year, or an id nobody ever issued bought it exactly as well as a real decision.
+ *
+ * WHAT IS STILL NOT CHECKED, and no gate can check it: whether this change actually conforms to
+ * the ruling. That is a Shari'ah judgement. This resolves a citation; scholars decide Shari'ah.
+ */
+export function resolveRulingBinding(ref, rulings, productId) {
+  const rows = Array.isArray(rulings?.doc?.rulings) ? rulings.doc.rulings : [];
+  const want = String(ref).trim();
+  const ruling = rows.find((r) => typeof r?.ruling_id === 'string' && r.ruling_id.trim() === want);
+  if (!ruling) {
+    return { bound: false, ruling: null, why: `no row in ${RULINGS_LOCATIONS[0]} carries that ruling_id — a citation the decision register cannot resolve is a ruling nobody can produce`, coverage: null };
+  }
+  if (ruling.status !== ACTIVE_STATUS) {
+    // superseded and withdrawn are not the same failure: one moved, the other is gone.
+    const replacement = rows.find((r) => r?.supersedes === ruling.ruling_id
+      || (Array.isArray(r?.supersedes) && r.supersedes.includes(ruling.ruling_id)));
+    const next = replacement
+      ? ` ${replacement.ruling_id} replaces it — cite that instead, or declare the structure delta`
+      : ' nothing in the register replaces it, so there is no standing decision left to conform to';
+    return { bound: false, ruling, why: `its status is ${JSON.stringify(ruling.status)}, not ${JSON.stringify(ACTIVE_STATUS)};${next}`, coverage: null };
+  }
+  const untouched = RULING_PROVENANCE_FIELDS.filter((f) => !isNamedRef(ruling[f]));
+  if (untouched.length) {
+    return { bound: false, ruling, why: `that row is still an adoption template (${untouched.join(', ')} ${untouched.length === 1 ? 'is' : 'are'} unset or an ADOPT marker) — a shipped example row is not a decision, however active it says it is`, coverage: null };
+  }
+  // COVERAGE, and only where both sides say something. A ruling that lists the products it governs
+  // does not govern a product it omits. Where the row declares no product scope (an institution-wide
+  // filing does not), or the envelope names no product, nothing here has checked coverage and the
+  // notice says so rather than implying it did.
+  const governs = (ruling.product_ids || []).filter((p) => isNamedRef(p)).map((p) => p.trim());
+  if (isNamedRef(productId) && governs.length && !governs.includes(String(productId).trim())) {
+    return { bound: false, ruling, why: `that ruling governs ${governs.join(', ')} and this change is against product ${productId} — a ruling on another product does not clear this one`, coverage: null };
+  }
+  const coverage = isNamedRef(productId) && governs.length
+    ? `product ${String(productId).trim()} is listed in that ruling's product_ids`
+    : 'coverage NOT checked — the ruling declares no product scope, or the envelope names no product_id';
+  return { bound: true, ruling, why: null, coverage };
+}
+
 /**
  * Which Shari'ah lane a change takes — 'structure-delta' or 'conforming'.
  *
@@ -100,18 +179,22 @@ const isNamedRef = (v) => typeof v === 'string' && v.trim() !== ''
  * lanes, and this is that practice mechanised. THE COMMITTEE APPROVES STRUCTURES. The Shari'ah
  * Compliance Function — second line, and under the CBUAE Shari'ah Compliance Function standard a
  * CONTINUOUS monitoring function, not a periodic one — clears changes that CONFORM to a structure
- * the committee has already ruled on. The committee ratifies the conforming flow at its cadence.
+ * the committee has already ruled on. The committee is expected to ratify the conforming flow at
+ * its cadence; that expectation is an organisational obligation, and NO gate in this harness
+ * verifies that any ratification ever happened.
  *
  * The lane is DECLARED, on the change envelope, as `flags.structure_delta` (true ⇒ this change
  * creates or modifies a Shari'ah product structure). Undeclared reads as conforming, which buys
- * nothing by itself: the conforming lane only substitutes when the envelope ALSO names the ruling
- * being conformed to — see `conformingLanePa1`.
+ * nothing by itself: the conforming lane only substitutes when the envelope ALSO names a ruling
+ * that RESOLVES to an active row of the decision register — see `conformingLanePa1`.
  *
  * WHAT THIS CANNOT SEE, and no gate can: whether a change that says it conforms actually does.
- * That is a Shari'ah judgement, and no agent makes one. The harness reads a declared flag, a named
- * ruling and a signature; it checks composition, provenance and binding, never substance. A
- * mis-declared lane is caught afterwards, when the committee RATIFIES what flowed through the
- * conforming lane — a cadence obligation carried by the assurance stream, not by this gate.
+ * That is a Shari'ah judgement, and no agent makes one. The harness reads a declared flag, resolves
+ * the cited ruling, and checks who signed; it checks composition, provenance and binding, never
+ * substance. A mis-declared lane is meant to surface afterwards, when the committee RATIFIES what
+ * flowed through the conforming lane — an organisational obligation on the assurance stream that
+ * this gate does NOT verify, and that nothing else in the harness verifies either. It is written
+ * here as an obligation, not as a compensating control that has been shown to operate.
  */
 export function shariahLane(plan, envelope) {
   // The envelope is where the flags live and where the compiler reads them from; a plan that
@@ -128,10 +211,22 @@ export function shariahLane(plan, envelope) {
  * change in a repository with no Islamic product in flight.
  *
  * On the conforming lane the committee's PA1 quorum is satisfied INSTEAD by a `shariah-compliance`
- * approval plus a named `issc_decision_ref` (the already-approved structure's ruling id). Both are
- * required: the signature without the ruling is a second-line clearance of nothing in particular,
- * and the ruling without the signature is a citation. Either missing, or a declared structure
- * delta, and the full committee binding applies exactly as before this lane existed.
+ * approval plus an `issc_decision_ref` that RESOLVES, in the repository's decision register, to an
+ * ACTIVE, non-template ruling this change's product is within. All of it is required: the signature
+ * without a ruling is a second-line clearance of nothing in particular; a ruling id that resolves
+ * to nothing, to a superseded or withdrawn row, or to a shipped example row is a citation of a
+ * decision this repository cannot produce. Anything missing, or a declared structure delta, and the
+ * full committee binding applies exactly as before this lane existed.
+ *
+ * `rulings` is the register handle from `loadRulings` — `{ present, doc }`. WHEN THE REGISTER IS
+ * ABSENT (or unreadable) THE LANE IS REFUSED, not opened with a caveat. The committee quorum (a
+ * number the identity registry declares, not one this file knows) is the most expensive control in
+ * the Shari'ah plane, and relaxing it on a claim nothing in the
+ * repository can resolve is the exact shape of defect this harness exists to catch: it would let
+ * the least-governed repository take the most-relaxed route. Mounting the register is one file; a
+ * NOT-VERIFIED notice over a dropped quorum is a green gate nobody checked. The cost of refusing is
+ * that an Islamic adopter without a register falls back to the committee binding — which is the
+ * behaviour they had before this lane existed, and it is announced, so it is not a silent failure.
  *
  * The lane taken is always announced. A silent lane switch is precisely the defect this design
  * would otherwise introduce: an auditor reading a green PA1 must be able to see whether three
@@ -140,20 +235,34 @@ export function shariahLane(plan, envelope) {
  * PA2 is untouched. Permission to LAUNCH keeps the full committee binding — the lane exists to
  * keep development flowing between sittings, not to launch a product the committee has not seen.
  */
-export function conformingLanePa1(plan, envelope, roles, label) {
+export function conformingLanePa1(plan, envelope, roles, label, rulings) {
   const findings = [];
   const notices = [];
   const out = [...(roles || [])];
   if (!out.includes(SHARIAH_COMMITTEE_ROLE)) return { roles: out, lane: null, substituted: false, ref: null, findings, notices };
   const lane = shariahLane(plan, envelope);
   const ref = envelope?.issc_decision_ref;
+  const stands = `The ${SHARIAH_COMMITTEE_ROLE} binding stands meanwhile.`;
   if (lane === 'structure-delta') {
     notices.push(`${label}: Shari'ah lane = STRUCTURE-DELTA (envelope flags.structure_delta) — this change creates or modifies a product structure, so the full ${SHARIAH_COMMITTEE_ROLE} quorum binds here. Only the committee approves a structure.`);
     return { roles: out, lane, substituted: false, ref: null, findings, notices };
   }
   if (!isNamedRef(ref)) {
-    findings.push(`${label}: the change takes the CONFORMING Shari'ah lane (envelope flags.structure_delta is not set) but names no issc_decision_ref — "this conforms to something the committee already approved" without saying WHAT is an assertion, not a route. Name the ruling, or declare the structure delta and bind the committee. The ${SHARIAH_COMMITTEE_ROLE} binding stands meanwhile.`);
+    findings.push(`${label}: the change takes the CONFORMING Shari'ah lane (envelope flags.structure_delta is not set) but names no issc_decision_ref — "this conforms to something the committee already approved" without saying WHAT is an assertion, not a route. Name the ruling, or declare the structure delta and bind the committee. ${stands}`);
     return { roles: out, lane, substituted: false, ref: null, findings, notices };
+  }
+  if (!rulings?.present) {
+    findings.push(`${label}: the conforming lane would drop the ${SHARIAH_COMMITTEE_ROLE} quorum on ISSC decision ${JSON.stringify(ref)}, and this repository carries no ${RULINGS_LOCATIONS[0]} to resolve it against — the relaxation is REFUSED rather than granted on a citation nothing here can check. Mount the decision register, or declare the structure delta. ${stands}`);
+    return { roles: out, lane, substituted: false, ref, findings, notices };
+  }
+  if (!rulings.doc) {
+    findings.push(`${label}: ${RULINGS_LOCATIONS[0]} is present but is not valid JSON, so ISSC decision ${JSON.stringify(ref)} resolves to nothing — an unreadable decision register unlocks no quorum relaxation. ${stands}`);
+    return { roles: out, lane, substituted: false, ref, findings, notices };
+  }
+  const bound = resolveRulingBinding(ref, rulings, envelope?.product_id);
+  if (!bound.bound) {
+    findings.push(`${label}: the conforming lane cites ISSC decision ${JSON.stringify(ref)} — ${bound.why}. A quorum of scholars is not relaxed to one signature against a ruling this repository cannot stand behind. ${stands}`);
+    return { roles: out, lane, substituted: false, ref, findings, notices };
   }
   if (!(plan?.required_approver_roles || []).includes(SHARIAH_COMPLIANCE_ROLE)) {
     findings.push(`${label}: the conforming lane clears a change through ${SHARIAH_COMPLIANCE_ROLE} against ISSC decision ${JSON.stringify(ref)}, and this plan compiles no ${SHARIAH_COMPLIANCE_ROLE} role — a lane with nobody in it is not a lane, so the ${SHARIAH_COMMITTEE_ROLE} binding stands.`);
@@ -161,7 +270,7 @@ export function conformingLanePa1(plan, envelope, roles, label) {
   }
   const next = out.filter((r) => r !== SHARIAH_COMMITTEE_ROLE);
   if (!next.includes(SHARIAH_COMPLIANCE_ROLE)) next.push(SHARIAH_COMPLIANCE_ROLE);
-  notices.push(`${label}: Shari'ah lane = CONFORMING against ISSC decision ${JSON.stringify(ref)} — the ${SHARIAH_COMMITTEE_ROLE} PA1 quorum is satisfied by ${SHARIAH_COMPLIANCE_ROLE} instead. What was checked: that a ruling is NAMED and that the Shari'ah Compliance Function signed. What was NOT checked, here or anywhere in the harness: whether this change conforms to that ruling — scholars decide Shari'ah. Committee ratification of the conforming flow is a cadence obligation on the assurance stream.`);
+  notices.push(`${label}: Shari'ah lane = CONFORMING against ISSC decision ${JSON.stringify(ref)} — the ${SHARIAH_COMMITTEE_ROLE} PA1 quorum is satisfied by ${SHARIAH_COMPLIANCE_ROLE} instead. CHECKED: that ruling resolves in ${RULINGS_LOCATIONS[0]} to a row whose status is ${JSON.stringify(ACTIVE_STATUS)}, carrying issuer/date/evidence provenance rather than adoption markers (${bound.coverage}); and that the Shari'ah Compliance Function signed. NOT CHECKED, here or anywhere in the harness: whether this change conforms to that ruling — scholars decide Shari'ah, and this gate resolves a citation. Committee ratification of what flows through this lane is an organisational obligation NO gate here verifies.`);
   return { roles: next.sort(), lane, substituted: true, ref, findings, notices };
 }
 
@@ -258,7 +367,10 @@ const hasSubstance = (s) => s && typeof s === 'object' && Object.keys(s).length 
  * `att` carries the attestation material when the plan compiles the capability:
  * { records, issuers, assertionIssuers, passportDigest, seen, now }. It also carries `envelope` —
  * the change envelope — because the Shari'ah lane is DECLARED there (flags.structure_delta,
- * issc_decision_ref) and a passport cannot answer for a route the change chose.
+ * issc_decision_ref) and a passport cannot answer for a route the change chose; and `rulings`, the
+ * decision-register handle the cited ruling must resolve in. An absent `rulings` reads as "no
+ * register", which REFUSES the conforming lane — a caller that supplies no register has shown
+ * nothing, and the relaxation is not granted on nothing.
  */
 export function evaluate(passport, plan, registry, att = {}) {
   const findings = [];
@@ -298,7 +410,7 @@ export function evaluate(passport, plan, registry, att = {}) {
       }
       // The Shari'ah lane. Silent and role-preserving unless the plan binds `shariah-committee` at
       // PA1, which is every change in a repository with no Islamic product in flight.
-      const lane = conformingLanePa1(plan, attCtx.envelope, pa1Required, `${id} · PA1`);
+      const lane = conformingLanePa1(plan, attCtx.envelope, pa1Required, `${id} · PA1`, attCtx.rulings);
       findings.push(...lane.findings);
       for (const n of lane.notices) attCtx.notices?.push(n);
       findings.push(...checkApprovals(passport.pa1.approvals, lane.roles, registry, `${id} · PA1`, 'PA1', attCtx).findings);
@@ -321,8 +433,6 @@ export function evaluate(passport, plan, registry, att = {}) {
   return findings;
 }
 
-const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
-
 export function run(cwd = process.cwd()) {
   const dir = `${cwd}/${CHANGES_DIR}`;
   if (!existsSync(dir)) return { findings: [], notices: [], count: 0 };
@@ -332,6 +442,9 @@ export function run(cwd = process.cwd()) {
   const issuers = loadIssuers(cwd);
   const identityMap = loadIdentityMap(cwd);
   const assertionIssuers = loadAssertionIssuers(cwd);
+  // The decision register, read once. Inert for a repository that has none and never takes the
+  // conforming lane; the handle keeps "absent" distinguishable from "unreadable".
+  const rulings = loadRulings(cwd);
   const seen = new Map();
   const findings = [];
   const notices = [];
@@ -365,6 +478,8 @@ export function run(cwd = process.cwd()) {
       // already read above; passing it in is what stops evaluate() guessing the route from the
       // passport, which cannot know it.
       envelope,
+      // …and the register the cited ruling has to resolve in, or the lane does not open.
+      rulings,
     };
     findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry, att));
   }

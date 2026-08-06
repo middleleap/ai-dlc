@@ -66,7 +66,9 @@
 //   PD-R13  an SR-* citation that resolves to no ruling in the rulings register — a citation of a
 //           ghost. Only checked when the register is present and the reference LOOKS like a ruling
 //           id; a minute reference is a pointer a human follows, and this gate says so instead of
-//           pretending to have followed it.
+//           pretending to have followed it. With NO register mounted the check cannot run, and the
+//           citation is reported NOT VERIFIED rather than passed in silence: a check that is off
+//           and says nothing is indistinguishable from a check that ran and was satisfied.
 //
 // THE THRESHOLD IS A HARNESS DEFAULT AND CARRIES NO REGULATORY AUTHORITY. 10% RELATIVE divergence
 // is a starting number, not a standard: relative, so it is unit-agnostic (a rate written 0.0375 and
@@ -144,14 +146,18 @@ export function changesRequiring(agg, capability = CAPABILITY) {
 /**
  * Findings + notices for ONE distribution run.
  *
- * `registry` resolves approvers; `rulingIds` (a Set) enables the PD-R13 citation check and an empty
- * one disables it; `file` is the record's filename where there is one; `threshold` is the relative
+ * `registry` resolves approvers; `rulingIds` is the rulings register's id set, or `null` when there
+ * is NO register to resolve against — in which case an SR-* citation is reported NOT VERIFIED
+ * rather than passed quietly, exactly as the purification gate reports an unresolvable signal_id.
+ * Unverified is a different thing from verified-good and this gate never claims the second. A
+ * register that is present but empty is a register: every SR-* citation then resolves to nothing,
+ * which is PD-R13. `file` is the record's filename where there is one; `threshold` is the relative
  * divergence at which a disclosure reference becomes due.
  *
  * An entirely untouched template row returns `{ counted: false }` and no findings: a fresh adoption
  * has not made a bad record, it has made no record. PD-R09 is what makes that silence temporary.
  */
-export function evaluate(r, { registry = null, rulingIds = new Set(), file = null, threshold = DEFAULT_DIVERGENCE_THRESHOLD } = {}) {
+export function evaluate(r, { registry = null, rulingIds = null, file = null, threshold = DEFAULT_DIVERGENCE_THRESHOLD } = {}) {
   const findings = [];
   const notices = [];
   const core = [r?.run_id, r?.pool_id, r?.period_start, r?.period_end, r?.allocation_basis, r?.mudarib_share, r?.approved_by];
@@ -213,10 +219,14 @@ export function evaluate(r, { registry = null, rulingIds = new Set(), file = nul
       // oversight written as its presence, which is why this is per-movement and not per-run.
       if (!given(m.issc_approval_ref)) {
         findings.push(`PD-R05: ${where}: no issc_approval_ref — a ${m?.reserve || 'reserve'} movement without a recorded committee approval is the defect this register exists to surface. Smoothing moves profit between cohorts of real customers; unapproved, it is displaced commercial risk nobody signed for. A movement is recorded when it happened, so this is money already moved`);
-      } else if (rulingIds.size && /^SR-/i.test(String(m.issc_approval_ref).trim()) && !rulingIds.has(String(m.issc_approval_ref).trim())) {
-        findings.push(`PD-R13: ${where}: issc_approval_ref ${JSON.stringify(m.issc_approval_ref)} resolves to no ruling in the rulings register — a citation of a ghost`);
       } else if (!/^SR-/i.test(String(m.issc_approval_ref).trim())) {
         notices.push(`${where}: issc_approval_ref ${JSON.stringify(m.issc_approval_ref)} is not an SR-* ruling id, so it is NOT RESOLVED here — a minute reference is a pointer a human follows, and this gate has not followed it`);
+      } else if (rulingIds === null) {
+        // No register mounted. The citation is UNRESOLVED, and saying nothing here would let an
+        // approval reference that resolves to nothing read exactly like one that resolves.
+        notices.push(`${where}: issc_approval_ref ${JSON.stringify(m.issc_approval_ref)} NOT VERIFIED — no rulings register here to resolve it against, so this gate has not checked that the ruling it names exists`);
+      } else if (!rulingIds.has(String(m.issc_approval_ref).trim())) {
+        findings.push(`PD-R13: ${where}: issc_approval_ref ${JSON.stringify(m.issc_approval_ref)} resolves to no ruling in the rulings register — a citation of a ghost`);
       }
     }
   }
@@ -367,7 +377,9 @@ export function run(cwd = process.cwd()) {
 
   const { threshold, findings: thresholdFindings } = resolveThreshold(registerPath ? readJson(registerPath) : null);
   const rulingsPath = firstPath(RULINGS_LOCATIONS, cwd);
-  const rulingIds = new Set(((rulingsPath ? readJson(rulingsPath) : null)?.rulings || []).map((x) => x?.ruling_id).filter(nonEmpty));
+  // `null` where no register is mounted — NOT an empty Set. The two are different claims: an empty
+  // register says every SR-* citation is a ghost; no register says this gate has not looked.
+  const rulingIds = rulingsPath ? new Set((readJson(rulingsPath)?.rulings || []).map((x) => x?.ruling_id).filter(nonEmpty)) : null;
   const { findings, notices, count } = evaluateAll(runs, { registry: loadRegistry(cwd), rulingIds, threshold });
   const all = [...loadFindings, ...thresholdFindings, ...findings];
 

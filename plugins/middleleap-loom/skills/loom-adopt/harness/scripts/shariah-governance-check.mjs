@@ -24,8 +24,10 @@
 // What it refuses, in order of how badly each ends:
 //
 //   SG-R00  a compiled plan requires the capability and there is no register at all
-//   SG-R01  a committee below the minimum composition — a body that cannot lawfully sit, whose
-//           "approval" is not the committee's however many people signed it
+//   SG-R01  a committee below the CONFIGURED minimum composition, whose "approval" is not the
+//           committee's however many people signed it. The floor is MOUNTED DATA with a shipped
+//           default (see DEFAULT_MINIMUM_MEMBERS) — this gate counts seats against a number the
+//           adopter can set, and states no jurisdiction's law
 //   SG-R02  a seat that does not resolve to a HUMAN holding the committee role in the registry:
 //           the register and the registry may not disagree about who sits
 //   SG-R03  a seat whose provenance fields are missing or still adoption markers — an untouched
@@ -43,8 +45,10 @@
 // TWO REGISTERS, ONE DECISION. docs/governance/shariah-rulings.json is the DECISION record;
 // docs/governance/shariah-structures/ is the engineering PROJECTION of a decision. Two registers
 // that can disagree about what the committee approved is exactly the ambiguity SG-R08 closes. Where
-// the rulings register is absent the join is reported NOT VERIFIED — a notice, never a silent pass,
-// because "nothing checked it" and "it checked out" must not look the same.
+// the rulings register is absent — OR where there is nothing to join at all, no structures tree or
+// an empty one — the join is reported NOT VERIFIED: a notice, never a silent pass, because "nothing
+// checked it" and "it checked out" must not look the same, and the catalogued objective claims
+// coverage of a binding that an absent tree does not supply.
 //
 // MANDATORY-WHEN-COMPILED. Inert — no findings, no notices — for any repository whose compiled
 // plans do not require `shariah_governance`; only an Islamic product or institution profile
@@ -63,10 +67,21 @@ export const CAPABILITY = 'shariah_governance';
 export const REGISTER_LOCATIONS = ['docs/governance/issc-register.json', 'issc-register.json'];
 export const RULINGS_LOCATIONS = ['docs/governance/shariah-rulings.json', 'shariah-rulings.json'];
 export const STRUCTURES_DIRS = ['docs/governance/shariah-structures', 'shariah-structures'];
-// The regulatory minimum committee size. FIVE IS A FLOOR, NOT A TARGET: a register carrying four
-// describes a body that cannot lawfully sit, and the gate counts seats because that is the one
-// thing about a committee a file can honestly count.
-export const MINIMUM_MEMBERS = 5;
+/**
+ * THE COMPOSITION FLOOR IS MOUNTED DATA WITH A SHIPPED DEFAULT — never a universal legal fact.
+ *
+ * Committee-size minima are set per regime. Five is the internal-committee floor in the regime this
+ * harness was extracted from (CBUAE Shari'ah Governance Standard for Islamic Financial Institutions,
+ * 2020); other regimes and standard-setters set it lower — three is common. A gate that hard-coded
+ * five and told every adopter a smaller committee "cannot lawfully sit" would be stating ONE market's
+ * rule as law from inside a generic harness, which is the defect this indirection exists to prevent:
+ * hardcoded gate LOGIC, mounted DATA. An adopter under a different regime sets `minimum_members` in
+ * the register and names the instrument in `minimum_members_source`; the gate then counts against
+ * THEIR number and quotes it back. Counting seats is all this is — it is not a ruling on any
+ * jurisdiction's law, and a register that clears its floor has cleared a number, not a regulator.
+ */
+export const DEFAULT_MINIMUM_MEMBERS = 5;
+export const DEFAULT_MINIMUM_SOURCE = 'shipped default: CBUAE Shari\'ah Governance Standard for Islamic Financial Institutions, 2020';
 export const COMMITTEE_ROLE = 'shariah-committee';
 export const SCF_ROLE = 'shariah-compliance';
 export const AUDIT_ROLE = 'shariah-audit';
@@ -80,6 +95,34 @@ const isNamed = (v) => nonEmpty(v) && !isPlaceholder(v);
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 const firstPath = (locs, cwd) => locs.map((p) => join(cwd, p)).find(existsSync) || null;
 const plural = (n, one, many) => (n === 1 ? one : many);
+const isObject = (v) => Boolean(v) && typeof v === 'object' && !Array.isArray(v);
+/** Roles as an array; null where the field is present but is not one (a role list that is not a list). */
+const rolesOf = (who) => (who?.roles === undefined || who?.roles === null ? [] : Array.isArray(who.roles) ? who.roles : null);
+
+/**
+ * The composition floor this register is checked against: `{ minimum, source, findings }`.
+ *
+ * The number is the ADOPTER'S (`minimum_members`), falling back to the shipped default. Two things
+ * are refused rather than absorbed, because both turn the floor into whatever the last editor typed:
+ * a `minimum_members` that is not a whole number of seats, and one that LOWERS the shipped default
+ * without naming the instrument that sets it. In both cases the shipped default stands, so a
+ * malformed or unattributed override cannot quietly relax the check.
+ */
+export function compositionFloor(register) {
+  const declared = register?.minimum_members;
+  const source = register?.minimum_members_source;
+  const shipped = { minimum: DEFAULT_MINIMUM_MEMBERS, source: DEFAULT_MINIMUM_SOURCE, findings: [] };
+  if (declared === undefined || declared === null) return shipped;
+  if (!Number.isInteger(declared) || declared < 1) {
+    shipped.findings.push(`SG-R01: minimum_members is ${JSON.stringify(declared)}, which is not a whole number of seats — a floor that cannot be compared against a count is not a floor, so the ${DEFAULT_MINIMUM_MEMBERS}-seat ${DEFAULT_MINIMUM_SOURCE} stands until it is corrected`);
+    return shipped;
+  }
+  if (declared < DEFAULT_MINIMUM_MEMBERS && !isNamed(source)) {
+    shipped.findings.push(`SG-R01: minimum_members lowers the composition floor to ${declared} from the shipped default of ${DEFAULT_MINIMUM_MEMBERS} and minimum_members_source names no instrument (${JSON.stringify(source)}) — a floor moved down by an unattributed number is a number somebody typed. Name the regime and edition that sets it; until then the shipped default stands`);
+    return shipped;
+  }
+  return { minimum: declared, source: isNamed(source) ? source : 'declared in the register', findings: [] };
+}
 
 /**
  * Findings (fail) and notices (never do) over the parsed composition register.
@@ -93,18 +136,30 @@ const plural = (n, one, many) => (n === 1 ? one : many);
 export function evaluate({ register, registry = null, rulings = null, structures = null } = {}) {
   const findings = [];
   const notices = [];
-  const canResolve = Boolean(registry);
-  if (!canResolve) {
+  // MALFORMED GOVERNANCE JSON IS ORDINARY, and a stack trace out of a gate is fail-closed but tells
+  // an operator nothing. Every shape the rest of this function relies on is established once, here,
+  // and anything else becomes a finding that names the file and the field.
+  const rawIdentities = Array.isArray(registry?.identities) ? registry.identities : null;
+  const identities = rawIdentities ? rawIdentities.filter(isObject) : [];
+  const canResolve = Boolean(registry) && rawIdentities !== null;
+  const resolvable = canResolve ? { ...registry, identities } : null;
+  if (!registry) {
     findings.push('SG-R02: no identity registry to resolve the Shari\'ah seats against — an ISSC register whose members resolve to nothing is a list of names, and a name is not an approver (see governance/identities.template.json)');
+  } else if (rawIdentities === null) {
+    findings.push(`SG-R02: the identity registry carries no \`identities\` array (${JSON.stringify(registry.identities)}) — nothing in it can be resolved, so every seat below is an unchecked name`);
+  } else if (identities.length !== rawIdentities.length) {
+    findings.push(`SG-R02: the identity registry carries ${rawIdentities.length - identities.length} ${plural(rawIdentities.length - identities.length, 'entry that is', 'entries that are')} not an identity object — an entry this gate cannot read is a holder it cannot see, and an unseen holder of ${COMMITTEE_ROLE} is exactly the shadow SG-R05 exists to catch`);
   }
 
   /* ── SG-R01/R02/R03 — the seats ─────────────────────────────────────────────────────────── */
+  const floor = compositionFloor(register);
+  findings.push(...floor.findings);
   const members = Array.isArray(register?.members) ? register.members : null;
   if (!members) {
     findings.push(`SG-R01: the ISSC register carries no \`members\` array — a composition register with no composition answers the one question it exists to answer with silence, and the quorum is then checked against nothing`);
   } else {
-    if (members.length < MINIMUM_MEMBERS) {
-      findings.push(`SG-R01: the register carries ${members.length} ${plural(members.length, 'seat', 'seats')}; the minimum committee composition is ${MINIMUM_MEMBERS} — a committee below the minimum cannot lawfully sit, and an approval collected from it is not the committee's approval however many people signed`);
+    if (members.length < floor.minimum) {
+      findings.push(`SG-R01: the register carries ${members.length} ${plural(members.length, 'seat', 'seats')} against a composition minimum of ${floor.minimum} (${floor.source}) — a body below the minimum it is held to is not the committee whose approval is attributed to it, however many people signed. This gate counts seats against configured data and rules on no jurisdiction's law: where your regime sets a different floor, declare minimum_members and name the instrument in minimum_members_source`);
     }
     const seen = new Set();
     for (const m of members) {
@@ -114,18 +169,21 @@ export function evaluate({ register, registry = null, rulings = null, structures
         findings.push('SG-R02: a seat names no identity_id — an empty seat still counts toward the composition, which is how a committee of four is made to look like five');
       } else {
         if (seen.has(id)) {
-          findings.push(`SG-R02: ${id} occupies two seats — one person counted twice is a committee of ${MINIMUM_MEMBERS - 1} wearing ${MINIMUM_MEMBERS} names`);
+          findings.push(`SG-R02: ${id} occupies two seats — one person counted twice inflates the composition: ${members.length} ${plural(members.length, 'seat is', 'seats are')} not ${members.length} ${plural(members.length, 'person', 'people')}, which is how a register clears a minimum it does not meet`);
         }
         seen.add(id);
         if (canResolve) {
-          const who = identityOf(registry, id);
+          const who = identityOf(resolvable, id);
           if (!who) {
             findings.push(`SG-R02: seat ${id} does not resolve in the identity registry — the two files may not disagree about who sits, and an unresolvable member cannot be the person whose approval was counted`);
           } else {
             if (who.kind !== 'human') {
               findings.push(`SG-R02: seat ${id} is an ${who.kind} identity — agents prepare evidence and never approve; scholars decide Shari'ah, and a committee seat is a person`);
             }
-            if (!(who.roles || []).includes(COMMITTEE_ROLE)) {
+            const roles = rolesOf(who);
+            // roles === null (a role list that is not a list) is reported ONCE, in the registry scan
+            // below — per-seat repetition of the same malformed field adds noise, not information.
+            if (roles !== null && !roles.includes(COMMITTEE_ROLE)) {
               findings.push(`SG-R02: seat ${id} does not hold ${COMMITTEE_ROLE} in the identity registry — approvals resolve against the registry, so a seat here that carries no role there is a member who cannot sign and a signer nobody appointed`);
             }
           }
@@ -144,7 +202,12 @@ export function evaluate({ register, registry = null, rulings = null, structures
 
   /* ── SG-R04/R05 — quorum, and the body's edges ──────────────────────────────────────────── */
   if (canResolve) {
-    const holders = (registry.identities || []).filter((i) => i.kind === 'human' && (i.roles || []).includes(COMMITTEE_ROLE));
+    for (const i of identities) {
+      if (rolesOf(i) === null) {
+        findings.push(`SG-R02: identity ${i.id} carries a \`roles\` field that is not an array (${JSON.stringify(i.roles)}) — this gate cannot tell whether they hold ${COMMITTEE_ROLE}, so a holder with no seat could hide behind the malformed field`);
+      }
+    }
+    const holders = identities.filter((i) => i.kind === 'human' && (rolesOf(i) || []).includes(COMMITTEE_ROLE));
     const seats = members ? members.length : 0;
     const majority = Math.floor(seats / 2) + 1;
     const declared = registry.quorum?.[COMMITTEE_ROLE];
@@ -162,8 +225,8 @@ export function evaluate({ register, registry = null, rulings = null, structures
     if (members) {
       const seated = new Set(members.map((m) => m?.identity_id).filter(nonEmpty));
       for (const h of holders) {
-        if (seated.has(h.id)) continue;
-        findings.push(`SG-R05: ${h.id} holds ${COMMITTEE_ROLE} in the identity registry but occupies no seat in the ISSC register — a scholar who can sign approvals from outside the disclosed body is exactly the hole the register exists to close. Seat them, or remove the role`);
+        if (nonEmpty(h.id) && seated.has(h.id)) continue;
+        findings.push(`SG-R05: ${nonEmpty(h.id) ? h.id : '(an identity carrying no id)'} holds ${COMMITTEE_ROLE} in the identity registry but occupies no seat in the ISSC register — a scholar who can sign approvals from outside the disclosed body is exactly the hole the register exists to close. Seat them, or remove the role`);
       }
     }
   }
@@ -174,7 +237,7 @@ export function evaluate({ register, registry = null, rulings = null, structures
     findings.push(`SG-R06: internal_audit.outsourced is ${JSON.stringify(ia?.outsourced)} and must be literally false — internal Shari'ah audit MAY NOT be outsourced. Absent, "false" as a string, and "co-sourced" are the three ways that rule is broken while looking answered`);
   }
   if (canResolve && nonEmpty(ia?.lead_identity_id)) {
-    const lead = identityOf(registry, ia.lead_identity_id);
+    const lead = identityOf(resolvable, ia.lead_identity_id);
     if (lead?.external === true) {
       findings.push(`SG-R06: internal_audit lead ${ia.lead_identity_id} is declared external:true in the identity registry — a co-sourced firm's partner in the third-line slot is the outsourcing the rule forbids, wearing an employee's label`);
     }
@@ -191,7 +254,7 @@ export function evaluate({ register, registry = null, rulings = null, structures
       continue;
     }
     if (!canResolve) continue; // already reported once; per-desk repetition adds noise, not information
-    const who = identityOf(registry, id);
+    const who = identityOf(resolvable, id);
     if (!who) {
       findings.push(`SG-R07: ${line.key} lead ${id} does not resolve in the identity registry — ${line.what} headed by an unresolvable name`);
       continue;
@@ -199,22 +262,41 @@ export function evaluate({ register, registry = null, rulings = null, structures
     if (who.kind !== 'human') {
       findings.push(`SG-R07: ${line.key} lead ${id} is an ${who.kind} identity — ${line.what} is held by a person who can be asked what they found`);
     }
-    if (!(who.roles || []).includes(line.role)) {
+    const roles = rolesOf(who); // null ⇒ malformed, reported once in the registry scan above
+    if (roles !== null && !roles.includes(line.role)) {
       findings.push(`SG-R07: ${line.key} lead ${id} does not hold ${line.role} in the identity registry — the desk and the role must be the same claim, or an approval demanding ${line.role} is satisfied by somebody this register never named`);
     }
   }
 
   /* ── SG-R08 — the two-registers join ────────────────────────────────────────────────────── */
-  if (Array.isArray(structures) && structures.length > 0) {
-    if (rulings === null) {
-      notices.push(`the two-registers join is NOT VERIFIED: ${structures.length} structure ${plural(structures.length, 'entry cites', 'entries cite')} an ISSC decision and there is no ${RULINGS_LOCATIONS[0]} to resolve them against. This is not a pass — nothing here has checked that the committee ever issued what these structures implement`);
+  // Read this block as three separate questions, because collapsing them is how the objective came
+  // to overstate the join: (1) which entries could not be read at all — findings, whatever else is
+  // true; (2) is there anything to join — an absent or empty tree is NOT VERIFIED, not a pass, and
+  // the catalogued objective claims a binding that nothing here supplied; (3) does each entry that
+  // could be read resolve to an ACTIVE ruling.
+  const rows = Array.isArray(structures) ? structures : [];
+  for (const s of rows) {
+    if (s?.unreadable) {
+      findings.push(`SG-R08: structure ${s.label} is not readable JSON — an unparseable structure entry is not a bound one, and a gate that skipped it would report the binding as checked`);
+    } else if (s?.malformed) {
+      findings.push(`SG-R08: structure entry ${s.label} is not a shape this gate reads (${s.malformed}) — a structures file is one structure object, a \`structures\` array, or a top-level array of structures; anything else is UNCHECKED, and an unchecked entry that looked like a pass is the silence this rule exists to break`);
+    }
+  }
+  const joinable = rows.filter((s) => s && !s.unreadable && !s.malformed);
+  if (joinable.length === 0) {
+    if (rows.length === 0) {
+      notices.push(`the two-registers join is NOT VERIFIED: ${structures === null ? `there is no ${STRUCTURES_DIRS[0]}/ tree` : `${STRUCTURES_DIRS[0]}/ projects no structure entries`}, so nothing in this repository binds an engineering structure to a ruling. This is not a pass — the capability is compiled, and an empty tree is evidence that no structure is DECLARED here, never evidence that none is being built`);
+    }
+    // else: every entry is already a finding above, and a notice about them would restate it.
+  } else if (rulings === null) {
+    notices.push(`the two-registers join is NOT VERIFIED: ${joinable.length} structure ${plural(joinable.length, 'entry cites', 'entries cite')} an ISSC decision and there is no ${RULINGS_LOCATIONS[0]} to resolve them against. This is not a pass — nothing here has checked that the committee ever issued what these structures implement`);
+  } else {
+    const rulingRows = isObject(rulings) && Array.isArray(rulings.rulings) ? rulings.rulings : null;
+    if (rulingRows === null) {
+      findings.push(`SG-R08: ${RULINGS_LOCATIONS[0]} carries no \`rulings\` array (${Array.isArray(rulings) ? 'the file is a top-level array' : `\`rulings\` is ${JSON.stringify(rulings?.rulings)}`}) — the decision register is unreadable in the one shape every reader of it expects, so the ${joinable.length} citation${joinable.length === 1 ? '' : 's'} below resolve against nothing`);
     } else {
-      const byId = new Map((rulings.rulings || []).filter((r) => nonEmpty(r?.ruling_id)).map((r) => [r.ruling_id, r]));
-      for (const s of structures) {
-        if (s.unreadable) {
-          findings.push(`SG-R08: structure ${s.label} is not readable JSON — an unparseable structure entry is not a bound one, and a gate that skipped it would report the binding as checked`);
-          continue;
-        }
+      const byId = new Map(rulingRows.filter((r) => nonEmpty(r?.ruling_id)).map((r) => [r.ruling_id, r]));
+      for (const s of joinable) {
         const ref = s.issc_decision_ref;
         if (!isNamed(ref)) {
           findings.push(`SG-R08: structure ${s.label} names no issc_decision_ref (${JSON.stringify(ref)}) — a structure in the engineering tree with no ruling behind it is an implementation of nobody's decision`);
@@ -247,25 +329,42 @@ export const requiringChanges = (agg) =>
 /**
  * The structures tree, flattened to `[{ label, issc_decision_ref }]`, or null where absent.
  *
- * Tolerant of both shapes an adopter reaches for — one file per structure, or one file holding a
- * `structures` array — because a gate that silently ignored the shape it did not expect would
- * report an unchecked tree as a checked one. Comment-only files (every key underscore-prefixed)
- * are skipped: a header is not a structure.
+ * THREE shapes an adopter reaches for, all read: one structure per file, a file holding a
+ * `structures` array, and a file that IS a top-level array. A fourth shape does not exist — anything
+ * else comes back carrying `malformed` (or `unreadable`) and becomes an SG-R08 finding, because the
+ * defect this replaced was exactly a silent one: a top-level array fell through the object branch,
+ * contributed nothing, and a tree of unchecked structures was reported as a checked one. Comment-only
+ * files (every key underscore-prefixed) are still skipped: a header is not a structure.
  */
 export function loadStructures(cwd = process.cwd()) {
   const dir = firstPath(STRUCTURES_DIRS, cwd);
   if (!dir) return null;
+  let names;
+  try {
+    names = readdirSync(dir).filter((n) => n.endsWith('.json')).sort();
+  } catch (e) {
+    // A file, a symlink to nowhere, an unreadable directory: the tree cannot be enumerated, which
+    // is not the same as being empty and must not read as it.
+    return [{ label: STRUCTURES_DIRS[0], malformed: `the structures location cannot be listed (${e.code || e.message})` }];
+  }
   const out = [];
-  for (const name of readdirSync(dir).filter((n) => n.endsWith('.json')).sort()) {
+  for (const name of names) {
     const full = join(dir, name);
-    if (!statSync(full).isFile()) continue;
-    const doc = readJson(full);
-    if (!doc) { out.push({ label: name, unreadable: true }); continue; }
-    const rows = Array.isArray(doc.structures) ? doc.structures : [doc];
+    let doc;
+    try {
+      if (!statSync(full).isFile()) continue;
+      doc = JSON.parse(readFileSync(full, 'utf8'));
+    } catch { out.push({ label: name, unreadable: true }); continue; }
+    const rows = Array.isArray(doc) ? doc
+      : isObject(doc) && Array.isArray(doc.structures) ? doc.structures
+        : isObject(doc) ? [doc]
+          : null;
+    if (rows === null) { out.push({ label: name, malformed: `the file is ${doc === null ? 'null' : `a top-level ${typeof doc}`}, not a structure object or an array of them` }); continue; }
     rows.forEach((s, i) => {
-      if (!s || typeof s !== 'object' || Array.isArray(s)) return;
+      const at = rows.length > 1 ? `${name}#${i}` : name;
+      if (!isObject(s)) { out.push({ label: at, malformed: `entry ${i} is ${Array.isArray(s) ? 'an array' : JSON.stringify(s)}, not a structure object` }); return; }
       if (Object.keys(s).every((k) => k.startsWith('_'))) return;
-      out.push({ label: s.structure_id || (rows.length > 1 ? `${name}#${i}` : name), issc_decision_ref: s.issc_decision_ref });
+      out.push({ label: nonEmpty(s.structure_id) ? s.structure_id : at, issc_decision_ref: s.issc_decision_ref });
     });
   }
   return out;
@@ -294,12 +393,24 @@ export function run(cwd = process.cwd(), { agg = null } = {}) {
   }
   const rulingsPath = firstPath(RULINGS_LOCATIONS, cwd);
   const rulings = rulingsPath ? readJson(rulingsPath) : null;
+  // loadRegistry parses without a net: an identities.json with a trailing comma would otherwise
+  // throw a SyntaxError out of the gate. Fail closed AND legibly — nothing resolves, and the
+  // operator is told which file to fix rather than handed a stack trace.
+  let registry = null;
+  let registryUnreadable = false;
+  try { registry = loadRegistry(cwd); } catch { registryUnreadable = true; }
   const { findings, notices } = evaluate({
     register,
-    registry: loadRegistry(cwd),
+    registry,
     rulings,
     structures: loadStructures(cwd),
   });
+  if (registryUnreadable) {
+    // Replace the generic "no registry" line rather than adding to it: one cause, one finding.
+    const specific = `SG-R02: the identity registry is present but is not valid JSON — every Shari'ah seat resolves against nothing, so the composition register is a list of names [${asked}]`;
+    const generic = findings.findIndex((f) => f.startsWith('SG-R02: no identity registry'));
+    if (generic >= 0) findings[generic] = specific; else findings.unshift(specific);
+  }
   if (rulingsPath && rulings === null) {
     findings.unshift(`SG-R08: ${RULINGS_LOCATIONS[0]} is present but is not valid JSON — the decision register cannot be read, so every citation of it is unresolved rather than resolved`);
   }

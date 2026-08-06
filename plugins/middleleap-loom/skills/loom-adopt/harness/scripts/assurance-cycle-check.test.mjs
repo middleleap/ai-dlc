@@ -5,7 +5,7 @@ import { generateKeyPairSync, sign } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { cadenceFindings, evaluate, cycleHash, run, streamsOf, STEPS } from './assurance-cycle-check.mjs';
+import { cadenceBound, cadenceFindings, evaluate, cycleHash, run, streamsOf, STEPS } from './assurance-cycle-check.mjs';
 
 // A self-contained issuer + registry so the test never depends on the shipped demo key.
 const { publicKey, privateKey } = generateKeyPairSync('ed25519');
@@ -186,6 +186,33 @@ test('a busy global cycle does NOT cover a stream that never ran', () => {
   const f = cadence({ config: { streams: STREAMS }, newest: daysAgo(1), newestByStream: new Map([['operational', daysAgo(1)]]) });
   assert.equal(f.length, 1);
   assert.ok(/newest "shariah"-stream assurance cycle is never run, past the 90d cadence .* assures nothing/.test(f[0]));
+});
+
+test('a malformed cadence_days is a FINDING and the window still applies — a bad number never disables the check', () => {
+  // "monthly" coerced to NaN, every `age > NaN` was false, and the staleness check switched itself
+  // off for exactly the repository whose config was wrong. Both limbs are asserted: it is reported,
+  // AND the default still polices the window.
+  for (const bad of ['monthly', '30 days', {}, [], true, '', 0, -30, NaN]) {
+    const f = cadence({ config: { cadence_days: bad }, newest: daysAgo(400) });
+    assert.ok(f.some((x) => /cadence_days .* is not a positive number of days/.test(x)), `${JSON.stringify(bad)}: ${f.join('\n')}`);
+    assert.ok(f.some((x) => /newest assurance cycle is 400d old, past the 30d cadence/.test(x)), `${JSON.stringify(bad)}: ${f.join('\n')}`);
+  }
+  // A stream's malformed cadence falls back to the global one, and says which it applied.
+  const s = cadence({ config: { cadence_days: 7, streams: { shariah: { cadence_days: 'quarterly' } } }, newest: daysAgo(1), newestByStream: new Map() });
+  assert.ok(s.some((x) => /stream "shariah": cadence_days "quarterly" is not a positive number/.test(x)), s.join('\n'));
+  assert.ok(s.some((x) => /"shariah"-stream assurance cycle is never run, past the 7d cadence/.test(x)), s.join('\n'));
+  // A cadence that IS a number is untouched: no finding, and the configured window governs.
+  assert.deepEqual(cadence({ config: { cadence_days: 60 }, newest: daysAgo(45) }), []);
+});
+
+test('cadenceBound: absent means "not configured", anything unusable means "configured wrong"', () => {
+  assert.deepEqual(cadenceBound(undefined), { days: null, ok: true });
+  assert.deepEqual(cadenceBound(null), { days: null, ok: true });
+  assert.deepEqual(cadenceBound(90), { days: 90, ok: true });
+  assert.deepEqual(cadenceBound(0.5), { days: 0.5, ok: true });
+  for (const bad of ['90', 0, -1, Infinity, NaN, {}, [], true]) {
+    assert.deepEqual(cadenceBound(bad), { days: null, ok: false }, JSON.stringify(bad));
+  }
 });
 
 test('a stream with no cadence_days of its own inherits the global window', () => {

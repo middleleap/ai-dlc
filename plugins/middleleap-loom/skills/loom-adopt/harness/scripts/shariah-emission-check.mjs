@@ -14,8 +14,9 @@
 // directory, and none of them trips a governance control.
 //
 // WHAT IT RULES ON: NOTHING. This gate makes NO Shari'ah determination and must never appear to.
-// It checks that data conforms to structures ALREADY APPROVED by the Shari'ah committee and to an
-// enum the published Standard already fixes. SCHOLARS DECIDE SHARI'AH. Whether a Murabaha is
+// It checks that data conforms to structures ALREADY APPROVED by the Shari'ah committee and to a
+// structure enum a published standard already fixes — quoted here as data, under the name of the
+// edition it was quoted from, never fixed here. SCHOLARS DECIDE SHARI'AH. Whether a Murabaha is
 // genuine, whether an ownership sequence is real, whether a rebate may be granted at all — those
 // are the committee's, and a version of this gate that appeared to answer them would be a defect.
 // The most this plane ever claims is STRUCTURE-CONFORMANT, never "Shari'ah-compliant".
@@ -27,10 +28,17 @@
 //
 // The surfaces are ADOPTER-DECLARED, in docs/governance/shariah-surfaces.json:
 //
-//   { "fixture_globs": ["tests/fixtures/islamic/**/*.json"],
-//     "spec_paths":    ["specs/accounts.json"],
-//     "content_roots": ["docs/products/islamic"],
-//     "rules":         { … extensions to the shipped patterns … } }
+//   { "fixture_globs":  ["tests/fixtures/islamic/**/*.json"],
+//     "spec_paths":     ["specs/accounts.json"],
+//     "content_roots":  ["docs/products/islamic"],
+//     "structure_enum": { … the ShariaStructure enum in force, and the edition it is quoted from … },
+//     "rules":          { … ADDITIONS to the shipped patterns … } }
+//
+// governance/shariah-surfaces.template.json is the copy of that file to start from. It ships with
+// every list EMPTY, which is the correct and permanent state for a repository with no Islamic
+// product: an empty declaration reads nothing, so a conventional adopter holding the template is
+// not failed by it. Once a plan compiles the capability, an empty declaration becomes a FINDING —
+// a gate that read nothing must not report a pass.
 //
 // Declaring them is the institution's act, not the harness's guess: no generic heuristic can tell
 // an Islamic fixture tree from a conventional one, and a gate that guessed would either miss the
@@ -45,10 +53,13 @@
 //           are the Profit and Rental variants the Standard already carries
 //   SE-R02  a product object with IsShariaCompliant ABSENT. The Standard defaults it FALSE, so an
 //           unstated flag is not a neutral omission — it is an assertion, and the wrong one
-//   SE-R03  a ShariaStructure outside the enum {Ijara, ServiceIjara, Murabaha, Musharaka, Tawarruq}.
-//           Mudarabah, Wakala, Istisna and Salam are a DOCUMENTED GAP in the published Standard, not
-//           an oversight in this file: THE GATE NEVER INVENTS AN ENUM VALUE, and the route for a
-//           structure the enum cannot express is a spec change, not a local extension
+//   SE-R03  a ShariaStructure outside the enum IN FORCE HERE. That enum is MOUNTED DATA with a
+//           shipped default (DEFAULT_STRUCTURE_ENUM) whose provenance — which standard, which
+//           edition — is recorded beside it, because a jurisdiction's closed enum is regulatory
+//           fact that revises on somebody else's schedule and must not be a constant of this
+//           harness. Structures the enum in force cannot express are a DOCUMENTED GAP in the
+//           standard it quotes: THE GATE NEVER INVENTS AN ENUM VALUE, and the route is a spec
+//           change to that standard, or a newer edition mounted here as data — never a local value
 //   SE-R04  OwnershipTransfer.Type "Gradual" with no BuyoutSchedule — diminishing ownership whose
 //           steps nobody wrote down is gharar in the one place the Standard gives you to remove it
 //   SE-R05  a CONTRACTUAL rebate (ibra') on a Murabaha. Early-settlement rebate is the committee's
@@ -61,13 +72,24 @@
 //           pre-write hook, which is the fast path; this is what catches the write that bypassed it
 //
 // R05/R06 (and the rest) match on PATTERNS shipped here and EXTENDED by the config's `rules` block.
-// Extension is data, never a fork. A declared list is UNIONED with the shipped one and can only
-// widen it: a config that could narrow a control would be an exception the adopter granted
-// themselves, and exceptions live in the exception register where somebody signs for them.
+// Extension is data, never a fork, and it is MONOTONE BY CONSTRUCTION: a declared list is UNIONED
+// with the shipped one, and only lists where every entry can ADD a finding are declarable at all.
+// The three lists where an entry SUBTRACTS instead — an allow-phrase that deletes an SE-R07 match, a
+// decision-ref pattern that widens what counts as an approving decision, an expected-rate pattern
+// that buys silence from the SE-R06 notice — are REFUSED (SUBTRACTIVE_RULES). One `prose_allow_phrases:
+// ["interest"]` turned the whole prose backstop off; that is not configuration, it is an exception the
+// adopter granted themselves, and exceptions live in the exception register where somebody signs.
+//
+// `structure_enum` is the one block that REPLACES rather than extends, and it is not a hole in that
+// rule. An enum is a CLOSED SET fixed by somebody else; a union of two editions is a set nobody
+// published and nobody can read. Mounting it is a DECLARATION of which interoperability contract
+// this repository emits under, and the only thing the gate holds it to is naming the standard and
+// the edition the values were copied from — an unpinned quotation being the defect it prevents.
 //
 // MANDATORY-WHEN-COMPILED. INERT — nothing read, nothing said — for any repository whose plans do
-// not compile `shariah_governance` and which mounts no config. A conventional adopter must never
-// be failed by a Shari'ah control, and this gate ships in the same bundle they install.
+// not compile `shariah_governance`, whether it mounts no config at all or the shipped template's
+// empty one. A conventional adopter must never be failed by a Shari'ah control, and this gate ships
+// in the same bundle they install.
 //
 // Lane: pr. Run from the repo root: `node scripts/shariah-emission-check.mjs` (exit 1 on a finding).
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -81,20 +103,36 @@ export const CAPABILITY = 'shariah_governance';
 export const CONFIG_LOCATIONS = ['docs/governance/shariah-surfaces.json', 'shariah-surfaces.json'];
 
 /**
- * The enum EXACTLY as the published Open Finance Standard fixes it. This list is a QUOTATION, not a
- * design choice, and nothing in this repository may add to it: the moment a harness invents a sixth
- * value, two institutions emit different bytes for the same structure and the enum has stopped
- * being an interoperability contract. A structure it cannot express routes to a spec change.
+ * The DEFAULT structure enum — a QUOTATION of one standard's closed set, shipped so the gate works
+ * out of the box, and DATA so it can be corrected without a code change.
+ *
+ * The DEFECT this shape exists to prevent: a jurisdiction's closed enum baked into a generic gate as
+ * a constant and stated as universal legal fact. It is neither. It is one regime's edition, it
+ * revises on that regime's schedule, and an adopter under a different standard — or under this one
+ * after its next revision — would be held to five values nobody can now amend without shipping a new
+ * harness. So the values carry their PROVENANCE beside them and an adopter may mount their own
+ * (docs/governance/shariah-surfaces.json `structure_enum`).
+ *
+ * What does NOT move: the gate still never invents a value. Replacing the enum declares which
+ * published contract this repository emits under; it does not license a sixth value of your own,
+ * because the moment two institutions emit different bytes for the same structure the enum has
+ * stopped being an interoperability contract. `edition` is a claim about when somebody last read the
+ * standard — the harness never fetches it. Pin its currency in docs/governance/knowledge-pins.json,
+ * which is the file that owns re-verification.
  */
-export const SHARIA_STRUCTURE_ENUM = ['Ijara', 'ServiceIjara', 'Murabaha', 'Musharaka', 'Tawarruq'];
-/** Structures the Standard does not yet carry — named so SE-R03 can say WHY, rather than "invalid". */
-export const DOCUMENTED_ENUM_GAP = ['Mudarabah', 'Mudaraba', 'Wakala', 'Wakalah', 'Istisna', "Istisna'a", 'Salam'];
+export const DEFAULT_STRUCTURE_ENUM = {
+  regime: 'Open Finance UAE Standards v2.1-final — ShariaStructure',
+  values: ['Ijara', 'ServiceIjara', 'Murabaha', 'Musharaka', 'Tawarruq'],
+  /** Structures that standard does not carry — named so SE-R03 can say WHY, rather than "invalid". */
+  documented_gap: ['Mudarabah', 'Mudaraba', 'Wakala', 'Wakalah', 'Istisna', "Istisna'a", 'Salam'],
+};
 /** Directories no surface scan ever descends into, whatever a glob says. */
 export const SKIP_DIRS = new Set(['node_modules', '.git']);
 
 /**
- * The shipped patterns. Every array here is a FLOOR: the config may add to it and may not remove
- * from it (see mergeRules). Scalars are matched case-insensitively unless the comment says otherwise.
+ * The shipped patterns. Every array here is a FLOOR: the config may add to a DETECTOR list and may
+ * neither remove from one nor touch a SUBTRACTIVE one (see mergeRules and SUBTRACTIVE_RULES).
+ * Scalars are matched case-insensitively unless the comment says otherwise.
  */
 export const DEFAULT_RULES = {
   // SE-R01 — the two category values the Standard uses for interest, and the key shape.
@@ -125,6 +163,22 @@ export const DEFAULT_RULES = {
   prose_extensions: ['.md', '.mdx', '.txt'],
 };
 
+/**
+ * The lists an adopter MAY NOT declare, and the exact narrowing each one buys. Every other list in
+ * DEFAULT_RULES is a DETECTOR — an added entry can only produce another finding, so a union with the
+ * shipped floor is monotone and safe. These three are ALLOWANCES: every entry deletes coverage, so
+ * no union of them is monotone and there is nothing to fix in the merge. They are refused instead.
+ *
+ * Each was a live narrowing, not a theoretical one: `prose_allow_phrases: ["interest"]` took SE-R07
+ * from one finding to zero on the same line; `rebate_decision_ref_patterns: ["[a-z]+"]` made any
+ * populated key count as the committee's decision and took SE-R05 to zero.
+ */
+export const SUBTRACTIVE_RULES = {
+  prose_allow_phrases: 'every phrase added here DELETES matches from SE-R07 before the terms are looked for — one entry of "interest" switches the prose backstop off entirely. The route for prose that must say the word is to backtick it (a cited field name is already exempt), rewrite it, or book an exception in docs/governance/exception-policy.json where somebody signs for it',
+  rebate_decision_ref_patterns: 'every pattern added here WIDENS what counts as an approving decision on SE-R05, so an addition buys a pass rather than a check — one entry of "[a-z]+" makes any populated key the committee\'s decision. Name the reference field so it says which decision it points at (issc/ruling/decision/approval/fatwa + _ref), or book an exception',
+  expected_return_key_patterns: 'every pattern added here SUPPRESSES the SE-R06 notice that says nothing here was checked against a rate. That notice is the difference between "the rate checked out" and "nothing read the rate", and buying silence from it is the false assurance this file exists not to give',
+};
+
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 const firstPath = (locs, cwd) => locs.map((p) => join(cwd, p)).find(existsSync) || null;
@@ -146,9 +200,14 @@ export const populated = (v) => {
 };
 
 /**
- * Shipped patterns UNIONED with the adopter's. Widening only — see the header. An unknown key in
- * `rules` is a FINDING and not a silent no-op: a typo in a rule name would otherwise read as a
- * configured control while configuring nothing, which is the worst outcome available here.
+ * Shipped patterns UNIONED with the adopter's, and the union is the WHOLE mechanism: the shipped
+ * floor is copied first and never overwritten, and only DETECTOR lists are mergeable, so no config
+ * this function accepts can produce fewer findings than the same input produces with no config at
+ * all. That is what "widening only" has to mean to be worth saying.
+ *
+ * An unknown key in `rules` is a FINDING and not a silent no-op: a typo in a rule name would
+ * otherwise read as a configured control while configuring nothing, which is the worst outcome
+ * available here. A SUBTRACTIVE key is refused the same way and for a stronger reason.
  */
 export function mergeRules(overrides = null) {
   const findings = [];
@@ -159,9 +218,18 @@ export function mergeRules(overrides = null) {
     findings.push('SE-R00: `rules` must be an object of pattern lists — a rules block that is not one configures nothing while looking configured');
     return { rules, findings };
   }
+  const declarable = Object.keys(DEFAULT_RULES).filter((k) => !Object.hasOwn(SUBTRACTIVE_RULES, k));
   for (const [k, v] of Object.entries(overrides)) {
+    // `_`-prefixed keys are documentation — the convention every template in this bundle uses to keep
+    // the reason for a field beside the field. They configure nothing and are not typos. Every other
+    // unknown key is a typo until proven otherwise, which is the next branch.
+    if (k.startsWith('_')) continue;
+    if (Object.hasOwn(SUBTRACTIVE_RULES, k)) {
+      findings.push(`SE-R00: rules.${k} is not adopter-configurable — ${SUBTRACTIVE_RULES[k]}. Adopter data may only ADD to what this gate catches; a list whose entries SUBTRACT is an exception, not configuration, and it is refused here rather than applied quietly (declarable: ${declarable.join(', ')})`);
+      continue;
+    }
     if (!Object.hasOwn(rules, k)) {
-      findings.push(`SE-R00: rules.${k} is not a rule this gate reads — a mistyped rule name silently configures nothing, so it is refused rather than ignored (known: ${Object.keys(DEFAULT_RULES).join(', ')})`);
+      findings.push(`SE-R00: rules.${k} is not a rule this gate reads — a mistyped rule name silently configures nothing, so it is refused rather than ignored (declarable: ${declarable.join(', ')})`);
       continue;
     }
     if (!Array.isArray(v) || v.some((s) => typeof s !== 'string')) {
@@ -172,6 +240,60 @@ export function mergeRules(overrides = null) {
     rules[k] = [...new Set([...rules[k], ...v])];
   }
   return { rules, findings };
+}
+
+const isPlaceholder = (s) => /^\s*ADOPT\b/i.test(String(s));
+const sameSet = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+/**
+ * The structure enum in force, resolved from the mounted config or defaulted to the shipped
+ * quotation. REPLACEMENT, not union — see the header: two editions unioned is a set nobody
+ * published. The gate holds a replacement to exactly one thing, and it is the one that makes the
+ * difference between mounted data and a fork: values copied from a standard MUST NOT travel under
+ * another standard's name. An adopter who changes the values and leaves `regime` naming the shipped
+ * default has produced the unpinned quotation this whole field exists to prevent, so that is a
+ * finding rather than a preference.
+ *
+ * Nothing here rules on Shari'ah. Which structures a regime's enum carries is that regime's act;
+ * this function only records whose enum is being applied.
+ */
+export function mergeStructureEnum(override = null) {
+  const shipped = {
+    regime: DEFAULT_STRUCTURE_ENUM.regime,
+    values: [...DEFAULT_STRUCTURE_ENUM.values],
+    documented_gap: [...DEFAULT_STRUCTURE_ENUM.documented_gap],
+    shipped: true,
+  };
+  const findings = [];
+  if (override === null || override === undefined) return { structureEnum: shipped, findings };
+  if (!isObject(override)) {
+    findings.push('SE-R00: `structure_enum` must be an object { regime, values, documented_gap } — anything else declares nothing while looking declared, and the shipped default stays in force');
+    return { structureEnum: shipped, findings };
+  }
+  const known = ['regime', 'edition', 'values', 'documented_gap'];
+  for (const k of Object.keys(override)) {
+    if (!known.includes(k) && !k.startsWith('_')) findings.push(`SE-R00: structure_enum.${k} is not a field this gate reads (known: ${known.join(', ')}) — a mistyped field declares nothing`);
+  }
+  const strings = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string' && s.trim() && !isPlaceholder(s));
+  if (Object.hasOwn(override, 'values') && !(strings(override.values) && override.values.length)) {
+    findings.push('SE-R00: structure_enum.values must be a non-empty array of non-placeholder strings — an enum that is empty or still carries an ADOPT marker checks nothing, and the shipped default stays in force');
+    return { structureEnum: shipped, findings };
+  }
+  const values = Object.hasOwn(override, 'values') ? [...override.values] : [...shipped.values];
+  const replaced = !sameSet(values, shipped.values);
+  const regime = typeof override.regime === 'string' ? override.regime.trim() : '';
+  const edition = typeof override.edition === 'string' ? override.edition.trim() : '';
+  const named = [regime, edition].filter(Boolean).join(' · ');
+  if (replaced && (!named || isPlaceholder(regime) || regime === shipped.regime)) {
+    findings.push(`SE-R00: structure_enum.values differ from the shipped default and structure_enum.regime ${named ? `still names ${JSON.stringify(shipped.regime)}` : 'is missing or unfilled'} — an enum copied from one standard and shipped under another's name is a quotation nobody can check. Name the standard AND the edition these values are copied from; the harness never fetches it, so the name is the only provenance there is`);
+  }
+  if (Object.hasOwn(override, 'documented_gap') && !strings(override.documented_gap)) {
+    findings.push('SE-R00: structure_enum.documented_gap must be an array of strings — it is what SE-R03 uses to say WHY a structure is unrepresentable rather than just "invalid"');
+  }
+  // The shipped gap list is a fact about the SHIPPED standard. Under a replaced enum it is not known
+  // to hold, so it is not carried over: SE-R03 then says "not one of {…}" and claims nothing more.
+  const gap = strings(override.documented_gap) ? [...override.documented_gap] : (replaced ? [] : [...shipped.documented_gap]);
+  return { structureEnum: { regime: named || shipped.regime, values, documented_gap: gap, shipped: !replaced }, findings };
 }
 
 /**
@@ -258,8 +380,10 @@ export function rebateDefect(value, rules, refPatterns) {
  * [{ label, text }] — the declared content roots' files. Both are passed in so this function is
  * pure: the tests exercise every rule without a filesystem, and run() does the reading.
  */
-export function evaluate({ documents = [], prose = [], rules: overrides = null } = {}) {
+export function evaluate({ documents = [], prose = [], rules: overrides = null, structureEnum: enumOverride = null } = {}) {
   const { rules, findings } = mergeRules(overrides);
+  const { structureEnum, findings: enumFindings } = mergeStructureEnum(enumOverride);
+  findings.push(...enumFindings);
   const notices = [];
   const interestKeys = compile(rules.interest_key_patterns, 'interest_key_patterns', findings);
   const rebateKeys = compile(rules.rebate_key_patterns, 'rebate_key_patterns', findings);
@@ -267,7 +391,11 @@ export function evaluate({ documents = [], prose = [], rules: overrides = null }
   const guaranteedKeys = compile(rules.guaranteed_return_key_patterns, 'guaranteed_return_key_patterns', findings);
   const expectedKeys = compile(rules.expected_return_key_patterns, 'expected_return_key_patterns', findings);
   const interestValues = new Set(rules.interest_values);
-  const enumSet = new Set(SHARIA_STRUCTURE_ENUM);
+  const enumSet = new Set(structureEnum.values);
+  const enumList = structureEnum.values.join(', ');
+  const enumSource = structureEnum.shipped
+    ? `${structureEnum.regime}, the default this harness ships`
+    : `${structureEnum.regime}, as mounted in ${CONFIG_LOCATIONS[0]}`;
 
   for (const { label, doc } of documents) {
     const at = (path) => `${label}${path ? ` → ${path}` : ''}`;
@@ -314,10 +442,10 @@ export function evaluate({ documents = [], prose = [], rules: overrides = null }
         const v = node.ShariaStructure;
         const where = at(path ? `${path}.ShariaStructure` : 'ShariaStructure');
         if (typeof v !== 'string' || !enumSet.has(v)) {
-          const gap = typeof v === 'string' && DOCUMENTED_ENUM_GAP.some((g) => g.toLowerCase() === v.toLowerCase());
+          const gap = typeof v === 'string' && structureEnum.documented_gap.some((g) => g.toLowerCase() === v.toLowerCase());
           findings.push(gap
-            ? `SE-R03: ${where} is ${JSON.stringify(v)}, which the Standard's ShariaStructure enum does not carry. This is a DOCUMENTED GAP in the published Standard (${DOCUMENTED_ENUM_GAP.join(', ')} have no enum value), not a value to add locally — a locally invented enum value is interoperable with nobody. Route it as a spec change and model the structure in your own field until the Standard carries it. The enum is exactly {${SHARIA_STRUCTURE_ENUM.join(', ')}}`
-            : `SE-R03: ${where} is ${JSON.stringify(v)}, which is not one of {${SHARIA_STRUCTURE_ENUM.join(', ')}} — this gate never invents an enum value, and a consumer reading this field will not recognise one either`);
+            ? `SE-R03: ${where} is ${JSON.stringify(v)}, which the ShariaStructure enum in force here does not carry (${enumSource}). This is a DOCUMENTED GAP in the standard that enum quotes (${structureEnum.documented_gap.join(', ')} have no enum value), not a value to add locally — a locally invented enum value is interoperable with nobody. Route it as a spec change to the standard and model the structure in your own field until the standard carries it. The enum in force is exactly {${enumList}}; a newer edition is mounted as data in ${CONFIG_LOCATIONS[0]} \`structure_enum\`, never edited into this gate`
+            : `SE-R03: ${where} is ${JSON.stringify(v)}, which is not one of {${enumList}} (${enumSource}) — this gate never invents an enum value, and a consumer reading this field will not recognise one either. If the standard has revised, mount the new edition in ${CONFIG_LOCATIONS[0]} \`structure_enum\` with the edition it comes from`);
         }
       }
 
@@ -444,7 +572,12 @@ export function resolveSurfaces(cwd, config) {
   const prose = [];
   const rel = (p) => p.slice(cwd.length + 1);
   const outside = (p) => typeof p !== 'string' || p.startsWith('/') || p.split('/').includes('..');
-  const exts = new Set((config?.rules?.prose_extensions || []).concat(DEFAULT_RULES.prose_extensions));
+  // Union with the shipped floor, same rule as mergeRules: a declared extension adds files to read
+  // and can never subtract one. A non-array here is ignored rather than concatenated — `"md"` would
+  // otherwise spread to a set of single characters and read files nobody declared. evaluate() emits
+  // the SE-R00 that says so, so the shape is refused loudly there, not silently absorbed here.
+  const declaredExts = config?.rules?.prose_extensions;
+  const exts = new Set(DEFAULT_RULES.prose_extensions.concat(Array.isArray(declaredExts) ? declaredExts.filter((e) => typeof e === 'string') : []));
 
   const readInto = (full, label) => {
     const doc = readJson(full);
@@ -516,7 +649,22 @@ export function run(cwd = process.cwd(), { agg = null } = {}) {
     return { inert: false, required, present: true, documents: 0, prose: 0, notices: [], findings: [`SE-R00: ${CONFIG_LOCATIONS[0]} is not valid JSON — an unreadable surfaces declaration is an absent one`] };
   }
   const surfaces = resolveSurfaces(cwd, config);
-  const { findings, notices } = evaluate({ documents: surfaces.documents, prose: surfaces.prose, rules: config.rules ?? null });
+  const { findings, notices } = evaluate({
+    documents: surfaces.documents,
+    prose: surfaces.prose,
+    rules: config.rules ?? null,
+    structureEnum: config.structure_enum ?? null,
+  });
+  // The template ships every list EMPTY, because an empty declaration is the correct permanent state
+  // for a repository with no Islamic product and must not fail one. Once a plan compiles the
+  // capability the same file is a hole: it satisfies "a config is mounted" while declaring nothing to
+  // read, and the gate would report a pass over zero bytes. That is the false assurance, not the gap.
+  const declared = ['fixture_globs', 'spec_paths', 'content_roots']
+    .reduce((n, k) => n + (Array.isArray(config[k]) ? config[k].length : 0), 0);
+  if (required && declared === 0) {
+    const asked = requiringChanges(aggregate).join(', ') || 'unknown change';
+    findings.push(`SE-R00: a compiled plan requires the ${CAPABILITY} capability [${asked}] and ${CONFIG_LOCATIONS[0]} declares no surfaces at all (fixture_globs, spec_paths and content_roots are all empty) — the file is mounted but nothing was read, and a gate that read nothing must not report a pass. Declaring the surfaces is the institution's act: the harness cannot tell an Islamic fixture tree from a conventional one`);
+  }
   return {
     inert: false, required, present: true,
     documents: surfaces.documents.length,
@@ -533,7 +681,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (findings.length) {
     process.stderr.write('\nShari\'ah product-substance gate — FAIL\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);
-    process.stderr.write('\nThis gate checks that DATA conforms to structures the Shari\'ah committee already approved\nand to an enum the Standard already fixes. It rules on no Shari\'ah question — scholars decide\nShari\'ah — and it reads files, never production.\nSee docs/governance/shariah-surfaces.json and scripts/shariah-governance-check.mjs.\n');
+    process.stderr.write('\nThis gate checks that DATA conforms to structures the Shari\'ah committee already approved\nand to the structure enum in force here — a published standard\'s, quoted as data and named with\nthe edition it came from. It rules on no Shari\'ah question — scholars decide Shari\'ah — and it\nreads files, never production.\nSee docs/governance/shariah-surfaces.json and scripts/shariah-governance-check.mjs.\n');
     process.exit(1);
   }
   if (inert) {

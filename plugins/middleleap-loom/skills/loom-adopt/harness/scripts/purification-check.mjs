@@ -196,7 +196,13 @@ export function evaluate({
     } else {
       // Fragment-addressable: the reference may point at a section inside a document.
       const path = ref.split('#')[0].trim();
-      if (path.includes('..') || path.startsWith('/')) {
+      if (!path) {
+        // A BARE FRAGMENT names no document. Before this limb existed the empty path component
+        // resolved to the repo root — which exists — so "#purification-of-non-compliant-income"
+        // passed the existence check while citing nothing: a method reference that reads as
+        // bound and is bound to no file at all.
+        findings.push(`${label}: method_ref ${JSON.stringify(ref)} is a fragment with no document in front of it — a fragment resolves inside the file that carries it, and this record is not that file. Cite the path to the approved PA2 section, then the fragment`);
+      } else if (path.includes('..') || path.startsWith('/')) {
         findings.push(`${label}: method_ref ${JSON.stringify(ref)} escapes the repository — the approved method has to be a document in here, readable by whoever audits this record`);
       } else if (!exists(path)) {
         findings.push(`${label}: method_ref ${JSON.stringify(ref)} does not exist at ${path} — a citation of a method nobody can open is the same as no method`);
@@ -226,6 +232,16 @@ export function evaluate({
       // transfer, and refusing the merge would teach adopters to delete the evidence instead.
       notices.push(`${label}: carries donation evidence while status is ${JSON.stringify(rec?.status)} — one of the two is stale; if the money has left, say donated`);
     }
+  }
+
+  // NO RECORDS AT ALL, with the capability compiled-required. Not a finding: purification records
+  // exist only where non-compliant income was found, so an institution that has found none has
+  // nothing to file and no way to satisfy a finding demanding one. But it is not a pass either —
+  // this gate verified NOTHING, and "OK, 0 records bound and approved" reads as assurance over an
+  // empty set, which is the vacuous green the file's own preamble refuses. Say what was checked.
+  if (required && records.length === 0) {
+    const who = requiringChanges.length ? requiringChanges.join(', ') : 'unknown change';
+    notices.push(`no records under ${PURIFICATION_DIR}/ while a compiled plan requires ${CAPABILITY} [${who}] — NOTHING WAS VERIFIED here. An empty register is uncovered, not clean: the harness reads records and cannot see whether any income needed purifying, so the absence of records is evidence of nothing`);
   }
 
   // MANDATORY-WHEN-COMPILED — every purification-routed signal has a record answering to it.
@@ -313,5 +329,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.stdout.write(`Purification gate — inert (no ${PURIFICATION_DIR}/ records, nothing routed to purification, no compiled plan requires ${CAPABILITY})\n`);
     process.exit(0);
   }
-  process.stdout.write(`Purification gate — OK (${count} record${count === 1 ? '' : 's'} bound and approved${required ? `, ${CAPABILITY} required by a compiled plan` : ''}${notices.length ? `, ${notices.length} notice(s)` : ''})\n`);
+  // Zero records is not "OK, 0 records bound and approved" — nothing was bound and nothing was
+  // approved, because there was nothing. The summary line says which of the two happened.
+  const tail = `${required ? `, ${CAPABILITY} required by a compiled plan` : ''}${notices.length ? `, ${notices.length} notice(s)` : ''}`;
+  if (count === 0) process.stdout.write(`Purification gate — NOTHING VERIFIED (no records under ${PURIFICATION_DIR}/; an empty register is uncovered, not clean${tail})\n`);
+  else process.stdout.write(`Purification gate — OK (${count} record${count === 1 ? '' : 's'} bound and approved${tail})\n`);
 }

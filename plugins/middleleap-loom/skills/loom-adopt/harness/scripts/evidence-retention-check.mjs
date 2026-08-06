@@ -21,12 +21,25 @@
 // in the file because the facility lives longest, not because this gate rules on anything: it takes
 // no view on permissibility, reads no ruling, and approves nothing. Scholars decide Shari'ah.
 //
-// MANDATORY-WHEN-COMPILED (rc.13 WS3 — the feature-flag / knowledge-pins idiom). No retention file
-// and no compiling change ⇒ SILENT, reported as `inert` rather than as a vacuous green. The moment
-// any change's compiled plan requires the `evidence_retention` capability, the missing file is a
-// finding that NAMES the changes requiring it. A repository that compiles nothing never fails here.
+// MANDATORY-WHEN-COMPILED (rc.13 WS3 — the feature-flag / knowledge-pins idiom), AND THAT GOVERNS
+// EVERY RULE BELOW, NOT ONLY THE MISSING FILE. No retention file and no compiling change ⇒ SILENT,
+// reported as `inert` rather than as a vacuous green. The moment any change's compiled plan
+// requires the `evidence_retention` capability, the missing file is a finding that NAMES the
+// changes requiring it. A repository that compiles nothing never fails here.
 //
-// The rules, in the order each one's absence bites:
+// THE MOUNTED FILE IS NOT THE DECLARATION. The installer copies this template into every
+// `governed`-tier adopter, so a gate armed by the file's PRESENCE arms itself in repositories that
+// never asked for it — and no shipped profile declares `evidence_retention`, which means presence-
+// arming could only ever fail people who did not opt in. That is the defect review found: a purely
+// conventional adopter, no Islamic profile and nothing compiled, who sealed an evidence type
+// outside the shipped rows — a penetration test, a DPIA, a UAT sign-off — took a hard PR-lane
+// failure from ER-R03 for a capability nothing required. So every rule here is a FINDING when a
+// compiled plan requires the capability and a NOTICE otherwise, and mounting the template can
+// never fail anybody.
+//
+// The rules, in the order each one's absence bites. ER-R01 to ER-R05 and the archive rules are
+// findings ONLY when the capability is compiled-required, notices otherwise; ER-R06 and ER-R08 are
+// notices always:
 //
 //   ER-R01  a mounted file with no `types` object — a retention policy with no policy in it
 //   ER-R02  a `default_retention_years` that is not a positive number — the safety net is the one
@@ -38,16 +51,16 @@
 //   ER-R04  an entry that is not an object — a bare number or a string is not a decision
 //   ER-R05  an entry with neither a positive `retention_years` NOR a justification: it says
 //           neither how long nor why, which is the unretained state with extra JSON
-//   ER-R06  (NOTICE) an unbounded entry carried on a stated justification — legitimate (a
+//   ER-R06  (NOTICE ALWAYS) an unbounded entry carried on a stated justification — legitimate (a
 //           statutory hold has no year count), and reported every run because the harness enforces
 //           precisely nothing about it
-//   ER-R07  `immutable_archive: true` naming no archive: neither an entry `archive_ref` nor a
-//           document-level `immutable_archive_ref`. A claim about a store nobody located is not a
-//           control. FINDING once a compiled plan requires the capability, NOTICE otherwise — the
-//           location is adopter-side platform detail, and a repository that has not yet decided it
-//           compiles must not be failed for the shipped template's silence
-//   ER-R08  (NOTICE) entries for types this repository does not produce — kept for a product built
-//           elsewhere or not yet. Reported, never enforced: that is the dormancy contract
+//   ER-R07  `immutable_archive` that is not a boolean, or `true` naming no archive: neither an
+//           entry `archive_ref` nor a document-level `immutable_archive_ref`. A claim about a
+//           store nobody located is not a control. The location is adopter-side platform detail,
+//           and a repository that has not yet decided it compiles must not be failed for the
+//           shipped template's silence
+//   ER-R08  (NOTICE ALWAYS) entries for types this repository does not produce — kept for a
+//           product built elsewhere or not yet. Reported, never enforced
 //
 // Lane: pr. Run from the repo root: `node scripts/evidence-retention-check.mjs` (exit 1 on a
 // finding).
@@ -79,28 +92,36 @@ const located = (v) => nonEmpty(v) && !isPlaceholder(v);
  * so ER-R03 can name the source rather than assert a gap. An empty map means the types could not
  * be enumerated here; run() says so as a notice rather than reporting full coverage.
  *
- * `enforced` is whether a compiled plan requires the capability — it moves ER-R07 between finding
- * and notice, and nothing else. Every other rule is the internal soundness of a file the adopter
- * chose to mount, and mounting it is the declaration.
+ * `enforced` is whether a compiled plan requires the capability, and it is the ONLY thing that
+ * decides finding-vs-notice — for every rule, not just the archive claim. MOUNTING THE FILE IS NOT
+ * THE DECLARATION: the installer mounts this template by default at the `governed` tier, so a rule
+ * that fires on presence fires at adopters who never opted in. Dormant ⇒ notices, exit 0.
  */
 export function evaluate(doc, { produced = new Map(), enforced = false } = {}) {
   const findings = [];
   const notices = [];
+  // The mandatory-when-compiled split, applied once and used by every rule below (the same idiom
+  // as knowledge-staleness-check.mjs and purification-check.mjs).
+  const say = (m) => (enforced ? findings : notices).push(m);
   const types = doc?.types;
   if (!types || typeof types !== 'object' || Array.isArray(types)) {
-    return { findings: ['ER-R01: evidence-retention.json has no `types` object — a retention policy with no per-type entries retains nothing and bounds nothing'], notices, count: 0 };
+    say('ER-R01: evidence-retention.json has no `types` object — a retention policy with no per-type entries retains nothing and bounds nothing');
+    return { findings, notices, count: 0 };
   }
 
   // ER-R02 — the safety net. Absent is allowed (every produced type must be named anyway); present
   // and unusable is not, because that is the value an unnamed type silently falls through to.
   if (doc.default_retention_years !== undefined && !positive(doc.default_retention_years)) {
-    findings.push(`ER-R02: default_retention_years is ${JSON.stringify(doc.default_retention_years)}, not a positive number — the default is what an unnamed evidence type falls through to, so an unusable one drops exactly the records nobody remembered to name`);
+    say(`ER-R02: default_retention_years is ${JSON.stringify(doc.default_retention_years)}, not a positive number — the default is what an unnamed evidence type falls through to, so an unusable one drops exactly the records nobody remembered to name`);
   }
 
-  // ER-R03 — coverage. The gap this file exists to close.
+  // ER-R03 — coverage. The gap this file exists to close, and the rule that made presence-arming a
+  // defect: an adopter's evidence types are their own, so an unlisted one is only a GAP against a
+  // requirement somebody compiled. Dormant, it is a notice — a conventional repository sealing a
+  // penetration test or a DPIA is not failed by a policy it never asked to be held to.
   for (const [type, origin] of produced) {
     if (!Object.prototype.hasOwnProperty.call(types, type)) {
-      findings.push(`ER-R03: evidence type ${JSON.stringify(type)} is produced here (${origin}) and has NO retention entry — it falls through to default_retention_years, and the default is a safety net. A safety net that is load-bearing is a missing entry: say how long this type is kept, and why`);
+      say(`ER-R03: evidence type ${JSON.stringify(type)} is produced here (${origin}) and has NO retention entry — it falls through to default_retention_years, and the default is a safety net. A safety net that is load-bearing is a missing entry: say how long this type is kept, and why`);
     }
   }
 
@@ -108,23 +129,22 @@ export function evaluate(doc, { produced = new Map(), enforced = false } = {}) {
   for (const [type, entry] of Object.entries(types)) {
     if (type.startsWith('_')) continue; // commentary keys, as everywhere else in the harness
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-      findings.push(`ER-R04: retention entry for ${JSON.stringify(type)} is ${JSON.stringify(entry)}, not an object — an entry states a period, a justification and whether it is archived; a bare value states none of them`);
+      say(`ER-R04: retention entry for ${JSON.stringify(type)} is ${JSON.stringify(entry)}, not an object — an entry states a period, a justification and whether it is archived; a bare value states none of them`);
       continue;
     }
     const bounded = positive(entry.retention_years);
     const justified = located(entry.justification);
     if (!bounded) {
       if (!justified) {
-        findings.push(`ER-R05: retention entry for ${JSON.stringify(type)} has neither a positive retention_years (got ${JSON.stringify(entry.retention_years)}) nor a justification — an entry that says neither how long nor why is the unretained state with extra JSON`);
+        say(`ER-R05: retention entry for ${JSON.stringify(type)} has neither a positive retention_years (got ${JSON.stringify(entry.retention_years)}) nor a justification — an entry that says neither how long nor why is the unretained state with extra JSON`);
       } else {
         notices.push(`ER-R06: ${type} carries no bounded retention_years and is kept on a stated justification instead (${entry.justification.trim().slice(0, 80)}…) — legitimate where a statutory hold has no year count, and reported every run because the harness enforces nothing about it`);
       }
     }
     if (entry.immutable_archive !== undefined && typeof entry.immutable_archive !== 'boolean') {
-      findings.push(`ER-R07: ${type} declares immutable_archive as ${JSON.stringify(entry.immutable_archive)} — it is true or false; a truthy string is not a claim anyone can act on`);
+      say(`ER-R07: ${type} declares immutable_archive as ${JSON.stringify(entry.immutable_archive)} — it is true or false; a truthy string is not a claim anyone can act on`);
     } else if (entry.immutable_archive === true && !located(entry.archive_ref) && !located(docArchive)) {
-      const m = `ER-R07: ${type} claims immutable_archive: true and names no archive — set archive_ref on the entry, or immutable_archive_ref once for the file. THE HARNESS CANNOT VERIFY THE STORE: it never reaches a WORM system, never confirms a retention lock and never sees a byte written, so the most it can hold is that the claim says where. A claim about a store nobody located is not a control`;
-      (enforced ? findings : notices).push(m);
+      say(`ER-R07: ${type} claims immutable_archive: true and names no archive — set archive_ref on the entry, or immutable_archive_ref once for the file. THE HARNESS CANNOT VERIFY THE STORE: it never reaches a WORM system, never confirms a retention lock and never sees a byte written, so the most it can hold is that the claim says where. A claim about a store nobody located is not a control`);
     }
   }
 
@@ -194,7 +214,12 @@ export function run(cwd = process.cwd()) {
     };
   }
   const doc = readJson(path);
-  if (!doc) return { present: true, required, findings: [`${RETENTION_LOCATIONS[0]} is not valid JSON`], notices: [], count: 0, inert: false };
+  if (!doc) {
+    // Same split as every rule: an unparseable file the adopter never opted into being held to is
+    // reported, not blocking. A mounted file is not a declaration, and that includes a broken one.
+    const m = `${RETENTION_LOCATIONS[0]} is not valid JSON — nothing in it can be read, so nothing in it bounds anything`;
+    return { present: true, required, findings: required ? [m] : [], notices: required ? [] : [m], count: 0, inert: false, covered: 0 };
+  }
   const produced = producedTypes(cwd, agg);
   const { findings, notices, count } = evaluate(doc, { produced, enforced: required });
   const originNotices = produced.size ? [] : [
@@ -219,5 +244,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   // "policy read", not "evidence retained": the gate compared a JSON file against the types this
   // repository produces. Whether anything was actually kept is the institution's archive to answer.
-  process.stdout.write(`Evidence-retention gate — OK (${count} type${count === 1 ? '' : 's'} in the policy, ${covered} produced here; policy read, retention never verified${required ? `, ${CAPABILITY} required by a compiled plan` : ''}${notices.length ? `, ${notices.length} notice(s)` : ''})\n`);
+  // And say which posture it read in — a green with everything reported as notices is a different
+  // statement from a green that enforced, and printing them identically would overclaim.
+  const posture = required
+    ? `, ${CAPABILITY} required by a compiled plan`
+    : `; no compiled plan requires ${CAPABILITY}, so every rule above is REPORTED, not enforced`;
+  process.stdout.write(`Evidence-retention gate — OK (${count} type${count === 1 ? '' : 's'} in the policy, ${covered} produced here; policy read, retention never verified${posture}${notices.length ? `, ${notices.length} notice(s)` : ''})\n`);
 }

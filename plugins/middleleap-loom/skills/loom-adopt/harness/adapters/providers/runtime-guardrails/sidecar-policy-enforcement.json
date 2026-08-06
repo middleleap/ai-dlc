@@ -29,9 +29,10 @@
     ]
   },
   "reconciliation": {
-    "_comment": "Bind the log to the bundle the sidecars actually loaded AND to how many of them exist. Matching the digest alone passes a fleet where one workload runs the right policy and nine run none.",
+    "_comment": "NO SHIPPED GATE READS THIS ARTIFACT, and `gate_mechanism` is null rather than naming one. AI-INCIDENT is catalogued `defined` — a runbook, not a mechanism — so there is nothing to name, and a gate id that does not resolve would be exactly the implied-coverage defect this role exists to refuse. What the harness DOES see is that a provider was selected (PS-R06) and whether activation_evidence is still placeholders (adapter-check.mjs). It never reads a decision log, and it certainly cannot count pods. So the reconciliation below is the ADOPTER'S, performed by the fetch that fills activation_evidence: bind the log to the bundle the sidecars actually loaded AND to how many of them exist. Matching the digest alone passes a fleet where one workload runs the right policy and nine run none. WHAT A GATE WOULD TAKE, so the gap is costed rather than merely admitted: this envelope committed as a signed observation under docs/governance/adapter-evidence/ naming AI-INCIDENT, asserted by an issuer outside the coding agent's write scope, with the denial as a required negative — plus a serving-path enforcement mechanism in core/floor-adapters.mjs SEAM_MECHANISMS, which carries none today, and a gate that reads it. Until all three exist, match_on is a specification for your fetch, not a comparison CI performs.",
     "gate_artifact": "docs/governance/evidence/runtime-guardrail-decisions.json",
-    "gate_mechanism": "scripts/ai-incident-check.mjs",
+    "gate_mechanism": null,
+    "reconciled_by": "the adopter's fetch and both probes — no gate in this harness",
     "match_on": ["policy_bundle_digest", "injected_workloads", "decisions_denied"]
   },
   "activation_evidence": {

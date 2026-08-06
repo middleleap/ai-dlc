@@ -30,9 +30,10 @@
     ]
   },
   "reconciliation": {
-    "_comment": "Bind the posture to the keys and fields ACTUALLY in force, not to the ones a runbook describes. A field added to the store after the encryption config was written is the commonest way this drifts, and it drifts silently because nothing fails. `reads_denied` is carried because an access log with no denials in it has never been shown to deny anything.",
+    "_comment": "NO SHIPPED GATE READS THIS ARTIFACT, and `gate_mechanism` is null rather than naming one. REAL-PII-SURFACE is catalogued `absent`: the harness ships nothing for the real-data case, which is the whole reason this role exists. scripts/adapter-evidence-check.mjs is the nearest thing and it is NOT it — it reads signed observations under docs/governance/adapter-evidence/, not this path, and it makes no claim at all about an adapter outside the stream contract (core/floor-adapters.mjs `isStreamAdapter`), which this one is. Naming it here would have read as coverage it never provides. What the harness DOES see is that a provider was selected (PS-R06) and whether activation_evidence is still placeholders (adapter-check.mjs). So the reconciliation below is the ADOPTER'S, performed by the fetch that fills activation_evidence: bind the posture to the keys and fields ACTUALLY in force, not to the ones a runbook describes. A field added to the store after the encryption config was written is the commonest way this drifts, and it drifts silently because nothing fails. `reads_denied` is carried because an access log with no denials in it has never been shown to deny anything. WHAT A GATE WOULD TAKE, so the gap is costed rather than merely admitted: this envelope committed as a signed observation under docs/governance/adapter-evidence/ naming REAL-PII-SURFACE, asserted by an issuer outside the coding agent's write scope, with the denial as a required negative — plus a data-custody mechanism in SEAM_MECHANISMS, which carries none today, and a gate that reads it. Until all three exist, match_on is a specification for your fetch, not a comparison CI performs.",
     "gate_artifact": "docs/governance/evidence/real-data-control-posture.json",
-    "gate_mechanism": "scripts/adapter-evidence-check.mjs",
+    "gate_mechanism": null,
+    "reconciled_by": "the adopter's fetch and negative probe — no gate in this harness",
     "match_on": ["key_manager_id", "key_ids", "encrypted_fields", "reads_denied"]
   },
   "activation_evidence": {

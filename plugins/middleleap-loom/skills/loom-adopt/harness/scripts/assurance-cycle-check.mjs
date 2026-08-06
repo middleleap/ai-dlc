@@ -186,6 +186,19 @@ export function evaluate(record, { issuers, registry, streams = {}, now = Date.n
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 
 /**
+ * A configured cadence bound: `{ days, ok }`. Absent (undefined/null) is `{ days: null, ok: true }`
+ * — not configured, take the fallback. Anything else that is not a positive finite NUMBER is
+ * `ok: false`, and that is the defect this exists against: `"monthly"` coerces to NaN, every
+ * `age > NaN` is false, and the staleness check switches itself OFF for the one repository whose
+ * config was wrong. A malformed cadence must fail loudly and still be POLICED by the fallback,
+ * because the alternative is a control disabled by a typo in the file it polices.
+ */
+export function cadenceBound(v) {
+  if (v === undefined || v === null) return { days: null, ok: true };
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? { days: v, ok: true } : { days: null, ok: false };
+}
+
+/**
  * Cadence findings: the global window, plus one per CONFIGURED stream. Pure and `now`-injectable
  * so the windows are testable without a clock.
  *
@@ -196,13 +209,21 @@ const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } ca
  */
 export function cadenceFindings({ config = {}, newest = 0, newestByStream = new Map(), now = Date.now() } = {}) {
   const findings = [];
-  const globalDays = config.cadence_days ?? DEFAULT_CADENCE_DAYS;
+  const g = cadenceBound(config?.cadence_days);
+  if (!g.ok) {
+    findings.push(`assurance-config cadence_days ${JSON.stringify(config.cadence_days)} is not a positive number of days — every staleness comparison against it is false, so a malformed cadence turns this check off rather than failing it. The ${DEFAULT_CADENCE_DAYS}d default is applied until it is a number`);
+  }
+  const globalDays = g.days ?? DEFAULT_CADENCE_DAYS;
   const ageDays = newest ? Math.floor((now - newest) / DAY) : Infinity;
   if (ageDays > globalDays) {
     findings.push(`newest assurance cycle is ${newest ? `${ageDays}d old` : 'undated'}, past the ${globalDays}d cadence while a change is in production — assurance is stale`);
   }
   for (const [name, cfg] of Object.entries(streamsOf(config))) {
-    const days = cfg?.cadence_days ?? globalDays;
+    const c = cadenceBound(cfg?.cadence_days);
+    if (!c.ok) {
+      findings.push(`stream ${JSON.stringify(name)}: cadence_days ${JSON.stringify(cfg.cadence_days)} is not a positive number of days — the comparison against it is always false, which is this stream's staleness check silently disabled. The ${globalDays}d global cadence is applied until it is a number`);
+    }
+    const days = c.days ?? globalDays;
     const t = newestByStream.get(name) || 0;
     const age = t ? Math.floor((now - t) / DAY) : Infinity;
     if (age > days) {

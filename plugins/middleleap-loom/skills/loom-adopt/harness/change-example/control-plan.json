@@ -101,6 +101,10 @@
     "real_data_controls": {
       "required": true,
       "institution_owned": true
+    },
+    "evidence_retention": {
+      "required": true,
+      "institution_owned": true
     }
   },
   "profile_bindings": [
@@ -114,7 +118,7 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:18a13e2a412bd7e02afbcd49799b269b4c09b08d53c896d8ca400a6e6c7a2835"
+      "digest": "sha256:ad2309c35c2ecb04b7a10bbb0a79a33b209aca4acac53e9caf8d8d8c633e84c1"
     },
     {
       "profile": "uae-bank",
@@ -123,5 +127,5 @@
       "digest": "sha256:1b23c7593d97760e9740a31cda994410bf31601bfef223ac4865dba23a30caaf"
     }
   ],
-  "plan_hash": "9e3f7ececc685fe42d0471e993c1cb88c37e38a3c45ec34c0dd3195167640af3"
+  "plan_hash": "7bd4c9a31865fca9ca3c49985a5c175552d52f8cf770e977aecd2cdafe5a20cd"
 }

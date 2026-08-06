@@ -56,7 +56,16 @@ Record the choice in `docs/governance/provider-selection.json`, copy the chosen 
 placeholder `activation_evidence` is reported as *selected, not active*, which is the honest resting
 state, never a green control.
 
-**Dormant until required.** `real_data_controls` compiles only from a profile that requires it — the
-intended home is a regulated-institution profile at the high tier, where real customer data is in
-scope. A repository working on synthetic fixtures never meets this role; `PS-R06` arms it the moment a
-plan names the capability, and not before.
+**Dormant until required — and the trigger is the profile and tier, not the data.**
+`real_data_controls` compiles only from a profile that requires it, and `PS-R06` arms it the moment a
+plan names the capability, not before. Be clear about when that is: the shipped `regulated-bank`
+profile requires it **unconditionally at the high tier**, so a conventional change working on
+synthetic fixtures, classified high on that profile, *does* meet this role and is asked for a
+selection.
+
+That is deliberate. The harness cannot tell a repository holding real customer data from one that does
+not, and a trigger conditioned on a self-declared "we have real data now" is precisely the silence
+described above. What stays inert is a repository whose changes never compile a profile requiring the
+capability — `standard`, or `regulated-bank` below high. There is no *not applicable* answer at
+selection time: under that profile at high tier you either record a provider or change the profile you
+compile, and the profile is the institution's to set.

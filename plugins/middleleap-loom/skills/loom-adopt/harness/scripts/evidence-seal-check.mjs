@@ -130,10 +130,19 @@ export const SEMANTICS = {
   // "structure-conformant" — and never that anything is Shari'ah-compliant: this reads a JSON
   // file at release time and has no view of what the product does in production.
   //
-  // WHAT IT CANNOT DO: resolve `issc_decision_ref` or the ids in `structures` against
-  // docs/governance/shariah-rulings.json. That cross-check belongs to the Shari'ah-governance
-  // gate, the same split brainkit-provenance uses — the seal verifies the record is well-formed,
-  // bound, and made by somebody who could make it; the register decides whether it is true.
+  // WHAT NOTHING VERIFIES — say it plainly, because attributing this to another gate is how a gap
+  // becomes invisible. This validator does not resolve `issc_decision_ref` or the ids in
+  // `structures` against docs/governance/shariah-rulings.json, and NO gate in this bundle resolves
+  // them FOR THIS ARTIFACT. Two nearby joins exist and neither covers it: SG-R08 (shariah-
+  // governance-check) resolves the refs carried by the entries under docs/governance/shariah-
+  // structures/, and product-approval-check resolves the ref carried by the CHANGE ENVELOPE on the
+  // conforming lane. Both read other files; neither ever opens a sealed attestation. So an
+  // attestation citing a decision that was never issued, or one since superseded, or naming
+  // structure ids no register row carries, seals clean here. The only reader of that gap today is
+  // HUMAN: the Shari'ah Compliance Function checking the attestation against the register before it
+  // is sealed. Mechanically closing it would take a gate that reads THIS artifact against the
+  // rulings register. Until one exists, a clean result means the record is well-formed, bound, and
+  // made by somebody who could make it — and says nothing about whether what it cites is real.
   'shariah-attestation': (a, ctx) => {
     const f = [];
     if (!nonEmpty(a.attester_id)) {

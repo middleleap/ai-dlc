@@ -311,9 +311,25 @@ test('PD-R13: an SR-* citation that resolves to no ruling is a citation of a gho
   assert.match(only(r), /PD-R13.*citation of a ghost/s);
 });
 
-test('PD-R13 is disabled when there is no rulings register to resolve against', () => {
+test('PD-R13 cannot run with no rulings register — and says NOT VERIFIED instead of passing in silence', () => {
   const r = evaluate({ ...RUN, per_reserve_movements: [{ reserve: 'PER', direction: 'to', amount: 1, issc_approval_ref: 'SR-9999-001' }] }, { registry: REGISTRY });
   assert.deepEqual(r.findings, []);
+  assert.ok(r.notices.some((n) => /SR-9999-001" NOT VERIFIED — no rulings register/.test(n)), r.notices.join('\n'));
+});
+
+test('a register that is PRESENT but empty is a register: every SR-* citation then resolves to nothing', () => {
+  const r = evaluate({ ...RUN, per_reserve_movements: [{ reserve: 'PER', direction: 'to', amount: 1, issc_approval_ref: 'SR-9999-001' }] },
+    { registry: REGISTRY, rulingIds: new Set() });
+  assert.match(only(r), /PD-R13.*citation of a ghost/s);
+});
+
+test('run(): a repo with no rulings register reports each SR-* citation NOT VERIFIED', () => {
+  const dir = repo({ runs: [RUN] });
+  try {
+    const r = run(dir);
+    assert.deepEqual(r.findings, [], r.findings.join('\n'));
+    assert.equal(r.notices.filter((n) => /NOT VERIFIED — no rulings register/.test(n)).length, 2, r.notices.join('\n'));
+  } finally { clean(dir); }
 });
 
 test('a minute reference is NOT resolved, and the gate says so instead of pretending it did', () => {

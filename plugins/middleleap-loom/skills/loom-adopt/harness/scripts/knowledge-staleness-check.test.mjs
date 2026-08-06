@@ -10,7 +10,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CAPABILITY, ageDays, evaluate, isPlaceholder, requiringChanges, run } from './knowledge-staleness-check.mjs';
+import { CAPABILITY, ageDays, evaluate, isPlaceholder, knownCapabilityNames, requiringChanges, run } from './knowledge-staleness-check.mjs';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -143,6 +143,49 @@ test('KP-R09 — a bound with no owner_role is a bound nobody keeps', () => {
   assert.ok(check([pin({ owner_role: '' })]).findings.some((f) => /KP-R09/.test(f)));
 });
 
+test('KP-R10 — a TYPO in required_by_capability cannot downgrade a stale pin to a notice', () => {
+  const stale = pin({ last_verified: daysAgo(200), max_age_days: 60, required_by_capability: 'knowledge_currncy' });
+  const known = new Set(['knowledge_currency', 'shariah_governance']);
+  const r = check([stale], { requiredCapabilities: new Set([CAPABILITY]), knownCapabilities: known });
+  assert.ok(r.findings.some((f) => /KP-R10.*"knowledge_currncy".*no compiled plan and no profile/s.test(f)), r.findings.join('\n'));
+  // …and the staleness it was hiding is a FINDING, not the notice the typo used to buy.
+  assert.ok(r.findings.some((f) => /KP-R07/.test(f)), r.findings.join('\n'));
+  assert.deepEqual(r.notices, [], r.notices.join('\n'));
+});
+
+test('KP-R10 — a RECOGNISED but uncompiled capability still goes dormant: this is not a generic-adopter tax', () => {
+  const stale = pin({ last_verified: daysAgo(200), max_age_days: 60, required_by_capability: 'shariah_governance' });
+  const known = new Set(['knowledge_currency', 'shariah_governance']);
+  const r = check([stale], { requiredCapabilities: new Set(), knownCapabilities: known });
+  assert.deepEqual(r.findings, [], r.findings.join('\n'));
+  assert.ok(r.notices.some((n) => /KP-R07.*reported rather than blocking/.test(n)), r.notices.join('\n'));
+});
+
+test('KP-R10 — the default known set is this gate\'s capability plus whatever a plan requires, so the check is never silently off', () => {
+  const r = check([pin({ required_by_capability: 'invented_by_nobody' })], { requiredCapabilities: new Set() });
+  assert.ok(r.findings.some((f) => /KP-R10/.test(f)), r.findings.join('\n'));
+  assert.deepEqual(check([pin()], { requiredCapabilities: new Set() }).findings, []);
+});
+
+test('knownCapabilityNames reads the ADOPTER\'S tree — shipped profiles and compiled plans, not a baked-in taxonomy', () => {
+  const names = knownCapabilityNames(H, aggregateRequirements(H));
+  for (const n of ['knowledge_currency', 'shariah_governance', 'data_risk_register', 'model_risk']) {
+    assert.ok(names.has(n), `${n} is declared by a shipped profile and must be recognised`);
+  }
+  assert.ok(!names.has('knowledge_currncy'));
+  // A capability an institution invents in its OWN profile is recognised the moment it declares it.
+  const dir = repo({ requires: true });
+  try {
+    mkdirSync(join(dir, 'profiles/institutions'), { recursive: true });
+    writeFileSync(join(dir, 'profiles/institutions/house.json'), JSON.stringify({
+      name: 'house', tiers: { medium: { capabilities: { house_specific_control: { required: true } } } },
+    }));
+    const local = knownCapabilityNames(dir, aggregateRequirements(dir));
+    assert.ok(local.has('house_specific_control'), [...local].join(', '));
+    assert.ok(local.has(CAPABILITY), 'the compiled plan\'s own capability is always known');
+  } finally { clean(dir); }
+});
+
 test('the SHIPPED template is notices-only for a repository that compiles nothing, and all findings once it does', () => {
   const doc = JSON.parse(readFileSync(join(H, 'governance/knowledge-pins.template.json'), 'utf8'));
   assert.ok(doc.pins.length >= 4);
@@ -232,6 +275,24 @@ test('run() — check_ref is resolved against the repo tree, not asserted', () =
 
   const ghost = repo({ requires: true, pins: [pin({ check_ref: 'scripts/standards-currency.mjs' })] });
   try { assert.ok(run(ghost, { now: NOW }).findings.some((f) => /KP-R08/.test(f))); } finally { clean(ghost); }
+});
+
+test('run() — on a real tree, a mistyped required_by_capability fails instead of quietly excusing the pin', () => {
+  const stale = pin({ last_verified: daysAgo(400), max_age_days: 30 });
+  // The same stale row, once with a name the tree uses and once with a typo of it.
+  const good = repo({ pins: [stale] });
+  try {
+    const r = run(good, { now: NOW });
+    assert.deepEqual(r.findings, [], r.findings.join('\n'));
+    assert.ok(r.notices.some((n) => /KP-R07/.test(n)), 'a recognised, uncompiled capability is still dormant');
+  } finally { clean(good); }
+
+  const typo = repo({ pins: [pin({ ...stale, required_by_capability: 'knowledge_currency ' })] });
+  try {
+    const r = run(typo, { now: NOW });
+    assert.ok(r.findings.some((f) => /KP-R10/.test(f)), r.findings.join('\n'));
+    assert.ok(r.findings.some((f) => /KP-R07/.test(f)), 'the staleness the typo was hiding blocks');
+  } finally { clean(typo); }
 });
 
 test('run() — an unparseable pins file is a finding, not a crash', () => {

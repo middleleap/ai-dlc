@@ -1,7 +1,7 @@
 // Tests for the policy compiler. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
@@ -12,15 +12,41 @@ const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const profile = (p) => JSON.parse(readFileSync(`${HARNESS}/profiles/${p}.json`, 'utf8'));
 const ALL = [profile('regulated-bank'), profile('jurisdictions/uae-bank'), profile('products/lending'), profile('products/payments')];
 
+// EVERY shipped profile, DISCOVERED rather than listed. The monotonicity property below used to
+// run over four NAMED profiles, so a profile added to the bundle was a profile the invariant never
+// saw: every profile the Shari'ah work added or changed landed outside it, and one whose
+// requirement value was not even iterable compiled nowhere the suite looked. What the property
+// then proves for each profile is what it can honestly prove — that it compiles cleanly at every
+// tier and flag combination, and that no tier drops what a lower one required. Enumeration is the
+// fix, because the next profile is then covered on the day it is committed, by nobody remembering.
+const PROFILE_DIRS = ['profiles', 'profiles/jurisdictions', 'profiles/products', 'profiles/institutions'];
+const SHIPPED = PROFILE_DIRS.flatMap((dir) => readdirSync(`${HARNESS}/${dir}`)
+  .filter((f) => f.endsWith('.json')).sort()
+  .map((f) => ({ dir, name: f.replace(/\.json$/, ''), data: JSON.parse(readFileSync(`${HARNESS}/${dir}/${f}`, 'utf8')) })));
+// Every flag any shipped profile reacts to, so a new conditional is exercised without being named.
+const SHIPPED_FLAGS = [...new Set(SHIPPED.flatMap((p) => (p.data.conditional || []).map((c) => c.when)))].sort();
+
 const envelope = (over = {}) => ({
   change_id: 'CHG-T-1', product_id: 'PRD-T', change_type: 'new-product', risk_tier: 'high',
   required_profiles: ['regulated-bank', 'uae-bank', 'lending'],
   flags: {}, ...over,
 });
 
-test('PROPERTY — monotonicity: a higher tier only ever ADDS requirements, for every profile combination', () => {
-  const combos = [[ALL[0]], [ALL[0], ALL[1]], [ALL[0], ALL[2]], [ALL[0], ALL[1], ALL[2]], [ALL[0], ALL[1], ALL[3]], ALL];
-  const flagSets = [{}, { islamic: true }, { model_involved: true, personal_data: true, third_party: true }];
+test('PROPERTY — monotonicity: a higher tier only ever ADDS requirements, for EVERY shipped profile', () => {
+  // A discovery that finds nothing passes vacuously, which is the failure mode of enumerating by
+  // path: assert each directory contributed before trusting a green result.
+  for (const dir of PROFILE_DIRS) {
+    assert.ok(SHIPPED.some((p) => p.dir === dir), `no profiles enumerated from ${dir} — an empty enumeration proves nothing`);
+  }
+  const base = SHIPPED.find((p) => p.name === 'regulated-bank').data;
+  // Each profile ALONE (its own tiers must be monotone unaided), each one composed on the base
+  // (composition must not break it), and all of them at once (the union of everything shipped).
+  const combos = [
+    ...SHIPPED.map((p) => [p.data]),
+    ...SHIPPED.filter((p) => p.data !== base).map((p) => [base, p.data]),
+    SHIPPED.map((p) => p.data),
+  ];
+  const flagSets = [{}, Object.fromEntries(SHIPPED_FLAGS.map((f) => [f, true])), ...SHIPPED_FLAGS.map((f) => ({ [f]: true }))];
   for (const profiles of combos) {
     for (const flags of flagSets) {
       let prev = null;
@@ -37,6 +63,20 @@ test('PROPERTY — monotonicity: a higher tier only ever ADDS requirements, for 
         }
         prev = plan;
       }
+    }
+  }
+});
+
+test('PROPERTY — every shipped profile declares its requirements under a KNOWN tier', () => {
+  // The compiler unions `requirements[tier]` by exact tier name, so a misspelled or invented tier
+  // key is silently never compiled: a requirement that exists in the file, reads as governance in
+  // review, and is enforced by nothing. Monotonicity cannot see it — the requirement never enters
+  // any plan — so it is asserted here. `_`-prefixed keys are the file convention for comments.
+  for (const p of SHIPPED) {
+    for (const key of Object.keys(p.data.requirements || {})) {
+      if (key.startsWith('_')) continue;
+      assert.ok(TIERS.includes(key),
+        `${p.dir}/${p.name}: requirements.${key} is not a tier (${TIERS.join('|')}) — nothing compiles it, so no gate can ever miss it`);
     }
   }
 });

@@ -152,6 +152,17 @@ test('method_ref is required, must not be a placeholder, must not escape, and mu
   assert.deepEqual(seen, ['docs/governance/changes/CHG-1/pa2.md']);
 });
 
+test('a FRAGMENT-ONLY method_ref cites no document — and is never resolved against the repo root', () => {
+  for (const ref of ['#purification-of-non-compliant-income', '  #s', '#']) {
+    const probed = [];
+    const { findings } = check([record({ method_ref: ref })], { exists: (p) => { probed.push(p); return true; } });
+    assert.ok(has(findings, /is a fragment with no document in front of it/), `${ref}: ${findings.join('\n')}`);
+    // The empty path component must never reach exists(): join(cwd, '') is the repo root, which
+    // exists, so probing it is what made a citation of nothing read as a citation of something.
+    assert.deepEqual(probed, [], `${ref} was resolved against the tree`);
+  }
+});
+
 // ── disposal ──────────────────────────────────────────────────────────────────────────────────
 test('status must be open|approved|donated', () => {
   assert.deepEqual(STATUSES, ['open', 'approved', 'donated']);
@@ -185,7 +196,18 @@ test('a purification-routed signal with no record: NOTICE when uncompiled, FINDI
 
   const loud = check([], { required: true, requiringChanges: ['CHG-2026-0042'] });
   assert.ok(has(loud.findings, /requires the shariah_governance capability \[CHG-2026-0042\]/), loud.findings.join('\n'));
-  assert.deepEqual(loud.notices, []);
+  // The routed signal is a FINDING, not a notice. The only notice is the empty-register one below.
+  assert.ok(!has(loud.notices, /routed to purification/), loud.notices.join('\n'));
+});
+
+test('an EMPTY register with the capability compiled says NOTHING WAS VERIFIED — never a green over no records', () => {
+  const { findings, notices } = check([], { signals: [SIGNALS[1]], required: true, requiringChanges: ['CHG-1'] });
+  // Not a finding: purification records exist only where non-compliant income was found, so an
+  // institution that found none has nothing to file and no way to satisfy a finding demanding one.
+  assert.deepEqual(findings, [], findings.join('\n'));
+  assert.ok(has(notices, /NOTHING WAS VERIFIED.*uncovered, not clean/s), notices.join('\n'));
+  // …and it stays silent where no plan requires the capability: this is not a generic-adopter tax.
+  assert.deepEqual(check([], { signals: [SIGNALS[1]] }).notices, []);
 });
 
 // ── run(): off a real tree ────────────────────────────────────────────────────────────────────

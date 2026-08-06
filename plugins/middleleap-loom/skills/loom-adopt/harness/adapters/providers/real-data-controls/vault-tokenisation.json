@@ -29,9 +29,10 @@
     ]
   },
   "reconciliation": {
-    "_comment": "`residual_plaintext_stores` is the field that earns this adapter its keep. Tokenisation projects are judged on what was tokenised; what decides the exposure is what was NOT, and that list is the one nobody publishes. Reconcile on it, and a store left holding plaintext is a finding rather than an omission.",
+    "_comment": "NO SHIPPED GATE READS THIS ARTIFACT, and `gate_mechanism` is null rather than naming one. REAL-PII-SURFACE is catalogued `absent`: the harness ships nothing for the real-data case, which is the whole reason this role exists. scripts/adapter-evidence-check.mjs is the nearest thing and it is NOT it — it reads signed observations under docs/governance/adapter-evidence/, not this path, and it makes no claim at all about an adapter outside the stream contract (core/floor-adapters.mjs `isStreamAdapter`), which this one is. What the harness DOES see is that a provider was selected (PS-R06) and whether activation_evidence is still placeholders (adapter-check.mjs). So the reconciliation below is the ADOPTER'S, performed by the fetch that fills activation_evidence. `residual_plaintext_stores` is the field that earns this adapter its keep: tokenisation projects are judged on what was tokenised; what decides the exposure is what was NOT, and that list is the one nobody publishes. Reconcile on it and a store left holding plaintext is a finding rather than an omission — but note WHOSE finding, because nothing in CI will raise it for you. WHAT A GATE WOULD TAKE: this envelope committed as a signed observation under docs/governance/adapter-evidence/ naming REAL-PII-SURFACE, asserted by an issuer outside the coding agent's write scope, with the denial as a required negative — plus a data-custody mechanism in SEAM_MECHANISMS, which carries none today, and a gate that reads it.",
     "gate_artifact": "docs/governance/evidence/real-data-control-posture.json",
-    "gate_mechanism": "scripts/adapter-evidence-check.mjs",
+    "gate_mechanism": null,
+    "reconciled_by": "the adopter's fetch and negative probe — no gate in this harness",
     "match_on": ["vault_id", "tokenised_fields", "residual_plaintext_stores", "detokenisations_denied"]
   },
   "activation_evidence": {

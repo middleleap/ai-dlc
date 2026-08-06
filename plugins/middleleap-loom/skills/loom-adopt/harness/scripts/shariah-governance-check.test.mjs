@@ -16,7 +16,8 @@ import { fileURLToPath } from 'node:url';
 import {
   CAPABILITY,
   COMMITTEE_ROLE,
-  MINIMUM_MEMBERS,
+  DEFAULT_MINIMUM_MEMBERS,
+  compositionFloor,
   evaluate,
   isPlaceholder,
   loadStructures,
@@ -73,20 +74,96 @@ const has = (findings, rule) => findings.some((f) => f.startsWith(`${rule}:`));
 /* ── the shape that must pass ─────────────────────────────────────────────────────────────── */
 
 test('a five-seat register that agrees with the registry passes clean', () => {
-  const { findings, notices } = check();
+  const { findings, notices } = check({ rulings: RULINGS, structures: [{ label: 'murabaha.json', issc_decision_ref: 'SR-0001' }] });
   assert.deepEqual(findings, [], findings.join('\n'));
   assert.deepEqual(notices, []);
 });
 
+test('a clean register with NO structures tree passes, and says the join checked nothing', () => {
+  // Not a failure and not a pass: the gate is honest about the half of its objective that had
+  // nothing to work on. Silence here would read as coverage.
+  const { findings, notices } = check();
+  assert.deepEqual(findings, [], findings.join('\n'));
+  assert.equal(notices.length, 1);
+  assert.match(notices[0], /NOT VERIFIED/);
+});
+
 /* ── SG-R01 — composition ─────────────────────────────────────────────────────────────────── */
 
-test('SG-R01: a committee below the minimum cannot lawfully sit', () => {
-  const four = { members: [seat(1), seat(2), seat(3), seat(4)] };
-  const registry = registryWith({ identities: REGISTRY.identities.filter((i) => i.id !== 'issc-scholar-5') });
-  const { findings } = check({ register: registerWith(four), registry: { ...registry, quorum: { [COMMITTEE_ROLE]: 3 } } });
+const fourSeats = (over = {}) => ({
+  register: registerWith({ members: [seat(1), seat(2), seat(3), seat(4)], ...over }),
+  registry: registryWith({
+    identities: REGISTRY.identities.filter((i) => i.id !== 'issc-scholar-5'),
+    quorum: { [COMMITTEE_ROLE]: 3 },
+  }),
+});
+
+test('SG-R01: a committee below the configured minimum is not the body its approvals name', () => {
+  const { findings } = check(fourSeats());
   assert.ok(has(findings, 'SG-R01'), findings.join('\n'));
-  assert.match(findings.find((f) => f.startsWith('SG-R01')), /4 seats; the minimum committee composition is 5/);
-  assert.equal(MINIMUM_MEMBERS, 5);
+  const f = findings.find((x) => x.startsWith('SG-R01'));
+  assert.match(f, /4 seats against a composition minimum of 5/);
+  assert.equal(DEFAULT_MINIMUM_MEMBERS, 5);
+  // HONESTY GRAMMAR: the gate counts seats against configured data. It may not tell an adopter in
+  // some other market what their law permits — the old wording ("cannot lawfully sit") did.
+  assert.doesNotMatch(f, /lawful|unlawful|legal/i, f);
+  assert.match(f, /rules on no jurisdiction's law/);
+});
+
+/* ── SG-R01 — the floor is MOUNTED DATA with a shipped default, not a baked-in legal fact ─── */
+
+test('compositionFloor: the shipped default applies where the register declares nothing, and says where it came from', () => {
+  const floor = compositionFloor(REGISTER);
+  assert.equal(floor.minimum, DEFAULT_MINIMUM_MEMBERS);
+  assert.deepEqual(floor.findings, []);
+  // The default's PROVENANCE is recorded and quoted back — a number in a finding with no regime
+  // behind it is the market-specific rule stated as universal law that this indirection prevents.
+  assert.match(floor.source, /shipped default/);
+  assert.match(floor.source, /Shari'ah Governance Standard/);
+});
+
+test('SG-R01: a market whose regime sets the floor at three passes a three-seat register', () => {
+  const three = registerWith({
+    members: [seat(1), seat(2), seat(3)],
+    minimum_members: 3,
+    minimum_members_source: 'Shari\'ah governance regulation of the adopting market, 2025 edition, art. 4',
+  });
+  const registry = registryWith({
+    identities: REGISTRY.identities.filter((i) => !['issc-scholar-4', 'issc-scholar-5'].includes(i.id)),
+    quorum: { [COMMITTEE_ROLE]: 2 },
+  });
+  assert.deepEqual(check({ register: three, registry }).findings, []);
+  // …and the gate still BITES below the configured floor.
+  const two = { ...three, members: [seat(1), seat(2)] };
+  const { findings } = check({
+    register: two,
+    registry: registryWith({ identities: registry.identities.filter((i) => i.id !== 'issc-scholar-3'), quorum: { [COMMITTEE_ROLE]: 2 } }),
+  });
+  assert.match(findings.find((f) => f.startsWith('SG-R01')), /2 seats against a composition minimum of 3 \(Shari'ah governance regulation of the adopting market/);
+});
+
+test('SG-R01: a raised floor is checked against, with no instrument demanded — raising your own bar needs no permission', () => {
+  const { findings } = check({ register: registerWith({ minimum_members: 7 }) });
+  assert.match(findings.find((f) => f.startsWith('SG-R01')), /5 seats against a composition minimum of 7 \(declared in the register\)/);
+});
+
+test('SG-R01: an override that LOWERS the shipped floor without naming its instrument does not take effect', () => {
+  const { findings } = check(fourSeats({ minimum_members: 4 }));
+  assert.ok(findings.some((f) => /minimum_members lowers the composition floor to 4 .* names no instrument/.test(f)), findings.join('\n'));
+  // the shipped default stands, so the four-seat register is still short
+  assert.ok(findings.some((f) => /4 seats against a composition minimum of 5 \(shipped default/.test(f)), findings.join('\n'));
+  // …and naming the instrument is what makes it take effect.
+  const sourced = check(fourSeats({ minimum_members: 4, minimum_members_source: 'the adopting market\'s Shari\'ah governance rulebook, 2024' }));
+  assert.deepEqual(sourced.findings, [], sourced.findings.join('\n'));
+});
+
+test('SG-R01: a minimum_members that is not a whole number of seats is refused, and the default stands', () => {
+  for (const bad of ['5', 4.5, 0, -1, true, null]) {
+    const floor = compositionFloor({ minimum_members: bad });
+    assert.equal(floor.minimum, DEFAULT_MINIMUM_MEMBERS, JSON.stringify(bad));
+    if (bad === null) { assert.deepEqual(floor.findings, [], 'null reads as absent'); continue; }
+    assert.match(floor.findings[0] || '', /not a whole number of seats/, JSON.stringify(bad));
+  }
 });
 
 test('SG-R01: no members array at all', () => {
@@ -276,9 +353,44 @@ test('SG-R08: an unreadable structure file is not a bound one', () => {
   assert.ok(findings.some((f) => /SG-R08: structure broken\.json is not readable JSON/.test(f)));
 });
 
-test('SG-R08 says nothing at all where the repository projects no structures', () => {
-  assert.deepEqual(check({ rulings: RULINGS, structures: null }).notices, []);
-  assert.deepEqual(check({ rulings: null, structures: [] }).notices, []);
+test('SG-R08: an unreadable entry is reported even when the rulings register is absent', () => {
+  // The join used to be skipped wholesale when there were no rulings, so an unparseable structure
+  // file went unmentioned. Being unable to resolve a citation is not a reason to stop reporting
+  // that a file could not be read at all.
+  const { findings } = check({ rulings: null, structures: [{ label: 'broken.json', unreadable: true }] });
+  assert.ok(findings.some((f) => /SG-R08: structure broken\.json is not readable JSON/.test(f)), findings.join('\n'));
+});
+
+test('SG-R08: a shape the gate does not read is a FINDING, never a silent skip', () => {
+  const { findings } = check({ rulings: RULINGS, structures: [{ label: 'odd.json', malformed: 'the file is a top-level number, not a structure object or an array of them' }] });
+  assert.ok(findings.some((f) => /SG-R08: structure entry odd\.json is not a shape this gate reads/.test(f)), findings.join('\n'));
+});
+
+test('SG-R08: nothing to join is NOT VERIFIED — the objective claims a binding an empty tree does not supply', () => {
+  // The catalogued objective ends "…every projected product structure is bound to an ACTIVE
+  // ruling". With no structures the join covers nothing, and silence there reads as coverage.
+  const absent = check({ rulings: RULINGS, structures: null });
+  assert.deepEqual(absent.findings, []);
+  assert.equal(absent.notices.length, 1);
+  assert.match(absent.notices[0], /NOT VERIFIED: there is no docs\/governance\/shariah-structures\/ tree/);
+  assert.match(absent.notices[0], /not a pass/);
+
+  const empty = check({ rulings: null, structures: [] });
+  assert.equal(empty.notices.length, 1);
+  assert.match(empty.notices[0], /NOT VERIFIED: docs\/governance\/shariah-structures\/ projects no structure entries/);
+});
+
+test('SG-R08: where every entry is already a finding, the empty-tree notice does not restate it', () => {
+  const { findings, notices } = check({ rulings: RULINGS, structures: [{ label: 'broken.json', unreadable: true }] });
+  assert.equal(findings.length, 1, findings.join('\n'));
+  assert.deepEqual(notices, []);
+});
+
+test('SG-R08: a decision register that is not the shape every reader expects resolves nothing', () => {
+  for (const rulings of [{ rulings: { 'SR-0001': {} } }, [{ ruling_id: 'SR-0001', status: 'active' }], { decisions: [] }]) {
+    const { findings } = check({ rulings, structures: [structure()] });
+    assert.ok(findings.some((f) => /SG-R08: docs\/governance\/shariah-rulings\.json carries no `rulings` array/.test(f)), `${JSON.stringify(rulings)}: ${findings.join('\n')}`);
+  }
 });
 
 /* ── loadStructures — both shapes an adopter reaches for ──────────────────────────────────── */
@@ -306,9 +418,77 @@ test('loadStructures reads one-file-per-structure, a structures array, and skips
   } finally { clean(dir); }
 });
 
+test('loadStructures reads a file written as a TOP-LEVEL JSON ARRAY — the third shape adopters write', () => {
+  // The defect: `Array.isArray(doc.structures) ? doc.structures : [doc]` put the ARRAY ITSELF in
+  // the row list, where it has no issc_decision_ref and every entry inside it vanished. A tree of
+  // unchecked structures was then reported as a checked one.
+  const dir = tmp();
+  try {
+    put(dir, 'docs/governance/shariah-structures/bundle.json', [
+      { structure_id: 'STR-01', issc_decision_ref: 'SR-0001' },
+      { issc_decision_ref: 'SR-9999' },
+    ]);
+    const rows = loadStructures(dir);
+    assert.deepEqual(rows.map((r) => r.label), ['STR-01', 'bundle.json#1']);
+    assert.deepEqual(rows.map((r) => r.issc_decision_ref), ['SR-0001', 'SR-9999']);
+    // and the join then actually sees the bad citation
+    const { findings } = check({ rulings: RULINGS, structures: rows });
+    assert.ok(findings.some((f) => /structure bundle\.json#1 cites ISSC decision "SR-9999"/.test(f)), findings.join('\n'));
+  } finally { clean(dir); }
+});
+
+test('loadStructures marks a shape it cannot read rather than dropping it', () => {
+  const dir = tmp();
+  try {
+    put(dir, 'docs/governance/shariah-structures/scalar.json', '"just a string"');
+    put(dir, 'docs/governance/shariah-structures/nulled.json', 'null');
+    put(dir, 'docs/governance/shariah-structures/nested.json', { structures: ['STR-07', 42] });
+    const rows = loadStructures(dir);
+    assert.deepEqual(rows.map((r) => r.label), ['nested.json#0', 'nested.json#1', 'nulled.json', 'scalar.json']);
+    for (const r of rows) assert.ok(r.malformed || r.unreadable, JSON.stringify(r));
+    assert.match(rows.find((r) => r.label === 'scalar.json').malformed, /top-level string/);
+    assert.match(rows.find((r) => r.label === 'nested.json#1').malformed, /entry 1 is 42, not a structure object/);
+  } finally { clean(dir); }
+});
+
+test('loadStructures reports a structures location that is not a listable directory', () => {
+  const dir = tmp();
+  try {
+    put(dir, 'docs/governance/shariah-structures', { structure_id: 'STR-01' });
+    const rows = loadStructures(dir);
+    assert.equal(rows.length, 1);
+    assert.match(rows[0].malformed, /cannot be listed/);
+  } finally { clean(dir); }
+});
+
 test('loadStructures returns null — not an empty tree — where the repository has no structures', () => {
   const dir = tmp();
   try { assert.equal(loadStructures(dir), null); } finally { clean(dir); }
+});
+
+/* ── malformed governance JSON is ordinary — a stack trace is fail-closed and useless ─────── */
+
+test('a malformed identity registry produces a finding, not a crash', () => {
+  const cases = [
+    ['identities is not an array', registryWith({ identities: { 'issc-scholar-1': {} } }), /carries no `identities` array/],
+    ['an entry that is not an object', registryWith({ identities: [...REGISTRY.identities, null, 'issc-scholar-9'] }), /2 entries that are not an identity object/],
+    ['a roles field that is not a list', registryWith({
+      identities: REGISTRY.identities.map((i) => (i.id === 'issc-scholar-2' ? { ...i, roles: { [COMMITTEE_ROLE]: true } } : i)),
+    }), /identity issc-scholar-2 carries a `roles` field that is not an array/],
+  ];
+  for (const [what, registry, expected] of cases) {
+    const { findings } = check({ registry });
+    assert.ok(findings.some((f) => expected.test(f)), `${what}: ${findings.join('\n')}`);
+    for (const f of findings) assert.match(f, /^SG-R\d\d: /, what);
+  }
+});
+
+test('a malformed register produces findings, not a crash', () => {
+  for (const members of [['issc-scholar-1', 'issc-scholar-2'], [null, 42], [[]]]) {
+    const { findings } = check({ register: registerWith({ members }) });
+    assert.ok(findings.length > 0, JSON.stringify(members));
+    assert.ok(has(findings, 'SG-R01') || has(findings, 'SG-R02') || has(findings, 'SG-R03'), findings.join('\n'));
+  }
 });
 
 /* ── run(): mandatory-when-compiled, end to end off a real tree ───────────────────────────── */
@@ -384,6 +564,26 @@ test('run() refuses an unreadable composition register, and an unreadable decisi
     put(dir, 'docs/governance/shariah-rulings.json', '{ not json');
     const r = run(dir);
     assert.ok(r.findings.some((f) => /SG-R08: .*shariah-rulings\.json is present but is not valid JSON/.test(f)), r.findings.join('\n'));
+  } finally { clean(dir); }
+});
+
+test('run() refuses an unreadable identity registry instead of throwing out of the gate', () => {
+  const dir = repo({ structures: { 'murabaha.json': { structure_id: 'STR-01', issc_decision_ref: 'SR-0001' } } });
+  try {
+    put(dir, 'docs/governance/identities.json', '{ "identities": [ , ] }');
+    const r = run(dir);
+    assert.ok(r.findings.some((f) => /SG-R02: the identity registry is present but is not valid JSON/.test(f)), r.findings.join('\n'));
+    assert.equal(r.findings.filter((f) => /^SG-R02: no identity registry/.test(f)).length, 0, 'one cause, one finding');
+  } finally { clean(dir); }
+});
+
+test('run() reports the join as NOT VERIFIED where the repository projects no structures at all', () => {
+  const dir = repo({ rulings: RULINGS });
+  try {
+    const r = run(dir);
+    assert.deepEqual(r.findings, [], r.findings.join('\n'));
+    assert.equal(r.notices.length, 1);
+    assert.match(r.notices[0], /NOT VERIFIED: there is no docs\/governance\/shariah-structures\/ tree/);
   } finally { clean(dir); }
 });
 

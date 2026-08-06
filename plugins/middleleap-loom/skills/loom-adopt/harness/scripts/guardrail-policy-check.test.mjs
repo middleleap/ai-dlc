@@ -242,18 +242,55 @@ test('shariah-term-guard: "conflict of interest" is not riba — idiomatic uses 
 
 // Both hooks must fail CLOSED with jq absent — a non-zero exit is a NON-BLOCKING error in the
 // runtime, so a guard that merely errors has disarmed itself silently.
-test('both hooks DENY when jq is absent, and still exit 0', { skip: !HOOKS_DIR }, () => {
+test('pii-guard DENIES when jq is absent, and still exits 0', { skip: !HOOKS_DIR }, () => {
   const empty = mkdtempSync(join(tmpdir(), 'gr-nopath-'));
   try {
-    for (const script of ['pii-guard.sh', 'shariah-term-guard.sh']) {
-      const r = spawnSync('/bin/bash', [join(HOOKS_DIR, script)], {
-        input: JSON.stringify({ tool_input: { file_path: 'x.md', content: 'x' } }),
-        encoding: 'utf8', env: { PATH: empty },
-      });
-      assert.match(r.stdout || '', /"permissionDecision":\s*"deny"/, `${script} must deny without jq`);
-      assert.equal(r.status, 0, `${script} must exit 0 — a non-zero exit is a non-blocking error`);
-    }
+    const r = spawnSync('/bin/bash', [join(HOOKS_DIR, 'pii-guard.sh')], {
+      input: JSON.stringify({ tool_input: { file_path: 'x.md', content: 'x' } }),
+      encoding: 'utf8', env: { PATH: empty },
+    });
+    assert.match(r.stdout || '', /"permissionDecision":\s*"deny"/, 'pii-guard must deny without jq');
+    assert.equal(r.status, 0, 'pii-guard must exit 0 — a non-zero exit is a non-blocking error');
   } finally { rmSync(empty, { recursive: true, force: true }); }
+});
+
+// The Shari'ah term guard fails closed like its sibling, but ONLY once the institution has opted in.
+// The distinction is the whole reason this test is separate, and it encodes a real defect that was
+// shipped and caught: the jq deny used to be evaluated BEFORE the scope check, so on a machine
+// without jq a control nobody had opted into denied every write in the repository. Dormancy that
+// depends on an external binary being installed is not dormancy — so the opt-in question is answered
+// with shell builtins alone, and only a repository that HAS declared a surface can fail closed here.
+test('the Shari\'ah term guard is DORMANT without jq until a surface is declared, then fails closed', { skip: !HOOKS_DIR }, () => {
+  const empty = mkdtempSync(join(tmpdir(), 'gr-nopath-'));
+  const stage = mkdtempSync(join(tmpdir(), 'gr-surfaces-'));
+  try {
+    cpSync(join(HOOKS_DIR, 'shariah-term-guard.sh'), join(stage, 'shariah-term-guard.sh'));
+    const run = () => spawnSync('/bin/bash', [join(stage, 'shariah-term-guard.sh')], {
+      input: JSON.stringify({ tool_input: { file_path: 'x.md', content: 'x' } }),
+      encoding: 'utf8', env: { PATH: empty },
+    });
+
+    // No surfaces file at all — the state of every adopter with no Islamic product.
+    let r = run();
+    assert.equal(r.status, 0, 'must exit 0');
+    assert.doesNotMatch(r.stdout || '', /"permissionDecision"/, 'no surfaces file ⇒ no decision at all');
+
+    // A surfaces file that declares nothing (the shipped state) is equally dormant.
+    writeFileSync(join(stage, 'shariah-surfaces.txt'), '# ADOPT: one path prefix per line\n\n');
+    r = run();
+    assert.equal(r.status, 0, 'must exit 0');
+    assert.doesNotMatch(r.stdout || '', /"permissionDecision"/, 'comments-only surfaces list ⇒ still dormant');
+
+    // One declared surface — the institution has opted in, so a guard that cannot read the write
+    // must now refuse it rather than wave it through.
+    writeFileSync(join(stage, 'shariah-surfaces.txt'), 'docs/customer/\n');
+    r = run();
+    assert.equal(r.status, 0, 'must exit 0 — a non-zero exit is a non-blocking error, i.e. a silent disarm');
+    assert.match(r.stdout || '', /"permissionDecision":\s*"deny"/, 'a declared surface without jq must fail closed');
+  } finally {
+    rmSync(empty, { recursive: true, force: true });
+    rmSync(stage, { recursive: true, force: true });
+  }
 });
 
 test('the ci-backstop mechanism for every guardrail exists (the enforcement of record is real)', { skip: !GUARDRAILS_PRESENT && 'guardrails/ not installed at this tier' }, () => {

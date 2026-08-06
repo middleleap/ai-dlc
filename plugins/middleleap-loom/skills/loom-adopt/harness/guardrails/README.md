@@ -56,6 +56,18 @@ as a request-time control — the exact substitution this policy exists to preve
 `uncovered` on all four runtimes and flagged as an acknowledged gap. Coverage the harness cannot see
 is declared, never implied.
 
+**`shariah-terminology` is the one row whose `● enforced` is conditional, and the matrix has no cell
+for that.** The schema's three states — `enforced`, `ci-backstop`, `uncovered` — carry no word for
+*installed but dormant until the adopter opts in*, which is exactly what ships: the hook's scope is
+`.claude/hooks/shariah-surfaces.txt`, that file ships **empty**, and with no entries the hook reads
+the path, finds no declared surface above it and **allows**. On a fresh install it blocks nothing.
+Read the cell as *point-of-action block inside a surface the institution declared Islamic*, and the
+row's `claude-code` note in `guardrail-policy.json` as the qualification. That dormancy is the design
+— an Islamic control must never fail a conventional adopter — not a gap to be closed by widening the
+default scope. The `github-actions` backstop (`shariah-emission-check.mjs`, SE-R07) is dormant on the
+same condition but activates from the **compiled plan**, not from a file somebody remembered to edit:
+once a plan requires `shariah_governance`, an absent or empty surfaces declaration is `SE-R00`.
+
 ## Adapters
 
 - **`claude-code`** — the shipped `hooks/*.sh`, wired via `settings.hooks.json` as `PreToolUse`
