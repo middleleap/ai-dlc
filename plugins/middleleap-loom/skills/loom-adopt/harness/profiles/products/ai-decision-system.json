@@ -5,11 +5,18 @@
   "requirements": {
     "medium": {
       "approver_roles": ["model-validator"],
-      "pa2_sections": ["human-oversight", "explainability-and-contestability"],
+      "_pa2_comment": "`ai-disclosure` is a CUSTOMER-facing duty, not an internal one: where AI made or materially shaped a decision about a person, the person is told so, and told the human-review path out of it. Consumer-protection disclosure duties do not stop applying because the decider was a model — this section is where that extension is written down and read by an approver.",
+      "pa2_sections": ["human-oversight", "explainability-and-contestability", "ai-disclosure"],
       "capabilities": {
         "model_risk": { "required": true, "minimum_tier": "high" },
         "human_oversight": { "required": true },
         "data_risk_register": { "required": true, "minimum_version": "3.1", "institution_owned": true }
+      }
+    },
+    "high": {
+      "_runtime_comment": "At high risk the model is deciding about people in production, and every guardrail this harness ships is a BUILD-time one — hooks and CI gates do not execute in the serving path. `runtime_guardrails` does not let the harness verify that a runtime control fires; it refuses to let a change ship that never chose the enforcement point. Naming it is the least the institution owes a customer whose outcome a model decides.",
+      "capabilities": {
+        "runtime_guardrails": { "required": true, "institution_owned": true }
       }
     }
   }

@@ -1,7 +1,13 @@
 // Tests for the assurance-case gate (rc.14 · WS6). Node runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { evaluate } from './assurance-case-check.mjs';
+
+const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const TEMPLATE = JSON.parse(readFileSync(join(H, 'governance/assurance-sla.template.json'), 'utf8'));
 
 const SLA = {
   sources: ['siem', 'model-monitoring'],
@@ -96,4 +102,30 @@ test('a missing lifecycle step fails', () => {
 test('a low-severity signal needs no containment', () => {
   const k = kase(); k.signal.severity = 'low'; delete k.steps.remediation.containment;
   assert.deepEqual(ev(k), []);
+});
+
+/* ---- rc.46: the SLA is VOCABULARY. Sources and containments extend by data, never by code ---- */
+
+test('the shipped SLA template declares the continuous-monitoring source and the two value-side containments', () => {
+  assert.ok(TEMPLATE.sources.includes('shariah-compliance-monitoring'), 'a continuous Shari\'ah compliance monitoring feed has somewhere to open a case');
+  assert.ok(TEMPLATE.containment_actions.includes('quarantine-income'));
+  assert.ok(TEMPLATE.containment_actions.includes('suspend-product-offering'));
+  // the original four are not displaced — an adopter on the shipped file loses nothing
+  for (const a of ['suspend-autonomy', 'block-release', 'rollback', 'model-fallback']) assert.ok(TEMPLATE.containment_actions.includes(a));
+});
+
+test('a case on the shipped vocabulary passes with no code change — the gate reads the SLA', () => {
+  const k = kase();
+  k.signal.source = 'shariah-compliance-monitoring';
+  k.steps.remediation.containment = ['quarantine-income', 'suspend-product-offering'];
+  assert.deepEqual(evaluate(k, { sla: TEMPLATE, registry: REGISTRY, controlIds: CONTROLS, now: NOW }), []);
+});
+
+test('the new vocabulary is still REFUSED for an adopter who did not declare it', () => {
+  // The local SLA above is a trimmed adopter file. Nothing is hardcoded: a containment the
+  // institution never adopted is not a containment, and neither is a source it never wired.
+  const c = kase(); c.steps.remediation.containment = ['quarantine-income'];
+  assert.ok(ev(c).some((f) => /no valid containment action/.test(f)));
+  const s = kase(); s.signal.source = 'shariah-compliance-monitoring';
+  assert.ok(ev(s).some((f) => /is not a declared assurance source/.test(f)));
 });

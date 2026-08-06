@@ -10,6 +10,12 @@
 //   each approval names a registry identity that is HUMAN, holds the role, and — for
 //   second-line roles — is not a builder. A text field with a name does not count.
 //
+// THE SHARI'AH LANE (see `shariahLane` below). Where a plan compiles `shariah-committee`, PA1 has
+// two routes and the change says which one it takes: a change that creates or modifies a product
+// STRUCTURE binds the full committee; a change that CONFORMS to a structure the committee already
+// ruled on is cleared by the Shari'ah Compliance Function against the named ruling. The gate checks
+// composition, provenance and binding. It never rules on Shari'ah — scholars do that.
+//
 // MANDATORY-WHEN-COMPILED (Factory Floor WS2 · D2.5). When the compiled plan requires the
 // `approval_attestation` capability — because the decision is made somewhere other than this
 // repository — a resolvable name is no longer sufficient either. Each approval must carry an
@@ -34,8 +40,23 @@ import {
 import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
-// Roles whose approvals demand organisational independence from the builders.
-export const SECOND_LINE_ROLES = new Set(['risk-second-line', 'compliance', 'model-validator', 'credit-risk', 'data-protection']);
+// Roles whose approvals demand organisational independence from the builders. THIRD LINE IS IN
+// HERE TOO (`shariah-audit`): the rule this set encodes is not an org chart, it is "the person who
+// certifies a change may never be an author of it", and an internal Shari'ah auditor — or a scholar
+// — signing work they helped build is that defect wearing a different title. Until the Shari'ah
+// roles were added, a builders-group identity holding one of them signed Shari'ah approvals
+// unchallenged, because the finding below only fires for roles in this set.
+export const SECOND_LINE_ROLES = new Set([
+  'risk-second-line', 'compliance', 'model-validator', 'credit-risk', 'data-protection',
+  // Shari'ah roles — inert for any repository whose plans never compile them. `shariah-committee`
+  // is the ISSC (the body); `shariah-compliance` is the Shari'ah Compliance Function head (second
+  // line); `shariah-audit` is internal Shari'ah audit (third line, and it may never be outsourced).
+  'shariah-committee', 'shariah-compliance', 'shariah-audit',
+]);
+// Third line, for the wording of the finding only — the independence rule is identical.
+const THIRD_LINE_ROLES = new Set(['shariah-audit']);
+export const SHARIAH_COMMITTEE_ROLE = 'shariah-committee';
+export const SHARIAH_COMPLIANCE_ROLE = 'shariah-compliance';
 // PA1 needs the owning + challenging functions as a FLOOR; PA2 needs every role the plan compiled.
 export const PA1_CORE_ROLES = ['product-owner', 'risk-second-line'];
 export const PA1_HIGH_ROLES = ['accountable-executive'];
@@ -61,6 +82,87 @@ export function pa1Roles(plan) {
     ...(plan?.pa1_approver_roles || []),
   ];
   return [...new Set(wanted)].filter((r) => required.includes(r)).sort();
+}
+
+/** A ruling id somebody actually wrote: not empty, not a marker nobody replaced. */
+const isNamedRef = (v) => typeof v === 'string' && v.trim() !== ''
+  && !/^(ADOPT[\s:—-]|TODO|TBD|N\/?A$|none$|<)/i.test(v.trim());
+
+/**
+ * Which Shari'ah lane a change takes — 'structure-delta' or 'conforming'.
+ *
+ * WHY THERE ARE TWO LANES. An ISSC sits on a committee cadence (governance/approval-sla.template.json
+ * ships a 14-day target, and that target is honest about why: it reflects when the body actually
+ * sits) and its quorum is 3 distinct scholars. Binding the full committee at PA1 to EVERY change
+ * that touches an Islamic product queues the institution's whole change flow behind a fortnightly
+ * meeting — the governance would be defeated by its own SLA data, and what follows is the thing
+ * governance cannot survive: people routing around it. The established practice is already two
+ * lanes, and this is that practice mechanised. THE COMMITTEE APPROVES STRUCTURES. The Shari'ah
+ * Compliance Function — second line, and under the CBUAE Shari'ah Compliance Function standard a
+ * CONTINUOUS monitoring function, not a periodic one — clears changes that CONFORM to a structure
+ * the committee has already ruled on. The committee ratifies the conforming flow at its cadence.
+ *
+ * The lane is DECLARED, on the change envelope, as `flags.structure_delta` (true ⇒ this change
+ * creates or modifies a Shari'ah product structure). Undeclared reads as conforming, which buys
+ * nothing by itself: the conforming lane only substitutes when the envelope ALSO names the ruling
+ * being conformed to — see `conformingLanePa1`.
+ *
+ * WHAT THIS CANNOT SEE, and no gate can: whether a change that says it conforms actually does.
+ * That is a Shari'ah judgement, and no agent makes one. The harness reads a declared flag, a named
+ * ruling and a signature; it checks composition, provenance and binding, never substance. A
+ * mis-declared lane is caught afterwards, when the committee RATIFIES what flowed through the
+ * conforming lane — a cadence obligation carried by the assurance stream, not by this gate.
+ */
+export function shariahLane(plan, envelope) {
+  // The envelope is where the flags live and where the compiler reads them from; a plan that
+  // carries its own copy is honoured so the helper answers for a plan handed over on its own.
+  const flags = envelope?.flags ?? plan?.flags ?? {};
+  return flags.structure_delta === true ? 'structure-delta' : 'conforming';
+}
+
+/**
+ * The PA1 role set after the Shari'ah lane is applied, and the record of which lane that was.
+ *
+ * Returns `{ roles, lane, substituted, ref, findings, notices }`. Inert — `lane: null`, roles
+ * unchanged, nothing said — for any stage that does not bind `shariah-committee`, which is every
+ * change in a repository with no Islamic product in flight.
+ *
+ * On the conforming lane the committee's PA1 quorum is satisfied INSTEAD by a `shariah-compliance`
+ * approval plus a named `issc_decision_ref` (the already-approved structure's ruling id). Both are
+ * required: the signature without the ruling is a second-line clearance of nothing in particular,
+ * and the ruling without the signature is a citation. Either missing, or a declared structure
+ * delta, and the full committee binding applies exactly as before this lane existed.
+ *
+ * The lane taken is always announced. A silent lane switch is precisely the defect this design
+ * would otherwise introduce: an auditor reading a green PA1 must be able to see whether three
+ * scholars bound this change or one compliance officer did, and against which ruling.
+ *
+ * PA2 is untouched. Permission to LAUNCH keeps the full committee binding — the lane exists to
+ * keep development flowing between sittings, not to launch a product the committee has not seen.
+ */
+export function conformingLanePa1(plan, envelope, roles, label) {
+  const findings = [];
+  const notices = [];
+  const out = [...(roles || [])];
+  if (!out.includes(SHARIAH_COMMITTEE_ROLE)) return { roles: out, lane: null, substituted: false, ref: null, findings, notices };
+  const lane = shariahLane(plan, envelope);
+  const ref = envelope?.issc_decision_ref;
+  if (lane === 'structure-delta') {
+    notices.push(`${label}: Shari'ah lane = STRUCTURE-DELTA (envelope flags.structure_delta) — this change creates or modifies a product structure, so the full ${SHARIAH_COMMITTEE_ROLE} quorum binds here. Only the committee approves a structure.`);
+    return { roles: out, lane, substituted: false, ref: null, findings, notices };
+  }
+  if (!isNamedRef(ref)) {
+    findings.push(`${label}: the change takes the CONFORMING Shari'ah lane (envelope flags.structure_delta is not set) but names no issc_decision_ref — "this conforms to something the committee already approved" without saying WHAT is an assertion, not a route. Name the ruling, or declare the structure delta and bind the committee. The ${SHARIAH_COMMITTEE_ROLE} binding stands meanwhile.`);
+    return { roles: out, lane, substituted: false, ref: null, findings, notices };
+  }
+  if (!(plan?.required_approver_roles || []).includes(SHARIAH_COMPLIANCE_ROLE)) {
+    findings.push(`${label}: the conforming lane clears a change through ${SHARIAH_COMPLIANCE_ROLE} against ISSC decision ${JSON.stringify(ref)}, and this plan compiles no ${SHARIAH_COMPLIANCE_ROLE} role — a lane with nobody in it is not a lane, so the ${SHARIAH_COMMITTEE_ROLE} binding stands.`);
+    return { roles: out, lane, substituted: false, ref, findings, notices };
+  }
+  const next = out.filter((r) => r !== SHARIAH_COMMITTEE_ROLE);
+  if (!next.includes(SHARIAH_COMPLIANCE_ROLE)) next.push(SHARIAH_COMPLIANCE_ROLE);
+  notices.push(`${label}: Shari'ah lane = CONFORMING against ISSC decision ${JSON.stringify(ref)} — the ${SHARIAH_COMMITTEE_ROLE} PA1 quorum is satisfied by ${SHARIAH_COMPLIANCE_ROLE} instead. What was checked: that a ruling is NAMED and that the Shari'ah Compliance Function signed. What was NOT checked, here or anywhere in the harness: whether this change conforms to that ruling — scholars decide Shari'ah. Committee ratification of the conforming flow is a cadence obligation on the assurance stream.`);
+  return { roles: next.sort(), lane, substituted: true, ref, findings, notices };
 }
 
 /**
@@ -143,7 +245,7 @@ function checkOne(a, role, registry, label, att) {
   if (registry && SECOND_LINE_ROLES.has(role)) {
     const who = identityOf(registry, a.by);
     if (who && (who.groups || []).includes('builders')) {
-      findings.push(`${label} · ${role}: ${a.by} is in the builders group — a builder cannot issue second-line approval`);
+      findings.push(`${label} · ${role}: ${a.by} is in the builders group — a builder cannot issue ${THIRD_LINE_ROLES.has(role) ? 'third-line' : 'second-line'} approval (the person who certifies a change may never be an author of it)`);
     }
   }
   return findings;
@@ -154,7 +256,9 @@ const hasSubstance = (s) => s && typeof s === 'object' && Object.keys(s).length 
 /**
  * Findings for one passport against its compiled plan.
  * `att` carries the attestation material when the plan compiles the capability:
- * { records, issuers, assertionIssuers, passportDigest, seen, now }.
+ * { records, issuers, assertionIssuers, passportDigest, seen, now }. It also carries `envelope` —
+ * the change envelope — because the Shari'ah lane is DECLARED there (flags.structure_delta,
+ * issc_decision_ref) and a passport cannot answer for a route the change chose.
  */
 export function evaluate(passport, plan, registry, att = {}) {
   const findings = [];
@@ -192,13 +296,20 @@ export function evaluate(passport, plan, registry, att = {}) {
           findings.push(`${id} · PA1: required section ${section} is missing or empty — an approval over absent analysis is not an approval`);
         }
       }
-      findings.push(...checkApprovals(passport.pa1.approvals, pa1Required, registry, `${id} · PA1`, 'PA1', attCtx).findings);
+      // The Shari'ah lane. Silent and role-preserving unless the plan binds `shariah-committee` at
+      // PA1, which is every change in a repository with no Islamic product in flight.
+      const lane = conformingLanePa1(plan, attCtx.envelope, pa1Required, `${id} · PA1`);
+      findings.push(...lane.findings);
+      for (const n of lane.notices) attCtx.notices?.push(n);
+      findings.push(...checkApprovals(passport.pa1.approvals, lane.roles, registry, `${id} · PA1`, 'PA1', attCtx).findings);
     } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
       findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
     }
   }
 
-  // PA2 — permission to launch: the full section set, every compiled control function.
+  // PA2 — permission to launch: the full section set, every compiled control function. The
+  // Shari'ah lane deliberately does NOT reach here: it exists so development keeps moving between
+  // committee sittings, not so a product launches on a structure the committee has not approved.
   if (gates.has('PA2') && passport.pa2?.decision === 'approved') {
     for (const section of [...(plan.pa1_sections || []), ...(plan.pa2_sections || [])]) {
       if (!hasSubstance(passport.sections?.[section])) {
@@ -250,6 +361,10 @@ export function run(cwd = process.cwd()) {
       map: identityMap,
       mapRequired: mapRequired(plan),
       notices,
+      // The envelope decides the Shari'ah lane (flags.structure_delta, issc_decision_ref). It is
+      // already read above; passing it in is what stops evaluate() guessing the route from the
+      // passport, which cannot know it.
+      envelope,
     };
     findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry, att));
   }

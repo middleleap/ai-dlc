@@ -98,6 +98,127 @@ test('rc.13 WS3.3 — product-type profiles compile DIFFERENT capabilities', () 
   assert.equal(both.shariah_governance.required, true);
 });
 
+// ---- Shari'ah governance (WS3.3, extended). The vocabulary is the three LINES, and the tests
+// pin it because the failure mode is a rename: a profile that says `shariah-board` compiles a
+// role no identity registry holds, and an unheld role is an approval nobody can give. ----
+
+/** Compile the FULL plan for a set of product profiles over base + jurisdiction. */
+const planWith = (names, flags = {}, tier = 'high') => compile(
+  envelope({ risk_tier: tier, flags, required_profiles: ['regulated-bank', 'uae-bank', ...names] }),
+  [profile('regulated-bank'), profile('jurisdictions/uae-bank'), ...names.map((n) => profile(`products/${n}`))],
+).plan;
+
+test('WS3.3 — islamic-product compiles the THREE canonical roles, and shariah-audit binds at PA2 only', () => {
+  const plan = planWith(['islamic-product']);
+  for (const r of ['shariah-committee', 'shariah-compliance', 'shariah-audit']) {
+    assert.ok(plan.required_approver_roles.includes(r), `islamic-product must compile ${r}`);
+  }
+  assert.ok(!plan.required_approver_roles.includes('shariah-board'), 'shariah-board is retired vocabulary');
+  assert.ok(plan.pa1_approver_roles.includes('shariah-committee'));
+  assert.ok(plan.pa1_approver_roles.includes('shariah-compliance'));
+  // Third-line audit certifies what was built; binding it at permission-to-develop would make
+  // the assurer a party to the thing it later assures.
+  assert.ok(!plan.pa1_approver_roles.includes('shariah-audit'), 'third-line audit must not authorise development');
+});
+
+test('WS3.3 — an Islamic product compiles attestation, continuous assurance and its evidence type', () => {
+  const plan = planWith(['islamic-product']);
+  // A ruling made in a committee sitting has to come home bound to the exact plan it ruled on.
+  assert.equal(plan.required_capabilities.approval_attestation.required, true);
+  // Continuous monitoring is a medium-tier duty, not a high-tier extra.
+  assert.equal(plan.required_capabilities.knowledge_currency.required, true);
+  assert.equal(plan.required_capabilities.knowledge_currency.institution_owned, true);
+  assert.ok(plan.required_gates.includes('assurance-cadence'));
+  assert.ok(plan.required_evidence.includes('shariah-attestation'));
+
+  // …and it is compiled at MEDIUM, not only at high — a medium-tier Islamic product governed
+  // once at launch and never again is the defect this tier placement exists to prevent.
+  const medium = planWith(['islamic-product'], {}, 'medium');
+  assert.ok(medium.required_gates.includes('assurance-cadence'));
+  assert.equal(medium.required_capabilities.approval_attestation.required, true);
+});
+
+test('WS3.3 — a Shari’ah-significant model adds a DOMAIN validation on top of model risk', () => {
+  const plan = planWith(['ai-decision-system', 'shariah-model']);
+  assert.equal(plan.required_capabilities.shariah_model_validation.required, true);
+  assert.equal(plan.required_capabilities.shariah_model_validation.institution_owned, true);
+  // Domain validation ADDS to model risk; it never replaces it.
+  assert.equal(plan.required_capabilities.model_risk.required, true);
+  assert.equal(plan.required_capabilities.model_risk.minimum_tier, 'high');
+  assert.ok(plan.required_approver_roles.includes('model-validator'));
+  assert.ok(plan.required_approver_roles.includes('shariah-compliance'));
+  assert.ok(plan.pa2_sections.includes('shariah-model-validation'));
+  // The customer is told when a model made or shaped the decision, on both routes.
+  assert.ok(plan.pa2_sections.includes('ai-disclosure'));
+  assert.ok(planWith(['ai-decision-system']).pa2_sections.includes('ai-disclosure'));
+});
+
+test('WS3.3 — Open Finance ∩ Islamic compiles the mapping table, disclosures and monetisation screen', () => {
+  const plan = planWith(['open-finance', 'islamic-product'], { islamic: true });
+  for (const s of ['sharia-structure-mapping', 'islamic-consumer-disclosures', 'monetisation-shariah-screening']) {
+    assert.ok(plan.pa2_sections.includes(s), `OF∩Islamic must compile ${s}`);
+  }
+  // The mapping table is EVIDENCE, not only analysis: the API representation is itself a
+  // compliance statement, so the product → contract → ShariaStructure rows (including the
+  // explicit GAP rows) have to exist as an artefact an auditor can read.
+  assert.ok(plan.required_evidence.includes('sharia-structure-mapping'));
+  // The Shari’ah roles come from the ISLAMIC profile, not from open-finance.
+  assert.ok(plan.required_approver_roles.includes('shariah-committee'));
+});
+
+test('WS3.3 — Open Finance ALONE is untouched: no Shari’ah governance, no Islamic sections', () => {
+  for (const flags of [{}, { islamic: false }]) {
+    const plan = planWith(['open-finance'], flags);
+    assert.ok(!plan.required_capabilities.shariah_governance, 'a conventional Open Finance change must not compile Shari’ah governance');
+    for (const s of ['sharia-structure-mapping', 'islamic-consumer-disclosures', 'monetisation-shariah-screening']) {
+      assert.ok(!plan.pa2_sections.includes(s), `${s} must be dormant for a non-Islamic adopter`);
+    }
+    assert.ok(!plan.required_evidence.includes('sharia-structure-mapping'));
+    for (const r of ['shariah-committee', 'shariah-compliance', 'shariah-audit']) {
+      assert.ok(!plan.required_approver_roles.includes(r), `${r} must not compile without an Islamic product`);
+    }
+  }
+});
+
+test('WS3.3 — the jurisdiction carries its own CX regime: islamic + open_finance fire independently', () => {
+  const uae = profile('jurisdictions/uae-bank');
+  const plan = compile(envelope({ flags: { islamic: true, open_finance: true } }), [profile('regulated-bank'), uae]).plan;
+  assert.ok(plan.pa2_sections.includes('shariah-approval'));
+  assert.ok(plan.pa2_sections.includes('altareq-cx-conformance'));
+  // Each flag alone fires only its own conditional — the market CX regime is not an Islamic
+  // control, and Shari’ah approval is not an Open Finance one.
+  const ofOnly = compile(envelope({ flags: { open_finance: true } }), [profile('regulated-bank'), uae]).plan;
+  assert.ok(ofOnly.pa2_sections.includes('altareq-cx-conformance'));
+  assert.ok(!ofOnly.pa2_sections.includes('shariah-approval'));
+});
+
+test('WS3.3 — two jurisdiction profiles compose: local authority vocabulary unions, duplicates collapse', () => {
+  // In-test fixtures, because the bundle ships one market and the invariant under test is that a
+  // SECOND market is a JSON file and not a code change. The generic Islamic duties live in the
+  // product profile; each market adds only its own binding-authority step.
+  const marketA = {
+    profile: 'market-a', kind: 'jurisdiction',
+    requirements: { medium: { pa2_sections: ['market-a-disclosure'] } },
+    conditional: [{ when: 'islamic', adds: { approver_roles: ['shariah-committee'], pa2_sections: ['market-a-authority-alignment'] } }],
+  };
+  const marketB = {
+    profile: 'market-b', kind: 'jurisdiction',
+    requirements: { medium: { pa2_sections: ['market-b-disclosure'] } },
+    conditional: [{ when: 'islamic', adds: { approver_roles: ['shariah-committee'], pa2_sections: ['market-b-authority-alignment'] } }],
+  };
+  const plan = compile(
+    envelope({ flags: { islamic: true }, required_profiles: ['regulated-bank', 'market-a', 'market-b', 'islamic-product'] }),
+    [profile('regulated-bank'), marketA, marketB, profile('products/islamic-product')],
+  ).plan;
+  for (const s of ['market-a-disclosure', 'market-b-disclosure', 'market-a-authority-alignment', 'market-b-authority-alignment']) {
+    assert.ok(plan.pa2_sections.includes(s), `both markets' requirements must survive the union (${s})`);
+  }
+  // The generic duty is stated ONCE by the product profile, and the two markets' duplicate role
+  // collapses — union, not concatenation, is what makes composition fork-free.
+  assert.equal(plan.required_approver_roles.filter((r) => r === 'shariah-committee').length, 1);
+  assert.ok(plan.pa2_sections.includes('purification-of-non-compliant-income'));
+});
+
 test('an unclassified change is blocked', () => {
   const { plan, findings } = compile(envelope({ risk_tier: undefined }), ALL);
   assert.equal(plan, null);

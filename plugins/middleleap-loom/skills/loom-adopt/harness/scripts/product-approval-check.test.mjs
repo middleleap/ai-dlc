@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateKeyPairSync, sign as edSign } from 'node:crypto';
-import { checkApprovals, evaluate, run, pa1Roles } from './product-approval-check.mjs';
+import { checkApprovals, conformingLanePa1, evaluate, run, pa1Roles, shariahLane, SECOND_LINE_ROLES } from './product-approval-check.mjs';
 import { canonicalDecisionPayload, roleBindingHash, sha256 } from '../core/approval-attestations.mjs';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, cpSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -283,12 +283,15 @@ test('an islamic change binds the Shariah roles at PA1, not only at PA2', () => 
   // The uae-bank and islamic-product profiles add Shariah approver roles AND Shariah PA1 sections.
   // Requiring the analysis at PA1 while nobody with Shariah authority need approve it until PA2
   // is incoherent, so those profiles now declare their roles pa1-binding.
+  // The vocabulary is fixed: `shariah-committee` is the ISSC (the body — a registry quorum is what
+  // makes it one), `shariah-compliance` is the Shari'ah Compliance Function head, `shariah-audit`
+  // is internal Shari'ah audit. `shariah-board` is retired and appears nowhere.
   const plan = {
     risk_tier: 'high',
-    required_approver_roles: ['product-owner', 'risk-second-line', 'shariah-committee', 'shariah-board', 'shariah-compliance'],
-    pa1_approver_roles: ['shariah-committee', 'shariah-board', 'shariah-compliance'],
+    required_approver_roles: ['product-owner', 'risk-second-line', 'shariah-committee', 'shariah-audit', 'shariah-compliance'],
+    pa1_approver_roles: ['shariah-committee', 'shariah-audit', 'shariah-compliance'],
   };
-  for (const r of ['shariah-committee', 'shariah-board', 'shariah-compliance']) {
+  for (const r of ['shariah-committee', 'shariah-audit', 'shariah-compliance']) {
     assert.ok(pa1Roles(plan).includes(r), `${r} must bind at PA1`);
   }
 });
@@ -349,4 +352,234 @@ test('with no quorum declared the default is 1 — every existing passport is un
   delete reg.quorum;
   assert.deepEqual(checkApprovals([{ role: 'risk-second-line', by: 'risk-a' }], ['risk-second-line'], reg, 'q', 'PA1', {}).findings, []);
 });
+
+// The Shari'ah lane must be INERT for a conventional change. The shipped worked example (Meridian
+// Trust's retail credit product) compiles no Shariah role, so an envelope carrying lane fields —
+// however it got there — must change nothing at all about how it is evaluated.
+test('the Shari’ah lane is dormant for a change whose plan compiles no Shariah role', () => {
+  const notices = [];
+  for (const envelope of [
+    undefined,
+    { flags: { structure_delta: true } },
+    { flags: {}, issc_decision_ref: 'ISSC-2026-014' },
+  ]) {
+    assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, { envelope, notices }), []);
+  }
+  assert.deepEqual(notices, [], 'a conventional change must not even be told which lane it took');
+});
 }
+
+// --- A2 · builder ∩ Shari’ah = ∅ ---------------------------------------------------------------
+//
+// These fixtures are built in this file rather than read from the bundled worked example, so they
+// run in a bare adoption too. Alpha Islamic Bank is the harness's fictional Islamic institution.
+//
+// The defect: the "builder cannot issue second-line approval" finding only fires for roles in
+// SECOND_LINE_ROLES, and none of the three Shari'ah roles were in it. A builders-group identity
+// holding `shariah-committee` signed the Shari'ah approval of their own change under a green gate.
+
+const SHARIAH_ROLES = ['shariah-committee', 'shariah-compliance', 'shariah-audit'];
+
+test('all three Shari’ah roles demand independence from the builders', () => {
+  for (const role of SHARIAH_ROLES) assert.ok(SECOND_LINE_ROLES.has(role), `${role} must require builder-disjointness`);
+  assert.ok(!SECOND_LINE_ROLES.has('shariah-board'), 'shariah-board is retired vocabulary');
+});
+
+test('a BUILDER holding a Shari’ah role cannot sign that Shari’ah approval', () => {
+  for (const role of SHARIAH_ROLES) {
+    const registry = {
+      groups: { builders: '', 'second-line': '' },
+      identities: [{ id: 'scholar-who-builds', kind: 'human', roles: [role], groups: ['builders'] }],
+    };
+    const { findings } = checkApprovals([{ role, by: 'scholar-who-builds' }], [role], registry, 'alpha', 'PA1', {});
+    assert.ok(findings.some((f) => /scholar-who-builds is in the builders group — a builder cannot issue (second|third)-line approval/.test(f)),
+      `${role}: a builder signing their own Shari'ah certification must be refused:\n${findings.join('\n')}`);
+  }
+});
+
+test('internal Shari’ah audit is named as THIRD line in the refusal — it is not second line', () => {
+  const registry = {
+    groups: { builders: '' },
+    identities: [{ id: 'auditor-who-builds', kind: 'human', roles: ['shariah-audit'], groups: ['builders'] }],
+  };
+  const { findings } = checkApprovals([{ role: 'shariah-audit', by: 'auditor-who-builds' }], ['shariah-audit'], registry, 'alpha', 'PA2', {});
+  assert.ok(findings.some((f) => /a builder cannot issue third-line approval/.test(f)), findings.join('\n'));
+});
+
+// --- G1 · the conforming-change lane -----------------------------------------------------------
+//
+// The committee approves STRUCTURES; the Shari'ah Compliance Function clears changes that CONFORM
+// to an already-approved structure; the committee ratifies at cadence (elsewhere). Without this,
+// every Islamic change queues on a 3-scholar quorum that sits fortnightly.
+
+const ISLAMIC_PLAN = {
+  change_id: 'CHG-ALPHA-0007',
+  risk_tier: 'high',
+  required_gates: ['PA1'],
+  required_approver_roles: ['accountable-executive', 'product-owner', 'risk-second-line', 'shariah-committee', 'shariah-compliance'],
+  pa1_approver_roles: ['shariah-committee', 'shariah-compliance'],
+  pa1_sections: ['ownership', 'shariah-structure'],
+  pa2_sections: ['shariah-approval'],
+};
+
+const ISLAMIC_REGISTRY = {
+  groups: { builders: '', 'second-line': '', 'shariah-function': '' },
+  identities: [
+    { id: 'po-noor', kind: 'human', roles: ['product-owner'], groups: ['builders'] },
+    { id: 'exec-mariam', kind: 'human', roles: ['accountable-executive'], groups: [] },
+    { id: 'risk-yusuf', kind: 'human', roles: ['risk-second-line'], groups: ['second-line'] },
+    { id: 'scholar-a', kind: 'human', roles: ['shariah-committee'], groups: ['shariah-function'] },
+    { id: 'scholar-b', kind: 'human', roles: ['shariah-committee'], groups: ['shariah-function'] },
+    { id: 'scholar-c', kind: 'human', roles: ['shariah-committee'], groups: ['shariah-function'] },
+    { id: 'shc-huda', kind: 'human', roles: ['shariah-compliance'], groups: ['second-line'] },
+  ],
+  // Majority of the CBUAE minimum of five. This number is the whole reason the lane exists.
+  quorum: { 'shariah-committee': 3 },
+};
+
+const islamicPassport = (approvals, extra = {}) => ({
+  sections: {
+    ownership: { product_owner: 'po-noor', accountable_executive: 'exec-mariam' },
+    'shariah-structure': { structure: 'Murabaha', ownership_sequencing: 'bank takes title before sale' },
+    ...(extra.sections || {}),
+  },
+  pa1: { decision: 'approved', approvals },
+  ...(extra.rest || {}),
+});
+
+// Everything PA1 binds on a high-tier change EXCEPT the Shari'ah roles — the lane is the only
+// variable under test here.
+const BASE_APPROVALS = [
+  { role: 'product-owner', by: 'po-noor' },
+  { role: 'risk-second-line', by: 'risk-yusuf' },
+  { role: 'accountable-executive', by: 'exec-mariam' },
+];
+const CONFORMING = { change_id: 'CHG-ALPHA-0007', flags: { islamic: true }, issc_decision_ref: 'ISSC-2026-014' };
+
+test('shariahLane reads the DECLARED flag: a structure delta is said out loud, or it is conforming', () => {
+  assert.equal(shariahLane({}, { flags: { structure_delta: true } }), 'structure-delta');
+  assert.equal(shariahLane({}, { flags: { structure_delta: false } }), 'conforming');
+  assert.equal(shariahLane({}, { flags: { islamic: true } }), 'conforming');
+  assert.equal(shariahLane({}, undefined), 'conforming');
+  // Not truthiness — a string is a declaration nobody made in the shape the flag requires.
+  assert.equal(shariahLane({}, { flags: { structure_delta: 'yes' } }), 'conforming');
+  // A plan carrying its own copy answers when the envelope is not to hand; the envelope wins.
+  assert.equal(shariahLane({ flags: { structure_delta: true } }, undefined), 'structure-delta');
+  assert.equal(shariahLane({ flags: { structure_delta: true } }, { flags: {} }), 'conforming');
+});
+
+test('a CONFORMING change with a named ISSC decision passes PA1 on shariah-compliance alone', () => {
+  const notices = [];
+  const passport = islamicPassport([...BASE_APPROVALS, { role: 'shariah-compliance', by: 'shc-huda' }]);
+  const findings = evaluate(passport, ISLAMIC_PLAN, ISLAMIC_REGISTRY, { envelope: CONFORMING, notices });
+  assert.deepEqual(findings, [], `the conforming lane must not queue on the committee:\n${findings.join('\n')}`);
+  // …and the lane it took is on the record, with the ruling it conformed to.
+  assert.ok(notices.some((n) => /Shari'ah lane = CONFORMING against ISSC decision "ISSC-2026-014"/.test(n)),
+    `the lane must be announced, or an auditor cannot tell three scholars from one officer:\n${notices.join('\n')}`);
+  assert.ok(notices.some((n) => /scholars decide Shari'ah/.test(n)), 'the notice must say what was NOT checked');
+});
+
+test('the conforming lane without an issc_decision_ref fails, and the committee still binds', () => {
+  const passport = islamicPassport([...BASE_APPROVALS, { role: 'shariah-compliance', by: 'shc-huda' }]);
+  for (const envelope of [
+    { change_id: 'CHG-ALPHA-0007', flags: { islamic: true } },              // absent
+    { change_id: 'CHG-ALPHA-0007', issc_decision_ref: '' },                 // empty
+    { change_id: 'CHG-ALPHA-0007', issc_decision_ref: '   ' },              // whitespace
+    { change_id: 'CHG-ALPHA-0007', issc_decision_ref: 'ADOPT: the ISSC ruling id' }, // never replaced
+    { change_id: 'CHG-ALPHA-0007', issc_decision_ref: 'TBD' },
+    { change_id: 'CHG-ALPHA-0007', issc_decision_ref: '<ruling-id>' },
+  ]) {
+    const findings = evaluate(passport, ISLAMIC_PLAN, ISLAMIC_REGISTRY, { envelope });
+    assert.ok(findings.some((f) => /names no issc_decision_ref/.test(f)),
+      `${JSON.stringify(envelope.issc_decision_ref)} must not open the lane:\n${findings.join('\n')}`);
+    assert.ok(findings.some((f) => /no approval for required role shariah-committee/.test(f)),
+      `the committee binding must stand when the lane does not open:\n${findings.join('\n')}`);
+  }
+});
+
+test('a STRUCTURE-DELTA change still demands the full committee quorum', () => {
+  const envelope = { ...CONFORMING, flags: { islamic: true, structure_delta: true } };
+  const notices = [];
+  // Compliance alone, with a perfectly good ruling reference: not enough. A new structure is the
+  // committee's to approve, and citing an old ruling is not a route around that.
+  const one = evaluate(islamicPassport([...BASE_APPROVALS, { role: 'shariah-compliance', by: 'shc-huda' }]),
+    ISLAMIC_PLAN, ISLAMIC_REGISTRY, { envelope, notices });
+  assert.ok(one.some((f) => /no approval for required role shariah-committee/.test(f)), one.join('\n'));
+  assert.ok(notices.some((n) => /Shari'ah lane = STRUCTURE-DELTA/.test(n)), notices.join('\n'));
+
+  // Two scholars is a committee short of its quorum, and the gate counts.
+  const two = evaluate(islamicPassport([
+    ...BASE_APPROVALS,
+    { role: 'shariah-compliance', by: 'shc-huda' },
+    { role: 'shariah-committee', by: 'scholar-a' },
+    { role: 'shariah-committee', by: 'scholar-b' },
+  ]), ISLAMIC_PLAN, ISLAMIC_REGISTRY, { envelope });
+  assert.ok(two.some((f) => /shariah-committee needs a quorum of 3 distinct holders — 2 recorded/.test(f)), two.join('\n'));
+
+  // Three distinct scholars: the structure is approved by the body, and PA1 is clean.
+  const three = evaluate(islamicPassport([
+    ...BASE_APPROVALS,
+    { role: 'shariah-compliance', by: 'shc-huda' },
+    { role: 'shariah-committee', by: 'scholar-a' },
+    { role: 'shariah-committee', by: 'scholar-b' },
+    { role: 'shariah-committee', by: 'scholar-c' },
+  ]), ISLAMIC_PLAN, ISLAMIC_REGISTRY, { envelope });
+  assert.deepEqual(three, [], three.join('\n'));
+});
+
+test('the conforming lane does not open when the plan compiles no shariah-compliance role', () => {
+  const plan = {
+    ...ISLAMIC_PLAN,
+    required_approver_roles: ISLAMIC_PLAN.required_approver_roles.filter((r) => r !== 'shariah-compliance'),
+    pa1_approver_roles: ['shariah-committee'],
+  };
+  const findings = evaluate(islamicPassport(BASE_APPROVALS), plan, ISLAMIC_REGISTRY, { envelope: CONFORMING });
+  assert.ok(findings.some((f) => /a lane with nobody in it is not a lane/.test(f)), findings.join('\n'));
+  assert.ok(findings.some((f) => /no approval for required role shariah-committee/.test(f)), findings.join('\n'));
+});
+
+test('the conforming lane substitutes shariah-compliance even when the profile bound it only at PA2', () => {
+  // The role is compiled but not pa1-binding. The lane cannot clear a change through a function
+  // nobody signed for, so the substitution ADDS the requirement rather than dropping one.
+  const plan = { ...ISLAMIC_PLAN, pa1_approver_roles: ['shariah-committee'] };
+  const res = conformingLanePa1(plan, CONFORMING, pa1Roles(plan), 'alpha · PA1');
+  assert.equal(res.lane, 'conforming');
+  assert.equal(res.substituted, true);
+  assert.ok(!res.roles.includes('shariah-committee'));
+  assert.ok(res.roles.includes('shariah-compliance'));
+  const findings = evaluate(islamicPassport(BASE_APPROVALS), plan, ISLAMIC_REGISTRY, { envelope: CONFORMING });
+  assert.ok(findings.some((f) => /no approval for required role shariah-compliance/.test(f)), findings.join('\n'));
+});
+
+test('conformingLanePa1 is inert where no committee is bound — no roles moved, nothing announced', () => {
+  const roles = ['product-owner', 'risk-second-line'];
+  const res = conformingLanePa1({ required_approver_roles: roles }, { flags: { structure_delta: true } }, roles, 'x · PA1');
+  assert.deepEqual(res, { roles, lane: null, substituted: false, ref: null, findings: [], notices: [] });
+});
+
+test('the conforming lane never reaches PA2 — permission to LAUNCH keeps the full committee', () => {
+  const plan = { ...ISLAMIC_PLAN, required_gates: ['PA1', 'PA2'] };
+  const passport = islamicPassport([...BASE_APPROVALS, { role: 'shariah-compliance', by: 'shc-huda' }], {
+    sections: { 'shariah-approval': { issc_decision_ref: 'ISSC-2026-014' } },
+    rest: {
+      pa2: {
+        decision: 'approved',
+        approvals: [...BASE_APPROVALS, { role: 'shariah-compliance', by: 'shc-huda' }],
+      },
+    },
+  });
+  const findings = evaluate(passport, plan, ISLAMIC_REGISTRY, { envelope: CONFORMING });
+  assert.ok(findings.some((f) => /PA2: no approval for required role shariah-committee/.test(f)), findings.join('\n'));
+  assert.ok(!findings.some((f) => /PA1: no approval for required role shariah-committee/.test(f)),
+    `PA1 must still take the conforming lane:\n${findings.join('\n')}`);
+});
+
+test('a builder in the Shari’ah compliance seat cannot clear their own change through the lane', () => {
+  // The lane's whole safety rests on the clearing officer being independent. A builders-group
+  // shariah-compliance holder would otherwise self-clear every conforming change.
+  const registry = structuredClone(ISLAMIC_REGISTRY);
+  registry.identities.push({ id: 'shc-builder', kind: 'human', roles: ['shariah-compliance'], groups: ['builders'] });
+  const passport = islamicPassport([...BASE_APPROVALS, { role: 'shariah-compliance', by: 'shc-builder' }]);
+  const findings = evaluate(passport, ISLAMIC_PLAN, registry, { envelope: CONFORMING });
+  assert.ok(findings.some((f) => /shc-builder is in the builders group/.test(f)), findings.join('\n'));
+});

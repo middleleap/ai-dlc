@@ -39,6 +39,38 @@ const SOLUTIONING = [
 
 const REG_DRIVERS = /\b(CPS|MMS|PDPL|BCBS239|CPS-AI)\b|\bArt\.?\s*\d|\bclause\b/i;
 
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * D6 asks whether the data-governance document is grounded in something a regulator wrote. The
+ * built-in regex above answers that for the abbreviations the harness ships knowing; it cannot
+ * see a Shariah authority's pronouncements, a standard-setter's standards, or any other
+ * jurisdiction's vocabulary, so a document citing nothing else failed as "cites no regulatory
+ * driver" — a false negative about a document that was entirely citation.
+ *
+ * The vocabulary is therefore MOUNTED DATA (`reg-drivers.json` beside the register), not gate
+ * logic. Two properties hold by construction:
+ *   · the built-in regex is kept and checked FIRST, so the mount can only ADD ways to pass —
+ *     an adopter can never shorten this gate by editing a list it owns;
+ *   · mounted terms are LITERALS, regex-escaped before use, so `.` matches a dot and nothing in
+ *     that file can widen into `.*`.
+ * With no file mounted, drivers is [] and this is the original check, byte for byte.
+ *
+ * Boundaries are applied only where the term actually has a word edge: real driver names end in
+ * punctuation often enough ("Shari'ah Standard No.", "Art.") that a blind \b…\b would silently
+ * never match them, which is the same false negative one level down.
+ */
+function citesRegulatoryDriver(text, drivers = []) {
+  if (REG_DRIVERS.test(text)) return true;
+  return drivers.some((term) => {
+    const t = String(term).trim();
+    if (!t) return false;
+    const lead = /^\w/.test(t) ? '\\b' : '';
+    const tail = /\w$/.test(t) ? '\\b' : '';
+    return new RegExp(`${lead}${escapeRe(t)}${tail}`, 'i').test(text);
+  });
+}
+
 function gate(id, name, issues, status) {
   return { id, name, status: status || (issues.length ? 'fail' : 'pass'), issues };
 }
@@ -165,10 +197,13 @@ export function validateRun(runDir, opts = {}) {
         if (drs.size === 0) issues.push('cites no DR-* risk category');
         for (const id of drs) if (!register.drIds.has(id)) issues.push(`DR id ${id} does not resolve in register`);
         for (const id of ctrls) if (!register.ctrlIds.has(id)) issues.push(`control ${id} does not resolve in register`);
-        if (!REG_DRIVERS.test(docs.dataGov.body)) issues.push('cites no regulatory driver');
+        if (!citesRegulatoryDriver(docs.dataGov.body, register.drivers)) issues.push('cites no regulatory driver');
         const verdict = ((docs.dataGov.body.match(/Acceptable for delivery\?\*\*\s*(.*)/i) || [])[1] || '').trim();
         const unfilled = /^yes\s*\/\s*no\s*\/\s*conditional\s*[—-]?\s*$/i.test(verdict);
-        if (!/(yes|no|conditional)/i.test(verdict) || PLACEHOLDER.test(verdict) || unfilled)
+        // \b-anchored: unanchored, the "no" inside "Not yet." counted as a verdict, so the one
+        // sentence that means "we have not decided" passed the gate that exists to make someone
+        // decide. A verdict is a whole word or it is not a verdict.
+        if (!/\b(yes|no|conditional)\b/i.test(verdict) || PLACEHOLDER.test(verdict) || unfilled)
           issues.push('no residual-risk verdict');
       }
       gates.push(gate('D6', 'Data-governance feasibility', issues));

@@ -33,6 +33,7 @@ repository is the worked example); the ids below are the Loom's stable names for
 | **HG-0011** | Agent LLM traffic and execution not residency-controlled | Onshore model gateway + pre-egress DLP + attested sandbox execution, where residency rules apply (`agent-egress-control.md`) |
 | **HG-0012** | The agent can reach "green" by retrieval, not derivation (mine `.git`, look up the fix) | Controlled build/eval runtime — sealed history + egress allow-list + an independent derivation-vs-retrieval audit (`agent-egress-control.md`) |
 | **HG-0013** | Autonomy is uncalibrated — one lighting policy governs a lint fix and an auth rewrite alike | **Graduated autonomy with a fixed dark boundary**: the loop runs fully autonomous up to *proposal*, never through *disposal* — the PR is the light switch. Per-change-class relaxation happens only through a second-line-owned, expiring **routine envelope** (`routine-change-check`), never ad hoc; the envelope moves human approval from per-change to per-envelope, it never removes it. Enforcement of record: a merge-queue/ruleset that auto-merges only with the routine gate among passing required checks |
+| **HG-0014** | Nothing distinguishes a religious or ethical determination from ordinary content the agent may propose — an agent can draft every governed artifact, so it can equally draft the ruling that says the artifact is permissible | **Determinations are institutional context, never agent work-product.** A Shari'ah determination is issued by humans (the ISSC; the Shari'ah Compliance Function and Shari'ah audit operate the second and third lines) and mounted as **control-plane data**: the rulings register is CODEOWNERS-owned by the Shari'ah secretariat, listed in `CONTROL_TARGETS`, and outside the routine lane because `docs/governance/` sits on the absolute floor. The agent may **cite** a ruling by id; it never authors, alters, or approves one, and no gate rules on Shari'ah — gates verify composition, provenance, and binding to already-approved structures. Enforcement of record: CODEOWNERS + branch protection + `control-plane-check` |
 
 ## How to adopt the catalog
 
@@ -41,8 +42,11 @@ repository is the worked example); the ids below are the Loom's stable names for
    the Develop skill, the routine envelope) and they are the ones the Loom's bundled machinery
    enforces directly.
 2. **Take the rest to your change/risk governance** as proposals — HG-0003–HG-0006,
-   HG-0008, HG-0010–HG-0012 are organisational decisions (identity, promotion, model risk,
-   residency) that need owners outside engineering.
+   HG-0008, HG-0010–HG-0012, HG-0014 are organisational decisions (identity, promotion, model
+   risk, residency, religious/ethical determination) that need owners outside engineering.
+   HG-0014's owner is the body that issues the determinations, not the platform team; the repo
+   mechanics (CODEOWNERS entry, control-plane target) are downstream of that appointment, and
+   they are inert for an institution with no such body.
 3. **Write each accepted decision as a real ADR** in your repository, citing your regulator's
    language, and keep the status honest (Proposed / Accepted). An HG id with no ADR behind it
    is a label, not a control.

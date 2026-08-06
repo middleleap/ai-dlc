@@ -1,6 +1,7 @@
 // Tests for the control-plane integrity gate. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { evaluate, ownersFor, ruleMatches, parseCodeowners, CONTROL_TARGETS } from './control-plane-check.mjs';
 
 const TARGETS = [
@@ -10,6 +11,16 @@ const TARGETS = [
   '.github/workflows/ci.yml',
   'CODEOWNERS',
 ];
+
+const SHARIAH_TARGETS = ['docs/governance/shariah-rulings.json', 'docs/governance/issc-register.json'];
+
+// The shipped template, with the placeholder owner swapped for a real one — the placeholder
+// failing is a separate, deliberate control (see the PLACEHOLDER_OWNER tests below), and we
+// are asking a different question here: does an adopter get these paths owned for free?
+const TEMPLATE = readFileSync(new URL('../governance/CODEOWNERS.template', import.meta.url), 'utf8')
+  .replaceAll('@your-org/', '@acme-bank/');
+
+const withoutLines = (text, drop) => text.split('\n').filter((l) => !drop.some((re) => re.test(l))).join('\n');
 
 test('a global owner rule protects every control target', () => {
   const findings = evaluate('* @org/platform-admins\n', TARGETS);
@@ -79,4 +90,31 @@ test('the shipped default control-target list is non-empty and self-protecting',
   assert.ok(CONTROL_TARGETS.length > 0);
   assert.ok(CONTROL_TARGETS.includes('CODEOWNERS'));
   assert.ok(CONTROL_TARGETS.includes('scripts/control-plane-check.mjs'));
+  // HG-0014: the two paths an agent must never be able to write — the record of what the
+  // committee determined, and the record of who may approve.
+  for (const t of SHARIAH_TARGETS) assert.ok(CONTROL_TARGETS.includes(t), `${t} missing from CONTROL_TARGETS`);
+});
+
+test('the shipped template owns both Shari\'ah control-plane paths', () => {
+  assert.deepEqual(evaluate(TEMPLATE, SHARIAH_TARGETS), []);
+  const rules = parseCodeowners(TEMPLATE);
+  // Owned by the secretariat specifically, not merely by whoever the blanket rule names —
+  // the dedicated line is what keeps the builders' platform team out of a Shari'ah record.
+  for (const t of SHARIAH_TARGETS) assert.deepEqual(ownersFor(rules, t), ['@acme-bank/shariah-secretariat']);
+});
+
+test('a non-Islamic adopter deleting the dedicated lines stays green on the blanket rule', () => {
+  const co = withoutLines(TEMPLATE, [/shariah-secretariat/]);
+  assert.deepEqual(evaluate(co, SHARIAH_TARGETS), []);
+  assert.deepEqual(evaluate(co, TARGETS), []); // and nothing else regressed
+});
+
+test('with the dedicated lines AND the blanket /docs/governance/ rule gone, both paths report unprotected', () => {
+  // Also drop the `*` default the template calls optional — an explicit-only adopter has no
+  // catch-all, and leaving one in would own the paths by accident and hide the hole.
+  const co = withoutLines(TEMPLATE, [/shariah-secretariat/, /^\/docs\/governance\/\s/, /^\*\s/]);
+  const findings = evaluate(co, SHARIAH_TARGETS);
+  assert.equal(findings.length, 2);
+  assert.match(findings[0], /shariah-rulings\.json — not owned in CODEOWNERS/);
+  assert.match(findings[1], /issc-register\.json — not owned in CODEOWNERS/);
 });

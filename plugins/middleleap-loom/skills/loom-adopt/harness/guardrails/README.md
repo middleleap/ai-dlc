@@ -12,18 +12,28 @@ claim names a mechanism that exists, every `uncovered` state names none, and a b
 enforced nowhere must be flagged as an acknowledged gap. The **capability matrix** below is generated
 from the policy and gated by `doc-integrity-check.mjs`, so it can never drift from what actually ships.
 
+The fourth column, **`production-agents`**, is the serving path — an agent answering a customer at
+request time. Everything else in this bundle is build-time. An institution running agents in the
+serving path gets nothing from a `PreToolUse` hook or a pull-request gate, and an absent column reads
+as coverage, so the column is present and almost entirely `○ uncovered`: each cell names why the
+mechanism does not reach there and what the adopter-side control would be. **The harness reads JSON
+records; it does not watch production** — no evidence it can gather moves a cell in that column to
+`● enforced`. The serving-side control itself is a named component with an owner and a decision log:
+see `adapters/providers/runtime-guardrails/README.md`.
+
 ## Capability matrix
 
 <!-- LOOM:GUARDRAIL-MATRIX:START -->
-| Guardrail | Event | claude-code | github-actions | local-git |
-|---|---|---|---|---|
-| `pii-literal` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered |
-| `test-integrity` | before-test-modification | ● enforced | ◐ CI backstop | ○ uncovered |
-| `contract-freeze` | before-contract-modification | ● enforced | ◐ CI backstop | ○ uncovered |
-| `control-plane-freeze` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered |
-| `brainkit-immutability` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered |
-| `network-egress` ⚠︎ | before-network-egress | ○ uncovered | ○ uncovered | ○ uncovered |
-| `parser-fail-closed` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered |
+| Guardrail | Event | claude-code | github-actions | local-git | production-agents |
+|---|---|---|---|---|---|
+| `pii-literal` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
+| `test-integrity` | before-test-modification | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
+| `contract-freeze` | before-contract-modification | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
+| `control-plane-freeze` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered | ○ uncovered |
+| `brainkit-immutability` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered | ○ uncovered |
+| `network-egress` ⚠︎ | before-network-egress | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
+| `parser-fail-closed` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
+| `agent-customer-decision` ⚠︎ | before-customer-decision | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
 
 _● enforced at the point of action · ◐ no local block but a CI gate catches it before merge (the enforcement of record) · ○ uncovered — no mechanism · ⚠︎ acknowledged gap (blocking, enforced nowhere). Generated from `guardrails/guardrail-policy.json` by `scripts/guardrail-policy-check.mjs`; do not edit by hand — run `node scripts/doc-integrity-check.mjs --fix`._
 <!-- LOOM:GUARDRAIL-MATRIX:END -->
@@ -37,6 +47,14 @@ uncovered` is an honest gap — wire the named local hook (or a runtime-appropri
 close it. `⚠︎` marks a blocking guardrail that is enforced **nowhere** in the bundle (e.g.
 network-egress, which needs an egress-controlled runner or sandbox — an adopter-side control).
 
+`agent-customer-decision` is the second `⚠︎` row and the reason the serving column exists. Where a
+compiled plan requires human oversight (`profiles/products/ai-decision-system.json`), the harness can
+read that the requirement was **chosen and approved**; it cannot read whether the deployed agent
+took the human step on any given request. Marking that as a CI backstop would sell a plan declaration
+as a request-time control — the exact substitution this policy exists to prevent — so it is
+`uncovered` on all four runtimes and flagged as an acknowledged gap. Coverage the harness cannot see
+is declared, never implied.
+
 ## Adapters
 
 - **`claude-code`** — the shipped `hooks/*.sh`, wired via `settings.hooks.json` as `PreToolUse`
@@ -47,3 +65,11 @@ network-egress, which needs an egress-controlled runner or sandbox — an adopte
   hook did not stop is caught here before merge.
 - **`local-git`** — no pre-commit hooks ship today. To cover this runtime, wire the relevant
   `hooks/*.sh` as `pre-commit`/`pre-push` hooks; until then these cells read `○ uncovered`.
+- **`production-agents`** — the serving path, where **nothing in this bundle runs**. No adapter ships
+  and none can: a filter at request time is infrastructure an institution deploys and operates, not a
+  file a plugin copies in. The cells name the shape of the missing control — an output/PII filter, a
+  tool-use allowlist pinned to the approved contract, an egress allowlist at the model gateway,
+  deploy-gate image provenance, a policy engine that denies when it is unreachable. Two properties
+  make any of them evidence rather than assertion: the decision log is asserted by the serving
+  platform, not by the agent being constrained, and a negative probe shows a violating action
+  actually denied. Between probes, coverage is `uncovered` — not assumed clean.

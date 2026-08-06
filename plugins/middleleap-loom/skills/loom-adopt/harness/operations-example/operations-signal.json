@@ -1,5 +1,5 @@
 {
-  "_comment": "ADOPTER EXAMPLE — Meridian Trust (DEMO, synthetic, non-production). A worked operations-signal log showing the Run -> Discovery loop close: every production signal is triaged (routed) and traceable, so nothing falls on the floor. Verified by scripts/operations-signal-check.mjs. rc.37: three signals carry the optional flow fields — caused_by_change (attribution, which makes change-failure rate derivable) and resolved_at (which makes MTTR derivable); scripts/flow-report.mjs reads them and never gates on them. See README.md. Replace with your own signals; keep the shape.",
+  "_comment": "ADOPTER EXAMPLE — Meridian Trust (DEMO, synthetic, non-production). A worked operations-signal log showing the Run -> Discovery loop close: every production signal is triaged (routed) and traceable, so nothing falls on the floor. Verified by scripts/operations-signal-check.mjs. rc.37: three signals carry the optional flow fields — caused_by_change (attribution, which makes change-failure rate derivable) and resolved_at (which makes MTTR derivable); scripts/flow-report.mjs reads them and never gates on them. rc.46: OPS-2447 is the Islamic path — a shariah-non-compliance signal routed to purification, from the Islamic window this DEMO entity operates. It is here so the route has a worked example; it is INERT for an adopter with no Islamic product, because both extra rules (an evidence_ref at every severity, and no `accepted` route) are conditional on the type. Its PUR-* link reports as NOT VERIFIED when run here, since this example ships no docs/governance/purification/ tree — unverified, said out loud, rather than a silent pass. See README.md. Replace with your own signals; keep the shape.",
   "entity": "Meridian Trust (DEMO instance)",
   "signals": [
     {
@@ -81,6 +81,17 @@
       "route": "register",
       "link": "DR-1.1-001",
       "resolved_at": "2026-07-24T13:00:00Z"
+    },
+    {
+      "id": "OPS-2447",
+      "source": "shariah-compliance-monitoring",
+      "type": "shariah-non-compliance",
+      "severity": "medium",
+      "detected": "2026-07-22",
+      "summary": "Second-line continuous monitoring flagged eight Murabaha bookings where the asset-ownership timestamp fell after the sale to the customer. The income earned on those eight is quantified for purification; the structure question itself is the committee's, not this log's.",
+      "evidence_ref": "shariah/SC-2026-07-ownership-sequencing.md",
+      "route": "purification",
+      "link": "PUR-2026-014"
     }
   ]
 }

@@ -48,6 +48,15 @@
           "pdpl-and-residency"
         ]
       }
+    },
+    {
+      "_comment": "Open Finance in this market carries a MANDATED customer-experience regime — the AlTareq brand and CX rules for consent screens, payment buttons and progress indication, with screen certification. It is attached to the JURISDICTION and not to products/open-finance deliberately: every market with an Open Finance regime has a CX regime, and they are different regimes. Putting this in the product profile would export one market's brand rules to all of them; putting it here means another market's jurisdiction profile carries its own, and the product profile stays market-neutral.",
+      "when": "open_finance",
+      "adds": {
+        "pa2_sections": [
+          "altareq-cx-conformance"
+        ]
+      }
     }
   ]
 }

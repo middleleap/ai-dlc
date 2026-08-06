@@ -16,7 +16,14 @@ export function parseTokens(designMdPath = 'discovery/brand/design.md') {
   const fm = (k) => (text.match(new RegExp(`^${k}:\\s*"?([^"\\n]+)"?`, 'm')) || [])[1];
   const bkId = fm('brainkit_id');
   const brainkit = bkId ? { id: bkId, version: fm('brainkit_version') || null, digest: fm('brainkit_digest') || null } : null;
-  return { tokens, version, banner, brainkit, present: text.length > 0 };
+  // Writing direction and content language are BRAND properties, not renderer constants: the
+  // shell hard-coded `lang="en"` and emitted no dir at all, so a right-to-left artifact was not
+  // expressible at all — no token could fix it. Defaults are the previous behaviour, so every
+  // brand file that says nothing renders exactly as before. Values are validated at emit time
+  // (render.mjs), not here: this function parses, it does not decide what is safe in an attribute.
+  const lang = fm('lang') || 'en';
+  const dir = fm('dir') || 'ltr';
+  return { tokens, version, banner, brainkit, lang, dir, present: text.length > 0 };
 }
 
 /** The one-line BrainKit provenance string embedded in rendered artifacts, or '' if none. */

@@ -13,10 +13,10 @@
   "files": {
     "discovery/brand/design.md": {
       "base": "sha256:b90830067e09b8c1fd803f745eaad7bf692a2e972d9c7378ab45a444097e737b",
-      "bundle": "sha256:c1f80a5126f4be747003cdc6f8790ebe73dc2188f0ecbbb07a55ee6c5e7cee7b",
+      "bundle": "sha256:62bcc26c218e63a60a538c186a2384688ecfa9b45d86a079ee075793392575de",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
+      "note": "changed here: lang/dir profile front-matter documented, an RTL font-stack token added, and the RTL media rules (logical mirroring, bidi-isolated Latin identifiers, numerals as adopter content policy) written down (F6)"
     },
     "discovery/brand/examples/meridian-trust.design.md": {
       "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
@@ -39,23 +39,24 @@
     },
     "discovery/gates/registers.mjs": {
       "base": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
-      "bundle": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
+      "bundle": "sha256:8fe6c9d13e2030035a3000a5468712ee037b6ef35260e338226f80ca00297bf9",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here: loadRegister() also mounts reg-drivers.json — the regulatory-driver vocabulary becomes register DATA instead of gate logic (F7)"
     },
     "discovery/gates/validate.mjs": {
       "base": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
-      "bundle": "sha256:f035e11dd84c9c177c25bbea745954d52f51e07379c776b2b404ad356c32aa43",
+      "bundle": "sha256:dc8d826ccbd3e5df6bac24bb9388711f0cdb2bec657c4e0715398faa1fd2676b",
       "upstream": null,
       "state": "owed",
-      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, Phase 1 correctness, rc.31 D8 over-specification scan widened to the wireframe asset and specs/*.json"
+      "note": "changed here: D6 accepts mounted regulatory drivers on top of the built-in regex (escaped literals, add-only), and the residual-verdict check is \\b-anchored so \"Not yet.\" no longer passes as a verdict via the \"no\" inside \"Not\" (F7)"
     },
     "discovery/gates/validate.test.mjs": {
       "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
-      "bundle": "sha256:5409c8a1362ca2adaf0e82220caccd4db94ce114b936a1bc16942234ffb7dedd",
+      "bundle": "sha256:a6576d86bf960c97a9fcd3015128741dcb751db10a318d80398d3374263e7c4b",
       "upstream": null,
       "state": "owed",
-      "note": "hardened here: rc.10 silent-green gaps, WS3 F5 regulated requirements, rc.31 D8 wireframe/spec over-specification cases"
+      "note": "changed here: rc.10 silent-green gaps, WS3 F5 regulated requirements, rc.31 D8 wireframe/spec over-specification cases, F7 mounted-driver + whole-word-verdict cases"
     },
     "discovery/render/README.md": {
       "base": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
@@ -99,24 +100,24 @@
     },
     "discovery/render/render.mjs": {
       "base": "sha256:74a7dc3e3a04240018d7afe7e0651ec10049450f0478b13cd69eb3a9eca2874d",
-      "bundle": "sha256:79aaf0257067643a57106aef3478f6d4aeaeae5d77eada4fd8aa0ec894796a4b",
+      "bundle": "sha256:4c6c491de52ca0c72394a10516476a095fd804b5b029a4c4ef16f1a2e5fd4508",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: rc.8 WS8 BrainKit provenance, rc.10 enforcement hardening"
+      "note": "changed here: rc.8 WS8 BrainKit provenance, rc.10 enforcement hardening, F5 lang/dir on <html> (allow-listed, brand default + per-artifact override) and logical direction CSS so one stylesheet serves both directions"
     },
     "discovery/render/render.test.mjs": {
       "base": "sha256:0827fbdc544c5d42a81ebb7b390334f09f0ed10080448c7e90938b89dd6a6186",
-      "bundle": "sha256:bfab962d77ef5ecebe2b85ed745a1c54a17a61b5cc71899294c2f41d04806594",
+      "bundle": "sha256:24a0982456c761e7cc55752286f322ab94b4fa82cc947ee0ff20176cc3deed8e",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: rc.10 enforcement hardening"
+      "note": "changed here: rc.10 enforcement hardening, F5 direction cases — LTR output byte-identical apart from the dir attribute, and the RTL example brand as the seam proof"
     },
     "discovery/render/tokens.mjs": {
       "base": "sha256:0c12607726e53bc3f83f1e53156de108a7f34be50a61c42e637ab6c9b0ef23a3",
-      "bundle": "sha256:f17032d0dc9304400cea189697daf0b9dd20281d9b160ba486de5e0e4b131443",
+      "bundle": "sha256:20912dc5a2da0a3c8393c7cbe29834e97fef9257d3a3a9110cbbcc88563f9702",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: rc.8 WS8 BrainKit provenance"
+      "note": "changed here: rc.8 WS8 BrainKit provenance, F5 lang/dir front-matter (defaults en/ltr, so an existing profile is unaffected)"
     },
     "discovery/templates/data-governance.md": {
       "base": "sha256:b43dd5b420e86638a9dbdb6c641fad08c09c95e1cbfb0a5047ab7e55da04ea05",
@@ -166,6 +167,13 @@
       "upstream": null,
       "state": "owed",
       "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+    },
+    "discovery/brand/examples/rtl-demo.design.md": {
+      "base": null,
+      "bundle": "sha256:0544c8c41f8c7843c1c95413fcd9d791dd8f4ecbb043d1f2f62b8b3b6e3f3b5c",
+      "upstream": null,
+      "state": "bundle-only",
+      "note": "added here 2026-08-06 (F6) — a synthetic right-to-left brand; the examples directory is the proof the D7 brand seam swaps, and direction is the one thing the other two examples cannot show"
     }
   }
 }

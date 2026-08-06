@@ -48,6 +48,32 @@ test('NEGATIVE — the API contract is under the floor', () => {
   assert.ok(f.some((m) => /absolute floor/.test(m)));
 });
 
+/* rc.46 (Shari'ah workstream): the routine lane must never reach the surfaces where a
+   product's economic substance is decided. The rulings register is floored for free by
+   docs/governance/; an adopter's pricing and product-structure roots are not, which is what
+   the ADOPT line on FLOOR_DENY exists for. Both halves are proved here. INERT for an adopter
+   with no Islamic product: nothing below changes the shipped floor. */
+
+test("NEGATIVE — a Shari'ah rulings register change hits the floor even under a reckless envelope", () => {
+  // An agent that could auto-merge a ruling could authorise its own product structure.
+  const reckless = { ...ENVELOPE, path_allow: [''], path_deny: [] };
+  const f = evaluate(reckless, { ...CLAIM, changed_paths: ['docs/governance/shariah-rulings.json'] }, REGISTRY, ASOF);
+  assert.ok(f.some((m) => /absolute floor/.test(m)), 'the rulings register is control-plane data, never routine');
+});
+
+test('NEGATIVE — a floored pricing root refuses a profit-rate change that looks routine', () => {
+  // The defect: a profit-rate table is a one-line diff that reads exactly like a routine
+  // config bump. Once the adopter appends their pricing root per the ADOPT line, no envelope
+  // can auto-merge it. The shipped floor names no adopter src/ path — asserted first.
+  assert.ok(!FLOOR_DENY.some((p) => /pricing/.test(p)), 'the shipped floor must not invent adopter roots');
+  FLOOR_DENY.push('src/pricing/'); // stands in for the adopter's ADOPT append
+  try {
+    const reckless = { ...ENVELOPE, path_allow: [''], path_deny: [] };
+    const f = evaluate(reckless, { ...CLAIM, changed_paths: ['src/pricing/profit-rates.json'] }, REGISTRY, ASOF);
+    assert.ok(f.some((m) => /absolute floor/.test(m)), 'a profit-rate change is not routine by construction');
+  } finally { FLOOR_DENY.pop(); }
+});
+
 test('NEGATIVE — an expired envelope does not qualify', () => {
   const f = evaluate({ ...ENVELOPE, expires: '2026-01-01' }, CLAIM, REGISTRY, ASOF);
   assert.ok(f.some((m) => /expired/.test(m)));

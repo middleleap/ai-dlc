@@ -1,7 +1,10 @@
 // Tests for the identity-registry gate. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate, resolveApprover } from './identity-registry-check.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { evaluate, isPlaceholder, resolveApprover } from './identity-registry-check.mjs';
 
 const REG = {
   groups: { builders: '', 'second-line': '' },
@@ -137,4 +140,67 @@ test('a quorum may only raise the count, and must be satisfiable', () => {
     assert.ok(evaluate(DREG(undefined, { quorum: { compliance: bad } }), { now: NOW })
       .some((f) => /must be an integer ≥ 1/.test(f)), JSON.stringify(bad));
   }
+});
+
+// --- external identities ---------------------------------------------------------------------
+//
+// The identity map reconciles against the corporate directory and assumes a joiner/mover/leaver
+// lifecycle. Committee appointees have neither. The pair below is the honest alternative, and both
+// directions are tested because both failures are silent: an external identity nobody reconciles,
+// and an employee who left the directory reconciliation by naming a register of their own.
+
+const EXT = (extra) => ({ ...REG, identities: [...REG.identities, { id: 'ext-1', kind: 'human', roles: ['shariah-committee'], groups: ['second-line'], ...extra }] });
+
+test('an external identity must name the register that governs it instead of the directory', () => {
+  assert.deepEqual(evaluate(EXT({ external: true, reconciliation_source: 'docs/governance/issc-register.json' })), []);
+  assert.ok(evaluate(EXT({ external: true })).some((f) => /ext-1: external identities must name a reconciliation_source/.test(f)));
+  assert.ok(evaluate(EXT({ external: true, reconciliation_source: '  ' })).some((f) => /must name a reconciliation_source/.test(f)));
+  assert.ok(evaluate(EXT({ external: true, reconciliation_source: 'ADOPT: the register that governs them' }))
+    .some((f) => /reconciliation_source is still an adoption marker/.test(f)));
+});
+
+test('a NON-external identity may not name a reconciliation_source — that is a hole, not an exemption', () => {
+  assert.ok(evaluate(EXT({ reconciliation_source: 'docs/governance/some-list.json' }))
+    .some((f) => /ext-1: names a reconciliation_source but is not external:true/.test(f)));
+  assert.ok(evaluate(EXT({ external: false, reconciliation_source: 'docs/governance/some-list.json' }))
+    .some((f) => /is not external:true/.test(f)));
+  assert.deepEqual(evaluate(EXT({ external: false })), []);
+});
+
+test('external must be a boolean — a truthy string is not a declaration', () => {
+  assert.ok(evaluate(EXT({ external: 'true', reconciliation_source: 'docs/governance/issc-register.json' }))
+    .some((f) => /ext-1: external must be true or false \(got "true"\)/.test(f)));
+  assert.ok(isPlaceholder('ADOPT: a register') && isPlaceholder('ADOPT-0001') && !isPlaceholder('docs/governance/issc-register.json'));
+});
+
+// The shipped template is what every adopter starts from, and it now carries the ISSC seats, the
+// committee quorum and the external pair. A template the gate itself refuses is the worst possible
+// first-run experience, so it is checked here rather than discovered on day one.
+test('the shipped identities template satisfies its own gate', () => {
+  const path = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'governance', 'identities.template.json');
+  assert.ok(existsSync(path));
+  const template = JSON.parse(readFileSync(path, 'utf8'));
+  assert.deepEqual(evaluate(template), []);
+  const scholars = template.identities.filter((i) => (i.roles || []).includes('shariah-committee'));
+  assert.equal(scholars.length, 5, 'five seats — the regulatory minimum for the committee');
+  for (const s of scholars) {
+    assert.equal(s.external, true);
+    assert.equal(s.reconciliation_source, 'docs/governance/issc-register.json');
+    for (const f of ['hsa_approval_ref', 'appointment_instrument', 'appointment_date']) {
+      assert.ok(isPlaceholder(s[f]), `${s.id}.${f} must ship as an ADOPT marker the adopter replaces`);
+    }
+  }
+  // The committee is a BODY: three of five, a majority of the regulatory minimum. One member's
+  // signature must never resolve as the committee's decision.
+  assert.deepEqual(template.quorum, { 'shariah-committee': 3 });
+  // Three lines, three people. Collapsing any two of them onto one identity is the defect.
+  const holders = (role) => template.identities.filter((i) => (i.roles || []).includes(role)).map((i) => i.id);
+  assert.equal(holders('shariah-compliance').length, 1);
+  assert.equal(holders('shariah-audit').length, 1);
+  assert.equal(new Set([...holders('shariah-committee'), ...holders('shariah-compliance'), ...holders('shariah-audit')]).size, 7);
+  // Internal Shari'ah audit may never be outsourced, so it must resolve to an in-house human.
+  const auditor = template.identities.find((i) => (i.roles || []).includes('shariah-audit'));
+  assert.equal(auditor.kind, 'human');
+  assert.ok(!auditor.external, 'internal Shari\'ah audit may not be outsourced — it cannot be an external identity');
+  assert.ok(!('shariah-board' in (template.quorum || {})), 'shariah-board is retired vocabulary');
 });

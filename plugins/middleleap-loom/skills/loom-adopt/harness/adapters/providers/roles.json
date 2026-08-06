@@ -20,6 +20,28 @@
         "a digest (never a tag) plus a verification result for the image's SBOM and provenance",
         "a negative probe: an image without a valid attestation must fail admission"
       ]
+    },
+    {
+      "role": "shariah-governance",
+      "control": "SHARIAH-GOV",
+      "capability": "shariah_governance",
+      "purpose": "Record which system of record carries the institution's ISSC arrangement — membership, HSA approvals, resolutions and minutes — so an Islamic product plan cannot compile against a Shari'ah governance function that exists only as prose",
+      "must_provide": [
+        "the ISSC register exported to docs/governance/issc-register.json — seats with their HSA approval and appointment references, and the resolutions an approval cites — asserted by the system of record, not by the repository under test",
+        "a tamper probe: a register row that diverges from the system of record (a seat added, an approval reference edited) must fail reconciliation"
+      ],
+      "_comment": "DORMANT UNLESS AN ISLAMIC PRODUCT IS IN FLIGHT. `shariah_governance` compiles only from an Islamic product or institution profile, so a conventional adopter never meets this role — PS-R06 arms it the moment a plan names the capability and not before. And note what the role does NOT do: it fixes WHERE the committee's arrangement is recorded and proves the export matches. Scholars decide Shari'ah. No provider here, and no gate that reads its evidence, rules on any Shari'ah question — they check that a ruling exists, is attributable to an approved committee, and is bound to this change."
+    },
+    {
+      "role": "runtime-guardrails",
+      "control": "AI-INCIDENT",
+      "capability": "runtime_guardrails",
+      "purpose": "Name the policy-enforcement point that constrains agents in the SERVING path (input/output filters, tool-use allowlists, terminology and PII screens) so the runtime guardrail is a chosen, evidenced component rather than an assumption",
+      "must_provide": [
+        "an enforcement decision log asserted by the serving platform — the enforcement point itself — and never by the agent being constrained",
+        "a negative probe: a policy-violating action must be denied and the denial must be observable in that log"
+      ],
+      "_comment": "Do not confuse this with guardrails/guardrail-policy.json: that policy covers the agent that WRITES the code, at build time; this role covers the agent that SERVES the customer, at request time. The honest limit is the same in both places — the harness reads records, it does not watch production. It cannot verify that a runtime guardrail FIRES; it can refuse to let a change ship that never chose one, and it can read the denial the platform recorded when the negative probe was run."
     }
   ]
 }

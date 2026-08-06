@@ -12,7 +12,9 @@
     "credit-risk": { "target_days": 7 },
     "data-protection": { "target_days": 7 },
     "accountable-executive": { "target_days": 10 },
-    "shariah-committee": { "target_days": 14, "note": "Committee cadence, not an individual's desk — the target reflects when the body actually sits." }
+    "shariah-committee": { "target_days": 14, "note": "Committee cadence, not an individual's desk — the target reflects when the body actually sits." },
+    "shariah-compliance": { "target_days": 7, "note": "The second-line Shari'ah Compliance Function is a standing desk, not a sitting body — it monitors continuously, so its target matches the other second-line functions rather than the committee's calendar." },
+    "shariah-audit": { "target_days": 10, "note": "Third-line internal Shari'ah audit, binding at PA2 only. Longer than the compliance desk because it certifies what was actually built, and shorter than the committee because it is a function rather than a quorum." }
   },
   "wip_limit_per_role": 5,
   "_wip_note": "A soft limit. More than this many changes queued on one role is reported as a concentration, because that is a capacity problem wearing the costume of a governance problem. It is a FLAG, never a block."

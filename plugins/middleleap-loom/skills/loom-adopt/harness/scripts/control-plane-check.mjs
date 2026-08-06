@@ -86,6 +86,11 @@ export const CONTROL_TARGETS = [
   'docs/governance/environments.json',
   'docs/governance/feature-flags.json',
   'docs/governance/deployments/any.json',             // ownership probe: the deploy record is owned
+  // The Shari'ah plane. Both paths are institution-issued context, and both are ownership
+  // probes: a repo with no Islamic product never mounts the files, and the blanket
+  // /docs/governance/ rule owns the paths anyway, so this stays silent for that adopter.
+  'docs/governance/shariah-rulings.json', // HG-0014 — a Shari'ah determination is institution-issued context; an agent that could write a ruling could authorise its own product structure
+  'docs/governance/issc-register.json',   // HG-0014 — committee composition decides who may approve; an agent that could edit the register could appoint its own approvers
   'CODEOWNERS',
 ];
 
