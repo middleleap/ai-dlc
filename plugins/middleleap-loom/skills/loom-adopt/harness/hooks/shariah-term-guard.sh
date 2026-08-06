@@ -44,11 +44,37 @@ set -euo pipefail
 case "${BASH_SOURCE[0]}" in */*) HOOK_DIR="${BASH_SOURCE[0]%/*}" ;; *) HOOK_DIR="." ;; esac
 SURFACES="$HOOK_DIR/shariah-surfaces.txt"
 
-# Fail CLOSED if jq is absent: without it the hook cannot even tell WHICH file is being written, so
-# it cannot know whether the write is in scope. Denying is the only honest answer; exiting non-zero
-# would be a non-blocking error, i.e. the guard disarming itself quietly.
+# ── DORMANCY IS DECIDED FIRST, AND WITHOUT jq ───────────────────────────────────────────────────
+# ORDER IS LOAD-BEARING HERE, and getting it wrong was a real defect: the jq fail-closed deny used
+# to run BEFORE this check, so on a machine without jq an Islamic control that the adopter had never
+# opted into denied EVERY write in the repository. Dormancy that depends on an external binary being
+# installed is not dormancy. So the opt-in question — "has this institution declared any Islamic
+# surface at all?" — is answered with shell builtins only, and a repository that has declared none
+# leaves this hook before it can fail at anything.
+#
+# An ABSENT or EMPTY surfaces file is therefore NOT a fail-closed case, and the difference from
+# pii-guard.sh is deliberate. pii-patterns.json IS that guard's substance — without it, it does not
+# know what it is looking for, and the safe answer is to refuse. This file is a SCOPE list: no
+# entries means no declared Islamic surfaces, which is the true and common state, and denying every
+# write over a missing opt-in file would make an Islamic control mandatory for adopters who have no
+# Islamic product.
+[ -f "$SURFACES" ] || exit 0
+declared=""
+while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in ''|'#'*) continue ;; esac
+  trimmed="${line%"${line##*[![:space:]]}"}"
+  trimmed="${trimmed#"${trimmed%%[![:space:]]*}"}"
+  [ -n "$trimmed" ] || continue
+  declared="yes"; break
+done < "$SURFACES"
+[ -n "$declared" ] || exit 0
+
+# Only now — with at least one surface declared, i.e. the institution HAS opted in — does the guard
+# have something to protect, and only now is failing closed the honest answer. Without jq it cannot
+# tell WHICH file is being written, so it cannot know whether the write is in scope; denying is the
+# only truthful response. Exiting non-zero would be a non-blocking error, i.e. a silent disarm.
 if ! command -v jq >/dev/null 2>&1; then
-  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Shariah term guard cannot run: jq is not installed, so it cannot read which file this write targets or scan it. Failing closed — install jq to enable the guard."}}'
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Shariah term guard cannot run: this repository declares Islamic surfaces in .claude/hooks/shariah-surfaces.txt, but jq is not installed, so the guard cannot read which file this write targets or scan it. Failing closed — install jq, or empty the surfaces list if the declaration was made in error."}}'
   exit 0
 fi
 
@@ -57,13 +83,6 @@ deny() {
     '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$reason}}'
   exit 0
 }
-
-# An ABSENT surfaces file is NOT a fail-closed case, and the difference from pii-guard.sh is
-# deliberate. pii-patterns.json IS the guard's substance — without it the guard does not know what it
-# is looking for. This file is a SCOPE list: no entries means no declared Islamic surfaces, which is
-# the true and common state, and denying every write in the repository over a missing opt-in file
-# would make an Islamic control mandatory for adopters who have no Islamic product.
-[ -f "$SURFACES" ] || exit 0
 
 input=$(cat)
 file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.notebook_path // ""')
