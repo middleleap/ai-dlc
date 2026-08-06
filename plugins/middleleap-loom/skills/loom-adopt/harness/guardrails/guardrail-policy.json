@@ -91,12 +91,25 @@
       "id": "parser-fail-closed",
       "event": "before-file-write",
       "decision": "block",
-      "description": "A guard that cannot parse its input (jq missing) must DENY, never silently pass",
+      "description": "A guard that cannot parse its input (jq missing) or load its own configuration must DENY, never silently pass",
       "coverage": {
-        "claude-code": { "state": "enforced", "mechanism": ".claude/hooks/pii-guard.sh", "note": "all three hooks emit a deny decision when jq is absent (rc.10)" },
+        "claude-code": { "state": "enforced", "mechanism": ".claude/hooks/pii-guard.sh", "note": "every hook emits a deny decision when jq is absent (rc.10); since F3 moved the PII shapes into hooks/pii-patterns.json, pii-guard also denies when that file is missing, unparseable, empty or carries a malformed row — deleting the pattern file is the cheapest attack on the guard and must not look like a clean run" },
         "github-actions": { "state": "ci-backstop", "mechanism": "scripts/control-plane-check.mjs", "note": "CI gates run under Node with no jq dependency; a parse failure exits non-zero and blocks" },
         "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped" },
         "production-agents": { "state": "uncovered", "note": "fail-closed is a property of the shipped hooks and CI gates and says nothing about a serving-path filter. Adopter-side: a gateway that DENIES when its policy engine is unreachable — an output filter that fails open is exactly the defect this row exists to name" }
+      }
+    },
+    {
+      "id": "shariah-terminology",
+      "event": "before-file-write",
+      "decision": "block",
+      "description": "Interest/APR wording in customer-facing prose on a DECLARED Islamic surface is blocked — the return there is a profit or a rental, never interest",
+      "_comment": "DORMANT BY DEFAULT, and that is the design, not a weakness. Scope comes entirely from .claude/hooks/shariah-surfaces.txt (ships EMPTY) and, at merge time, from the adopter's declared emission surfaces; an institution with no Islamic product declares none and never meets this row. Note what BOTH mechanisms rule on: NOTHING. Neither makes a Shari'ah determination. They check vocabulary on a surface the institution itself declared Islamic — scholars decide Shari'ah, and a green run here means the conventional word was not used, never that the copy is right and never 'Shari'ah-compliant'. The honest word for what any gate in this bundle can show is structure-conformant.",
+      "coverage": {
+        "claude-code": { "state": "enforced", "mechanism": ".claude/hooks/shariah-term-guard.sh", "note": "path-scoped to the declared surfaces, with fenced/backticked spans and PascalCase, camelCase and snake_case identifiers stripped before matching — a mapping layer must be able to name a standard's InterestRate field. English terms only: a vetted non-English list is compliance-owned adopter content, not engineering guesswork" },
+        "github-actions": { "state": "ci-backstop", "mechanism": "scripts/shariah-emission-check.mjs", "note": "SE-R07 is the enforcement of record — it reads every declared prose surface in the tree, not one write, so a term introduced with the hook uninstalled is still caught at merge" },
+        "local-git": { "state": "uncovered", "note": "no pre-commit hook shipped — wire shariah-term-guard as a pre-commit hook to cover this runtime" },
+        "production-agents": { "state": "uncovered", "note": "both mechanisms are build-time and read files in the repository; neither executes in the serving path. An agent that GENERATES customer copy at request time — a chat answer describing an Islamic product's return as interest — is stopped by nothing in this bundle, and that is the likeliest place this defect now reaches a customer. Adopter-side: a terminology screen at the model gateway, whose denials the platform logs (see adapters/providers/runtime-guardrails/). The harness reads JSON records; it never watches production, so this cell cannot become enforced on the harness's own evidence" }
       }
     },
     {

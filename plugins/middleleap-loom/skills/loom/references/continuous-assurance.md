@@ -45,6 +45,33 @@ Most of those triggers fire from **Run/Operations** — the third arc where the 
 lives. `operations.md` covers how operational signals feed this lifecycle and route back into
 Discovery to close the loop (the `operations-signal` seam keeps that feedback wire traceable).
 
+## Domain streams — the same six steps, a second cadence and a different confirmer
+
+An institution rarely runs one assurance cycle. The standing control set runs on one cadence; a
+**domain** cycle — Shari'ah, medical, privacy — runs on another, and is confirmed by a different
+body. That is now a configured mechanism rather than a fork: `assurance-config.json` names each
+stream with its own `cadence_days` and `confirm_roles`, and a cycle record declares which stream it
+belongs to. A repo that configures no streams is unaffected in every respect.
+
+The Shari'ah stream, as the worked example, over the same six steps:
+
+| Step | Who runs it in this stream |
+|---|---|
+| ① **Watch** | agent-run — the pronouncement / knowledge-pin class: a new ruling, a standard revised, a pin past its max age |
+| ② **Assess** | **routed to the human Shari'ah functions.** For a pronouncement item the judgement is never the risk-reviewer agent's — an agent can surface that something moved; whether it binds this institution is a determination |
+| ③ **Check** | conformance reviewers — composition, provenance, binding to an approved structure |
+| ④ **Test** | the gate runner — the compiled control plan's gates, as for any other change |
+| ⑤ **Evidence** | agent-assembled — the signed, sealed trail |
+| ⑥ **Confirm** | **role-locked to the committee**, and internal: the third-line Shari'ah audit function may not be outsourced. Never an agent's |
+
+This is also where changes that took the **conforming lane** — those covered by an already-approved
+structure, where no fresh determination was sought — are **ratified at cadence**: the accountable
+body confirms after the fact what the lane let through, and the signed record is the receipt.
+
+The honesty line holds here as everywhere: **the harness checks the records.** The feeds, the
+screening and the monitoring that produce them are the institution's runtime. And nothing in a
+stream rules on its domain — `confirm_roles` decides who confirms, never what was confirmed.
+
 ## Why this is different
 
 | Before — point-in-time, meeting-driven | Now — continuous, agent-driven |

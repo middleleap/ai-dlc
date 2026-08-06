@@ -90,6 +90,10 @@ Full canon for each half:
 - `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
   eval-before-release, and independent validation, with the model-provenance gate that enforces
   the repo-side half.
+- `references/jurisdiction-scale-out.md` — entering a new market: the six data seams (jurisdiction
+  profile, PII shapes, regulatory vocabulary, brand `lang`/`dir`, identities + quorum, data-risk
+  rows) that make scale-out zero-code, and the documented data-contract gaps that belong in the
+  register rather than in an invented enum value.
 
 ## The context brain — why the method compounds
 

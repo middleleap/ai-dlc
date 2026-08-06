@@ -16,16 +16,16 @@
       "acr": "urn:mace:incommon:iap:silver",
       "issued_at": "2026-07-19T11:04:00Z",
       "expires_at": "2026-07-19T11:09:00Z",
-      "nonce": "sha256:72d04040e145d026324efe7604f7ca1a23fcc0e6236504968eed4c5037697d17",
-      "signature": "xlRmFsYfuV9jSIC4IJJF+VbDCKeMShdSh8aL0UAEBO5KgDqYSfcBQj+Pq+KVYL2TESwcP6ycmLnh2zAnEYaGCQ=="
+      "nonce": "sha256:e899aeed95c51ca349ff8d4835fc26c49263f4c5f0d79e7921dce81826ec5490",
+      "signature": "pGqHt9MzYbi54VBuREynBaMYN/+6ekBpqV2WLHIh9KAXpH4UKuQDHW5cryFuF/Oh3/1T5NmAQa1ZM+n6rBvSAg=="
     }
   },
   "bound_to": {
-    "plan_hash": "be3f03718a19100a96b8fdf5b29966af25b01a0ae26a82d2aa1f08ab48b5620b",
+    "plan_hash": "9e3f7ececc685fe42d0471e993c1cb88c37e38a3c45ec34c0dd3195167640af3",
     "passport_digest": "sha256:4a93b99eb9f807fd9c0d7b79cb7a0c560fecf9afd8935b7d7a77d3b03667ac0d",
     "source_sha": "4b0bc5c1e2f3a495867d0c1b2a3948576e8f9012",
     "control_plan_path": "control-plan.json",
-    "binding_hash": "sha256:1281e429c7042df525a90c808d21adf58d53c538a55f7436289a1a1e7ed94386"
+    "binding_hash": "sha256:a808e10f6ac1081e5715ef56fc3ae4b60184f4eedfcee22b2e8a0cd59698575f"
   },
   "origin": {
     "system": "notion",
@@ -46,7 +46,7 @@
     "transcribed_at": "2026-07-19T11:04:09Z",
     "attestation": {
       "issuer": "demo-floor-bridge",
-      "signature": "WoCj99eo3sEun0ZUgrwgyTI32gqtNsSkPwPMbcT9LADY0i7kx3kBNe246ncn4PvL8Ie5Xt0+OyCzQX9JZeVNBQ=="
+      "signature": "58Z//phZ1EWojj7fo0zsqBt5oSXSXqgPvqFbqsOD/jXNq3ZIGr4KBIETZE5McPH9+N7J5wailsEz+LWpKum0BA=="
     }
   }
 }

@@ -36,6 +36,14 @@ For every endpoint touched by the diff:
    match the spec exactly — no added or missing values.
 9. **Approval annotations**: every operation the spec marks as approval-gated defers execution
    to the approvals flow.
+10. **Ownership sequencing on asset-sale and lease flows**: for every asset-sale, lease or
+    rental-accrual flow the diff touches, the ledger/event tests must assert that the
+    institution's acquisition/title event strictly PRECEDES the sale, lease or first rental
+    accrual — cost-plus sale: acquire → sell; lease: acquire → lease; diminishing co-ownership:
+    ownership units transfer only per the buyout schedule. A suite that books revenue before
+    title, or that carries NO ordering assertion at all for such a flow, is a finding: that
+    ordering is exactly where a synthetic implementation stops being a sale and becomes a loan at
+    interest.
 
 ## Output format
 

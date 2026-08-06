@@ -33,6 +33,7 @@ see `adapters/providers/runtime-guardrails/README.md`.
 | `brainkit-immutability` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered | ○ uncovered |
 | `network-egress` ⚠︎ | before-network-egress | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
 | `parser-fail-closed` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
+| `shariah-terminology` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
 | `agent-customer-decision` ⚠︎ | before-customer-decision | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
 
 _● enforced at the point of action · ◐ no local block but a CI gate catches it before merge (the enforcement of record) · ○ uncovered — no mechanism · ⚠︎ acknowledged gap (blocking, enforced nowhere). Generated from `guardrails/guardrail-policy.json` by `scripts/guardrail-policy-check.mjs`; do not edit by hand — run `node scripts/doc-integrity-check.mjs --fix`._

@@ -42,6 +42,18 @@
         "a negative probe: a policy-violating action must be denied and the denial must be observable in that log"
       ],
       "_comment": "Do not confuse this with guardrails/guardrail-policy.json: that policy covers the agent that WRITES the code, at build time; this role covers the agent that SERVES the customer, at request time. The honest limit is the same in both places — the harness reads records, it does not watch production. It cannot verify that a runtime guardrail FIRES; it can refuse to let a change ship that never chose one, and it can read the denial the platform recorded when the negative probe was run."
+    },
+    {
+      "role": "real-data-controls",
+      "control": "REAL-PII-SURFACE",
+      "capability": "real_data_controls",
+      "purpose": "Name the platform controls that stand between real customer data and the people and agents who touch it — key custody and rotation, field-level encryption or tokenisation, and access logging — so an institution moving off synthetic data records what it CHOSE instead of inheriting the harness's synthetic-only posture by silence",
+      "must_provide": [
+        "key custody and access logs asserted by the PLATFORM that holds the data — the key manager, the tokenisation service, the database audit log — and never by the application or the agent that reads through them",
+        "a negative probe: an unauthorised read must be DENIED and the denial must be observable in that log. An allow-only log proves traffic, never protection"
+      ],
+      "_comment": "THE SEAM THIS ROLE EXISTS TO MAKE VISIBLE. Everything else in this bundle assumes synthetic data — pii-guard.sh blocks real-PII shapes at the keystroke, and REAL-PII-SURFACE is graded `absent` in the control catalog because the harness genuinely ships nothing for the real-data case. That is honest while the repository is synthetic-only. The moment an institution points a workload at production data, the same `absent` grade reads as 'not our problem' about the surface that now matters most, and nothing in the tree changes to say so. This role turns that transition into a recorded choice: an adopter that moves to real data must name the key manager, the encryption or tokenisation boundary, and the access log, and evidence a denial. What the role does NOT do: it does not encrypt anything, does not verify a key rotation happened, and cannot see a read at request time. The harness reads JSON records; it never watches production. It refuses to let the move to real data happen without a named, evidenced control, which is a smaller claim than 'customer data is protected' and is the true one.",
+      "_dormancy_comment": "DORMANT UNLESS A COMPILED PLAN REQUIRES IT. `real_data_controls` arms via PS-R06 only when a profile a change compiles against demands it — the intended home is a regulated-institution profile at the high tier, where real customer data is in scope. A repository working on synthetic fixtures never meets this role."
     }
   ]
 }

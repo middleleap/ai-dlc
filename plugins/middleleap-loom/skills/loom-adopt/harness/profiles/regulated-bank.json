@@ -26,11 +26,13 @@
       "evidence": ["sast", "sbom", "dependency-audit", "provenance", "product-eval"],
       "pa1_sections": ["data-and-models", "third-parties"],
       "pa2_sections": ["security-privacy-residency", "model-validation", "operational-readiness"],
+      "_real_data_comment": "The harness is synthetic-only by design, and that posture is inherited by SILENCE — a repository that starts carrying real customer data does not announce it. `real_data_controls` refuses the silence: at high risk the institution must record which platform controls stand between real data and the people and agents who touch it (key custody, field-level encryption or tokenisation, access logging). The harness cannot verify any of them operate; it can refuse to let a change ship that never named them.",
       "capabilities": {
         "model_risk": { "required": true, "minimum_tier": "medium" },
         "sca": { "required": true },
         "hardened_runtime": { "required": true },
-        "exposure_control": { "required": true }
+        "exposure_control": { "required": true },
+        "real_data_controls": { "required": true, "institution_owned": true }
       }
     },
     "critical": {

@@ -49,7 +49,10 @@ export const EVIDENCE_FLOOR = ['tests', 'reviews', 'control-plane'];
 // a plan that requires brainkit-provenance makes it a sealed, semantically-checked artifact, not
 // a rendering courtesy. The audit's gap: "brainkit-provenance is ignored by the evidence-seal
 // gate"; this is what closes it. brainkit-check cross-checks the digest against the live BrainKit.
-export const PLAN_ONLY_TYPES = ['brainkit-provenance'];
+// rc.41 adds `shariah-attestation` to the same list on the same terms — the Islamic-product
+// profile compiles it as required evidence, and a repository whose plans name no Islamic product
+// never seals it and never sees this validator run.
+export const PLAN_ONLY_TYPES = ['brainkit-provenance', 'shariah-attestation'];
 
 /**
  * The evidence types a release must seal, DERIVED from the compiled plans (W1, closes F1)
@@ -115,8 +118,48 @@ export const SEMANTICS = {
     if (!Array.isArray(a.artifacts) || a.artifacts.length === 0) f.push('sealed brainkit-provenance lists no artifacts — provenance must say WHICH artifacts it covers');
     return f;
   },
+  // The tenth evidence type (rc.41 · Islamic plane). PLAN-ONLY on the brainkit-provenance terms:
+  // the Islamic-product profile compiles it, nothing else does, so a conventional adopter never
+  // seals one and never reaches this validator.
+  //
+  // THE ATTESTATION RECORDS A HUMAN DECISION; IT NEVER CONSTITUTES ONE. Scholars decide Shari'ah.
+  // What is verified here is COMPOSITION, PROVENANCE and BINDING: an attester who resolves to a
+  // HUMAN registry identity, the already-taken committee decision the shipped structures are
+  // approved under, WHICH register rows those structures are, a PASS result, and the release
+  // commit the assertion was made at. A clean result means the record is complete and bound —
+  // "structure-conformant" — and never that anything is Shari'ah-compliant: this reads a JSON
+  // file at release time and has no view of what the product does in production.
+  //
+  // WHAT IT CANNOT DO: resolve `issc_decision_ref` or the ids in `structures` against
+  // docs/governance/shariah-rulings.json. That cross-check belongs to the Shari'ah-governance
+  // gate, the same split brainkit-provenance uses — the seal verifies the record is well-formed,
+  // bound, and made by somebody who could make it; the register decides whether it is true.
+  'shariah-attestation': (a, ctx) => {
+    const f = [];
+    if (!nonEmpty(a.attester_id)) {
+      f.push('sealed shariah-attestation names no attester_id — an attestation nobody is named for is a claim with no author');
+    } else if (!ctx.registry) {
+      f.push(`sealed shariah-attestation attester_id ${JSON.stringify(a.attester_id)} cannot be resolved — no identity registry was loaded, and an unresolvable attester does not count`);
+    } else {
+      const who = identityOf(ctx.registry, a.attester_id);
+      if (!who) f.push(`sealed shariah-attestation attester_id ${JSON.stringify(a.attester_id)} does not resolve in the identity registry — an approval that resolves to nobody is not an approval`);
+      else if (who.kind === 'agent') f.push(`sealed shariah-attestation attester_id ${JSON.stringify(a.attester_id)} is an AGENT — the record of a Shari'ah decision may be PREPARED by an agent and may never be MADE by one`);
+    }
+    if (!nonEmpty(a.issc_decision_ref)) {
+      f.push('sealed shariah-attestation names no issc_decision_ref — an attestation that cites no committee decision asserts approval on its own authority, which is the defect this evidence type exists to prevent');
+    }
+    if (!Array.isArray(a.structures) || a.structures.length === 0 || !a.structures.every(nonEmpty)) {
+      f.push(`sealed shariah-attestation lists no structures (got ${JSON.stringify(a.structures)}) — it must say WHICH register rows the shipped structures are, or it approves everything and nothing`);
+    }
+    if (a.result !== 'PASS') f.push(`sealed shariah-attestation result is ${JSON.stringify(a.result)}, not PASS — sealing a non-passing attestation launders it into release evidence`);
+    if (ctx.releaseCommit && a.commit !== ctx.releaseCommit) {
+      f.push(`sealed shariah-attestation was made at ${JSON.stringify(a.commit)}, not the release commit ${JSON.stringify(ctx.releaseCommit)} — an approval given for one build is not an approval of another`);
+    }
+    return f;
+  },
 };
 
+const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 const sha256File = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 
@@ -141,8 +184,13 @@ export function buildChain(rawEntries) {
  * When `baseDir` is given, each entry's artifact at `ref` (resolved relative to baseDir) is read
  * and its sha256 verified against the manifest — so altering the artifact on disk (not just the
  * manifest) is caught, which is what makes the seal tamper-evident. The CLI always passes it.
+ *
+ * `registry` (rc.41) is the identity registry, reachable by the semantic validators that need to
+ * resolve a NAME inside a sealed artifact. Only shariah-attestation uses it today. It defaults to
+ * null so every existing caller is unchanged; a validator that needs it and does not get it says
+ * so as a finding rather than passing on an unresolvable name.
  */
-export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = null } = {}) {
+export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = null, registry = null } = {}) {
   const findings = [];
   const entries = manifest && manifest.entries;
   if (!Array.isArray(entries) || entries.length === 0) {
@@ -184,7 +232,7 @@ export function evaluate(manifest, { requiredTypes = REQUIRED_TYPES, baseDir = n
       } else if (SEMANTICS[e.type]) {
         // Bytes intact ⇒ now verify what the artifact SAYS. Intact-but-failing is a failure.
         try {
-          for (const f of SEMANTICS[e.type](JSON.parse(readFileSync(p, 'utf8')), { releaseCommit })) {
+          for (const f of SEMANTICS[e.type](JSON.parse(readFileSync(p, 'utf8')), { releaseCommit, registry })) {
             findings.push(`entry ${i} (${e.type}): ${f}`);
           }
         } catch {
@@ -286,7 +334,7 @@ function run(cwd = process.cwd()) {
     notes.push(`${trains.length} release train(s) present, none of them binding this bundle's release_commit — required evidence is derived from EVERY non-terminal change (the fail-open posture)`);
   }
   const requiredTypes = requiredTypesFor(aggregateRequirements(cwd, { changeIds }));
-  findings.push(...evaluate(manifest, { baseDir: dirname(path), requiredTypes }));
+  findings.push(...evaluate(manifest, { baseDir: dirname(path), requiredTypes, registry }));
   const commitCheck = verifyReleaseCommit(manifest.release_commit, cwd);
   findings.push(...commitCheck.findings);
   if (commitCheck.note) notes.push(commitCheck.note);
