@@ -232,6 +232,13 @@ test('every role capability is actually declared by a shipped profile — PS-R06
       for (const tier of Object.values(profile.requirements || {})) {
         for (const cap of Object.keys(tier.capabilities || {})) declared.add(cap);
       }
+      // Conditionals count too. A capability required only when a flag fires is still a capability
+      // a shipped profile requires — and it is the RIGHT home for a control whose trigger is a
+      // property of the change rather than its risk tier. Scanning only tiers made that placement
+      // look like an unreferenced role and pushed the capability up to a tier where it over-fires.
+      for (const cond of profile.conditional || []) {
+        for (const cap of Object.keys(cond.adds?.capabilities || {})) declared.add(cap);
+      }
     }
   }
   for (const role of roles) {

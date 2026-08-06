@@ -8,7 +8,7 @@
       "demo": true,
       "description": "DEMO reference issuer — the carrying service for the bundled example. Private key generated to sign it and discarded.",
       "verify": {
-        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApPq6MHu6RGytplD5LjONesB0K8OS/XlzQSNzahbHZqY=\n-----END PUBLIC KEY-----\n"
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA2Kd/LGo5tfA61vlptuMPdz/lZQZmtA3B5CnCGM86HFU=\n-----END PUBLIC KEY-----\n"
       }
     }
   ]

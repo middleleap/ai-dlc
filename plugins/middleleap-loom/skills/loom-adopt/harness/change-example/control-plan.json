@@ -98,11 +98,11 @@
     "exposure_control": {
       "required": true
     },
-    "real_data_controls": {
+    "evidence_retention": {
       "required": true,
       "institution_owned": true
     },
-    "evidence_retention": {
+    "real_data_controls": {
       "required": true,
       "institution_owned": true
     }
@@ -118,7 +118,7 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:ad2309c35c2ecb04b7a10bbb0a79a33b209aca4acac53e9caf8d8d8c633e84c1"
+      "digest": "sha256:ff36f09b22212ab92fe0b745879da1454d6b4a7041a5b7560eb89331aa98a388"
     },
     {
       "profile": "uae-bank",
@@ -127,5 +127,5 @@
       "digest": "sha256:1b23c7593d97760e9740a31cda994410bf31601bfef223ac4865dba23a30caaf"
     }
   ],
-  "plan_hash": "7bd4c9a31865fca9ca3c49985a5c175552d52f8cf770e977aecd2cdafe5a20cd"
+  "plan_hash": "cb351600dbb9c95a2ce45a2653870c9827cf45e581fb85c2f79b832a989b0c77"
 }
