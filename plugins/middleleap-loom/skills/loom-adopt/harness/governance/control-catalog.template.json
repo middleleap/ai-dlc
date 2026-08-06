@@ -153,7 +153,7 @@
     },
     {
       "control_id": "HG-0006",
-      "objective": "Every model role is pinned, tiered, evaluated against its pin with a sealed report, independently validated, and (at high tier) declares runtime monitoring, suspension thresholds and a fallback",
+      "objective": "Every model role is pinned, tiered, evaluated against its pin with a sealed report, independently validated, and (at high tier) declares runtime monitoring, suspension thresholds and a fallback; a model whose output carries DOMAIN significance additionally names a resolvable human <domain>-model-validator outside the build line, and a compiled plan requiring a domain capability cannot be satisfied by a manifest that never declares that domain",
       "owner_role": "model-risk",
       "line": 2,
       "state": "mechanically-validated",
@@ -163,7 +163,8 @@
       "paths": [
         "docs/governance/model-manifest.json",
         "docs/governance/evidence/"
-      ]
+      ],
+      "note": "The domain limb is strictly additive — a model that declares no `domains` never reaches it — and it verifies COMPOSITION and BINDING only: WHO signed, that they hold the derived <domain>-model-validator role, are not an agent, and signed against the pin that ships. Whether the determination is sound belongs to the accountable body (for Shari'ah, the internal Shari'ah supervision committee); no agent in this harness authors or approves one"
     },
     {
       "control_id": "PA-GATES",
@@ -214,7 +215,7 @@
     },
     {
       "control_id": "HG-0003",
-      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain with a MANDATORY external anchor; release_commit must be a real commit that exists in this repository and is an ancestor of HEAD (a non-git context records the check as not-performable, never as a pass)",
+      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain with a MANDATORY external anchor; release_commit must be a real commit that exists in this repository and is an ancestor of HEAD (a non-git context records the check as not-performable, never as a pass), and a plan-only evidence type (brainkit-provenance, shariah-attestation) is demanded and semantically verified only where a compiled plan names it",
       "owner_role": "platform-admin",
       "line": 1,
       "state": "mechanically-validated",
@@ -367,6 +368,15 @@
       "line": 1,
       "state": "mechanically-validated",
       "mechanism_ref": ".claude/hooks/test-tripwire.sh"
+    },
+    {
+      "control_id": "HOOK-SHARIAH-TERM",
+      "objective": "Interest/APR wording is blocked at write time on DECLARED Islamic customer-facing prose surfaces (defence in depth with SHARIAH-SUBSTANCE)",
+      "owner_role": "shariah-compliance",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": ".claude/hooks/shariah-term-guard.sh",
+      "note": "A hook row on the HOOK-PII/HOOK-SPEC/HOOK-TEST shape: no gate_family and no lane, so the gate runner never spawns it — the enforcement is the runtime's pre-write hook, and the merge-time reader of the same ground is SHARIAH-SUBSTANCE (scripts/shariah-emission-check.mjs, SE-R07). Scope comes from .claude/hooks/shariah-surfaces.txt, which ships EMPTY: with no declared surface the guard is a no-op, so a conventional adopter never meets this control. It makes NO Shari'ah determination — it checks vocabulary on a surface the institution itself declared. Scholars decide Shari'ah. Claude Code-specific, like every hook here; where a runtime lacks the pre-write hook the CI gate is the enforcement of record (GUARDRAIL-POLICY says so and is checked)"
     },
     {
       "control_id": "CI-CATALOG",
@@ -567,6 +577,16 @@
       "state": "defined",
       "doc_ref": "docs/governance/runbooks/model-risk-operating-model-runbook.md",
       "adopter_side": true
+    },
+    {
+      "control_id": "AI-INCIDENT",
+      "objective": "A rehearsed response path for a deployed model that harms: detection off the runtime metrics the model manifest already declares, suspension held by the model-risk function, customer notification, remediation, and purification where the harm generated income",
+      "owner_role": "model-risk",
+      "line": 2,
+      "state": "defined",
+      "doc_ref": "docs/governance/runbooks/ai-incident-runbook.md",
+      "adopter_side": true,
+      "note": "Moves bank-grade-gap cluster B's 'AI incident runbook' from Absent to Defined, and no further. THE HARNESS HOLDS NO INCIDENT DETECTION — it reads records: a manifest that DECLARES which metrics are monitored, a log that RECORDS a signal somebody else wrote, a purification record that STATES an amount left. Nothing here watches a live model, evaluates a production output, pages a human or moves money, so a period with no incident record is uncovered here, not clean. Each mechanical step in the runbook is gated by a control that already exists (HG-0006, OPS-LOOP, PURIFICATION, ASSURANCE-CYCLE, HG-0003); this row is the organisational path they hang on, and running it is the adopter's. The runtime-guardrails provider role (adapters/providers/runtime-guardrails/) names the enforcement point that would produce the denials this path assumes — selecting one does not change this grade"
     },
     {
       "control_id": "2L-CHALLENGE",
@@ -790,7 +810,7 @@
     },
     {
       "control_id": "COMPREHENSION",
-      "objective": "Review is not understanding: a high/critical change carries a human-authored comprehension record \u2014 summary, critical-path walkthrough, a named human owner who can explain it, reviewer challenge questions, architecture/failure-mode explanation, a replay of the agent decision log, and reported metrics \u2014 so delivery throughput cannot outrun institutional understanding",
+      "objective": "Review is not understanding: a change selected by tier (high/critical), by an always-comprehend capability its plan compiles, or by the second line's deterministic medium-tier sample carries a human-authored comprehension record \u2014 summary, critical-path walkthrough, a named human owner who can explain it, reviewer challenge questions, architecture/failure-mode explanation, a replay of the agent decision log, and reported metrics \u2014 so delivery throughput cannot outrun institutional understanding",
       "owner_role": "engineering",
       "line": 1,
       "state": "mechanically-validated",
@@ -798,9 +818,10 @@
       "test_ref": "scripts/comprehension-check.test.mjs",
       "lane": "pr",
       "paths": [
-        "docs/governance/changes/"
+        "docs/governance/changes/",
+        "docs/governance/approval-sla.json"
       ],
-      "note": "Mandatory-when-compiled: a low/medium change needs none; a high/critical change that lacks the record fails. Metrics are REPORTED, never gated on their values \u2014 the objective is understanding, not throttling AI output. The decision-log replay is the rc.6 replayable log's second consumer"
+      "note": "Mandatory-when-compiled: a high/critical change that lacks the record fails, and a low/medium one needs none UNLESS the second line configured it. rc.41 adds two selections the second line owns in approval-sla.json's `comprehension` block: a DETERMINISTIC medium-tier sample (FNV-1a over the change id \u2014 never Math.random, so the same change selects the same way for the author, the reviewer and CI) and `always_comprehend_capabilities`, which selects at any tier for domain-material surfaces. An ABSENT block behaves exactly as rc.15 did; a `medium_sample_rate` of 0 is a decision and is REPORTED as a notice on every run rather than left invisible; a malformed rate FAILS rather than degrading to a file that looks configured and samples nothing. approval-sla.json is in the path scope so that editing the policy re-runs the gate. Metrics are REPORTED, never gated on their values \u2014 the objective is understanding, not throttling AI output. The decision-log replay is the rc.6 replayable log's second consumer"
     },
     {
       "control_id": "DOC-INTEGRITY",
@@ -896,7 +917,25 @@
       "line": 2,
       "state": "absent",
       "adopter_side": true,
-      "note": "The harness is synthetic-only by design; the real-data surface is the adopter's (data-protection-runbook.md)"
+      "note": "The harness is synthetic-only by design; the real-data surface is the adopter's (data-protection-runbook.md). rc.46: a provider role (adapters/providers/real-data-controls/) now names the alternatives — encrypt-in-place vs tokenisation — so an institution moving to real data records a CHOICE instead of inheriting the synthetic-only posture by silence. Selecting a provider does not change this grade; only platform-asserted key custody, access logs and an OBSERVED denial would"
+    },
+    {
+      "control_id": "AI-FAIRNESS",
+      "objective": "Fairness and bias testing of a model whose output affects a customer outcome: declared protected attributes, a measured disparity across them on a representative population, a threshold somebody owns, and a re-test on every material retrain",
+      "owner_role": "model-risk",
+      "line": 2,
+      "state": "absent",
+      "adopter_side": true,
+      "note": "NAMED, NOT SHIPPED — bank-grade-gap cluster B grades this Absent and rc.46 does not move it. The harness holds no fairness metric, no protected-attribute register and no test rig, and no gate here measures a disparity. The model manifest can carry a fairness evaluation as one more sealed, pin-bound report (HG-0006), but that is a place to PUT a result, not a mechanism that produces one, and grading this control on the strength of it would claim a bias test where only an eval slot exists. Closing it is the adopter's rig, the adopter's representative population, and a threshold the model-risk function owns"
+    },
+    {
+      "control_id": "AI-EXPLAINABILITY",
+      "objective": "Explainability and contestability of an automated decision: a reason the affected customer can be given, a route by which they can challenge it, and a human with the authority to act on the challenge",
+      "owner_role": "model-risk",
+      "line": 2,
+      "state": "absent",
+      "adopter_side": true,
+      "note": "NAMED, NOT SHIPPED — bank-grade-gap cluster B grades this Absent and rc.46 does not move it. What ships is a REQUIREMENT TO SAY: the ai-decision-system profile compiles an `explainability-and-contestability` PA2 section (and shariah-model restates `ai-disclosure` beside it), so a plan must state how a decision is explained and contested, and product-approval-check verifies the section is present and approved. That is a compiled section a human writes — no gate here generates a reason code, judges whether a reason is intelligible to the person who received it, or routes a contest to anybody. The explanation surface and the contest path are the adopter's runtime"
     },
     {
       "control_id": "SELF-CLAIMS",
@@ -1057,6 +1096,106 @@
         "docs/governance/environments.json"
       ],
       "note": "The DEPLOY LANE'S FIRST CONTROL \u2014 it is what retires rc.33's empty-lane guard for `deploy` (the guard itself stands: an empty lane is still a hole). Everything upstream binds an immutable artifact digest and nothing compared it to what actually ran; a rebuild of the same source is a different artifact and was not the one evaluated. Reading a clock here is not telemetry gating: the DECLARED bake is compared with the OBSERVED bake, which is a control being verified, not a duration being judged"
+    },
+    {
+      "control_id": "SHARIAH-GOV",
+      "objective": "The Shari'ah committee's composition and appointment provenance are recorded, agree with the identity registry in both directions, and carry a majority quorum; internal Shari'ah audit is not outsourced; and every projected product structure is bound to an ACTIVE ruling in the decision register",
+      "owner_role": "shariah-compliance",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/shariah-governance-check.mjs",
+      "test_ref": "scripts/shariah-governance-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/issc-register.json",
+        "docs/governance/shariah-rulings.json",
+        "docs/governance/shariah-structures/",
+        "docs/governance/identities.json",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "assurance-cadence",
+      "note": "The primary reader of the `shariah_governance` capability. Mandatory-when-compiled and INERT otherwise: a repository whose plans never require that capability reads nothing and says nothing, so a conventional adopter is never failed by a Shari'ah control. It rides `assurance-cadence` because that is the family the Islamic-product profile compiles from medium, which keeps the gate on the route whenever an Islamic change is in flight regardless of the diff; docs/governance/changes/ is in the path scope for the same reason from the other side \u2014 the change that ARMS this gate is a compiled plan. It verifies COMPOSITION, PROVENANCE and BINDING records only: it answers no Shari'ah question, cannot tell a genuine approval reference from a well-formed invention, and a green result over a substantively wrong ruling is possible by design. Scholars decide Shari'ah; no agent authors or approves a ruling"
+    },
+    {
+      "control_id": "SHARIAH-SUBSTANCE",
+      "objective": "Islamic product data is structure-conformant where it is emitted: no interest field or category inside an IsShariaCompliant subtree, no product silent about IsShariaCompliant (the Standard defaults it FALSE), no ShariaStructure outside the fixed enum, no Gradual ownership transfer without a BuyoutSchedule, no contractual ibra' on a Murabaha, no guaranteed return on a participatory structure, and no interest/APR terminology in declared customer-facing prose",
+      "owner_role": "shariah-compliance",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/shariah-emission-check.mjs",
+      "test_ref": "scripts/shariah-emission-check.test.mjs",
+      "lane": "pr",
+      "note": "The second reader of the `shariah_governance` capability: SHARIAH-GOV reads the governance records, this reads the other end \u2014 the fixtures and specs where the structure stops being a claim and becomes bytes. Mandatory-when-compiled and INERT otherwise: no docs/governance/shariah-surfaces.json and no compiled requirement means it reads nothing and says nothing, so a conventional adopter is never failed by a Shari'ah control. NO PATH SCOPE IS DECLARED, deliberately \u2014 the surfaces are adopter-declared (fixture globs, spec paths, content roots) and are not knowable at catalogue time, so a path scope would silently skip the gate on exactly the diffs that change an Islamic fixture; with no scope the runner runs it by default. It rules on NO Shari'ah question: it checks conformance to structures the committee already approved and to an enum the published Standard already fixes, and the most this plane ever claims is structure-conformant, never Shari'ah-compliant. It reads files in the repository, never production \u2014 an undeclared surface is UNCHECKED here, not clean. Scholars decide Shari'ah"
+    },
+    {
+      "control_id": "PURIFICATION",
+      "objective": "Income that must never be booked is disposed of, provably: every purification record binds to a shariah-non-compliance signal in the operations log, states a positive amount and currency, names who computed it (an agent may) and a NON-AGENT shariah-compliance or shariah-committee identity who approved its disposal, cites an on-disk PA2 purification-of-non-compliant-income method, and \u2014 once donated \u2014 carries donation evidence dated at or after the breach was opened",
+      "owner_role": "shariah-compliance",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/purification-check.mjs",
+      "test_ref": "scripts/purification-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/purification/",
+        "docs/governance/operations-signal.json",
+        "docs/governance/identities.json",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "assurance-cadence",
+      "note": "Mandatory-when-compiled and INERT otherwise: a repository with no purification records, nothing routed to purification and no plan requiring `shariah_governance` never sees it fire. The moment a compiled plan does require it, a purification-routed signal with no answering record FAILS and names the change id. It rides `assurance-cadence`, the family the Islamic-product profile already compiles, which makes it unskippable whenever an Islamic change is in flight regardless of the diff. THE HARNESS READS JSON RECORDS: it proves the record exists, is complete, and is bound to a breach and to an approved PA2 method \u2014 never that the money actually moved, and never that the income was or was not permissible. Computing an amount is arithmetic and an agent may do it; approving its disposal is human Shari'ah authority and an agent may not. Scholars decide Shari'ah"
+    },
+    {
+      "control_id": "PROFIT-DISTRIBUTION",
+      "objective": "Every recorded profit-distribution run to investment accountholders is governance-complete: a bounded period and a stated allocation basis, a disclosed mudarib share within 0..1, EVERY profit-equalisation or investment-risk reserve movement carrying its own committee approval reference, a disclosure reference where the distributed rate diverges materially from the expected rate, and an approval resolving to a non-agent human holding shariah-compliance or (at registry quorum) shariah-committee",
+      "owner_role": "shariah-compliance",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/profit-distribution-check.mjs",
+      "test_ref": "scripts/profit-distribution-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/profit-distribution/",
+        "docs/governance/profit-distribution.json",
+        "docs/governance/shariah-rulings.json",
+        "docs/governance/identities.json",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "assurance-cadence",
+      "note": "The deposit-side twin of PURIFICATION, and the third reader of `shariah_governance`. Mandatory-when-compiled and INERT otherwise: no distribution records and no compiling plan means silence, and PD-R09 names the change id the moment one requires it. RETURNS ON THESE STRUCTURES ARE EXPECTED, NEVER GUARANTEED \u2014 the gate never asks the distributed rate to meet the expected one, because a gate that did would be demanding a guaranteed return on a deposit; it asks only that a material divergence was disclosed. It reads the governance RECORD of a run, not its arithmetic: it does not read the ledger, cannot recompute an allocation or a weightage table, cannot tell an approved smoothing from a managed one, and cannot tell you a quarter went unrecorded. A movement is approved here because a committee reference is recorded against it, never because this file judged it permissible. Scholars decide Shari'ah"
+    },
+    {
+      "control_id": "KNOWLEDGE-CURRENCY",
+      "objective": "Every external rule base this repository is built against is a pin \u2014 named publisher, named edition, accountable owner_role, and a re-verification bound that has not lapsed \u2014 and a pin's check_ref names a job that exists",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/knowledge-staleness-check.mjs",
+      "test_ref": "scripts/knowledge-staleness-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/knowledge-pins.json",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "assurance-cadence",
+      "note": "NOT AN ISLAMIC MECHANISM \u2014 pinning is generic, and the shipped template's non-Islamic row is there to prove it. Mandatory-when-compiled on the `knowledge_currency` capability (the Islamic-product profile and the institution template both declare it from medium): no pins file and no compiling change is INERT, and the shipped template's untouched rows are NOTICES, so a conventional adopter never fails on this. IT READS DATES OUT OF A JSON FILE and never fetches a publisher \u2014 there is no network call anywhere in the harness \u2014 so it cannot tell you the pinned edition is still the current one, and `last_verified` can be bumped by hand in the same commit that would otherwise have failed. Running each pin's check_ref on a schedule and confirming it in the assurance stream (ASSURANCE-CYCLE, step 6) is what makes the date mean anything. A stale pin is a TRUE finding; a fresh pin is a claim about the record, not the world. It takes no view on the CONTENT of any rule base"
+    },
+    {
+      "control_id": "EVIDENCE-RETENTION",
+      "objective": "Every evidence type this repository produces \u2014 sealed into a release bundle or required by a compiled control plan \u2014 is named in a retention policy with a positive retention period or an explicit justification, and every immutable-archive claim says WHERE that archive is",
+      "owner_role": "internal-audit",
+      "line": 3,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/evidence-retention-check.mjs",
+      "test_ref": "scripts/evidence-retention-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/evidence-retention.json",
+        "docs/governance/evidence/",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "assurance-cadence",
+      "note": "HG-0003 makes the release bundle tamper-EVIDENT for exactly as long as it exists and nothing said how long that is; an examination reaches back years. NOT AN ISLAMIC CONTROL \u2014 retention is generic and the rows in the shipped template that have nothing to do with Islamic finance are there to prove it. Mandatory-when-compiled on the `evidence_retention` capability: no policy and no compiling change is INERT rather than a vacuous green, and the requirement arrives from a profile, never from a CI flag. THE HARNESS RECORDS THE POLICY AND DOES NOT HOLD THE EVIDENCE \u2014 the WORM store, the retention lock and the timestamping authority are the adopter's platform (see WORM-EVIDENCE, line 3, adopter_side), so `immutable_archive: true` is a claim this gate reads and can never confirm a byte was written against. An archive claim with no named archive is a FINDING once the capability compiles and a NOTICE otherwise, so a repository that has not yet chosen a store is not failed for the shipped template's silence; a row for evidence this repository does not produce is reported, never enforced, which is also what keeps the Islamic rows dormant for a conventional adopter"
     }
   ]
 }

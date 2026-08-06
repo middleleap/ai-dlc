@@ -104,9 +104,11 @@ are repo-root-relative.
 | `scripts/*.mjs` | `scripts/` | core | Every gate + its tests (globbed — a per-file list silently drops new gates) |
 | `core` | `core` | core | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
 | `profiles` | `profiles` | core | Profiles as data: base + jurisdiction + product-type |
-| `hooks/*.sh` | `.claude/hooks/` | core | Pre-write guardrail hooks (pii-guard, spec/test tripwires) |
+| `hooks/*.sh` | `.claude/hooks/` | core | Pre-write guardrail hooks (pii-guard, spec/test tripwires, shariah-term-guard) |
+| `hooks/pii-patterns.json` | `.claude/hooks/pii-patterns.json` | core | The PII shapes pii-guard.sh reads — mounted data, not code: a new jurisdiction is a row here, never an edit to a security-critical shell script. NOT OPTIONAL and not tierable: the glob above copies only *.sh, and a guard that cannot load its patterns DENIES every write. It ships wherever the hook ships |
+| `hooks/shariah-surfaces.txt` | `.claude/hooks/shariah-surfaces.txt` | core | The declared Islamic customer-facing prose surfaces shariah-term-guard.sh is scoped to. Core because it ships beside the hook it scopes, and it carries NO entries: with an empty list the guard is a no-op, which is the correct and permanent state for a conventional adopter |
 | `hooks/settings.hooks.json` | `.claude/settings.json` | core | Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand) |
-| `governance/runbooks/*.md` | `docs/governance/runbooks/` | core | Seven adoption runbooks + the supervised-pilot playbook |
+| `governance/runbooks/*.md` | `docs/governance/runbooks/` | core | Eight adoption runbooks + the supervised-pilot playbook |
 | `governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | core | How to activate branch protection, IAM, the routine lane |
 | `governance/routine-controller.yml` | `docs/governance/routine-controller.yml` | core | Reference routine auto-merge controller — separated bot identity, gated on routine-qualified + config-reconciliation (rc.12 WS2.3) |
 | `governance/CODEOWNERS.template` | `CODEOWNERS` | core | The control-plane ownership map (replace @your-org/… — the gate fails until you do) |
@@ -116,7 +118,7 @@ are repo-root-relative.
 | `governance/assertion-issuers.template.json` | `docs/governance/assertion-issuers.json` | governed | Identity-provider material for human approval assertions (kept separate from service keys) |
 | `governance/identity-map.template.json` | `docs/governance/identity-map.json` | governed | The P6 join: surface person id → IdP subject → registry identity. Second-line owned; never written by a service |
 | `governance/identity-map-reconciliation.template.json` | `docs/governance/identity-map-reconciliation.json` | governed | The observer's signed observation that the map is still current (observed, not declared) |
-| `governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | core | Model inventory (pinned, tiered, evaluated, runtime-governed) |
+| `governance/model-manifest.template.json` | `docs/governance/model-manifest.json` | core | Model inventory (pinned, tiered, evaluated, runtime-governed; optional per-domain validation signatures) |
 | `governance/data-lifecycle.template.json` | `docs/governance/data-lifecycle.json` | core | Data classification, retention, erasure, residency |
 | `governance/operations-signal.template.json` | `docs/governance/operations-signal.json` | governed | The Run→Discovery feedback log |
 | `governance/service-readiness.template.json` | `docs/governance/services/example-service.json` | governed | Operational readiness R1–R6 (per service; unparseable ADOPT dates fail until you exercise the drills) |
@@ -128,7 +130,13 @@ are repo-root-relative.
 | `governance/assurance-sla.template.json` | `docs/governance/assurance-sla.json` | full | Service-level expectations for continuous-assurance cases (rc.14 WS6) |
 | `governance/approval-sla.template.json` | `docs/governance/approval-sla.json` | full | Approval service-level EXPECTATIONS (rc.37) — read by scripts/approval-status.mjs, which flags a breach and gates nothing |
 | `governance/exception-policy.template.json` | `docs/governance/exception-policy.json` | governed | Exception-register policy (rc.37) — the concentration limit, which may be tightened below the shipped floor of 3 and never raised above it |
+| `governance/evidence-retention.template.json` | `docs/governance/evidence-retention.json` | governed | Per-evidence-type retention — how long each sealed evidence type is kept and why. GOVERNED rather than full because twelve of its fourteen types are the ordinary release bundle (provenance, reviews, tests, SAST, SBOM, evals) and a sealed bundle with no stated retention is a gap for any institution, Islamic or not. The harness records the policy; `immutable_archive: true` is a claim about the institution's WORM store that no gate here can confirm. Mandatory once a compiled plan requires the evidence_retention capability |
 | `governance/token-ledger.template.json` | `docs/governance/token-ledger.json` | full | Token-spend ledger (a report, never a merge gate) |
+| `governance/shariah-rulings.template.json` | `docs/governance/shariah-rulings.json` | full | The SR-* decision register — the record every Islamic structure and change cites. Agents may cite a ruling by id and may never author, alter or approve one; scholars decide Shari'ah. FULL, not core or governed: an institution running no Islamic product should never be handed ADOPT markers for a committee it does not have. Mandatory once a compiled plan requires the shariah_governance capability, silent otherwise |
+| `governance/issc-register.template.json` | `docs/governance/issc-register.json` | full | Who holds the Shari'ah committee seats and under what appointment — the composition register scripts/shariah-governance-check.mjs reads. It checks that a cited approver held a seat on the date they approved; it decides no Shari'ah question. Full tier for the same reason as the rulings register |
+| `governance/profit-distribution.template.json` | `docs/governance/profit-distribution.json` | full | The deposit-side register for investment accountholders — one row per distribution run, each PER/IRR reserve movement carrying its own committee approval. Mount here or split into docs/governance/profit-distribution/<run-id>.json; the gate reads both. The harness reads the RECORD of a run: it cannot recompute an allocation or tell an approved smoothing from a managed one. Full tier — this is the most Islamic-specific file in the bundle |
+| `governance/knowledge-pins.template.json` | `docs/governance/knowledge-pins.json` | full | Pinned external rule bases — publisher, edition, who owns re-verification, and the bound after which `last_verified` stops counting. The MECHANISM is generic, but three of the four shipped rows are Shari'ah rule bases and `knowledge_currency` only compiles from an Islamic or institution profile, so it sits at full rather than taxing every governed adopter. No gate here ever fetches a publisher: a fresh pin means somebody looked recently, never that the pin is current |
+| `governance/shariah-audit-charter.template.md` | `docs/governance/shariah-audit-charter.md` | full | The internal Shari'ah audit charter — scope, independence, reporting line and cycle for the third-line review of the Islamic control set. A charter is a DECLARATION the harness stores and links; whether the function is independent in practice is not visible from a checkout and is not claimed. Full tier, with the rest of the Islamic seam |
 | `adapters/README.md` | `docs/governance/adapters/README.md` | full | The neutral adapter contract |
 | `adapters/providers` | `docs/governance/adapters/providers` | full | The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it |
 | `governance/provider-selection.template.json` | `docs/governance/provider-selection.json` | full | Which provider this institution chose per role (the choice is recorded, never defaulted) |
@@ -186,6 +194,17 @@ and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (
   (`cp -r harness/register-example/ docs/governance/data-risk-register/`) so the pipeline is
   exercisable end to end, then replace its records with the organisation's own regulation → risk
   → control → residual chain behind the same JSON shape (documented in its README).
+- **Shari'ah (only if the institution runs Islamic products):** `--tier full` also lands the
+  Islamic seam — `docs/governance/shariah-rulings.json` (the SR-* decision register everything
+  cites), `issc-register.json` (who holds a committee seat, and when), `profit-distribution.json`,
+  `knowledge-pins.json`, `shariah-audit-charter.md`, and the scope file
+  `.claude/hooks/shariah-surfaces.txt`, which ships with no entries. Leave every one of them
+  untouched and nothing changes: these gates are mandatory-when-compiled, so they stay silent
+  until a change names an Islamic product or institution profile, and a conventional adoption
+  never meets them. **The harness decides no Shari'ah question.** It checks that a cited ruling
+  exists, that the person who approved it held a seat on the date they approved, and that data
+  matches a structure the committee already approved — scholars decide permissibility, and no
+  agent here may author, alter or approve a ruling.
 
 ## 3. Fill the ADOPT markers
 
@@ -197,7 +216,10 @@ all: `grep -rn "ADOPT" .claude/ discovery/ scripts/`. As of this bundle:
 - `.claude/agents/contract-conformance-reviewer.md` — replace with THIS project's binding API
   conventions.
 - `.claude/hooks/spec-tripwire.sh` — set `SPEC_PATH` to the project's contract file.
-- `.claude/hooks/pii-guard.sh` — swap the UAE PII patterns for the project's jurisdiction.
+- `.claude/hooks/pii-patterns.json` — swap the UAE PII shapes for the project's jurisdiction. The
+  shapes are data now, not code: add a row, never edit `pii-guard.sh`. The guard **denies every
+  write** if this file is missing or unparseable, so it installs at every tier and must stay
+  beside the hook.
 - `scripts/discovery-link-check.mjs` — set `FEATURE` to the project's story-id convention.
 - `.claude/skills/next-story/SKILL.md` and `implement-story/SKILL.md` — name the project's
   verify commands and binding test cases.
