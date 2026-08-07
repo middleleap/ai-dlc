@@ -58,7 +58,14 @@ vendors — `HG-0008` honoured in the prose and broken in the filesystem.
 providers/roles.json                          the roles, each naming its control + capability
 providers/sca/{snyk,trivy}.json               fills Q4-SUPPLY
 providers/hardened-runtime/{chainguard,internal-golden-images}.json   fills HG-0011
+providers/shariah-governance/{internal-issc-register,grc-shariah-workflow}.json   fills SHARIAH-GOV
+providers/runtime-guardrails/{gateway,sidecar}-policy-enforcement.json            fills AI-INCIDENT
+providers/real-data-controls/{kms-field-encryption,vault-tokenisation}.json       fills REAL-PII-SURFACE
 ```
+
+`runtime-guardrails` and `real-data-controls` ship a `README.md` beside their alternatives — read it
+before choosing. Both are roles whose name promises more than the harness delivers, and each README
+says which half is which (see also the reconciliation table below).
 
 Nothing under `providers/` is mounted by default — **a catalog is an offer, not an installation.**
 The institution records its choice in `docs/governance/provider-selection.json` and copies the
@@ -66,11 +73,34 @@ chosen file into `docs/governance/adapters/`. `scripts/provider-selection-check.
 join, including `PS-R06`: once a compiled plan requires a role's capability, having made *no*
 choice is a finding rather than a default.
 
-The base `regulated-bank` profile declares both capabilities at **high tier**, so on a high-tier
-change the choice is mandatory — the D6-register pattern, where the requirement comes from the
-profile and a pipeline edit cannot weaken it. `PS-R06` demands a recorded *decision*, not a live
-integration: an institution can honestly be mid-onboarding with a provider chosen and its probes
-not yet run, which is the `selected, not active` state.
+**Which role arms, and from where, differs per role — and the difference is the point.** The base
+`regulated-bank` profile declares `sca`, `hardened_runtime` and `real_data_controls` at **high tier**,
+so on a high-tier change those three choices are mandatory whatever the change is about — the
+D6-register pattern, where the requirement comes from the profile and a pipeline edit cannot weaken
+it. The other two arm only from a profile an institution opts into: `shariah_governance` from an
+Islamic product or institution profile, `runtime_guardrails` from an AI-serving product profile. So a
+conventional adopter is never asked for a Shari'ah provider, and an adopter with no model in a serving
+path is never asked for an enforcement point. `PS-R06` demands a recorded *decision*, not a live
+integration: an institution can honestly be mid-onboarding with a provider chosen and its probes not
+yet run, which is the `selected, not active` state.
+
+**What a chosen provider is reconciled BY, which is not the same question and is answered honestly per
+role.** Every provider declares `reconciliation.gate_artifact` — the file its fetch writes — and
+`reconciliation.gate_mechanism`, the gate that reads that file. Three roles have one. Two do not, and
+say so with `gate_mechanism: null` rather than naming a script, because a gate id that does not resolve
+reads as coverage and is worse than the gap it papers over:
+
+| Role | Control | Reconciled by |
+|---|---|---|
+| `sca` | `Q4-SUPPLY` | `scripts/supply-chain-check.mjs` reads the audit artifact |
+| `hardened-runtime` | `HG-0011` | `scripts/platform-activation-check.mjs` reads the activation record |
+| `shariah-governance` | `SHARIAH-GOV` | `scripts/shariah-governance-check.mjs` reads the ISSC register |
+| `runtime-guardrails` | `AI-INCIDENT` | **nothing** — the control is catalogued `defined` (a runbook, not a mechanism) |
+| `real-data-controls` | `REAL-PII-SURFACE` | **nothing** — the control is catalogued `absent`; the harness ships nothing for the real-data case |
+
+For the bottom two, `match_on` is a specification for the adopter's own fetch, not a comparison CI
+performs, and each declaration states what a gate would take. Selecting a provider does not change
+either control's grade — the catalog says so too.
 
 Adding a provider is the intended way to extend this: drop a file under `providers/<role>/`, keep
 the adapter contract, and state its `role_fit` honestly — every provider ships one line on what it

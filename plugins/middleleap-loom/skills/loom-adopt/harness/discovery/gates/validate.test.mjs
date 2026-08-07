@@ -131,6 +131,91 @@ test('D6 fails when a control id does not resolve', () => {
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// --- D6 regulatory-driver vocabulary is MOUNTED, not hardcoded (F7) ------------------------
+// The built-in driver regex knows one jurisdiction's abbreviations. A document grounded only in
+// a Shariah authority's pronouncements or a standard-setter's standards cited none of them and
+// failed as "cites no regulatory driver" — about a document that was entirely citation. The
+// vocabulary now mounts beside the register; the built-in regex is kept, so the mount can only
+// ADD ways to pass.
+
+/** A register directory copied from the mounted one, plus an optional reg-drivers.json. */
+function registerWithDrivers(drivers) {
+  const dir = mkdtempSync(join(tmpdir(), 'reg-'));
+  for (const f of ['risk-taxonomy.json', 'risk-statements.json', 'controls.json', 'residual-risk.json']) {
+    if (existsSync(join(REGISTER_DIR, f))) writeFileSync(join(dir, f), readFileSync(join(REGISTER_DIR, f)));
+  }
+  if (drivers) writeFileSync(join(dir, 'reg-drivers.json'), JSON.stringify(drivers, null, 2));
+  return dir;
+}
+
+// A data-governance doc whose ONLY grounding is a vocabulary the built-in regex cannot see.
+const SHARIAH_ONLY = `---\nartifact: data-governance\n${FM}\n---\n## Risk mapping\n`
+  + `| profit presentation | ${DR} | High | HSA resolution; AAOIFI Shari'ah Standard No. 8 | ${CTRL} |\n`
+  + '## Residual-risk verdict (D6)\n- **Acceptable for delivery?** Conditional — pending the recorded committee determination\n';
+
+test('D6 fails a document grounded only in an unmounted vocabulary (the defect)', () => {
+  const reg = registerWithDrivers(null); // no reg-drivers.json — built-in regex only
+  const dir = makeRun({ 'data-governance.md': SHARIAH_ONLY });
+  try {
+    const g = gateOf(validateRun(dir, { ...OPTS, registerDir: reg }), 'D6');
+    assert.ok(g.issues.includes('cites no regulatory driver'), 'expected the false negative: ' + JSON.stringify(g.issues));
+  } finally { rmSync(dir, { recursive: true, force: true }); rmSync(reg, { recursive: true, force: true }); }
+});
+
+test('D6 accepts the same document once the vocabulary is MOUNTED (no gate edit)', () => {
+  const reg = registerWithDrivers(['HSA', "AAOIFI Shari'ah Standard No."]);
+  const dir = makeRun({ 'data-governance.md': SHARIAH_ONLY });
+  try {
+    const g = gateOf(validateRun(dir, { ...OPTS, registerDir: reg }), 'D6');
+    assert.equal(g.status, 'pass', 'mounted drivers must resolve: ' + JSON.stringify(g.issues));
+  } finally { rmSync(dir, { recursive: true, force: true }); rmSync(reg, { recursive: true, force: true }); }
+});
+
+test('D6 mounted terms are LITERALS — a regex metacharacter cannot widen the check', () => {
+  // '.*' as a term must match the two characters, not everything. If it were compiled as a
+  // pattern, an adopter could retire this gate by mounting one line.
+  const reg = registerWithDrivers(['.*', 'HS.']);
+  const dir = makeRun({ 'data-governance.md': SHARIAH_ONLY });
+  try {
+    const g = gateOf(validateRun(dir, { ...OPTS, registerDir: reg }), 'D6');
+    assert.ok(g.issues.includes('cites no regulatory driver'), 'escaped literals must not match: ' + JSON.stringify(g.issues));
+  } finally { rmSync(dir, { recursive: true, force: true }); rmSync(reg, { recursive: true, force: true }); }
+});
+
+test('D6 mounted terms cannot REMOVE the built-in drivers (mount only adds)', () => {
+  const reg = registerWithDrivers([]); // an empty vocabulary is not a licence to drop PDPL
+  const dir = makeRun(); // the default fixture cites "PDPL Art. 5"
+  try { assert.equal(gateOf(validateRun(dir, { ...OPTS, registerDir: reg }), 'D6').status, 'pass'); }
+  finally { rmSync(dir, { recursive: true, force: true }); rmSync(reg, { recursive: true, force: true }); }
+});
+
+test('D6 is unchanged when no reg-drivers.json is mounted (backward compatible)', () => {
+  const reg = registerWithDrivers(null);
+  const dir = makeRun();
+  try { assert.equal(gateOf(validateRun(dir, { ...OPTS, registerDir: reg }), 'D6').status, 'pass'); }
+  finally { rmSync(dir, { recursive: true, force: true }); rmSync(reg, { recursive: true, force: true }); }
+});
+
+// --- D6 residual verdict must be a WHOLE word (F7) -----------------------------------------
+test('D6 rejects "Not yet." as a verdict (the "no" inside "Not" is not a decision)', () => {
+  const dir = makeRun({
+    'data-governance.md': FILES['data-governance.md'].replace('Conditional — monitor fee variance', 'Not yet. Two items are unresolved.'),
+  });
+  try {
+    const g = gateOf(validateRun(dir, OPTS), 'D6');
+    assert.equal(g.status, 'fail');
+    assert.ok(g.issues.includes('no residual-risk verdict'), JSON.stringify(g.issues));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D6 accepts a real negative verdict', () => {
+  const dir = makeRun({
+    'data-governance.md': FILES['data-governance.md'].replace('Conditional — monitor fee variance', 'No — escalated, and not deliverable until the determination is recorded'),
+  });
+  try { assert.equal(gateOf(validateRun(dir, OPTS), 'D6').status, 'pass'); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('D6 skips when the register is not mounted (generic repo)', () => {
   const dir = makeRun();
   try { assert.equal(gateOf(validateRun(dir, { ...OPTS, register: null }), 'D6').status, 'skip'); }

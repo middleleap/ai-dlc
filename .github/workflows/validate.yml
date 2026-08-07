@@ -592,15 +592,22 @@ jobs:
           # The ADOPT step: choose a provider per role and mount its adapter, as an adopter would.
           cp docs/governance/adapters/providers/sca/snyk.json docs/governance/adapters/
           cp docs/governance/adapters/providers/hardened-runtime/chainguard.json docs/governance/adapters/
+          # rc.46: a THIRD role. The worked change carries personal_data, and regulated-bank's
+          # personal_data conditional requires `real_data_controls` — a change touching real
+          # customer data must say which platform controls stand between that data and whoever
+          # touches it. Selecting it here is exactly what the adopter does; leaving it out would
+          # assert that the seam is optional, which is the silence the capability exists to refuse.
+          cp docs/governance/adapters/providers/real-data-controls/kms-field-encryption.json docs/governance/adapters/
           node -e '
             const fs=require("fs"), sel=(role,provider,adapter_id)=>({role,provider,adapter_id,
               decided_by:"infosec-noor",decided_at:new Date().toISOString().slice(0,10),source:"mt-tech-2026"});
             fs.writeFileSync("/tmp/provider-selection.json",JSON.stringify({selections:[
-              sel("sca","snyk","snyk-sca"), sel("hardened-runtime","chainguard","chainguard-runtime")]},null,2));
+              sel("sca","snyk","snyk-sca"), sel("hardened-runtime","chainguard","chainguard-runtime"),
+              sel("real-data-controls","kms-field-encryption","kms-field-encryption")]},null,2));
           '
           cp /tmp/provider-selection.json docs/governance/provider-selection.json
           node scripts/provider-selection-check.mjs | tee /tmp/ps1.txt
-          grep -q '2 roles selected' /tmp/ps1.txt || {
+          grep -q '3 roles selected' /tmp/ps1.txt || {
             echo "::error::the provider-selection gate is not counting the real selections"; exit 1; }
           grep -q 'selected, not active' /tmp/ps1.txt || {
             echo "::error::a mounted-but-unactivated provider must be reported as selected, not active"; exit 1; }

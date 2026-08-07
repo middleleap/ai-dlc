@@ -146,9 +146,16 @@ test('the round trip is idempotent — a re-filed card is a no-op, not a second 
 
 // --- the taxonomy is the gate's, and there is only one of it ---------------------------------------
 
+// A few types constrain which routes they may take (the gate owns that rule — see
+// operations-signal-check.mjs). The default route here is `spec-fix`, so those types need a route
+// they are actually allowed, or this test would be asserting the constraint away.
+const ROUTE_FOR_TYPE = { 'shariah-non-compliance': 'issc-escalation' };
+
 test('every type and severity the gate knows is accepted here, and nothing else is', () => {
   for (const type of TYPES) {
-    assert.deepEqual(run(filed({ type }), adj({ type })).findings, [], `${type} must be accepted`);
+    const route = ROUTE_FOR_TYPE[type];
+    const over = route ? { type, route } : { type };
+    assert.deepEqual(run(filed({ type }), adj(over)).findings, [], `${type} must be accepted`);
   }
   for (const severity of SEVERITIES) {
     assert.deepEqual(run(filed({ severity }), adj({ severity })).findings, [], `${severity} must be accepted`);

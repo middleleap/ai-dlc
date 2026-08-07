@@ -114,7 +114,21 @@
       "dest": ".claude/hooks",
       "kind": "glob",
       "glob": "*.sh",
-      "seam": "Pre-write guardrail hooks (pii-guard, spec/test tripwires)",
+      "seam": "Pre-write guardrail hooks (pii-guard, spec/test tripwires, shariah-term-guard)",
+      "tier": "core"
+    },
+    {
+      "source": "hooks/pii-patterns.json",
+      "dest": ".claude/hooks/pii-patterns.json",
+      "kind": "file",
+      "seam": "The PII shapes pii-guard.sh reads — mounted data, not code: a new jurisdiction is a row here, never an edit to a security-critical shell script. NOT OPTIONAL and not tierable: the glob above copies only *.sh, and a guard that cannot load its patterns DENIES every write. It ships wherever the hook ships",
+      "tier": "core"
+    },
+    {
+      "source": "hooks/shariah-surfaces.txt",
+      "dest": ".claude/hooks/shariah-surfaces.txt",
+      "kind": "file",
+      "seam": "The declared Islamic customer-facing prose surfaces shariah-term-guard.sh is scoped to. Core because it ships beside the hook it scopes, and it carries NO entries: with an empty list the guard is a no-op, which is the correct and permanent state for a conventional adopter",
       "tier": "core"
     },
     {
@@ -130,7 +144,7 @@
       "dest": "docs/governance/runbooks",
       "kind": "glob",
       "glob": "*.md",
-      "seam": "Seven adoption runbooks + the supervised-pilot playbook",
+      "seam": "Eight adoption runbooks + the supervised-pilot playbook",
       "tier": "core"
     },
     {
@@ -209,7 +223,7 @@
       "dest": "docs/governance/model-manifest.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "Model inventory (pinned, tiered, evaluated, runtime-governed)",
+      "seam": "Model inventory (pinned, tiered, evaluated, runtime-governed; optional per-domain validation signatures)",
       "tier": "core"
     },
     {
@@ -301,11 +315,67 @@
       "tier": "governed"
     },
     {
+      "source": "governance/evidence-retention.template.json",
+      "dest": "docs/governance/evidence-retention.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Per-evidence-type retention — how long each sealed evidence type is kept and why. GOVERNED rather than full because twelve of its fourteen types are the ordinary release bundle (provenance, reviews, tests, SAST, SBOM, evals) and a sealed bundle with no stated retention is a gap for any institution, Islamic or not. The harness records the policy; `immutable_archive: true` is a claim about the institution's WORM store that no gate here can confirm. Mandatory once a compiled plan requires the evidence_retention capability",
+      "tier": "governed"
+    },
+    {
       "source": "governance/token-ledger.template.json",
       "dest": "docs/governance/token-ledger.json",
       "kind": "file",
       "adopt": "template",
       "seam": "Token-spend ledger (a report, never a merge gate)",
+      "tier": "full"
+    },
+    {
+      "source": "governance/shariah-rulings.template.json",
+      "dest": "docs/governance/shariah-rulings.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The SR-* decision register — the record every Islamic structure and change cites. Agents may cite a ruling by id and may never author, alter or approve one; scholars decide Shari'ah. FULL, not core or governed: an institution running no Islamic product should never be handed ADOPT markers for a committee it does not have. Mandatory once a compiled plan requires the shariah_governance capability, silent otherwise",
+      "tier": "full"
+    },
+    {
+      "source": "governance/shariah-surfaces.template.json",
+      "dest": "docs/governance/shariah-surfaces.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "WHERE this institution's Islamic data contracts, fixtures and customer copy live — the declaration the product-substance gate reads. It ships DECLARING NOTHING and that is deliberate: the harness cannot tell an Islamic fixture tree from a conventional one, so a template that guessed a path would either scan the wrong tree or fail a bank with no Islamic product. Declaring a surface is the institution's act. Mandatory once a compiled plan requires the shariah_governance capability — without this entry the gate would fail an adopter with nothing to copy, which is the defect it exists to prevent",
+      "tier": "full"
+    },
+    {
+      "source": "governance/issc-register.template.json",
+      "dest": "docs/governance/issc-register.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Who holds the Shari'ah committee seats and under what appointment — the composition register scripts/shariah-governance-check.mjs reads. It checks that a cited approver held a seat on the date they approved; it decides no Shari'ah question. Full tier for the same reason as the rulings register",
+      "tier": "full"
+    },
+    {
+      "source": "governance/profit-distribution.template.json",
+      "dest": "docs/governance/profit-distribution.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The deposit-side register for investment accountholders — one row per distribution run, each PER/IRR reserve movement carrying its own committee approval. Mount here or split into docs/governance/profit-distribution/<run-id>.json; the gate reads both. The harness reads the RECORD of a run: it cannot recompute an allocation or tell an approved smoothing from a managed one. Full tier — this is the most Islamic-specific file in the bundle",
+      "tier": "full"
+    },
+    {
+      "source": "governance/knowledge-pins.template.json",
+      "dest": "docs/governance/knowledge-pins.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Pinned external rule bases — publisher, edition, who owns re-verification, and the bound after which `last_verified` stops counting. The MECHANISM is generic, but three of the four shipped rows are Shari'ah rule bases and `knowledge_currency` only compiles from an Islamic or institution profile, so it sits at full rather than taxing every governed adopter. No gate here ever fetches a publisher: a fresh pin means somebody looked recently, never that the pin is current",
+      "tier": "full"
+    },
+    {
+      "source": "governance/shariah-audit-charter.template.md",
+      "dest": "docs/governance/shariah-audit-charter.md",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The internal Shari'ah audit charter — scope, independence, reporting line and cycle for the third-line review of the Islamic control set. A charter is a DECLARATION the harness stores and links; whether the function is independent in practice is not visible from a checkout and is not claimed. Full tier, with the rest of the Islamic seam",
       "tier": "full"
     },
     {

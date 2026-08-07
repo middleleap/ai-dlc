@@ -11,12 +11,16 @@ const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ROLES = [
   { role: 'sca', control: 'Q4-SUPPLY', capability: 'sca' },
   { role: 'hardened-runtime', control: 'HG-0011', capability: 'hardened_runtime' },
+  { role: 'shariah-governance', control: 'SHARIAH-GOV', capability: 'shariah_governance' },
+  { role: 'runtime-guardrails', control: 'AI-INCIDENT', capability: 'runtime_guardrails' },
 ];
 const catalogOf = (...entries) => new Map(entries);
 const CATALOG = catalogOf(
   ['sca/snyk', { provider: 'snyk', satisfies_control: 'Q4-SUPPLY', adapter_id: 'snyk-sca' }],
   ['sca/trivy', { provider: 'trivy', satisfies_control: 'Q4-SUPPLY', adapter_id: 'trivy-sca' }],
   ['hardened-runtime/chainguard', { provider: 'chainguard', satisfies_control: 'HG-0011', adapter_id: 'chainguard-runtime' }],
+  ['shariah-governance/internal-issc-register', { provider: 'internal-issc-register', satisfies_control: 'SHARIAH-GOV', adapter_id: 'internal-issc-register' }],
+  ['runtime-guardrails/gateway-policy-enforcement', { provider: 'gateway-policy-enforcement', satisfies_control: 'AI-INCIDENT', adapter_id: 'gateway-policy-enforcement' }],
 );
 const ACTIVE = { adapter_id: 'snyk-sca', activation_evidence: { fetched_at: '2026-07-20T00:00:00Z', tamper_probe: 'rejected' } };
 const PENDING = { adapter_id: 'snyk-sca', activation_evidence: { fetched_at: 'ADOPT: timestamp of your Snyk API read' } };
@@ -94,6 +98,55 @@ test('PS-R06 does not fire for a capability no compiled plan requires', () => {
 test('PS-R06 is satisfied by a selection that is merely mounted, not yet active', () => {
   const r = run({ selections: [SEL], mounted: new Map([['snyk-sca', PENDING]]), requiredCapabilities: new Set(['sca']) });
   assert.deepEqual(r.findings, [], 'requiring a DECISION is not the same as requiring it to be live');
+});
+
+/* ---- The two roles that must stay DORMANT until a plan names them ---- */
+
+// A new row in roles.json makes a capability enforceable with zero code: PS-R06 reads the catalog
+// generically. These two tests are the proof for each new row — armed when compiled, silent when not.
+// The silence half matters more than the failure half: a conventional adopter who runs no Islamic
+// product and serves no agent must never be failed by a control that has nothing to do with them.
+
+test('PS-R06: an Islamic plan requiring shariah_governance with no provider selected', () => {
+  const r = run({ selections: [], requiredCapabilities: new Set(['shariah_governance']) });
+  assert.equal(r.findings.length, 1);
+  assert.match(r.findings[0], /PS-R06/);
+  assert.match(r.findings[0], /"shariah_governance"/);
+  assert.match(r.findings[0], /"shariah-governance"/);
+});
+
+test('shariah_governance is satisfied by a recorded, mounted choice', () => {
+  const sel = { role: 'shariah-governance', provider: 'internal-issc-register', adapter_id: 'internal-issc-register' };
+  const mounted = new Map([['internal-issc-register', { adapter_id: 'internal-issc-register', activation_evidence: { tamper_probe: 'rejected' } }]]);
+  const r = run({ selections: [sel], mounted, requiredCapabilities: new Set(['shariah_governance']) });
+  assert.deepEqual(r.findings, []);
+  assert.equal(r.selected, 1);
+});
+
+test('shariah_governance stays SILENT for an adopter with no Islamic product in flight', () => {
+  const r = run({ selections: [], requiredCapabilities: new Set(['sca']) });
+  assert.equal(r.findings.length, 1, 'only the compiled capability is demanded');
+  assert.ok(!/shariah/i.test(r.findings[0]), 'a conventional plan must not be failed by a Shari’ah role');
+});
+
+test('PS-R06: an AI-serving plan requiring runtime_guardrails with no provider selected', () => {
+  const r = run({ selections: [], requiredCapabilities: new Set(['runtime_guardrails']) });
+  assert.equal(r.findings.length, 1);
+  assert.match(r.findings[0], /PS-R06/);
+  assert.match(r.findings[0], /"runtime_guardrails"/);
+  assert.match(r.findings[0], /"runtime-guardrails"/);
+});
+
+test('runtime_guardrails is satisfied by a recorded, mounted choice', () => {
+  const sel = { role: 'runtime-guardrails', provider: 'gateway-policy-enforcement', adapter_id: 'gateway-policy-enforcement' };
+  const mounted = new Map([['gateway-policy-enforcement', { adapter_id: 'gateway-policy-enforcement', activation_evidence: { negative_probe: 'denied-and-logged' } }]]);
+  const r = run({ selections: [sel], mounted, requiredCapabilities: new Set(['runtime_guardrails']) });
+  assert.deepEqual(r.findings, []);
+  assert.equal(r.selected, 1);
+});
+
+test('runtime_guardrails stays SILENT until a plan requires it — choosing is not owed by default', () => {
+  assert.deepEqual(run({ selections: [] }).findings, []);
 });
 
 test('PS-R07: a half-completed selection is not a made decision', () => {
@@ -178,6 +231,13 @@ test('every role capability is actually declared by a shipped profile — PS-R06
       const profile = JSON.parse(readFileSync(`${d}/${name}`, 'utf8'));
       for (const tier of Object.values(profile.requirements || {})) {
         for (const cap of Object.keys(tier.capabilities || {})) declared.add(cap);
+      }
+      // Conditionals count too. A capability required only when a flag fires is still a capability
+      // a shipped profile requires — and it is the RIGHT home for a control whose trigger is a
+      // property of the change rather than its risk tier. Scanning only tiers made that placement
+      // look like an unreferenced role and pushed the capability up to a tier where it over-fires.
+      for (const cond of profile.conditional || []) {
+        for (const cap of Object.keys(cond.adds?.capabilities || {})) declared.add(cap);
       }
     }
   }

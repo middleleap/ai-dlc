@@ -25,6 +25,22 @@
 // Neither loosens anything. Delegation moves WHO may approve, inside a window a second-line human
 // signed for; quorum moves HOW MANY must.
 //
+// EXTERNAL IDENTITIES. The identity map (Factory Floor P6) reconciles registry identities against
+// the corporate directory, and that reconciliation assumes a joiner/mover/leaver lifecycle: a
+// departed human's IdP subject goes disabled and the map's observation catches it. Some approvers
+// have no such lifecycle. Committee appointees — the ISSC is the case that forced this — are
+// external, not employed, and typically hold no corporate IdP subject at all, so requiring one for
+// every scholar approval is either unimplementable or an instruction to create employee accounts
+// for non-employees. So an identity may declare:
+//
+//   external              — true when the identity is NOT governed by the corporate directory
+//   reconciliation_source — the register that governs it instead (for scholars: the ISSC register)
+//
+// enforced as a PAIR in both directions. An external identity with no named register is reconciled
+// by nothing; a non-external identity that names one has quietly opted out of the directory
+// reconciliation, which is the hole this field would otherwise open. A still-unreplaced `ADOPT:`
+// marker is not a register.
+//
 // Run from the repo root: `node scripts/identity-registry-check.mjs`.
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
@@ -33,6 +49,9 @@ import { pathToFileURL } from 'node:url';
 export const REGISTRY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
 export const KINDS = ['human', 'agent'];
 export const DELEGATION_FIELDS = ['to', 'from', 'until', 'granted_by'];
+
+/** An unreplaced adoption marker. A template value is not a register, a name, or a reference. */
+export const isPlaceholder = (v) => typeof v === 'string' && /ADOPT[:-]/.test(v);
 
 /** Load the registry from disk, or null. */
 export function loadRegistry(cwd = process.cwd()) {
@@ -128,9 +147,44 @@ export function evaluate(registry, { notices = null, now = Date.now() } = {}) {
     if (groups.has('second-line') && groups.has('builders')) {
       findings.push(`${i.id}: is in BOTH builders and second-line — independence requires disjoint membership`);
     }
+    findings.push(...externalFindings(i));
   }
   findings.push(...evaluateDelegations(registry, { notices, now }));
   findings.push(...evaluateQuorum(registry));
+  return findings;
+}
+
+/**
+ * The `external` / `reconciliation_source` pair for ONE identity. Both directions are findings,
+ * because the failure modes are opposite and both are silent:
+ *
+ *   external with no register  — nothing reconciles this identity at all. The identity-map's
+ *                                joiner/mover/leaver observation does not cover it (that is why it
+ *                                is flagged external), so an unnamed register means a resigned
+ *                                committee member keeps approving until someone remembers.
+ *   register with no external  — an employee reconciled against an ad-hoc list has stepped OUT of
+ *                                the directory reconciliation without saying so. The field would
+ *                                become the way to make any identity unreconcilable.
+ *
+ * The gate checks the declaration, never the register's contents: whether the named register
+ * actually lists this person, and whether their appointment still stands, is read by the register's
+ * own gate. Here, `uncovered` is the honest word for everything beyond the pairing.
+ */
+export function externalFindings(i) {
+  const findings = [];
+  const src = i.reconciliation_source;
+  if (i.external !== undefined && typeof i.external !== 'boolean') {
+    findings.push(`${i.id}: external must be true or false (got ${JSON.stringify(i.external)}) — a truthy string is not a declaration`);
+  }
+  if (i.external === true) {
+    if (!(typeof src === 'string' && src.trim())) {
+      findings.push(`${i.id}: external identities must name a reconciliation_source — the register that governs them. An external appointee has no joiner/mover/leaver record in the corporate directory, so with no register named, nothing reconciles them at all`);
+    } else if (isPlaceholder(src)) {
+      findings.push(`${i.id}: reconciliation_source is still an adoption marker (${JSON.stringify(src)}) — an unreplaced placeholder is not a register`);
+    }
+  } else if (src !== undefined) {
+    findings.push(`${i.id}: names a reconciliation_source but is not external:true — an identity inside the corporate directory is reconciled against it, and reconciling one against an ad-hoc register instead is a hole, not an exemption`);
+  }
   return findings;
 }
 

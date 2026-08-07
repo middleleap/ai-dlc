@@ -1,12 +1,15 @@
 // Tests for the evidence-seal gate. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { evaluate, buildChain, sealOf, REQUIRED_TYPES, SEMANTICS, requiredTypesFor, verifyReleaseCommit, EVIDENCE_FLOOR } from './evidence-seal-check.mjs';
+import { evaluate, buildChain, sealOf, REQUIRED_TYPES, SEMANTICS, requiredTypesFor, verifyReleaseCommit, EVIDENCE_FLOOR, PLAN_ONLY_TYPES } from './evidence-seal-check.mjs';
+
+const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const COMMIT = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678'; // a real 40-hex sha (rc.11: symbolic subjects fail)
 
@@ -364,4 +367,110 @@ test('a sealed brainkit-provenance record is verified for what it SAYS', () => {
   assert.ok(SEMANTICS['brainkit-provenance']({ ...good, brainkit_digest: 'not-a-digest' }).some((f) => /no sha256 brainkit_digest/.test(f)));
   assert.ok(SEMANTICS['brainkit-provenance']({ ...good, brainkit_id: '' }).some((f) => /declares no brainkit_id/.test(f)));
   assert.ok(SEMANTICS['brainkit-provenance']({ ...good, artifacts: [] }).some((f) => /lists no artifacts/.test(f)));
+});
+
+/* ---- rc.41: the tenth evidence type, shariah-attestation ------------------------------------
+ *
+ * Two properties matter more than the field rules and are tested first and last: a repository
+ * whose compiled plans name no Islamic product NEVER seals one (so nothing here can fail a
+ * conventional adopter), and the worked evidence bundle that shipped before this type existed
+ * still passes untouched.
+ */
+
+// A registry with one scholar, one agent, and nobody else — the smallest thing that can tell a
+// human attester from a machine one.
+const SHARIAH_REGISTRY = {
+  identities: [
+    { id: 'scholar.alpha', kind: 'human', roles: ['shariah-committee'], external: true, reconciliation_source: 'docs/governance/issc-register.json' },
+    { id: 'agent.delivery-loop', kind: 'agent', roles: [] },
+  ],
+};
+const ATTESTATION = {
+  attester_id: 'scholar.alpha',
+  issc_decision_ref: 'SR-0001',
+  structures: ['SR-0001', 'SR-0004'],
+  result: 'PASS',
+  commit: COMMIT,
+};
+const att = (over = {}, ctx = {}) =>
+  SEMANTICS['shariah-attestation']({ ...ATTESTATION, ...over }, { releaseCommit: COMMIT, registry: SHARIAH_REGISTRY, ...ctx });
+
+test('shariah-attestation is PLAN-ONLY — a generic repo seals nothing new', () => {
+  assert.ok(PLAN_ONLY_TYPES.includes('shariah-attestation'), 'the seal must know HOW to verify it');
+  assert.ok(!REQUIRED_TYPES.includes('shariah-attestation'), 'it stays out of the generic-repo default');
+  assert.ok(!EVIDENCE_FLOOR.includes('shariah-attestation'));
+  assert.ok(!requiredTypesFor({ evidence: new Set() }).includes('shariah-attestation'), 'the baseline must not demand it');
+  assert.ok(!requiredTypesFor({ evidence: new Set(['tests', 'reviews']) }).includes('shariah-attestation'));
+});
+
+test('a plan compiling shariah-attestation makes the seal DEMAND it, and names it as missing', () => {
+  const req = requiredTypesFor({ evidence: new Set(['tests', 'reviews', 'shariah-attestation']) });
+  assert.ok(req.includes('shariah-attestation'), 'plan-required shariah-attestation must be a sealed type');
+  const m = anchored({ release: 'v', release_commit: COMMIT, entries: buildChain([{ type: 'tests', ref: 'tests.json', sha256: 'h' }]) });
+  assert.ok(evaluate(m, { requiredTypes: req }).some((x) => x === 'missing required evidence: shariah-attestation'));
+});
+
+test('a complete, human-attested, commit-bound attestation is structure-conformant', () => {
+  assert.deepEqual(att(), []);
+});
+
+test('the attestation RECORDS a human decision — an agent attester is a finding', () => {
+  assert.ok(att({ attester_id: 'agent.delivery-loop' }).some((f) => /is an AGENT/.test(f)));
+});
+
+test('an attester who resolves to nobody does not count, and neither does one nobody can resolve', () => {
+  assert.ok(att({ attester_id: 'scholar.nobody' }).some((f) => /does not resolve in the identity registry/.test(f)));
+  assert.ok(att({}, { registry: null }).some((f) => /cannot be resolved — no identity registry/.test(f)));
+  assert.ok(att({ attester_id: '' }).some((f) => /names no attester_id/.test(f)));
+});
+
+test('an attestation citing no committee decision asserts approval on its own authority', () => {
+  assert.ok(att({ issc_decision_ref: '' }).some((f) => /names no issc_decision_ref/.test(f)));
+  assert.ok(att({ issc_decision_ref: undefined }).some((f) => /names no issc_decision_ref/.test(f)));
+});
+
+test('an attestation must say WHICH register rows the shipped structures are', () => {
+  for (const structures of [[], undefined, 'SR-0001', ['SR-0001', '']]) {
+    assert.ok(att({ structures }).some((f) => /lists no structures/.test(f)), JSON.stringify(structures));
+  }
+});
+
+test('a non-PASS attestation is not release evidence, and a stale one is not this release\'s', () => {
+  assert.ok(att({ result: 'CONDITIONAL' }).some((f) => /not PASS/.test(f)));
+  assert.ok(att({ result: undefined }).some((f) => /not PASS/.test(f)));
+  assert.ok(att({ commit: 'b'.repeat(40) }).some((f) => /not the release commit/.test(f)));
+  assert.ok(att({ commit: undefined }).some((f) => /not the release commit/.test(f)), 'the tests validator\'s rule: an unstated commit is not a binding');
+  // With no release commit known there is nothing to bind to, and the gate says nothing about it.
+  assert.deepEqual(att({ commit: undefined }, { releaseCommit: null }), []);
+});
+
+test('the registry reaches the validator THROUGH evaluate() — a sealed attestation is resolved end to end', () => {
+  const { dir } = realBundle();
+  try {
+    const body = JSON.stringify({ ...ATTESTATION, attester_id: 'agent.delivery-loop' }) + '\n';
+    writeFileSync(join(dir, 'shariah-attestation.json'), body);
+    const raw = [
+      ...REQUIRED_TYPES.map((t) => ({ type: t, ref: `${t}.json`, sha256: createHash('sha256').update(JSON.stringify(VALID[t]) + '\n').digest('hex') })),
+      { type: 'shariah-attestation', ref: 'shariah-attestation.json', sha256: createHash('sha256').update(body).digest('hex') },
+    ];
+    const m = anchored({ release: 'v', release_commit: COMMIT, entries: buildChain(raw) });
+    assert.ok(evaluate(m, { baseDir: dir, registry: SHARIAH_REGISTRY }).some((x) => /shariah-attestation.*is an AGENT/.test(x)),
+      'without the registry threaded through, an agent-signed attestation would seal clean');
+    // Same bundle, human attester: the whole chain verifies.
+    const good = JSON.stringify(ATTESTATION) + '\n';
+    writeFileSync(join(dir, 'shariah-attestation.json'), good);
+    raw[raw.length - 1].sha256 = createHash('sha256').update(good).digest('hex');
+    const ok = anchored({ release: 'v', release_commit: COMMIT, entries: buildChain(raw) });
+    assert.deepEqual(evaluate(ok, { baseDir: dir, registry: SHARIAH_REGISTRY }), []);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+const WORKED_BUNDLE = [join(HARNESS, 'evidence-example'), join(HARNESS, 'docs/governance/evidence')]
+  .find((d) => existsSync(join(d, 'manifest.json')));
+test('BACKWARD COMPATIBILITY — the shipped worked evidence bundle still passes, untouched', { skip: !WORKED_BUNDLE && 'worked evidence bundle not staged in this layout' }, () => {
+  const dir = WORKED_BUNDLE;
+  const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+  assert.deepEqual(evaluate(manifest, { baseDir: dir }), [], 'the worked bundle predates shariah-attestation and must not acquire a requirement');
+  // …and with no registry loaded either, which is the state every conventional adopter is in.
+  assert.deepEqual(evaluate(manifest, { baseDir: dir, registry: null }), []);
 });

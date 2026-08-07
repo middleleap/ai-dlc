@@ -86,6 +86,16 @@ export const CONTROL_TARGETS = [
   'docs/governance/environments.json',
   'docs/governance/feature-flags.json',
   'docs/governance/deployments/any.json',             // ownership probe: the deploy record is owned
+  // The Shari'ah plane. Both paths are institution-issued context, and both are ownership PROBES:
+  // this gate never opens the files and makes no Islamic determination — it asks only whether the
+  // path WOULD require Code Owner review. Whether that is silent for an adopter with no Islamic
+  // product depends on their CODEOWNERS, not on their product, so do not read "no Islamic product"
+  // as "no finding". Delete the two shipped `@your-org/shariah-secretariat` lines (governance/
+  // CODEOWNERS.template says to) and the blanket /docs/governance/ rule owns both paths, so these
+  // entries say nothing. LEAVE those lines in place and both entries FAIL — with the placeholder-
+  // team finding every other unadopted target gets, naming the placeholder rather than the product.
+  'docs/governance/shariah-rulings.json', // HG-0014 — a Shari'ah determination is institution-issued context; an agent that could write a ruling could authorise its own product structure
+  'docs/governance/issc-register.json',   // HG-0014 — committee composition decides who may approve; an agent that could edit the register could appoint its own approvers
   'CODEOWNERS',
 ];
 

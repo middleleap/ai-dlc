@@ -29,7 +29,7 @@ stage: define
 ## Residual-risk verdict (D6)
 
 - **Residual rating after controls:** Medium — contingent on the ISSC position recorded below.
-- **Acceptable for delivery?** Not yet. Two items are unresolved and both are Shariah questions, not engineering ones.
+- **Acceptable for delivery?** No — not with these two elements in it. Both are Shariah questions, not engineering ones, and neither is this team's to answer: they are escalated to the ISSC as ADR-ALPHA-003. The direction without those two elements is acceptable at Medium residual; with them it is not acceptable until the ISSC determination is recorded, and no gate, agent, or engineering decision substitutes for it.
 - **Conditions / watch-items carried into hand-off:** no persistence of third-party narratives; suppress rather than assert compliance where the flag is unpopulated.
 
 ## Uncovered risks

@@ -8,10 +8,12 @@
 //   Every signal must be TRIAGED (routed) and TRACEABLE (the route resolves to real follow-up).
 //
 // Routes and what each must trace to:
-//   - spec-fix   → a delivery follow-up (link a PR / spec-change)      — stays in Delivery
-//   - register   → a data-risk register update (cite a DR-* risk)      — Continuous Assurance
-//   - discovery  → a discovery run (link its slug), or status:triaging — re-enters Discovery
-//   - accepted   → a stated justification (a conscious no-op)          — closed with a reason
+//   - spec-fix        → a delivery follow-up (link a PR / spec-change)      — stays in Delivery
+//   - register        → a data-risk register update (cite a DR-* risk)      — Continuous Assurance
+//   - discovery       → a discovery run (link its slug), or status:triaging — re-enters Discovery
+//   - accepted        → a stated justification (a conscious no-op)          — closed with a reason
+//   - purification    → a PUR-* record under docs/governance/purification/  — the money leaves
+//   - issc-escalation → an assurance case id, or status:triaging            — a body decides
 //
 // rc.37 (flow-plan Phase 3.3) — TWO OPTIONAL FIELDS THAT MAKE RUN MEASURABLE. Change-failure
 // rate and MTTR are not derivable from a log that never says which change caused a signal or
@@ -30,19 +32,49 @@
 // Neither field gates anything on its VALUE: scripts/flow-report.mjs reads them, and telemetry
 // never blocks a merge. What this gate refuses is a malformed or unresolvable link.
 //
+// rc.46 (Shari'ah workstream) — A SHARI'AH BREACH MUST HAVE SOMEWHERE TO GO. Until now the closed
+// type enum had no member for a Shari'ah non-compliance event and no route led anywhere a Shari'ah
+// body sits, while the Islamic product profile compiles a PA2 `purification-of-non-compliant-income`
+// section that no run-time signal could ever reach. Two rules attach to the type, because a Shari'ah
+// breach closes differently from an outage:
+//
+//   · it needs an evidence_ref at EVERY severity, not only high/critical — purification quantifies
+//     an amount that should never have been earned, and an amount nobody can reconstruct from the
+//     record is a number, not a record;
+//   · it may route ONLY to purification, issc-escalation or register. `accepted` is refused:
+//     waiving a Shari'ah breach is the Shari'ah body's decision, recorded in a case with scholars'
+//     names on it, never a triager's justification field in an operations log.
+//
+// Both rules are TYPE-CONDITIONAL, so a repo with no Islamic product in flight never meets them —
+// a log that never carries the type is unaffected, and no generic adopter fails because of them.
+//
+// Honest limit: THIS GATE VALIDATES THE LOG. The runtime screening that detects a non-conforming
+// transaction and writes the entry is the institution's — the harness reads JSON records, it never
+// watches production, so a period with no Shari'ah signal is UNCOVERED here, not clean. And nothing
+// here rules on Shari'ah: the gate checks that a breach was routed somewhere a scholar can decide
+// and that the destination resolves. Scholars decide Shari'ah.
+//
 // An empty log is valid (operations may not have started). A signal with no route is the
 // failure this gate exists to prevent. Run from repo root:
 //   `node scripts/operations-signal-check.mjs` (exit 1 on any finding).
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { CASES_DIR } from './assurance-case-check.mjs';
 
 const MANIFEST_LOCATIONS = ['docs/governance/operations-signal.json', 'operations-signal.json'];
+/** Where purification records live. One record per amount identified, quantified, approved, given away. */
+export const PURIFICATION_DIR = 'docs/governance/purification';
 
-// ADOPT: the operational signal taxonomy and how each routes back into the loop.
-export const TYPES = new Set(['incident', 'slo-breach', 'drift', 'cve', 'regulatory', 'near-miss', 'customer-signal', 'risk-materialised']);
+// ADOPT: the operational signal taxonomy and how each routes back into the loop. `regulatory` is
+// the precedent for a domain-shaped member: a type exists here when the follow-up it demands is
+// unlike any other type's. `shariah-non-compliance` is one of those — nothing else routes money out.
+export const TYPES = new Set(['incident', 'slo-breach', 'drift', 'cve', 'regulatory', 'near-miss', 'customer-signal', 'risk-materialised', 'shariah-non-compliance']);
 export const SEVERITIES = new Set(['low', 'medium', 'high', 'critical']);
-export const ROUTES = new Set(['spec-fix', 'register', 'discovery', 'accepted']);
+export const ROUTES = new Set(['spec-fix', 'register', 'discovery', 'accepted', 'purification', 'issc-escalation']);
+
+/** The only routes a Shari'ah non-compliance signal may take. `accepted` is deliberately not one. */
+export const SHARIAH_ROUTES = new Set(['purification', 'issc-escalation', 'register']);
 
 const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
 
@@ -52,7 +84,7 @@ const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
  * EMPTY log is itself a finding (1.12): a live product that has never produced one incident,
  * complaint, drift or SLO measurement means the sensing is missing, not that Run is perfect.
  */
-export function evaluate(manifest, { inProduction = false, changeIds = null, notices = null } = {}) {
+export function evaluate(manifest, { inProduction = false, changeIds = null, purificationIds = null, caseIds = null, notices = null } = {}) {
   const signals = manifest && manifest.signals;
   if (!Array.isArray(signals)) return ['operations-signal manifest has no `signals` array'];
   if (signals.length === 0) {
@@ -69,6 +101,13 @@ export function evaluate(manifest, { inProduction = false, changeIds = null, not
     // high/critical signals must carry evidence so a reviewer can reconstruct them.
     if ((s.severity === 'high' || s.severity === 'critical') && !nonEmpty(s.evidence_ref)) {
       findings.push(`${id}: ${s.severity} signal needs an evidence_ref`);
+    }
+    // A Shari'ah non-compliance signal carries evidence at EVERY severity (the high/critical rule
+    // above already covers those two). What follows a low-severity entry is a purification
+    // computation, and a computed amount with nothing behind it cannot be re-derived by the
+    // Shari'ah Compliance Function, the third-line auditor, or anyone after them.
+    if (s.type === 'shariah-non-compliance' && s.severity !== 'high' && s.severity !== 'critical' && !nonEmpty(s.evidence_ref)) {
+      findings.push(`${id}: a shariah-non-compliance signal needs an evidence_ref at EVERY severity — the money flow must be reconstructable, and severity does not change that`);
     }
     // rc.37 — the two flow fields. Optional; malformed or unresolvable is a finding.
     if (s.caused_by_change !== undefined) {
@@ -93,8 +132,13 @@ export function evaluate(manifest, { inProduction = false, changeIds = null, not
       }
     }
     if (!ROUTES.has(s.route)) {
-      findings.push(`${id}: not triaged — route must be spec-fix|register|discovery|accepted (got ${JSON.stringify(s.route)}); a signal must not fall on the floor`);
+      findings.push(`${id}: not triaged — route must be ${[...ROUTES].join('|')} (got ${JSON.stringify(s.route)}); a signal must not fall on the floor`);
       continue; // route drives the traceability checks
+    }
+    // Where a Shari'ah breach may go. Not a judgement about the breach — a statement about who is
+    // allowed to close one. `accepted` would let a triager retire a Shari'ah finding with a sentence.
+    if (s.type === 'shariah-non-compliance' && !SHARIAH_ROUTES.has(s.route)) {
+      findings.push(`${id}: shariah-non-compliance routed to ${JSON.stringify(s.route)} — it may route only to ${[...SHARIAH_ROUTES].join('|')}. Waiving a Shari'ah breach is the Shari'ah body's decision recorded in a case, not a triager's justification in an operations log`);
     }
     switch (s.route) {
       case 'discovery':
@@ -111,6 +155,43 @@ export function evaluate(manifest, { inProduction = false, changeIds = null, not
       case 'accepted':
         if (!nonEmpty(s.justification)) findings.push(`${id}: accepted (no action) needs a justification`);
         break;
+      case 'purification': {
+        // Income that should never have been earned is quantified, approved and given away — never
+        // booked. The link is the record of that, and an unresolvable PUR-* id is the failure the
+        // whole traceability chain refuses: a citation of a payment nobody can find.
+        const link = String(s.link || '');
+        if (!/^PUR-/.test(link)) {
+          findings.push(`${id}: routed to purification but does not cite a PUR-* purification record in link — an amount to be purified with no record is money the log says left and cannot show leaving`);
+        } else if (purificationIds instanceof Set) {
+          if (!purificationIds.has(link)) {
+            findings.push(`${id}: purification record ${JSON.stringify(link)} does not resolve under ${PURIFICATION_DIR}/ — a signal cannot be purified into a record that does not exist`);
+          }
+        } else {
+          // No purification tree to resolve against: say so rather than pass quietly. Unverified is
+          // a different thing from verified-good, and this gate never claims the second.
+          notices?.push(`${id}: purification record ${JSON.stringify(link)} NOT verified — no ${PURIFICATION_DIR}/ tree here to resolve it against`);
+        }
+        break;
+      }
+      case 'issc-escalation': {
+        // Escalated to the Shari'ah committee. The destination is an assurance case, because that is
+        // where a body's decision is recorded with a name and a date on it. `status: triaging` is the
+        // honest interim: the escalation was logged before the case was cut. An escalation with
+        // neither is a breach declared to nobody.
+        const link = String(s.link || '');
+        if (!nonEmpty(link)) {
+          if (s.status !== 'triaging') {
+            findings.push(`${id}: routed to issc-escalation but names no assurance case and is not status:triaging — an escalation that reaches no case reaches no committee`);
+          }
+        } else if (caseIds instanceof Set) {
+          if (!caseIds.has(link)) {
+            findings.push(`${id}: assurance case ${JSON.stringify(link)} does not resolve under ${CASES_DIR}/ — the escalation cites a case that does not exist`);
+          }
+        } else {
+          notices?.push(`${id}: assurance case ${JSON.stringify(link)} NOT verified — no ${CASES_DIR}/ tree here to resolve it against`);
+        }
+        break;
+      }
     }
   }
   return findings;
@@ -148,6 +229,42 @@ export function governedChangeIds(cwd = process.cwd()) {
   return ids;
 }
 
+/**
+ * Every purification record id in the tree — the file/directory name (a `.json` suffix stripped)
+ * AND the declared id, because a record may be filed under either. Same shape as
+ * `governedChangeIds`, including the null: no tree at all is reported by `evaluate` as an
+ * UNVERIFIED link, never as "no such record". The harness reads these records; it does not see the
+ * bank account the money left from.
+ */
+export function purificationRecordIds(cwd = process.cwd()) {
+  const dir = `${cwd}/${PURIFICATION_DIR}`;
+  if (!existsSync(dir)) return null;
+  const ids = new Set();
+  for (const name of readdirSync(dir)) {
+    ids.add(name.replace(/\.json$/, ''));
+    try {
+      const rec = JSON.parse(readFileSync(`${dir}/${name}`, 'utf8'));
+      ids.add(rec.purification_id ?? rec.id);
+    } catch { /* a directory, or a malformed record the purification gate reports */ }
+  }
+  ids.delete(undefined);
+  return ids;
+}
+
+/** Every assurance-case id — filename (minus `.json`) and declared `case_id`. Null when no tree. */
+export function assuranceCaseIds(cwd = process.cwd()) {
+  const dir = `${cwd}/${CASES_DIR}`;
+  if (!existsSync(dir)) return null;
+  const ids = new Set();
+  for (const name of readdirSync(dir)) {
+    ids.add(name.replace(/\.json$/, ''));
+    try { ids.add(JSON.parse(readFileSync(`${dir}/${name}`, 'utf8')).case_id); }
+    catch { /* the assurance-case gate reports unparseable cases */ }
+  }
+  ids.delete(undefined);
+  return ids;
+}
+
 function run(cwd = process.cwd()) {
   const inProduction = anyChangeInProduction(cwd);
   const notices = [];
@@ -163,7 +280,16 @@ function run(cwd = process.cwd()) {
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
   catch (e) { return { notices, findings: [`operations-signal manifest is not valid JSON: ${e.message}`] }; }
-  return { notices, findings: evaluate(manifest, { inProduction, changeIds: governedChangeIds(cwd), notices }) };
+  return {
+    notices,
+    findings: evaluate(manifest, {
+      inProduction,
+      changeIds: governedChangeIds(cwd),
+      purificationIds: purificationRecordIds(cwd),
+      caseIds: assuranceCaseIds(cwd),
+      notices,
+    }),
+  };
 }
 
 // CLI (skipped when imported by the test suite).

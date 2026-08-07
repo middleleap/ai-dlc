@@ -36,6 +36,21 @@ For every endpoint touched by the diff:
    match the spec exactly — no added or missing values.
 9. **Approval annotations**: every operation the spec marks as approval-gated defers execution
    to the approvals flow.
+10. **Ownership sequencing on asset-sale and lease flows** — SCOPED, and check the scope first.
+    This check applies to a touched asset-sale, lease or rental-accrual flow ONLY where one of
+    these holds: (a) the flow's paths sit under a surface the project itself declares Islamic
+    (`docs/governance/shariah-surfaces.json` `content_roots`/`spec_paths`), or (b) the flow
+    implements an approved structure entry in `docs/governance/shariah-structures/`. If neither
+    holds — and in a project with no Islamic product neither ever does, because both declarations
+    are absent — SKIP this check and raise nothing under it. A conventional sale-of-goods or
+    equipment-lease endpoint is not a finding here. Where it DOES apply: the ledger/event tests
+    must assert that the institution's acquisition/title event strictly PRECEDES the sale, lease
+    or first rental accrual — cost-plus sale: acquire → sell; lease: acquire → lease; and for
+    diminishing co-ownership:
+    ownership units transfer only per the buyout schedule. A suite that books revenue before
+    title, or that carries NO ordering assertion at all for such a flow, is a finding: that
+    ordering is exactly where a synthetic implementation stops being a sale and becomes a loan at
+    interest.
 
 ## Output format
 

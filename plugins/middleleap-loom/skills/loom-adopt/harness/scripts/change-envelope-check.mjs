@@ -46,6 +46,17 @@
 // against the repository's OWN governance data — the data-lifecycle register, the model manifest,
 // the passport's third-parties section — and a CONTRADICTED flag is a finding.
 //
+// INSTITUTION ASSERTIONS. Some flags state a fact about the INSTITUTION rather than about the
+// change, and those have no per-change register to corroborate them against: an envelope can leave
+// one false and route around a whole body of governance without anyone having to argue for it. An
+// institution profile may therefore declare `asserts_flags: { "<flag>": true }` — this flag is
+// true of every change in this repository — and `required_for_all_changes: true` — every envelope
+// must name this profile, because a profile a change can decline to name governs only the changes
+// that agreed to be governed. Both are read from EVERY profile in profiles/institutions/, not
+// merely the ones the envelope named: the record that contradicts an envelope is precisely the one
+// the envelope left out. The mechanism is generic — this gate does not know which flags exist —
+// and a repository whose institution profiles declare neither field is entirely unaffected.
+//
 // Run from the repo root: `node scripts/change-envelope-check.mjs [--base <ref>]`.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -88,6 +99,8 @@ export const EMERGENCY_STATE = 'emergency-authorized';
 export const EMERGENCY_RETROSPECTIVE_MAX_DAYS = 10;
 // The classifications in docs/governance/data-lifecycle.json that contradict personal_data: false.
 export const PERSONAL_CLASSIFICATIONS = new Set(['personal', 'sensitive', 'sensitive-personal', 'special-category']);
+// Where the repository keeps its institution profiles (policy-compiler.mjs PROFILE_DIRS).
+export const INSTITUTIONS_DIR = 'profiles/institutions';
 
 const at = (state) => STATES.indexOf(state === EMERGENCY_STATE ? 'production-authorized' : state);
 const known = (state) => STATES.includes(state) || TERMINAL_STATES.has(state) || state === EMERGENCY_STATE;
@@ -239,8 +252,12 @@ export function checkEmergency(envelope, { registry = null, receipts = [], notic
  * keeps for other reasons: the data-lifecycle register, the model manifest, and the passport's
  * own third-parties analysis. A contradiction is a finding. The absence of one is NOT a pass, and
  * where the corroborating record is missing this says so instead of going quiet.
+ *
+ * `institutions` adds the fourth record: the repository's own institution profiles (see
+ * loadInstitutionProfiles). A flag an institution ASSERTS is not a per-change judgement at all,
+ * and an envelope that leaves it false is contradicted by the institution it belongs to.
  */
-export function corroborateFlags(envelope, { dataLifecycle = null, modelManifest = null, passport = null, notices = null } = {}) {
+export function corroborateFlags(envelope, { dataLifecycle = null, modelManifest = null, passport = null, institutions = [], notices = null } = {}) {
   const findings = [];
   const id = envelope?.change_id || '(no id)';
   const flags = envelope?.flags || {};
@@ -274,6 +291,40 @@ export function corroborateFlags(envelope, { dataLifecycle = null, modelManifest
       notices?.push(`${id}: flags.third_party is not set and the passport's third-parties section names no parties in a list this gate can read — NOT VERIFIED (declare parties as an array to make the corroboration mechanical)`);
     }
   }
+
+  // The institution's own assertions. Only a `true` assertion binds: asserting a flag false would
+  // assert nothing the compiler does not already assume, and an institution cannot declare a flag
+  // OFF for a change that legitimately sets it on — the flags only ever add.
+  for (const inst of institutions || []) {
+    const asserted = inst?.data?.asserts_flags;
+    if (!asserted || typeof asserted !== 'object' || Array.isArray(asserted)) continue;
+    for (const [flag, value] of Object.entries(asserted)) {
+      if (value !== true || flags[flag] === true) continue;
+      findings.push(`${id}: flags.${flag} is ${JSON.stringify(flags[flag] ?? null)} but the repository's own institution profile ${inst.path} asserts ${flag}: true of every change here — a flag contradicted by the institution profile is a finding, not a tier reduction (correct the envelope, or the assertion if it is no longer unconditionally true)`);
+    }
+  }
+  return findings;
+}
+
+/**
+ * The institution profiles a change must NAME. `required_for_all_changes` is how an institution
+ * makes its own governance structural rather than opt-in: without it, the profile that carries the
+ * institution's approvals, evidence and conformance gates applies only to the changes that chose
+ * to be governed by it, and choosing is the builder's.
+ *
+ * Names resolve the way the compiler resolves them (policy-compiler.mjs findProfile): the bare
+ * file name, or a directory-qualified path to the same file.
+ */
+export function checkRequiredInstitutions(envelope, institutions = []) {
+  const findings = [];
+  const id = envelope?.change_id || '(no id)';
+  const named = new Set((envelope?.required_profiles || []).map((n) => String(n).split('/').pop()));
+  for (const inst of institutions || []) {
+    if (inst?.data?.required_for_all_changes !== true) continue;
+    const accepts = [inst.name, inst.data.profile].filter((n) => typeof n === 'string' && n.trim());
+    if (accepts.some((n) => named.has(n.split('/').pop()))) continue;
+    findings.push(`${id}: institution profile ${inst.path} declares required_for_all_changes but is not in required_profiles (${[...named].join(', ') || 'none'}) — an institution profile a change can decline to name governs only the changes that agreed to be governed`);
+  }
   return findings;
 }
 
@@ -281,7 +332,7 @@ export function corroborateFlags(envelope, { dataLifecycle = null, modelManifest
  * Findings for one change. `files` gives the sibling artifacts already parsed:
  * { plan, passport, architecture (booleans/objects) }; `registry` resolves identities.
  */
-export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, diff, now = Date.now() } = {}) {
+export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, institutions = [], diff, now = Date.now() } = {}) {
   const findings = [];
   const id = envelope?.change_id || '(no id)';
   if (!known(envelope?.current_state)) {
@@ -425,8 +476,11 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
     findings.push(...receipts);
   }
 
-  // rc.38 (Phase 4.7) — the flags that decide the route are corroborated against the repo's data.
-  findings.push(...corroborateFlags(envelope, { dataLifecycle, modelManifest, passport, notices }));
+  // rc.38 (Phase 4.7) — the flags that decide the route are corroborated against the repo's data,
+  // including the institution profiles' own assertions, and the profiles an institution requires
+  // of every change are required whether or not this envelope thought to name them.
+  findings.push(...corroborateFlags(envelope, { dataLifecycle, modelManifest, passport, institutions, notices }));
+  findings.push(...checkRequiredInstitutions(envelope, institutions));
 
   // Exemptions: owned, reasoned, compensated, expiring, second-line approved. Expired blocks.
   for (const ex of envelope.exemptions || []) {
@@ -448,6 +502,33 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
 }
 
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
+
+/**
+ * Every institution profile the repository keeps — `[{ name, path, data }]`, empty when there is
+ * no profiles/institutions/ at all (most repositories; the directory is optional).
+ *
+ * ALL of them, deliberately: an envelope that omits the institution profile is exactly the case
+ * these assertions exist to catch, so reading only the profiles the envelope named would ask the
+ * envelope to incriminate itself.
+ *
+ * Two things are NOT an institution's declaration and are skipped: a `*.template.json`, and a
+ * profile still carrying an `ADOPT:` placeholder as its name. Both ship in the harness with
+ * example values filled in, and a template asserting an example flag over every envelope in every
+ * adopting repository would be a fabricated institutional declaration — the exact defect the
+ * ADOPT: marker exists to make visible.
+ */
+export function loadInstitutionProfiles(cwd = process.cwd()) {
+  const dir = `${cwd}/${INSTITUTIONS_DIR}`;
+  let entries;
+  try { entries = readdirSync(dir); } catch { return []; }
+  const out = [];
+  for (const name of entries.filter((n) => n.endsWith('.json') && !n.endsWith('.template.json')).sort()) {
+    const data = readJson(`${dir}/${name}`);
+    if (!data || (typeof data.profile === 'string' && data.profile.startsWith('ADOPT:'))) continue;
+    out.push({ name: name.replace(/\.json$/, ''), path: `${INSTITUTIONS_DIR}/${name}`, data });
+  }
+  return out;
+}
 
 /**
  * rc.38 — the diff a pattern claim is reconciled against, or null when it cannot be computed.
@@ -475,6 +556,9 @@ export function run(cwd = process.cwd(), { baseRef = null, now = Date.now() } = 
   // (Phase 4.3). Both are loaded ONCE: they are repository-wide records, not per-change ones.
   const dataLifecycle = readJson(`${cwd}/docs/governance/data-lifecycle.json`);
   const modelManifest = readJson(`${cwd}/docs/governance/model-manifest.json`);
+  // The institution's own assertions about its changes — repository-wide, so loaded once and read
+  // for every envelope, including the envelopes that never named an institution profile.
+  const institutions = loadInstitutionProfiles(cwd);
   const diff = diffSince(baseRef, cwd);
   const findings = [];
   const notices = [];
@@ -531,7 +615,7 @@ export function run(cwd = process.cwd(), { baseRef = null, now = Date.now() } = 
       anchor: manifest.anchor,
       attestationFindings: verifyAnchorAttestation(manifest, loadIssuers(cwd)),
     };
-    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, diff, now }));
+    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, institutions, diff, now }));
   }
   return { findings, notices, count };
 }

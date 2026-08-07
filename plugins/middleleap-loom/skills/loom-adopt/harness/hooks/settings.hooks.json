@@ -1,5 +1,5 @@
 {
-  "_comment": "Merge into the adopting repo's .claude/settings.json. Paths assume the hook scripts land in .claude/hooks/.",
+  "_comment": "Merge into the adopting repo's .claude/settings.json. Paths assume the hook scripts land in .claude/hooks/. Two hooks read a data file that must land beside them: pii-guard.sh reads pii-patterns.json (missing ⇒ DENY, fail closed) and shariah-term-guard.sh reads shariah-surfaces.txt (missing or empty ⇒ NO-OP, because an empty scope list means no declared Islamic surfaces, which is the correct default for most adopters). Every hook here exits 0 and expresses refusal as a deny DECISION — a non-zero exit is a non-blocking error in Claude Code, i.e. a silent disarm.",
   "hooks": {
     "PreToolUse": [
       {
@@ -7,7 +7,8 @@
         "hooks": [
           { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pii-guard.sh", "timeout": 10, "statusMessage": "PII guard" },
           { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/spec-tripwire.sh", "timeout": 10, "statusMessage": "Spec tripwire" },
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/test-tripwire.sh", "timeout": 10, "statusMessage": "Test tripwire" }
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/test-tripwire.sh", "timeout": 10, "statusMessage": "Test tripwire" },
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/shariah-term-guard.sh", "timeout": 10, "statusMessage": "Shariah term guard" }
         ]
       }
     ]

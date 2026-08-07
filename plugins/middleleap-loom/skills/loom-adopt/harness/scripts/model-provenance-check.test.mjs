@@ -1,7 +1,10 @@
 // Tests for the model-provenance gate. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate } from './model-provenance-check.mjs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { CAPABILITY_DOMAINS, domainValidatorRole, evaluate, run } from './model-provenance-check.mjs';
 
 // A high-tier model that satisfies every check — the fixture others mutate.
 const HIGH = {
@@ -150,4 +153,139 @@ test('free text, an agent, a builder, or the wrong role all fail validation reso
 
 test('without a registry, validated_by stays a presence check (generic repo, backward compatible)', () => {
   assert.deepEqual(evaluate(manifest({ validated_by: 'anything non-empty' })), []);
+});
+
+/* ---- 2.1: domain validation — a SECOND signature, generic across domains ---- */
+
+const DREG = { identities: [
+  ...REG.identities,
+  { id: 'scholar-yusuf', kind: 'human', roles: ['shariah-model-validator'], groups: ['second-line'] },
+  { id: 'clinician-nadia', kind: 'human', roles: ['medical-model-validator'], groups: ['second-line'] },
+  { id: 'both-hana', kind: 'human', roles: ['model-validator', 'shariah-model-validator'], groups: ['second-line'] },
+  { id: 'builder-sam', kind: 'human', roles: ['shariah-model-validator'], groups: ['builders'] },
+  { id: 'agent-scholar', kind: 'agent', roles: ['shariah-model-validator'], groups: [] },
+] };
+const domained = (over = {}) => manifest({ validated_by: 'mrm-aisha', domains: ['shariah'], domain_validations: { shariah: 'scholar-yusuf' }, ...over });
+
+test('STRICTLY ADDITIVE: a manifest with no domains key produces zero new findings', () => {
+  assert.deepEqual(evaluate(manifest({ validated_by: 'mrm-aisha' }), { registry: DREG }), []);
+  // and at every tier, with and without a registry mounted
+  assert.deepEqual(evaluate({ models: [{ role: 'summariser', model_id: 'x@1', prompt_version: 'p@1', risk_tier: 'low' }] }, { registry: DREG }), []);
+  assert.deepEqual(evaluate(manifest({ validated_by: 'anything non-empty' })), []);
+});
+
+test('a declared domain with a resolvable second-line domain validator passes', () => {
+  assert.deepEqual(evaluate(domained(), { registry: DREG }), []);
+});
+
+test('the domain check is generic — medical takes the identical path', () => {
+  assert.deepEqual(evaluate(domained({ domains: ['medical'], domain_validations: { medical: 'clinician-nadia' } }), { registry: DREG }), []);
+  const f = evaluate(domained({ domains: ['medical'], domain_validations: { medical: 'scholar-yusuf' } }), { registry: DREG });
+  assert.ok(f.some((x) => /does not hold the medical-model-validator role/.test(x)), f.join('\n'));
+});
+
+test('two domains each need their own signature', () => {
+  const ok = evaluate(domained({ domains: ['shariah', 'medical'], domain_validations: { shariah: 'scholar-yusuf', medical: 'clinician-nadia' } }), { registry: DREG });
+  assert.deepEqual(ok, []);
+  const f = evaluate(domained({ domains: ['shariah', 'medical'], domain_validations: { shariah: 'scholar-yusuf' } }), { registry: DREG });
+  assert.ok(f.some((x) => /declares domain medical but domain_validations.medical names nobody/.test(x)), f.join('\n'));
+});
+
+test('a declared domain with no signature, an empty signature, or a placeholder signature fails', () => {
+  assert.ok(evaluate(domained({ domain_validations: undefined }), { registry: DREG }).some((x) => /names nobody/.test(x)));
+  assert.ok(evaluate(domained({ domain_validations: { shariah: '  ' } }), { registry: DREG }).some((x) => /names nobody/.test(x)));
+  assert.ok(evaluate(domained({ domain_validations: { shariah: 'ADOPT: the scholar id' } }), { registry: DREG }).some((x) => /still an ADOPT placeholder/.test(x)));
+});
+
+test('an agent, a builder, free text, or the wrong role all fail domain validation', () => {
+  assert.ok(evaluate(domained({ domain_validations: { shariah: 'agent-scholar' } }), { registry: DREG }).some((x) => /is an AGENT/.test(x)));
+  assert.ok(evaluate(domained({ domain_validations: { shariah: 'builder-sam' } }), { registry: DREG }).some((x) => /is a BUILDER/.test(x)));
+  assert.ok(evaluate(domained({ domain_validations: { shariah: 'Scholars' } }), { registry: DREG }).some((x) => /not a registry identity/.test(x)));
+  assert.ok(evaluate(domained({ domain_validations: { shariah: 'risk-lena' } }), { registry: DREG }).some((x) => /does not hold the shariah-model-validator role/.test(x)));
+});
+
+test('one identity may cover validated_by AND the domain only by holding both roles', () => {
+  assert.deepEqual(evaluate(domained({ validated_by: 'both-hana', domain_validations: { shariah: 'both-hana' } }), { registry: DREG }), []);
+  const f = evaluate(domained({ validated_by: 'mrm-aisha', domain_validations: { shariah: 'mrm-aisha' } }), { registry: DREG });
+  assert.ok(f.some((x) => /reuses validated_by mrm-aisha.*needs two distinct signatures/.test(x)), f.join('\n'));
+  // the reverse: the domain validator cannot stand in for the model-risk signature either
+  const g = evaluate(domained({ validated_by: 'scholar-yusuf', domain_validations: { shariah: 'scholar-yusuf' } }), { registry: DREG });
+  assert.ok(g.some((x) => /does not hold the model-validator role/.test(x)), g.join('\n'));
+});
+
+test('without a registry a domain signature stays a presence check', () => {
+  assert.deepEqual(evaluate(domained({ domain_validations: { shariah: 'whoever' } })), []);
+  assert.ok(evaluate(domained({ domain_validations: {} })).some((x) => /names nobody/.test(x)));
+});
+
+test('a non-slug domain cannot derive a role name, and malformed containers are caught', () => {
+  assert.ok(evaluate(domained({ domains: ['Shari\'ah Board'] }), { registry: DREG }).some((x) => /is not a slug/.test(x)));
+  assert.ok(evaluate(domained({ domains: 'shariah' }), { registry: DREG }).some((x) => /domains must be an array/.test(x)));
+  assert.ok(evaluate(domained({ domain_validations: ['scholar-yusuf'] }), { registry: DREG }).some((x) => /domain_validations must be an object/.test(x)));
+});
+
+test('an ADOPT-placeholder domain row is an untouched template, not a declaration', () => {
+  assert.deepEqual(evaluate(manifest({
+    validated_by: 'mrm-aisha',
+    domains: ['ADOPT: e.g. shariah, medical, privacy'],
+    domain_validations: { 'ADOPT: <domain>': 'ADOPT: <identity id>' },
+  }), { registry: DREG }), []);
+});
+
+test('a signature for an undeclared domain is coverage the manifest does not have', () => {
+  const f = evaluate(domained({ domain_validations: { shariah: 'scholar-yusuf', privacy: 'clinician-nadia' } }), { registry: DREG });
+  assert.ok(f.some((x) => /domain_validations names "privacy", which is not in domains/.test(x)), f.join('\n'));
+});
+
+test('domain significance is not tier — a low-tier model that declares a domain still needs the signature', () => {
+  const low = { role: 'screener', model_id: 'x@1', prompt_version: 'p@1', risk_tier: 'low', domains: ['shariah'] };
+  assert.ok(evaluate({ models: [low] }, { registry: DREG }).some((x) => /names nobody/.test(x)));
+});
+
+/* ---- 2.1: mandatory-when-compiled (run()) ---- */
+
+function repo({ capability = null, domains = undefined } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'mprov-'));
+  const base = join(dir, 'docs/governance/changes/CHG-7');
+  mkdirSync(base, { recursive: true });
+  writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: 'CHG-7', current_state: 'in-delivery', control_plan: 'control-plan.json' }));
+  writeFileSync(join(base, 'control-plan.json'), JSON.stringify({
+    required_gates: [], required_evidence: [],
+    required_capabilities: capability ? { [capability]: { required: true } } : {},
+  }));
+  const model = { role: 'screener', model_id: 'x@1', prompt_version: 'p@1', risk_tier: 'low' };
+  if (domains) { model.domains = domains; model.domain_validations = { shariah: 'scholar-yusuf' }; }
+  writeFileSync(join(dir, 'docs/governance/model-manifest.json'), JSON.stringify({ models: [model] }));
+  writeFileSync(join(dir, 'docs/governance/identities.json'), JSON.stringify(DREG));
+  return dir;
+}
+const clean = (d) => rmSync(d, { recursive: true, force: true });
+
+test('run(): a repo whose plans require no domain capability is SILENT about domains', () => {
+  const d = repo();
+  try { assert.deepEqual(run(d), []); } finally { clean(d); }
+});
+
+test('run(): shariah_model_validation compiled + no model naming the domain FAILS, naming the change', () => {
+  const d = repo({ capability: 'shariah_model_validation' });
+  try {
+    const f = run(d);
+    assert.ok(f.some((x) => /requires the shariah_model_validation capability \[CHG-7\]/.test(x)), f.join('\n'));
+    assert.ok(f.some((x) => /no model in the manifest declares the "shariah" domain/.test(x)), f.join('\n'));
+  } finally { clean(d); }
+});
+
+test('run(): once a model declares the domain with a valid signature, the limb is satisfied', () => {
+  const d = repo({ capability: 'shariah_model_validation', domains: ['shariah'] });
+  try { assert.deepEqual(run(d), []); } finally { clean(d); }
+});
+
+test('run(): an unrelated compiled capability does not trigger the domain limb', () => {
+  const d = repo({ capability: 'exposure_control' });
+  try { assert.deepEqual(run(d), []); } finally { clean(d); }
+});
+
+test('the capability→domain table is data, and the role name is derived from it', () => {
+  assert.equal(CAPABILITY_DOMAINS.shariah_model_validation, 'shariah');
+  assert.equal(domainValidatorRole('medical'), 'medical-model-validator');
 });

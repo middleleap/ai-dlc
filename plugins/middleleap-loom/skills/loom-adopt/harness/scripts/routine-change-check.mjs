@@ -18,6 +18,14 @@
 //   2. A FLOOR denylist in THIS file is absolute — no envelope, however misconfigured, can
 //      authorize a change that touches the control plane, the API contract, auth, or
 //      migrations. The floor is code, not configuration.
+//      rc.46 (Shari'ah workstream): the floor also has to cover the surfaces where a product's
+//      ECONOMIC SUBSTANCE is decided. No envelope, however configured by its second-line owner,
+//      may auto-merge a change to profit-rate configuration, product-structure definition, or a
+//      Shari'ah rulings root. The defect this prevents is quiet: a rate table or an ownership-
+//      sequencing constant is a one-line diff, it looks exactly like the routine work the lane
+//      exists for, and it is where a structure that scholars approved silently becomes riba.
+//      The rulings register is already floored for free (docs/governance/), but an adopter's
+//      APPLICATION pricing and product-structure code is not — hence the ADOPT line below.
 //   3. The lane is CLAIMED, not defaulted. Absent a claim, every PR takes the normal lane.
 //      A claim that does not fit the envelope in EVERY respect fails the gate, so a claim can
 //      only ever narrow scrutiny to exactly what the second line pre-authorized.
@@ -42,8 +50,10 @@ export const ROUTINE_CLASSES = ['dependency-patch', 'lint-fix', 'doc-fix', 'form
 
 // The absolute floor: paths no routine envelope can ever reach, whatever it declares. This is
 // the control plane and the other high-blast-radius surfaces — a change touching any of them
-// is not routine BY CONSTRUCTION. ADOPT: append your auth and migration roots; never remove a
-// control-plane entry.
+// is not routine BY CONSTRUCTION. ADOPT: append your auth and migration roots, and — if this
+// repo builds financial products — your profit-rate / pricing configuration root, your
+// product-structure definition root, and any Shari'ah rulings root outside docs/governance/;
+// never remove a control-plane entry.
 export const FLOOR_DENY = [
   '.github/', 'scripts/', 'core/', 'profiles/', 'discovery/gates/',
   'docs/governance/', 'CODEOWNERS', '.claude/hooks/', '.claude/settings.json',

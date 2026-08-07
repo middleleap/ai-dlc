@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CHANGE_CLASSES, EMERGENCY_RETROSPECTIVE_MAX_DAYS, EMERGENCY_STATE, checkStateHistory, corroborateFlags, evaluate, STATES, stateHistoryRequired } from './change-envelope-check.mjs';
+import { CHANGE_CLASSES, EMERGENCY_RETROSPECTIVE_MAX_DAYS, EMERGENCY_STATE, checkRequiredInstitutions, checkStateHistory, corroborateFlags, evaluate, loadInstitutionProfiles, STATES, stateHistoryRequired } from './change-envelope-check.mjs';
 import { collectPatterns } from '../core/change-patterns.mjs';
 import { compile, resolveBindings } from '../core/policy-compiler.mjs';
 
@@ -372,5 +372,71 @@ test('a missing corroborating record is NOT VERIFIED, never a quiet pass', () =>
   corroborateFlags({ ...ENVELOPE, flags: {} }, { notices });
   assert.ok(notices.some((n) => /data-lifecycle.json to corroborate it against — NOT VERIFIED/.test(n)));
   assert.ok(notices.some((n) => /model-manifest.json to corroborate it against — NOT VERIFIED/.test(n)));
+});
+
+// --- the institution flag-assertion contract --------------------------------------------------
+//
+// A route-deciding flag that states a fact about the INSTITUTION has no per-change register to
+// corroborate it against, so an envelope could leave it false and route around a whole body of
+// governance. The contract is generic: the gate never knows which flag it is checking. `islamic`
+// is used here only because it is the flag the shipped worked example carries.
+
+const INST = (data, name = 'alpha-islamic-bank') => ({ name, path: `profiles/institutions/${name}.json`, data: { profile: name, kind: 'institution', ...data } });
+const ASSERTING = [INST({ asserts_flags: { islamic: true } })];
+// The stored plan reconciled against ITSELF: these tests are about the institution contract, so
+// they must not also be a second assertion that the worked example's plan is freshly compiled
+// (that is the reconciliation tests' job, and it fails for its own reasons when a profile moves).
+const ICTX = { plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY, freshPlan: PLAN };
+
+test('INSTITUTION — a flag the institution profile asserts cannot be left false by an envelope', () => {
+  const env = { ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: false } };
+  const f = corroborateFlags(env, { institutions: ASSERTING });
+  assert.equal(f.length, 1, f.join('\n'));
+  assert.match(f[0], /profiles\/institutions\/alpha-islamic-bank\.json asserts islamic: true/);
+  assert.match(f[0], /not a tier reduction/);
+  // An ABSENT flag is the same case — the compiler reads absent and false identically.
+  assert.equal(corroborateFlags({ ...ENVELOPE, flags: {} }, { institutions: ASSERTING })
+    .filter((x) => /institution profile/.test(x)).length, 1);
+});
+
+test('INSTITUTION — an envelope that agrees with the assertion is clean, and only `true` asserts', () => {
+  const env = { ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: true } };
+  assert.deepEqual(corroborateFlags(env, { institutions: ASSERTING }), []);
+  // Asserting a flag false asserts nothing the compiler does not already assume.
+  assert.deepEqual(corroborateFlags(ENVELOPE, { institutions: [INST({ asserts_flags: { islamic: false } })] }), []);
+});
+
+test('INSTITUTION — the assertion is read from EVERY institution profile, not the ones the envelope named', () => {
+  // The envelope names regulated-bank, uae-bank, lending: no institution profile at all. That is
+  // precisely the case the contract exists for, so the finding must still fire.
+  assert.equal(ENVELOPE.required_profiles.includes('alpha-islamic-bank'), false);
+  const f = evaluate({ ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: false } }, { ...ICTX, institutions: ASSERTING });
+  assert.equal(f.length, 1, f.join('\n'));
+  assert.match(f[0], /asserts islamic: true/);
+});
+
+test('INSTITUTION — required_for_all_changes: a profile a change can decline to name governs nothing', () => {
+  const required = [INST({ required_for_all_changes: true })];
+  const f = checkRequiredInstitutions(ENVELOPE, required);
+  assert.equal(f.length, 1, f.join('\n'));
+  assert.match(f[0], /declares required_for_all_changes but is not in required_profiles/);
+  // Named — bare, or directory-qualified the way the compiler also resolves it.
+  for (const named of ['alpha-islamic-bank', 'institutions/alpha-islamic-bank']) {
+    assert.deepEqual(checkRequiredInstitutions({ ...ENVELOPE, required_profiles: [...ENVELOPE.required_profiles, named] }, required), [], named);
+  }
+  // Declared false or absent: nothing is required of anyone.
+  assert.deepEqual(checkRequiredInstitutions(ENVELOPE, [INST({ required_for_all_changes: false }), INST({})]), []);
+});
+
+test('INSTITUTION — the profiles this harness actually ships assert nothing: no findings, no notices', () => {
+  // DORMANCY. meridian-trust.json declares neither field, and the ADOPT: template — whose example
+  // values would otherwise assert over every envelope in every adopting repository — is skipped.
+  const shipped = loadInstitutionProfiles(HARNESS);
+  assert.equal(shipped.some((p) => /template/.test(p.path) || /^ADOPT:/.test(p.data.profile || '')), false,
+    `an uninstantiated template is not an institutional declaration: ${shipped.map((p) => p.path).join(', ')}`);
+  const notices = [];
+  assert.deepEqual(evaluate(ENVELOPE, { ...ICTX, institutions: shipped, notices }), []);
+  assert.deepEqual(notices, []);
+  assert.deepEqual(checkRequiredInstitutions(ENVELOPE, shipped), []);
 });
 }

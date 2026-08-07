@@ -13,10 +13,25 @@
 // pct_agent_generated would make the metric a target and the record a fiction. `--check` validates
 // only that the metrics are well-FORMED.
 //
+// SATURATION (rc.41 · G5). The trend above answers "is understanding decaying?". It cannot answer
+// the question that decides whether it will: IS THERE ANYBODY LEFT TO DO THE READING? The review
+// gate is the one resource in an AI-SDLC loop that does not scale, and its exhaustion has a
+// signature — open changes piling on one approver role, or one named reviewer, while the loop keeps
+// shipping. A body that sits on a committee cadence against a flow that ships continuously is the
+// canonical case, and until it is counted it is an anecdote somebody has to win an argument with.
+// So it is counted, per approver role and per reviewer, and printed.
+//
+// It REPORTS AND DOES NOT GATE, and here that is not timidity. A saturation number that blocked a
+// merge would be relieved by routing the change to a less-loaded approver — the queue would clear
+// and the reading would not happen. Visibility is the only pressure that does not corrupt this
+// particular measurement.
+//
 // Run from the repo root: `node scripts/comprehension-report.mjs` (print) or `--check` (shape).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { collect as collectOutstanding, byRole } from './approval-status.mjs';
+import { TERMINAL_STATES } from '../core/compiled-requirements.mjs';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 export const TRENDED = ['review_minutes', 'pct_agent_generated'];
@@ -85,6 +100,54 @@ export function trend(records = []) {
   return { series, direction };
 }
 
+/**
+ * The review resource, saturated — two denominators, because the bottleneck has two shapes.
+ *
+ *   per_role      open changes waiting on each approver role. Built on approval-status's `byRole`
+ *                 rather than a second aggregation, so "waiting on" has ONE definition in the
+ *                 harness; the addition here is the DISTINCT-CHANGE count, because twelve
+ *                 outstanding approvals across two changes and across twelve changes are the same
+ *                 row count and very different problems.
+ *   per_reviewer  open changes whose comprehension record names this human as the owner — the
+ *                 person who has to be able to explain them, later, without the agent session.
+ *
+ * HONEST DENOMINATOR: per_reviewer counts only changes that HAVE a comprehension record, because a
+ * change without one has no reviewer to attribute it to. Those changes are not invisible — they are
+ * in per_role, and if they were selected and unrecorded, comprehension-check already failed them.
+ * Terminal (closed/superseded) changes are excluded from both: they are not open work.
+ *
+ * Pure. `rows` are approval-status `outstanding()` rows; `records` are `collect()` records.
+ */
+export function saturation(rows = [], records = [], { sla = null } = {}) {
+  const per_role = {};
+  for (const [role, b] of Object.entries(byRole(rows, sla))) {
+    per_role[role] = {
+      open_changes: new Set(rows.filter((r) => r.role === role).map((r) => r.change_id)).size,
+      outstanding_approvals: b.waiting,
+      over_target: b.breached,
+      oldest_days: b.oldest_days,
+      over_wip_limit: b.over_wip_limit,
+      queue: b.changes,
+    };
+  }
+  const per_reviewer = {};
+  for (const rec of records) {
+    if (TERMINAL_STATES.has(rec?.current_state)) continue;
+    const owner = (typeof rec?.named_owner === 'string' && rec.named_owner.trim()) || '(no named_owner)';
+    const b = (per_reviewer[owner] ||= { open_changes: 0, changes: [] });
+    const id = rec?.change_id || '(no id)';
+    if (b.changes.includes(id)) continue;
+    b.changes.push(id);
+    b.open_changes += 1;
+  }
+  return {
+    per_role,
+    per_reviewer,
+    wip_limit: Number.isFinite(sla?.wip_limit_per_role) ? sla.wip_limit_per_role : null,
+    open_changes: new Set(rows.map((r) => r.change_id)).size,
+  };
+}
+
 /** Findings if the metrics are malformed. Empty ⇒ well-formed (an absent metric block is valid). */
 export function validate(records = []) {
   const findings = [];
@@ -120,6 +183,8 @@ export function collect(cwd = process.cwd()) {
       ...record,
       change_id: record.change_id || envelope?.change_id || name,
       risk_tier: envelope?.risk_tier || null,
+      // Carried for the saturation view: open work is what a reviewer still owes an explanation for.
+      current_state: envelope?.current_state || null,
       // Order the series by when the change was judged — the one date every envelope carries.
       at: envelope?.classification?.classified_at || null,
     });
@@ -170,5 +235,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       ? `    ${metric}: ${d.earlier_mean} → ${d.later_mean} (${d.delta > 0 ? '+' : ''}${d.delta})\n`
       : `    ${metric}: not enough history to trend (needs 4 records)\n`);
   }
+
+  // SATURATION — the review resource, counted. Reported; never gated (see the header).
+  const { sla, rows } = collectOutstanding();
+  const sat = saturation(rows, records, { sla });
+  out.write(`\n  SATURATION — ${sat.open_changes} change(s) waiting on an approver${sat.wip_limit === null ? '' : ` (WIP limit ${sat.wip_limit}/role)`}\n`);
+  const roles = Object.entries(sat.per_role).sort((a, b) => b[1].open_changes - a[1].open_changes);
+  if (!roles.length) out.write('    no approver role is carrying open work\n');
+  for (const [role, b] of roles) {
+    out.write(`    ${role.padEnd(24)} ${String(b.open_changes).padStart(3)} open change(s), ${b.outstanding_approvals} approval(s), oldest ${b.oldest_days}d${b.over_target ? `, ${b.over_target} over target` : ''}${b.over_wip_limit ? '  ⚠ OVER WIP LIMIT' : ''}\n`);
+  }
+  const reviewers = Object.entries(sat.per_reviewer).sort((a, b) => b[1].open_changes - a[1].open_changes);
+  if (reviewers.length) {
+    out.write('    per reviewer (open changes carrying a comprehension record they own)\n');
+    for (const [owner, b] of reviewers) out.write(`      ${owner.padEnd(22)} ${String(b.open_changes).padStart(3)} open change(s)\n`);
+  }
+
   out.write('\n  (telemetry, not a gate — the objective is understanding, not throttling AI output)\n');
 }
