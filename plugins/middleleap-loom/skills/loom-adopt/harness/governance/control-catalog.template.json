@@ -924,18 +924,38 @@
       "objective": "Fairness and bias testing of a model whose output affects a customer outcome: declared protected attributes, a measured disparity across them on a representative population, a threshold somebody owns, and a re-test on every material retrain",
       "owner_role": "model-risk",
       "line": 2,
-      "state": "absent",
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/fairness-evaluation-check.mjs",
+      "test_ref": "scripts/fairness-evaluation-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/fairness-evaluations.json",
+        "docs/governance/model-manifest.json",
+        "docs/governance/identities.json",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "product-eval",
       "adopter_side": true,
-      "note": "NAMED, NOT SHIPPED — bank-grade-gap cluster B grades this Absent and rc.46 does not move it. The harness holds no fairness metric, no protected-attribute register and no test rig, and no gate here measures a disparity. The model manifest can carry a fairness evaluation as one more sealed, pin-bound report (HG-0006), but that is a place to PUT a result, not a mechanism that produces one, and grading this control on the strength of it would claim a bias test where only an eval slot exists. Closing it is the adopter's rig, the adopter's representative population, and a threshold the model-risk function owns"
+      "note": "MOVED FROM ABSENT AT 2.0.0, AND ONLY TO mechanically-validated. Everything the rc.46 note said the harness cannot do it still cannot do: it holds NO fairness metric, no test rig and no population, measures no disparity, and cannot detect a proxy. Every number it reads was produced by the adopter's rig and is taken as a declaration — a rig measuring the wrong thing produces a record this gate passes. What changed is that a slot became a JOIN: an evaluation names the model_id and prompt_version it was run against and the gate compares them to the pin in the model manifest, so A RETRAIN THAT MOVES THE PIN INVALIDATES ITS OWN FAIRNESS EVIDENCE (FR-R08) — the mechanical half of 're-tested on every material retrain', and the thing an eval slot could never hold. Alongside it: coverage in both directions (a covered-tier model with no measurement is named, FR-R06), a register whose attributes each carry a legal basis, a threshold with an EXPLICIT direction (a ratio metric fails LOW, and inferring that from the metric name is how a failing model reads green), an owner who resolves to a human outside `builders`, and a report artifact re-hashed. Mandatory-when-compiled on `fairness_evaluation`: inert for a repository whose plans never ask, fail-closed from the first run for one that does. A GREEN GATE MEANS THE RECORD EXISTS, IS BOUND TO THE PIN THAT SHIPS AND SITS UNDER A THRESHOLD ITS OWNER SET — never that the model is fair. What stays adopter-side is what always was: the rig, the representative population, and whether the metric chosen is the one that matters"
     },
     {
       "control_id": "AI-EXPLAINABILITY",
       "objective": "Explainability and contestability of an automated decision: a reason the affected customer can be given, a route by which they can challenge it, and a human with the authority to act on the challenge",
       "owner_role": "model-risk",
       "line": 2,
-      "state": "absent",
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/decision-contestability-check.mjs",
+      "test_ref": "scripts/decision-contestability-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/decision-contestability.json",
+        "docs/governance/model-manifest.json",
+        "docs/governance/identities.json",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "PA2",
       "adopter_side": true,
-      "note": "NAMED, NOT SHIPPED — bank-grade-gap cluster B grades this Absent and rc.46 does not move it. What ships is a REQUIREMENT TO SAY: the ai-decision-system profile compiles an `explainability-and-contestability` PA2 section (and shariah-model restates `ai-disclosure` beside it), so a plan must state how a decision is explained and contested, and product-approval-check verifies the section is present and approved. That is a compiled section a human writes — no gate here generates a reason code, judges whether a reason is intelligible to the person who received it, or routes a contest to anybody. The explanation surface and the contest path are the adopter's runtime"
+      "note": "MOVED FROM ABSENT AT 2.0.0, AND ONLY TO mechanically-validated. The rc.46 note called what shipped 'a REQUIREMENT TO SAY' — the ai-decision-system profile compiles an `explainability-and-contestability` PA2 section and product-approval-check verifies it is present and approved. The hole was that the section was joined to nothing: A PLAN COULD SATISFY IT IN PROSE WHILE A MODEL SHIPPED THAT THE PROSE NEVER MENTIONED. CT-R02 is that join — a covered-tier role in the model manifest with no declared contest route is named. Around it: where the reason actually appears (a reason that exists only in a log is not a reason anybody was given), what the shown reason is DERIVED from (the field most often quietly false — a reason composed from a rules layer that did not make the decision is a plausible sentence about a different process, and the gate cannot tell), a bounded response time, an authority who resolves to a human who is neither an agent nor a builder, and somewhere overturns are recorded so the runtime monitoring can see them. STILL TRUE, AND REPORTED AS A NOTICE ON EVERY RUN FOR EVERY SURFACE (CT-R11): no gate here generates a reason code, judges whether a reason is intelligible to the person who received it, delivers anything to a customer, or routes a contest. The explanation surface and the contest path are the adopter's runtime; this control holds that they were DESIGNED and named, never that they work. KNOWN BOUNDARY, named rather than left to be discovered: the capability compiles from products/ai-decision-system ONLY. products/shariah-model restates `ai-disclosure` on the reasoning that a Shari'ah-significant model may ship without ai-decision-system being named and the customer's right to be told is not conditional on which profiles an envelope happened to list — the same argument reaches contestability, and 2.0.0 does not act on it. An institution deploying a deciding model under a profile that does not name this capability arms neither gate; naming all applicable product profiles on the envelope is the adopter's act, as it already is for disclosure"
     },
     {
       "control_id": "SELF-CLAIMS",

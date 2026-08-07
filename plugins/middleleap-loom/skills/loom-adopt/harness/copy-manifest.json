@@ -363,6 +363,22 @@
       "tier": "full"
     },
     {
+      "source": "governance/fairness-evaluations.template.json",
+      "dest": "docs/governance/fairness-evaluations.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The protected-attribute register and the disparity measurements taken against it. GOVERNED, not full: the join partners (model-manifest.json, identities.json) are both core, and a model deciding about people is not a specialist product the way an Islamic facility is. THE HARNESS MEASURES NOTHING — every number is the adopter's rig, read as a declaration. What the gate holds that a filled-in slot cannot: the measurement is bound to the model pin that ships, so a retrain invalidates its own evidence. Mandatory once a compiled plan requires the fairness_evaluation capability (ai-decision-system, from medium), silent otherwise",
+      "tier": "governed"
+    },
+    {
+      "source": "governance/decision-contestability.template.json",
+      "dest": "docs/governance/decision-contestability.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Where a person is told why, how they challenge it, and the human who can overturn it — the join the `explainability-and-contestability` PA2 section never had, since a plan could satisfy that section in prose while a model shipped the prose never mentioned. GOVERNED for the same reason as the fairness register beside it. Nothing here generates a reason, judges whether one is intelligible, or routes a contest; the gate reports that limit on every run. Mandatory once a compiled plan requires the decision_contestability capability, silent otherwise",
+      "tier": "governed"
+    },
+    {
       "source": "governance/knowledge-pins.template.json",
       "dest": "docs/governance/knowledge-pins.json",
       "kind": "file",
