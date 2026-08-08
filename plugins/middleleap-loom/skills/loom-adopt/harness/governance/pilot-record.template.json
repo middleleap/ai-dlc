@@ -14,9 +14,9 @@
     }
   ],
   "scope_bound": {
-    "_comment": "ADOPT: what makes this pilot BOUNDED. The playbook's first characteristic is capped exposure; these are the caps. The gate reads that they are stated and numeric where numeric is meaningful — it has no way to observe whether they held.",
-    "max_customers": "ADOPT: a positive number — the cohort ceiling.",
-    "max_transaction_value": "ADOPT: a positive number in your reporting currency, or the value cap that applies. State the currency in `scope_note`.",
+    "_comment": "ADOPT: what makes this pilot BOUNDED. The playbook's first characteristic is capped exposure; these are the caps. The gate reads that they are STATED — it has no way to observe whether they held. ZERO IS A REAL ANSWER and often the correct one: a stage-1 synthetic rehearsal has no customers and moves no money, and stage 2 is internal users with no external customers. What the gate refuses is an absent or non-numeric cap (an unstated ceiling is not a bound) and a ZERO cap at a stage where the exposure demonstrably exists — customers from stage 3, transaction value from stage 4.",
+    "max_customers": "ADOPT: a number >= 0 — the cohort ceiling. 0 through stages 1-2; a real number from stage 3, where real users first appear.",
+    "max_transaction_value": "ADOPT: a number >= 0 in your reporting currency, or the value cap that applies; state the currency in `scope_note`. 0 through stage 3, which the playbook defines as having NO financial execution; a real number from stage 4.",
     "scope_note": "ADOPT: what the pilot covers and — more usefully — what it explicitly does not. 'Not autonomous core posting on day one' is the playbook's example.",
     "financial_execution": "ADOPT: true or false. False through stage 3 by the playbook's own staging: a staff/customer beta has real users and NO financial execution. The gate reports a pilot that claims financial execution before stage 4."
   },

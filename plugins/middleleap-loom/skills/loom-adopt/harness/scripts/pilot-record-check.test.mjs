@@ -100,10 +100,48 @@ test('PL-R04 — the team running the pilot does not authorise its own advance',
   }
 });
 
-test('PL-R05 — bounded means numbers, and money does not move before stage 4', () => {
+test('PL-R05 — ZERO IS A REAL CAP before the exposure exists (the defect a real rehearsal found)', () => {
+  // A stage-1 synthetic rehearsal has no customers and moves no money. Requiring a POSITIVE cap
+  // there left an adopter two options — fabricate a number, or not declare the pilot — which is
+  // the rule making its own honest answer unwritable. Zero must pass at stage 1.
+  const rehearsal = record({
+    stage: 1,
+    stage_exits: [],
+    scope_bound: { max_customers: 0, max_transaction_value: 0, scope_note: 'Synthetic rehearsal; nothing deployed.', financial_execution: false },
+  });
+  const r = evaluate(rehearsal, ctx);
+  assert.deepEqual(r.findings.filter((f) => /PL-R05/.test(f)), [], r.findings.join('\n'));
+  // Stage 2 is internal users with no external customers — still zero.
+  const internal = { ...rehearsal, stage: 2, stage_exits: [exit_()] };
+  assert.deepEqual(evaluate(internal, ctx).findings.filter((f) => /PL-R05/.test(f)), []);
+});
+
+test('PL-R05 — but a ZERO cap where the exposure exists is a finding', () => {
+  const exits = [exit_(), exit_({ stage: 2 })];
+  // Stage 3: real users, so a zero customer cap says the pilot is bounded to nothing while it
+  // demonstrably is not. Transaction value may still be zero — stage 3 has no financial execution.
+  const s3 = record({ stage: 3, stage_exits: exits, scope_bound: { max_customers: 0, max_transaction_value: 0, scope_note: 'beta', financial_execution: false } });
+  const r3 = evaluate(s3, ctx).findings.filter((f) => /PL-R05/.test(f));
+  assert.equal(r3.length, 1, r3.join('\n'));
+  assert.ok(/max_customers is 0 at stage 3/.test(r3[0]), r3[0]);
+  // Stage 4: money moves, so a zero value cap is a finding too.
+  const s4 = record({ stage: 4, stage_exits: [...exits, exit_({ stage: 3 })], scope_bound: { max_customers: 10, max_transaction_value: 0, scope_note: 'cohort', financial_execution: true } });
+  assert.ok(evaluate(s4, ctx).findings.some((f) => /PL-R05.*max_transaction_value is 0 at stage 4/.test(f)));
+});
+
+test('PL-R05 — a cap declared BEFORE its exposure exists is a notice, never a block', () => {
+  const early = record({ stage: 1, stage_exits: [], scope_bound: { max_customers: 50, max_transaction_value: 0, scope_note: 'x', financial_execution: false } });
+  const r = evaluate(early, ctx);
+  assert.deepEqual(r.findings.filter((f) => /PL-R05/.test(f)), [], r.findings.join('\n'));
+  assert.ok(r.notices.some((n) => /PL-R05.*max_customers is 50 at stage 1.*stage number is behind/.test(n)), r.notices.join('\n'));
+});
+
+test('PL-R05 — an unstated cap is still a finding: an unstated ceiling is not a bound', () => {
   for (const key of ['max_customers', 'max_transaction_value']) {
-    const bad = record({ scope_bound: { ...record().scope_bound, [key]: 0 } });
-    assert.ok(evaluate(bad, ctx).findings.some((f) => /PL-R05/.test(f)), key);
+    for (const bad of [undefined, null, 'lots', -1, NaN]) {
+      const doc = record({ scope_bound: { ...record().scope_bound, [key]: bad } });
+      assert.ok(evaluate(doc, ctx).findings.some((f) => /PL-R05/.test(f)), `${key}=${JSON.stringify(bad)}`);
+    }
   }
   const early = record({ stage: 3, stage_exits: [exit_(), exit_({ stage: 2 })], scope_bound: { ...record().scope_bound, financial_execution: true } });
   assert.ok(evaluate(early, ctx).findings.some((f) => /PL-R05.*financial_execution at stage 3/.test(f)));

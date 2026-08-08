@@ -32,8 +32,11 @@
 //           exists to prevent, and the jump is invisible unless the exits are enumerated
 //   PL-R04  a stage exit with no date, no evidence, or an `approved_by` who does not resolve to
 //           a human outside `builders` — the team running the pilot does not decide it may widen
-//   PL-R05  scope bounds absent or non-numeric, or `financial_execution: true` before stage 4 —
-//           the playbook's own staging puts real users with NO financial execution at stage 3
+//   PL-R05  scope bounds absent or non-numeric; a cap of ZERO at a stage where the exposure it
+//           caps exists; or `financial_execution: true` before stage 4 — the playbook's own
+//           staging puts real users with NO financial execution at stage 3. Zero is a legitimate
+//           cap BELOW those stages, and demanding a positive one there was a defect that made
+//           the honest answer unwritable (found by filling this record for a real rehearsal)
 //   PL-R06  no reversibility `route`; or, at stage 4+, no `drilled_on`. Capped production
 //           exposure with an unexercised rollback is precisely the R3 case
 //   PL-R07  supervision: a `second_line_observer` or `accountable_executive` who does not
@@ -72,6 +75,9 @@ export const OUTCOMES = new Set(['held', 'failed', 'partial']);
 export const DISPOSITIONS = new Set(['open', 'resolved', 'risk-accepted']);
 /** The stage at which real money moves. Below it the playbook forbids financial execution. */
 export const FINANCIAL_EXECUTION_STAGE = 4;
+// The stage at which REAL USERS first appear. Stage 1 is synthetic and stage 2 is controlled
+// internal users with no external customers, so a customer cap of 0 is correct below this.
+export const CUSTOMER_EXPOSURE_STAGE = 3;
 export const MAX_STAGE = 6;
 
 const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
@@ -79,6 +85,8 @@ const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
 export const isPlaceholder = (v) => typeof v === 'string' && /^ADOPT[\s:—-]/i.test(v.trim());
 const stated = (v) => nonEmpty(v) && !isPlaceholder(v);
 const positive = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+/** A stated cap. Zero is a real answer before the exposure exists; absent is not. */
+const nonNegative = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
 const isDate = (v) => stated(v) && /^\d{4}-\d{2}-\d{2}$/.test(v.trim());
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 
@@ -162,9 +170,33 @@ export function evaluate(doc, { playbook = null, registry = null } = {}) {
   }
 
   // PL-R05 — what makes it bounded.
+  //
+  // ZERO IS A LEGITIMATE CAP, AND REQUIRING A POSITIVE ONE WAS A DEFECT (found by filling this
+  // record for a real stage-1 rehearsal). A synthetic rehearsal has no customers and moves no
+  // money — that is what makes it synthetic — and stage 2 is internal users with no external
+  // customers. Demanding a positive number there left an adopter two options: fabricate one, or
+  // not declare the pilot. A rule that makes the honest answer impossible manufactures the
+  // dishonesty it was meant to prevent, which is the same failure as a retention entry claiming
+  // an archive nobody could name.
+  //
+  // So the cap must be STATED at every stage — an absent or non-numeric one is still a finding,
+  // because an unstated ceiling is not a bound — and must be POSITIVE only from the stage at
+  // which the exposure it caps actually exists. Below that, a non-zero cap is reported: it
+  // usually means the stage number is wrong, which is worth a look and never worth a block.
   const scope = doc?.scope_bound && typeof doc.scope_bound === 'object' ? doc.scope_bound : null;
-  if (!positive(scope?.max_customers)) say(`PL-R05: scope_bound.max_customers is ${JSON.stringify(scope?.max_customers)}, not a positive number — "bounded" is the pilot's first characteristic and an unstated cohort ceiling is not a bound`);
-  if (!positive(scope?.max_transaction_value)) say(`PL-R05: scope_bound.max_transaction_value is ${JSON.stringify(scope?.max_transaction_value)}, not a positive number — capped exposure is a number or it is a hope`);
+  for (const [key, from, what] of [
+    ['max_customers', CUSTOMER_EXPOSURE_STAGE, 'real users first appear at stage 3 (staff/customer beta); stages 1-2 are synthetic and internal'],
+    ['max_transaction_value', FINANCIAL_EXECUTION_STAGE, `money first moves at stage ${FINANCIAL_EXECUTION_STAGE} (capped production cohort); stage 3 is explicitly no financial execution`],
+  ]) {
+    const v = scope?.[key];
+    if (!nonNegative(v)) {
+      say(`PL-R05: scope_bound.${key} is ${JSON.stringify(v)} — state a number. Zero is a legitimate and expected answer before stage ${from}; absent is not, because an unstated ceiling is not a bound`);
+    } else if (stageOk && stage >= from && v === 0) {
+      say(`PL-R05: scope_bound.${key} is 0 at stage ${stage}, where the exposure it caps exists — ${what}. A zero cap here says the pilot is bounded to nothing while it is demonstrably not`);
+    } else if (stageOk && stage < from && v > 0) {
+      notices.push(`PL-R05: scope_bound.${key} is ${v} at stage ${stage}, before the exposure it caps exists — ${what}. Reported, never enforced: it usually means the stage number is behind what the pilot is actually doing`);
+    }
+  }
   if (!stated(scope?.scope_note)) say('PL-R05: scope_bound.scope_note is empty — say what the pilot covers and, more usefully, what it explicitly does not');
   if (scope?.financial_execution === true && stageOk && stage < FINANCIAL_EXECUTION_STAGE) {
     say(`PL-R05: the pilot claims financial_execution at stage ${stage} — the playbook's staging puts real users with NO financial execution at stage 3, and money moves at stage ${FINANCIAL_EXECUTION_STAGE}. Either the stage is wrong or the pilot has outrun its own plan`);
