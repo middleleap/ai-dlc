@@ -57,9 +57,9 @@ bundle's reach, is in one place.
 <!-- LOOM:SCORECARD:START -->
 | Mechanically validated | Defined | Absent | Platform enforced | Organisationally enforced |
 |---|---|---|---|---|
-| 75 | 8 | 9 | 0 | 0 |
+| 78 | 8 | 7 | 0 | 0 |
 
-_Generated from the control catalog (92 controls; 16 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
+_Generated from the control catalog (93 controls; 17 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
 <!-- LOOM:SCORECARD:END -->
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
@@ -144,10 +144,23 @@ hash-chained, tamper-evident, completeness-checked, commit-bound and SEMANTICALL
 | Independent model validation function | Defined | `validated_by` + the `model-risk-reviewer` challenge agent ship; the org-separate MRM *function* is the adopter's |
 | Production drift monitoring | Defined | The model manifest now REQUIRES runtime monitoring/suspension/fallback declarations at high tier (`model-provenance-check`, 2.0-rc); executing the live monitoring is the adopter's model-risk function |
 | Replayable decision log | **Mechanically validated** | — (`decision-log-check.mjs`, 2.0-rc: an append-only hash chain of the agent's decisions; CAPTURE is the adopter's harness wiring) |
-| Fairness/bias testing · explainability · AI incident runbook | Absent | Where applicable to the use case |
+| Fairness/bias testing | **Mechanically validated** | — (`fairness-evaluation-check.mjs`, 2.0.0: a protected-attribute register, a threshold with an owner who resolves, and a measurement per attribute **bound to the shipping model pin**, so a retrain invalidates its own evidence). The rig, the population and the choice of metric are the adopter's — **no disparity is measured here** |
+| Explainability · contestability | **Mechanically validated** | — (`decision-contestability-check.mjs`, 2.0.0: every covered-tier model in the manifest names where the reason appears, how it is challenged and a human who can overturn). The `explainability-and-contestability` PA2 section always required a plan to *say* this; the gate is the join that stops a model shipping which the prose never mentioned. **No reason is generated, judged or delivered here, and no contest is routed** |
+| AI incident runbook | Defined | The runbook ships (`ai-incident-runbook.md`, rc.46) and each of its mechanical steps hangs on a control that exists. **Nothing here watches a live model, evaluates a production output, pages a human or moves money** — running the path is the adopter's |
 
 The agent *is a model*. This cluster was the gap most specific to an AI-driven harness and the
-least addressed; roadmap Step 2 moved provenance from *absent* to *mechanically validated*.
+least addressed; roadmap Step 2 moved provenance from *absent* to *mechanically validated*, and
+2.0.0 closed the last two — which is what emptied this cluster's *Absent* column.
+
+Read those two grades precisely, because the distance between them and the words in the first
+column is where this table would otherwise mislead. Both gates read **records**. They hold
+composition (the register names attributes; the surface names a route), provenance (the owner and
+the authority resolve to humans who are neither agents nor builders), binding (a measurement cites
+the model and prompt pin that ships) and coverage (a deciding model with no entry is named, not
+skipped). None of that is a bias test or an explanation. A rig measuring the wrong thing produces a
+fairness record these gates pass, and a contest path that is designed but broken produces a
+contestability record they pass too. *Mechanically validated* means a mechanism exists and cannot be
+overstated — never that the risk is controlled.
 
 *Shipped machinery (loom-adopt harness):* a `model-manifest.json` inventory seam +
 `model-provenance-check.mjs` — an HG-0006 CI gate that fails a release unless every model role
@@ -216,7 +229,7 @@ drills and DAST/pentest (catalogued as `DAST-PENTEST`).
 |---|---|---|
 | Named accountable officer (HG-0010) | Defined | Appoint and document the Senior Manager |
 | Senior-manager regime · board oversight · RACI | Absent | The governance operating model around the loop |
-| Supervised production pilot | Absent | A real, supervised run on non-synthetic scope |
+| Supervised production pilot | Absent | A real, supervised run on non-synthetic scope. **2.0.0 built the instrument, not the proof**: `pilot-record-check.mjs` (PILOT-CONDUCT) makes a *declared* pilot bounded, staged, observed and reversible, and stops it concluding while any `live` row of the playbook's adversarial checklist is unexercised. That is a separate control with its own grade. This row closes when a pilot has **run** |
 | Legacy / core-banking integration patterns | Absent | The integration cost the demo never paid |
 | Live regulator examination | Absent | The proof the method has not yet earned |
 

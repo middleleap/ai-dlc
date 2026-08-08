@@ -363,6 +363,30 @@
       "tier": "full"
     },
     {
+      "source": "governance/pilot-record.template.json",
+      "dest": "docs/governance/pilot-record.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The record of a declared supervised pilot — stage, caps, supervisor, rollback drill, and which adversarial rows from the playbook have been exercised. CORE, because the playbook it belongs to is core and now points at it; a core adopter who reads the playbook must find the file it names. Costs nothing until used: the gate arms on `status: active`, not on the file's presence, so an untouched copy is silent forever. THE HARNESS RUNS NO PILOT AND OBSERVES NO PRODUCTION — it reads the record, and SUPERVISED-PILOT stays Absent until a pilot has actually run",
+      "tier": "core"
+    },
+    {
+      "source": "governance/fairness-evaluations.template.json",
+      "dest": "docs/governance/fairness-evaluations.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The protected-attribute register and the disparity measurements taken against it. GOVERNED, not full: the join partners (model-manifest.json, identities.json) are both core, and a model deciding about people is not a specialist product the way an Islamic facility is. THE HARNESS MEASURES NOTHING — every number is the adopter's rig, read as a declaration. What the gate holds that a filled-in slot cannot: the measurement is bound to the model pin that ships, so a retrain invalidates its own evidence. Mandatory once a compiled plan requires the fairness_evaluation capability (ai-decision-system, from medium), silent otherwise",
+      "tier": "governed"
+    },
+    {
+      "source": "governance/decision-contestability.template.json",
+      "dest": "docs/governance/decision-contestability.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "Where a person is told why, how they challenge it, and the human who can overturn it — the join the `explainability-and-contestability` PA2 section never had, since a plan could satisfy that section in prose while a model shipped the prose never mentioned. GOVERNED for the same reason as the fairness register beside it. Nothing here generates a reason, judges whether one is intelligible, or routes a contest; the gate reports that limit on every run. Mandatory once a compiled plan requires the decision_contestability capability, silent otherwise",
+      "tier": "governed"
+    },
+    {
       "source": "governance/knowledge-pins.template.json",
       "dest": "docs/governance/knowledge-pins.json",
       "kind": "file",
