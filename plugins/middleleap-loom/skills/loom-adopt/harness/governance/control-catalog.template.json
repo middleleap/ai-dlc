@@ -899,7 +899,25 @@
       "line": 1,
       "state": "absent",
       "adopter_side": true,
-      "note": "The bundle ships the pilot playbook + adversarial checklist (runbooks/pilot-playbook.md); running it is the adopter's"
+      "note": "STILL ABSENT AT 2.0.0, AND DELIBERATELY. This control is an EVENT — a pilot that ran, in production, on real customers — and no file makes an event have happened. 2.0.0 built the INSTRUMENT beside it (PILOT-CONDUCT, scripts/pilot-record-check.mjs): a declared pilot is now bounded, staged, observed, reversible and unable to conclude while the playbook's adversarial rows are unexercised. That is a different control and it is graded separately. GRADING THIS ONE ON THE INSTRUMENT WOULD BE THE EXACT SUBSTITUTION THE CATALOG'S GRAMMAR EXISTS TO PREVENT: a green gate over an empty pilot is still an empty pilot, and every other state in this file would be worth less if this row were bought with a JSON template. It closes when a pilot has run and its independent report exists — not before, and not by anything a repository can contain"
+    },
+    {
+      "control_id": "PILOT-CONDUCT",
+      "objective": "A DECLARED pilot is governable: it stays inside published caps, advances only by recorded stage exits somebody outside the build team approved, is observed at a stated cadence by a second line that is not running it, carries a rollback route somebody drilled before production exposure, and cannot declare an exit while any adversarial row in the playbook carrying a live obligation is unexercised",
+      "owner_role": "accountable-executive",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/pilot-record-check.mjs",
+      "test_ref": "scripts/pilot-record-check.test.mjs",
+      "doc_ref": "docs/governance/runbooks/pilot-playbook.md",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/pilot-record.json",
+        "docs/governance/runbooks/pilot-playbook.md",
+        "docs/governance/identities.json"
+      ],
+      "adopter_side": true,
+      "note": "NEW AT 2.0.0, and it is the instrument for SUPERVISED-PILOT rather than a substitute for it — read that row too. THE RULE THAT EARNS THE GRADE is PL-R08, a join rather than a field check: the gate parses the adversarial table in runbooks/pilot-playbook.md ITSELF — not a copy of it — and requires an exercise entry for every AX row whose status carries `live`. Adding a row to the playbook creates an outstanding obligation on the running pilot the moment it is written, and the pilot cannot reach `concluded` while any remain. The playbook's own exit criterion ('every live row exercised at least once') was, until now, tracked in NO FILE AT ALL — the same defect discovery-sync.json exists to fix: a debt nobody wrote down is a debt nobody pays. While the pilot is `active` the outstanding rows are a NOTICE, because a pilot in flight is supposed to have them; that is what it is for. Around the join: stage monotonicity (a pilot that jumped from synthetic rehearsal to a production cohort skipped the criteria staging exists to test), numeric caps, no financial execution before stage 4, a drilled rollback once production exposure begins, an observer and an accountable executive who resolve to humans outside `builders`, risk acceptance reserved to the executive alone, and an independent report whose author is not a builder. ARMED BY CONTENT, NOT PRESENCE and not by a compiled capability — a pilot is not a property of any change's control plan, so nothing can compile it; `status: active` is the adopter's declaration and the gate is inert until it is set, so mounting the template can never fail anybody. THE HARNESS RUNS NOTHING AND OBSERVES NOTHING: every date, exercise, observation and finding is human-written and read as a declaration, and a pilot that went badly and was recorded tidily passes every rule here. PL-R14 says so as a notice on every armed run"
     },
     {
       "control_id": "LIVE-EXAM",

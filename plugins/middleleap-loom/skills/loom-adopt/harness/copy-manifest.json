@@ -363,6 +363,14 @@
       "tier": "full"
     },
     {
+      "source": "governance/pilot-record.template.json",
+      "dest": "docs/governance/pilot-record.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The record of a declared supervised pilot — stage, caps, supervisor, rollback drill, and which adversarial rows from the playbook have been exercised. CORE, because the playbook it belongs to is core and now points at it; a core adopter who reads the playbook must find the file it names. Costs nothing until used: the gate arms on `status: active`, not on the file's presence, so an untouched copy is silent forever. THE HARNESS RUNS NO PILOT AND OBSERVES NO PRODUCTION — it reads the record, and SUPERVISED-PILOT stays Absent until a pilot has actually run",
+      "tier": "core"
+    },
+    {
       "source": "governance/fairness-evaluations.template.json",
       "dest": "docs/governance/fairness-evaluations.json",
       "kind": "file",

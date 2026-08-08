@@ -57,9 +57,9 @@ bundle's reach, is in one place.
 <!-- LOOM:SCORECARD:START -->
 | Mechanically validated | Defined | Absent | Platform enforced | Organisationally enforced |
 |---|---|---|---|---|
-| 77 | 8 | 7 | 0 | 0 |
+| 78 | 8 | 7 | 0 | 0 |
 
-_Generated from the control catalog (92 controls; 16 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
+_Generated from the control catalog (93 controls; 17 flagged `adopter_side`) by `scripts/generate-scorecard.mjs`. The catalog is the state of record — do not edit this block by hand; run `node scripts/doc-integrity-check.mjs --fix`._
 <!-- LOOM:SCORECARD:END -->
 
 **Platform enforced: 0 as shipped. Organisationally enforced: 0 as shipped.** A bundle cannot
@@ -229,7 +229,7 @@ drills and DAST/pentest (catalogued as `DAST-PENTEST`).
 |---|---|---|
 | Named accountable officer (HG-0010) | Defined | Appoint and document the Senior Manager |
 | Senior-manager regime · board oversight · RACI | Absent | The governance operating model around the loop |
-| Supervised production pilot | Absent | A real, supervised run on non-synthetic scope |
+| Supervised production pilot | Absent | A real, supervised run on non-synthetic scope. **2.0.0 built the instrument, not the proof**: `pilot-record-check.mjs` (PILOT-CONDUCT) makes a *declared* pilot bounded, staged, observed and reversible, and stops it concluding while any `live` row of the playbook's adversarial checklist is unexercised. That is a separate control with its own grade. This row closes when a pilot has **run** |
 | Legacy / core-banking integration patterns | Absent | The integration cost the demo never paid |
 | Live regulator examination | Absent | The proof the method has not yet earned |
 
