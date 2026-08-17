@@ -99,20 +99,16 @@ questions):
 **Branches:** `main` is published/authoritative. Other branches are drafts of future content
 (e.g. a forthcoming `v2.2`) and are not authoritative until Nebras announces ecosystem review.
 
-**Website spec branch:** the community site does NOT necessarily render specs from `main` — it
-pins a branch in `community-standards/.specs-branch` (raw fetch it to check; value on 10 Jun 2026:
-`caap-refactor`, which carries the CAAP Operations spec not yet on `main`). When the site and
-`main` disagree, check this file first. Two nuances
-([compare view](https://github.com/Nebras-Open-Finance/api-specs/compare/main...caap-refactor)):
-
-- **CAAP Operations is a rename of User Operations** — the branch's single unique commit renames
-  `main`'s `uae-ozone-connect-user-operations-openapi.yaml` to
-  `uae-ozone-connect-caap-operations-openapi.yaml` (expanded with accounts + insurance-policy
-  GETs; data-sharing and insurance specs correspondingly slimmed). Same artifact, refactored: on
-  the site user-operations no longer exists as a spec; on `main` the reverse. Don't look for both.
-- **The branch is not stale on errata:** it sits 1 ahead / 2 behind `main`, but the missing
-  commits are only the errata2 merge commits — the **errata2 content is fully present on the
-  branch**, so the rendered site reflects current errata.
+**Website spec branch — RESOLVED (17 Aug 2026):** the `caap-refactor` divergence has landed on
+`main`. `dist/ozone-connect/v2.1.x/uae-ozone-connect-caap-operations-openapi.yaml` now exists on
+`main` (title "Ozone Connect - UAE CAAP Operations API Description", `info.version` **v2.1.4**,
+including the accounts + per-line insurance-policy GETs), and
+`uae-ozone-connect-user-operations-openapi.yaml` is **gone (404)** — CAAP Operations is the rename
+of User Operations; don't look for both. The `community-standards/.specs-branch` pin file has
+also been **removed (404)**, i.e. the site builds specs from `main` again. Historical note: from
+~Jun–Jul 2026 the site rendered the `caap-refactor` branch via `.specs-branch` while `main` still
+carried user-operations — if that pin file ever reappears, raw-fetch it and treat its branch as
+what the site shows.
 
 **Viewing a spec nicely:** paste the raw YAML URL into the Redocly viewer
 (`https://redocly.github.io/redoc/`).
@@ -193,12 +189,13 @@ reference specs under `open-api-standards/`.
 Setup, environment URLs, certificate/key items, collection variables, and the
 `x-fapi-interaction-id` rule are detailed in `technical-specs.md` (and section 7 below).
 
-**Pending change (10 Jun 2026):** unmerged branch
+**Pending change (10 Jun 2026; merge status NOT re-verifiable on 17 Aug 2026 — GitHub API
+rate-limited):** branch
 [`fix/api-hub-and-hh-endpoints`](https://github.com/Nebras-Open-Finance/postman/tree/fix/api-hub-and-hh-endpoints)
 (commit 8 Jun 2026, "fix CM variable and HH requests") rewrites ~4,500 lines across **both**
-collections (Consent Manager variable + Headless Heimdall requests). `main` is unchanged since
-22 May 2026, but a material update is queued — **pull the latest collections (and check whether
-this branch has merged) before any certification run.**
+collections (Consent Manager variable + Headless Heimdall requests). A material update is/was
+queued — **pull the latest collections (and check whether this branch has merged) before any
+certification run.**
 
 ---
 

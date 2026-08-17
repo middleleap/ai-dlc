@@ -102,6 +102,8 @@ Three phases: **A — Pre-production build & integrate · B — Certification ·
 
 **API Hub onboarding logistics:** managed through the Nebras Service Desk — email `support@nebrasopenfinance.ae` ("API Hub Onboarding Request — [Org] — [Environment]") naming a **Primary Technical Contact (PTC)**; Nebras raises tickets per stage. Three stages: (1) Prerequisites Questionnaire, (2) Application Layer Authentication — choose from mTLS Only / API Key / Client Credentials Grant / **JWT Auth (recommended)**, (3) Environment-Specific Configuration (certificates, URLs, domain values — repeated per environment).
 
+**Onboarding operations, SLAs & the Nebras Support Portal (Interaction Guide v5.0, Jun 2026 — full digest in `nebras-interaction-guide.md`):** the support portal is a Jira customer portal with **SSO via the Trust Framework Sandbox** (PBC/PTC access; SBC = sandbox-only read-only role). Onboarding SLA: 10-min first response · PBC/PTC onboarded to platform 5 days · system-admin access 5 days · escalation review 5 days — contingent on the CCO's PBC nomination, CBUAE licence validation, and **Docusign signature of the Individual + Organizational T&Cs within 30 days**. Flow: nominated user registers in the AlTareq TF Sandbox → Docusign → Nebras Operations verification against CBUAE records → **PBC promoted to Organization Admin** → Org Admin registers the rest. Production onboarding mirrors sandbox (PBC must match sandbox or carry a fresh CCO nomination); an LFI wanting production **BDSP/BSIP (TPP-style) roles** must first submit a **TPP Self-Attestation** (and a Self-testing Acknowledgment for production self-testing).
+
 ## Trust Framework Operations
 
 > Source: `https://nebras-open-finance.com/tech/lfi-api-hub/trust-framework/` (29 pages), verified 10 June 2026.
@@ -260,7 +262,7 @@ Each API Hub instance exposes **one authorization endpoint**, so SME/corporate p
 | Performance / availability | 99.5% uptime; 500ms API response; 3s payment execution; 500ms payment status (per Standards Operational Requirements — see SKILL.md SLAs) |
 | Change management | **30-day notice for breaking changes; dual running mandatory** during version transitions (zero-downtime migration) |
 | Release tracking | Track [Release Notes & Erratas](https://nebras-open-finance.com/tech/release-notes-and-erratas/) — Release Notes = platform deployments (API Hub, Trust Framework); Erratas = doc corrections. Plan version-upgrade work against the API Hub release schedule |
-| Incident & support | Nebras Service Desk / `support@nebrasopenfinance.ae`; incident response + on-call required before live proving (step 9 prerequisite) |
+| Incident & support | Nebras Service Desk / `support@nebrasopenfinance.ae` · 24/7 incident line +971 4 328 2979 · escalations@nebrasopenfinance.ae; service-desk SLAs, incident priorities (P1–P4), dispute + billing processes: `nebras-interaction-guide.md`. Incident response + on-call required before live proving (step 9 prerequisite) |
 | Monitoring | Error mapping, audit logging, observability confirmed before production validation (step 7) |
 | Certificate lifecycle | Rotate transport/signing certificates per the certificate-rotation guide without interrupting service |
 

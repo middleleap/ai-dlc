@@ -1,20 +1,20 @@
 ---
 name: open-finance-uae
-description: Expert guidance on UAE Open Finance regulatory requirements, Al Tareq platform integration, CBUAE compliance, and Standards versions/errata (current v2.1-final + errata3). Use when working on UAE Open Finance projects including TPP licensing, LFI obligations, API specs (Bank Data Sharing, Bank Service Initiation, Insurance), consent management, security (FAPI 2.0, mTLS, SCA, partial encryption, certificate rotation), liability frameworks, Nebras platform operations, CAAP authentication, and AlTareq brand/CX (consent screen design, payment buttons, progress bar, CX certification). Triggers on queries about CBUAE regulations, Al Tareq, Nebras, Open Finance UAE, TPP/LFI requirements, deemed licenses, standards versions, errata, payment initiation, data sharing, multi-payments, bulk payments, dynamic account opening, Ozone Connect, API Hub resource server, PSU consent lifecycle, Postman collections, OpenAPI spec fetching/errata resolution, "Pay by bank using AlTareq", and UAE financial services API compliance.
+description: Expert guidance on UAE Open Finance — CBUAE regulation and compliance, Al Tareq platform integration, and Standards versions/errata (current v2.1-final + errata3). Use for TPP licensing, LFI obligations, API specs (Bank Data Sharing, Bank Service Initiation, Insurance), consent management, security (FAPI 2.0, mTLS, SCA, partial encryption, certificate rotation), liability, pricing, Nebras operations (service desk, SLAs, incidents, disputes, billing, change management/CAB per the Interaction Guide v5.0), CAAP authentication, and AlTareq brand/CX (consent screens, CX certification). Triggers on CBUAE regulations, Al Tareq, Nebras, Open Finance UAE, TPP/LFI requirements, deemed licenses, standards versions, errata, payment initiation, data sharing, multi-payments, bulk payments, dynamic account opening, Ozone Connect, API Hub, PSU consent lifecycle, Postman collections, OpenAPI spec fetching/errata resolution, "Pay by bank using AlTareq", and UAE financial services API compliance.
 ---
 
 # UAE Open Finance Expert
 
 Expert knowledge base for UAE's Open Finance ecosystem covering CBUAE regulations, Standards versions (v2.1-final production, errata3 current), Al Tareq platform requirements, implementation guidance, testing/certification, commercial model, roadmap, and CAAP authentication.
 
-> **Last verified against sources: 13 July 2026 (version/errata pass; full audit 10 June 2026).** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py`.
+> **Last verified against sources: 17 August 2026 (full source re-verification; prior passes 13 Jul / 10 Jun 2026).** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py`.
 
 ## Quick Reference
 
 | Aspect | Detail |
 |--------|--------|
 | Regulation | CBUAE Circular C 03/2025 (10 July 2025) |
-| Current Standards | **v2.1-final** (base 7 Jan 2026) + **errata3** (register-published by 13 Jul 2026; scope: intl-payments creditor, 2 specs) |
+| Current Standards | **v2.1-final** (base 7 Jan 2026) + **errata3** (effective 30 Jun 2026 doc-level / 8 Jul 2026 spec register; scope: intl-payments creditor) |
 | Post-Publication Register | Release Notes (platform deployments) + Errata (doc corrections); current errata = **v2.1-errata3** (auth-endpoints + bank-initiation only; other specs resolve to errata2/errata1/base) |
 | API Hub Version | **v8** (current; v7 = v2.0, v6 = v1.2 legacy) |
 | Platform | Al Tareq (consumer brand) / Nebras (operator) |
@@ -24,7 +24,7 @@ Expert knowledge base for UAE's Open Finance ecosystem covering CBUAE regulation
 | TPP Capital | AED 1,000,000 minimum |
 | API Hub Capital | AED 20,000,000 minimum |
 | SLAs | 99.5% uptime · 500ms API response · 3s payment execution · 5s FX quote · 500ms payment status (canonical table: `references/technical-specs.md` — update there first) |
-| Support | support@nebrasopenfinance.ae / Service Desk Portal |
+| Support | support@nebrasopenfinance.ae / Nebras Support Portal (Jira, TF-sandbox SSO) · 24/7 incidents +971 4 328 2979 · escalations@ / billing@ nebrasopenfinance.ae · SLAs & disputes: `references/nebras-interaction-guide.md` (Interaction Guide v5.0, Jun 2026) |
 
 ## Architecture Invariants (never violate these)
 
@@ -69,7 +69,7 @@ The UAE model is **centralised** — do not import UK/EU Open Banking assumption
 | v2.0-final | Apr 2025 | Superseded (still in heavy live use) | v7 |
 | **v2.1-final** | **Jan 7 2026** | **✓ CURRENT PRODUCTION** | **v8** |
 | v2.1-errata2 | 7 May 2026 | Superseded per-file by errata3 (17 corrections) | v8 |
-| **v2.1-errata3** | **by 13 Jul 2026** | **✓ CURRENT ERRATA** (2 corrections: intl-payments creditor, SWIFT SR2026; auth-endpoints + bank-initiation only) | v8 |
+| **v2.1-errata3** | **30 Jun / 8 Jul 2026** | **✓ CURRENT ERRATA** (2 corrections: intl-payments creditor, SWIFT SR2026; auth-endpoints + bank-initiation only) | v8 |
 
 **Errata model:** once published, a version's content MUST NOT change without an Errata record. **Release Notes** capture platform deployments that change participant-facing behaviour; **Errata** capture documentation corrections. Use v2.1-final + errata3 for all new builds — but confirm the counterparty's live version first (see live-traffic note above). Full version comparison, errata detail, and migration guidance: `references/standards-versions.md`.
 
@@ -86,7 +86,7 @@ The UAE model is **centralised** — do not import UK/EU Open Banking assumption
 | Pay Request | Merchant-initiated payments | /pay-requests |
 | Product/Metadata | Discovery | /products, /leads, /atm |
 | Trust Framework directory | Participant/org/auth-server discovery (Raidiam, unversioned) | /participants, /organisations, /references/apifamilies |
-| CAAP Operations (Ozone Connect) | LFI-side CAAP adoption: user reg/challenge, PII decrypt, consent validate/augment | /users/actions/*, /consent/actions/* (spec = ozone-connect user-operations, renamed caap-operations on the site's spec branch; fully documented in the v2.1 LFI guide) |
+| CAAP Operations (Ozone Connect) | LFI-side CAAP adoption: user reg/challenge, PII decrypt, consent validate/augment | /users/actions/*, /consent/actions/* (spec = `uae-ozone-connect-caap-operations-openapi.yaml`, on `main` since ~Jul 2026, v2.1.4 — replaces user-operations; fully documented in the v2.1 LFI guide) |
 
 Complete API reference: `references/api-specifications.md`.
 
@@ -151,6 +151,7 @@ Verified 10 Jun 2026 against the OF Confluence "Limitation of Liability Model" (
 | **Compliance dates / what's live** | `implementation-roadmap.md` → `standards-versions.md` |
 | **Fraud / AML** controls | `aml-fraud-guidelines.md` → `api-specifications.md` (Risk block context) |
 | **SLA / data-quality / deprecation policy** | `operational-policies.md` → `liability-framework.md` |
+| **Support tickets / service-desk SLAs / disputes / billing ops / CAB change requests / notice periods** | `nebras-interaction-guide.md` → `operational-policies.md` |
 | **Payment/consent business rules, multi-payments, insurance quotes** | `payments-and-consent-rules.md` → `api-specifications.md` |
 | **UI / consent screens / AlTareq branding / CX certification** | `altareq-brand.md` → `altareq-cx-requirements.md` → `altareq-journey-screens.md` |
 | Exact **field / endpoint / enum** detail | Run `scripts/fetch_spec.py <name>` (errata-resolved live spec); `repositories.md` for the repo map |
@@ -191,7 +192,7 @@ Volatile facts have one canonical home each — update there first, then sync th
 
 - **Community hub (primary, live):** [nebras-open-finance.com](https://nebras-open-finance.com) — rendered from the `community-standards` repo; the fastest place to find current material. Key sections: [TPP Standards](https://nebras-open-finance.com/tech/tpp-standards) · [LFI Integration Guide](https://nebras-open-finance.com/tech/lfi-api-hub) · [API Specs](https://nebras-open-finance.com/tech/api-specs/) · [Release Notes & Erratas](https://nebras-open-finance.com/tech/release-notes-and-erratas/) (authoritative post-publication register) · [Knowledge Base](https://nebras-open-finance.com/knowledge-base) · [Service Desk](https://nebras-open-finance.com/support-service-desk/). The [Metrics dashboard](https://nebras-open-finance.com/metrics) UI is JS-rendered, but the underlying data is static JSON at `nebras-open-finance.com/api/*.json` (api-log, payments-log, auth-log, trust-framework, github-stats).
 - **GitHub:** [Nebras-Open-Finance org](https://github.com/Nebras-Open-Finance) — `community-standards` (docs site, errata, metrics data), `api-specs` (canonical OpenAPI), `postman` (banking + insurance collections). Check `community-standards/commits` for recent changes.
-- **Confluence (official):** [OF Space](https://openfinanceuae.atlassian.net/wiki/spaces/OF/overview) — Roadmap, Approved Use Cases, Catalogue of Standards (incl. v2.1-final-errata2), Testing & Certification, Platform Assurance (ISO 27001 evidence), Limitation of Liability, Commercial and Pricing Model, AML & Fraud Guidelines. Anonymously readable via the REST API (see `verification-log.md`).
+- **Confluence (official):** [OF Space](https://openfinanceuae.atlassian.net/wiki/spaces/OF/overview) — Roadmap, Approved Use Cases, Catalogue of Standards (incl. the doc-level errata pages: v2.1-final-errata1/errata2 + the **"Standards V2.1 & API Hub V8 - Consolidated Errata"** page covering errata1–3), Testing & Certification, Platform Assurance (ISO 27001 evidence), Limitation of Liability, Commercial and Pricing Model, AML & Fraud Guidelines, **Nebras Interaction Guide** (page 232751177 — current PDF: v5.0, Jun 2026). Anonymously readable via the REST API (see `verification-log.md`).
 
 ## Key Contacts
 

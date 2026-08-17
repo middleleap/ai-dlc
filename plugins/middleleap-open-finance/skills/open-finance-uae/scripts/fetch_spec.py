@@ -21,7 +21,6 @@ Usage:
 
 Requires network access to api.github.com / raw.githubusercontent.com.
 """
-from __future__ import annotations
 import argparse
 import json
 import os

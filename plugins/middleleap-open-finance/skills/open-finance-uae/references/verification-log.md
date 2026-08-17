@@ -51,6 +51,28 @@ were not found in any public page text, spec, or hub page; each stays flagged
 | check_current.py | Rewritten: cross-checks repo (cut) vs register (published); adds **PENDING** state (repo ahead of register); GitHub 403s now diagnosed as the unauthenticated rate limit (60 req/hr/IP) with register-only fallback rather than an opaque failure. | `scripts/check_current.py` |
 | Not re-verified this pass | Confluence doc-level errata register for an errata3 record; effective dates per errata3 section; whether API Hub v8 deployment already emits the new creditor schemas (Release Notes not yet checked). Flag "(verify against source)" where these matter. | — |
 
+## Pass of 17 August 2026 — full source re-verification + Interaction Guide v5.0
+
+Trigger: user-supplied **Nebras Interaction Guide for LFIs and TPPs v5.0 (June 2026)** + request
+for a full accuracy pass. Method: OF Confluence REST (anonymous), community-hub pages, registry
+sources on raw.githubusercontent.com. GitHub REST API was rate-limited (403) throughout — repo
+trees/branches checked via raw-file probes instead.
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| Interaction Guide | **NEW SOURCE INGESTED**: Confluence page 232751177 ("Nebras Interaction Guide", page v9, updated 29 Jun 2026) declares **v5.0 (June 2026)** current ("replaced with v5"); v4/v3/v1.2/v1.0 PDFs retained. Full digest (service-desk SLAs, P1–P4 priorities, 24/7 line +971 4 328 2979, escalations@/billing@, portal SSO, onboarding SLAs + Docusign 30-day rule, dispute process incl. AEP/Nebras split + Sanadak, billing cycle 5th/10th/30th, notification notice periods, CMR/CAB). Internal inconsistency noted (p.13 chart vs §9.4 SLA table) — §9.4 treated as canonical. "Powered by Unitey" branding | NEW `nebras-interaction-guide.md`; cross-refs in SKILL.md, lfi-integration, technical-specs, liability-framework, aml-fraud-guidelines, pricing-model |
+| Errata level | **Still v2.1-final + errata3 — no errata4, no v2.2** (versioned erratas page + erratas-registry.ts). Errata3 effective dates now published: **8 Jul 2026 (spec register) / 30 Jun 2026 (doc-level)**. Registry now ALSO lists **errata1** (insurance quote-read oneOf, effective 10 Apr 2026) — the 10 Jun "no errata1 entries" observation is obsolete. Errata3 affected-spec list adds consent-manager + ozone-connect bank-service-initiation/consent-events (in-place `v2.1.x` corrections) | `standards-versions.md`, SKILL.md, `implementation-roadmap.md`, `api-specifications.md` |
+| Doc-level errata register | **RESOLVED (was open from 13 Jul):** Confluence now has **"Standards V2.1 & API Hub V8 - Consolidated Errata"** (page 1366294554, published 30 Jun 2026, edited 8 Jul 2026) consolidating errata1 (16 Mar 2026), errata2 (7 May 2026), errata3 (30 Jun 2026); separate errata1/errata2 pages also exist (both edited 30 Jun 2026). Doc-level vs spec-level dates diverge systematically | `standards-versions.md` |
+| API Hub releases | **NEW release 2026.22.0 (effective 6 Jul 2026; registry `effectiveDate: '2026-07-06'`, cross-checked against the rendered register page)**: paymentId restored mandatory on CM GET /payment-log; consent revocation in non-revocable states → **400 (was 204)**; PATCH /consents 500 fix; token error_description RFC 6749 charset | `implementation-roadmap.md`, `standards-versions.md` |
+| Trust Framework releases | **2.2.0 (2 Jun) / 2.3.0 (8 Jun) / 2.4.0 (7 Jul 2026) all RELEASED** (were planned at 10 Jun audit); 2.5.0 planned | `implementation-roadmap.md`, `standards-versions.md` |
+| CAAP spec | **RESOLVED:** `uae-ozone-connect-caap-operations-openapi.yaml` (v2.1.4) confirmed **on `main`**; `user-operations` 404; `.specs-branch` pin file **removed** (404) — site builds from main again | `repositories.md`, `api-specifications.md`, SKILL.md |
+| Pricing | Unchanged: page 124846096 v31 (edit 2 Jun 2026), doc label **Version 1.0 (4 Oct 2024)**; fee figures re-confirmed in body (2.5 fils SI; 0.5 fils balance/CoP within 2h of payment; 38 bps→25 bps + 50 AED cap; 25 fils P2P; 250 fils corporate; 5–12.5 fils quote tiers). Interaction Guide **sample invoice** shows CoP-discounted 0.25 AED — sample-doc anomaly, pricing page stays authoritative | `pricing-model.md` (billing-ops addendum + caveat) |
+| Liability | Unchanged: page 124944402 v20, last edit 7 Jan 2026 (after which the 10 Jun verification ran) — amounts stand. v5.0 adds the operational dispute channels (AEP vs Nebras, Sanadak, timelines) | `liability-framework.md` |
+| AML page | Unchanged (page 124747798 v11, last edit 23 Jul 2024). v5.0 adds the operational fraud-incident path (helpdesk P2 / systemic P1 / operational pause) | `aml-fraud-guidelines.md` |
+| Testing & Certification page | Unchanged (page 124583943 v46, 12 May 2026). v5.0 certification tables match the skill (Hub-held single OIDF FAPI cert renewed per major version; TPP FAPI RP per version; Nebras-issued functional + CX certs) | — |
+| Roadmap / Platform Assurance / Brand pages | Unchanged (Roadmap 6259008 v31, 25 Mar 2026; Assurance 405307393 v5, 2 Jun 2026; AlTareq Brand Guidelines 196116611 v9, 27 Feb 2025). NEW: final English **insurance co-branded messaging templates (LFI + TPP)** attached 8 Jul 2026 | `altareq-brand.md` |
+| NOT re-verified this pass | Metrics data range / v2.1 adoption (JSON too large for static fetch — still a 31 May 2026 snapshot); postman `fix/api-hub-and-hh-endpoints` merge status (GitHub API 403); live spec YAML diffs beyond existence probes | flagged in `implementation-roadmap.md`, `repositories.md` |
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the
@@ -60,15 +82,3 @@ were not found in any public page text, spec, or hub page; each stays flagged
   Model" (doc v2.1).
 - **Live-traffic snapshot** — metrics dashboard data through 31 May 2026: production traffic
   dominated by v1.2/v2.0; v2.1 adoption ~2-3% of successful volume.
-
-## Import into middleleap/ai-dlc (17 Jul 2026)
-
-- Imported from the Claude.ai `.skill` export into the `middleleap-open-finance` plugin
-  (v2.0.0), replacing the repo's stale copy; the standalone `altareq-brand-guidelines` skill
-  was retired in the same change (its content lives here as `altareq-*.md`).
-- **Portability fix applied on import:** both `scripts/*.py` used `X | None` return
-  annotations, which crash at import time on Python 3.9 (macOS system python). Added
-  `from __future__ import annotations` to each. **This fix must be mirrored into the
-  canonical Claude.ai copy**, or the next export will re-break it.
-- `check_current.py` run live on 17 Jul 2026 after the fix: **FRESH** — skill's v2.1-errata3
-  matches the published register and the api-specs repo.

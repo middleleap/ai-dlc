@@ -40,7 +40,7 @@ Verified against the `api-specs` repo tree (main branch, 9 Jun 2026). Effective 
 
 Full URL shape: `https://rs1.{lfiCode}.{env}.apihub.openfinance.ae{server base path}{endpoint}` (see `technical-specs.md` for environments).
 
-LFI-side and Hub-side specs (same repo): `dist/ozone-connect/v2.1.x/` — bank-data-sharing, bank-open-data, bank-products-data, bank-service-initiation, consent-events-actions, health-check, insurance, user-operations. `dist/api-hub/v2.1.x/` — authorisation-server, consent-manager, tpp-onboarding, tpp-reports.
+LFI-side and Hub-side specs (same repo): `dist/ozone-connect/v2.1.x/` — bank-data-sharing, bank-open-data, bank-products-data, bank-service-initiation, consent-events-actions, health-check, insurance, **caap-operations** (replaces user-operations on `main` since ~Jul 2026). `dist/api-hub/v2.1.x/` — authorisation-server, consent-manager, tpp-onboarding, tpp-reports.
 
 **Not present as standalone v2.1 specs** (give category only; verify against source): **Pay Request** (roadmap Q3 2026 — no published spec on main as of 9 Jun 2026) and a dedicated **Remittance** spec (FX quotes are covered by the FX API; remittance execution rides service initiation — verify against source).
 
@@ -220,7 +220,7 @@ Spec: `uae-webhook-template-openapi.yaml` — a **template** for the endpoint ea
 
 **Purpose:** the Ozone Connect endpoints an LFI must implement **when adopting CAAP** (the centralized auth platform) — user challenge/registration lifecycle, PII decryption, consent validation + augmentation, and CAAP-specific account / per-line insurance-policy GETs that drive the end-user consent journey in the AlTareq app.
 
-**Branch caveat (10 Jun 2026):** spec is `dist/ozone-connect/v2.1.x/uae-ozone-connect-caap-operations-openapi.yaml` (title "Ozone Connect — UAE CAAP Operations API", v2.1.4) on the **`caap-refactor` branch only — not yet on `main`**, i.e. published on the website (which builds from `.specs-branch` = `caap-refactor`) but not yet merged to the authoritative branch. Treat as pre-release; re-check `main` before building.
+**Spec status (verified 17 Aug 2026):** `dist/ozone-connect/v2.1.x/uae-ozone-connect-caap-operations-openapi.yaml` (title "Ozone Connect - UAE CAAP Operations API Description", **v2.1.4**) is **on `main`** — the earlier caap-refactor branch caveat is resolved; `uae-ozone-connect-user-operations-openapi.yaml` no longer exists (renamed). Build against the main-branch spec.
 
 | Endpoint group | Endpoints |
 |---|---|

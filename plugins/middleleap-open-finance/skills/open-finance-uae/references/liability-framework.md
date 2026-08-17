@@ -92,6 +92,12 @@ Allocation follows the **locus of failure**, with the customer-facing party payi
 
 Evidence expectations: participants must retain consent and transaction records for **at least 5 years** (Article 13) and surrender them promptly — record-keeping failures effectively concede disputes given the Article 21(3) burden of proof.
 
+**Operational dispute channels & timelines (Nebras Interaction Guide v5.0, Jun 2026 — full detail in `nebras-interaction-guide.md`):**
+
+- **Channel split for Aani-settled OF payments:** Aani settlement / Aani system issues → dispute with **Al Etihad Payments** (Aani scheme process); AlTareq (Open Finance) API issues or anything preventing an OF service completing → dispute with **Nebras**. Payments not initiated through Open Finance cannot be disputed with Nebras. Compensation follows this model after an upheld decision, and **direct losses are never compensated twice** (Aani scheme dispute vs OF dispute).
+- **Timelines:** report within 30 days; LFI/TPP formal resolution within 15 business days; respondent replies within 3 business days of Nebras raising it; 3-business-day appeal window on a Nebras verdict; implementation of the final decision within 3 business days. Non-response ⇒ dispute may resolve in the complainant's favour; non-adherence ⇒ supervisory action with CBUAE.
+- **Escalation paths:** retail (non-commercial) customers unhappy after LFI/TPP + Nebras → **Sanadak** (Emirates consumer-protection authority); corporate customers may raise disputes with Nebras directly.
+
 ## Insurance and Indemnity Expectations
 
 | Participant | Requirement |

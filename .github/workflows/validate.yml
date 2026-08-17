@@ -114,6 +114,22 @@ jobs:
           cp "$H/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
           cp -r "$H/register-example" "$A/docs/governance/data-risk-register"
           cp "$H/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
+          # The committed example carries fixed dates and the assurance-cycle gate judges them
+          # against the real clock: the moment the wall clock passed AC-F-1's due date the gate
+          # started blocking every run, and the 30d cadence on ran_at was days from doing the
+          # same. Same reasoning as rc.36 re-stamping the fictional commit: the derived tree is
+          # this run's, so its time-relative fields are stamped at derivation — ran_at fresh,
+          # open findings due ahead of now. Resolved findings keep their history; regenerate.mjs
+          # below signs the stamped record, so signature verification is unaffected.
+          node -e '
+            const fs=require("fs");
+            const p=process.argv[1];
+            const c=JSON.parse(fs.readFileSync(p));
+            const DAY=86400000, now=Date.now();
+            c.ran_at=new Date(now-2*DAY).toISOString();
+            for (const f of c.findings??[]) if (f.status==="open") f.due=new Date(now+21*DAY).toISOString().slice(0,10);
+            fs.writeFileSync(p,JSON.stringify(c,null,2));
+          ' "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
           cp "$H/assurance-example/decision-log.json" "$A/docs/governance/decision-log.json"
           mkdir -p "$A/docs/governance/assurance-cases"
           cp "$H/assurance-example/assurance-case.json" "$A/docs/governance/assurance-cases/CASE-2026-0007.json"
