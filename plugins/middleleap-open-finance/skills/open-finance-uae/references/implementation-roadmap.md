@@ -30,7 +30,7 @@ Sources: SKILL.md roadmap table; community hub [Release Notes & Erratas](https:/
 | Pay Request | Q3 2026 | Merchant-initiated payment requests |
 | Corporate R5 | Sep 2026 | Full Corporate Suite |
 
-All releases are now aligned with **Standards v2.1-final** (7 Jan 2026; current errata: errata3, register-published by 13 Jul 2026) and **API Hub v8**.
+All releases are now aligned with **Standards v2.1-final** (7 Jan 2026; current errata: errata3, effective 30 Jun/8 Jul 2026) and **API Hub v8**.
 
 Other dated milestones:
 
@@ -39,7 +39,7 @@ Other dated milestones:
 | TPP regularisation deadline (CBUAE) | **16 Sep 2026** — unchanged as of the 8 Jun 2026 source check |
 | Ozone ISO/IEC 27001:2022 certificate + Platform Assurance docs published | Jun 2026 |
 | v2.1-errata2 published | 7 May 2026 (individual errata sections record effective dates from 28 Apr 2026; some "to be confirmed on merge") |
-| v2.1-errata3 published | Register-published by 13 Jul 2026 — 2 corrections, intl-payments creditor restructure (SWIFT SR2026); auth-endpoints + bank-initiation specs only |
+| v2.1-errata3 published | Effective 30 Jun 2026 (doc-level) / 8 Jul 2026 (spec register) — 2 corrections, intl-payments creditor restructure (SWIFT SR2026); standards-tree folders: auth-endpoints + bank-initiation (matching in-place Consent Manager / Ozone Connect updates) |
 
 ## Deadlines vs Delivery
 
@@ -77,7 +77,7 @@ Implications:
 
 - **Do not assume v2.1 is live** at a given LFI — "superseded" versions carry most real traffic. Confirm the counterparty's actually-served version per integration.
 - New builds still target **v2.1-final + errata3**; the gap is between what the standard mandates and what incumbents have migrated.
-- The metrics dashboard ([nebras-open-finance.com/metrics](https://nebras-open-finance.com/metrics)) is JS-rendered — figures need a real browser; re-verify before quoting.
+- The metrics dashboard ([nebras-open-finance.com/metrics](https://nebras-open-finance.com/metrics)) is JS-rendered — figures need a real browser; re-verify before quoting. (17 Aug 2026 pass: current data range / adoption mix could not be re-verified statically — the underlying JSON exceeds fetch limits; the mix above remains a **31 May 2026 snapshot**.)
 
 ## API Hub Platform Release Notes (2026)
 
@@ -88,6 +88,7 @@ From the hub's release-notes register (Release Notes = deployments to operationa
 | 2026.07.0 | 11 Mar 2026 | **V2.1 Banking API families enabled end-to-end** (the platform moment v2.1 became servable) |
 | 2026.13.1 | 20 Apr 2026 | Refresh-token support for multi-authorization on SIP; corrected response mapping for GET /beneficiaries and GET /standing-orders; Sandbox Model Bank pre-populated Debtor Account fix; Account Information v2.1 consent response schema tightening |
 | 2026.19.0 | 9 Jun 2026 (pre-production 2 Jun 2026) | **Mandatory `x-fapi-customer-ip-address` header on Product API endpoints**; **60-second authorisation-code expiry for FAPI 2.0 profiles**; Meta object on Statements responses; corrected Model Bank transaction payloads; CoP 500-error fixes (corporate requests, name masking); consent-expiry status-update fix; sandbox data-consistency improvements; idToken handling removed from Admin/Hub Portal flows |
+| 2026.22.0 | 6 Jul 2026 (production) | Mandatory `paymentId` restored on Consent Manager `GET /payment-log` responses; **consent revocation in non-revocable states now returns HTTP 400 (was 204)**; `PATCH /consents` 500 fix (Consent Manager v2025.47); token-endpoint `error_description` restricted to RFC 6749-permitted characters |
 
 Note the 11 Mar 2026 platform-enablement date vs the 7 Jan 2026 standards publication — a ~2-month lag between "standard published" and "Hub can serve it," before any LFI migration even starts. This is the structural reason traffic adoption trails the calendar. The two bolded 2026.19.0 items are participant-impacting behaviour changes (TPP request headers and auth-code handling) — check integrations against them.
 
@@ -99,8 +100,12 @@ The Trust Framework (Raidiam-operated directory) has its **own release stream an
 |---|---|---|---|
 | 2.0.0 | 19 Feb 2026 | Released | API Families via Reference Data; certificate description field; new Auth Server detail experience; federation endpoint visibility |
 | 2.1.0 | 2 Apr 2026 | Released | New Application details experience; IDP creation wizard; federation visibility |
-| 2.2.0 | 2 Jun 2026 | Planned (still flagged planned at 10 Jun 2026 audit) | Directory version display; server roles; OTP validation in onboarding; cross-org audit-log scope |
-| 2.3.0 | 2026 | Planned | Application change history / audit comparison; active-server filter |
+| 2.2.0 | 2 Jun 2026 | **Released** | Directory version display; server roles; OTP validation in onboarding; cross-org audit-log scope |
+| 2.3.0 | 8 Jun 2026 | **Released** | Application change history / audit comparison; authorisation-server filtering; responsive layouts; email validation |
+| 2.4.0 | 7 Jul 2026 | **Released** | Audit-log date sorting; external regulatory documents; certificate-authorities management; organization audit trails; expanded search/filtering |
+| 2.5.0 | 2026 (TBC) | Planned | Cross-client application management scope; unified Documents view; sortable audit tables; enhanced directory-wide search |
+
+_(Statuses re-verified 17 Aug 2026.)_
 
 Track **both** streams (plus the errata register — see `standards-versions.md`) when assessing platform change impact: directory/portal behaviour (certificates, onboarding, server publication) changes on the TF stream even when no API Hub release ships.
 

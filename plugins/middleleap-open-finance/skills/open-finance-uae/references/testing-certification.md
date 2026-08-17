@@ -25,7 +25,7 @@ Certification sits at **Phase B** of the integration journey (after pre-producti
 | Required Certifications | Overview · Functional Evidence — Bank Data Sharing · User Experience Evidence · Performance Testing · Security Validation | Stubs ("coming soon") |
 | Production Live Proving | Attestation & Self Testing · TPP Buddying | Stubs ("coming soon") |
 
-The five-step paths below (from SKILL.md, sourced from the official Testing & Certification material) remain the authoritative summary.
+The five-step paths below (from SKILL.md, sourced from the official Testing & Certification material) remain the authoritative summary. **Independently corroborated 17 Aug 2026** by the Nebras Interaction Guide v5.0 §7.5 certification tables (LFI FAPI: OFTF/OIDF responsibility — the Hub obtains one FAPI certification and renews it per major Standards version, so LFIs never FAPI-certify; TPP FAPI RP per version per application; functional + CX certifications validated and issued by Nebras; evidence via the Support Portal "Certification Evidence" ticket; non-compliant submissions loop until certified). See `nebras-interaction-guide.md`.
 
 ## LFI Certification Path
 

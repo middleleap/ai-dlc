@@ -29,7 +29,6 @@ Usage:
   python3 check_current.py            # human-readable report
   python3 check_current.py --json     # machine-readable result
 """
-from __future__ import annotations
 import argparse
 import json
 import re

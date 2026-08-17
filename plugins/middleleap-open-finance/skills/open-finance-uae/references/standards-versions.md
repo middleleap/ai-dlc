@@ -1,6 +1,6 @@
 # UAE Open Finance Standards Versions
 
-> **Last verified: 13 July 2026** (version/errata pass; full-site coverage audit 10 June 2026) against the community hub Release Notes & Errata register and the api-specs repo. Current production standard is **v2.1-final** with **errata3** (register-published; supersedes errata2 of 7 May 2026 for the two touched specs). Note: live API traffic is still dominated by v1.2 and v2.0 (v2.1 adoption nascent as of May 2026 data) — "Superseded" below means "not for new builds," not "out of live use."
+> **Last verified: 17 August 2026** (full register + Confluence re-check; prior passes 13 Jul / 10 Jun 2026) against the community hub Release Notes & Errata register, the erratas-registry source, and the OF Confluence errata pages. Current production standard is **v2.1-final** with **errata3** (spec-register effective 8 Jul 2026; doc-level effective 30 Jun 2026; supersedes errata2 of 7 May 2026 for the touched specs). No errata4 and no v2.2 published as of 17 Aug 2026. Note: live API traffic is still dominated by v1.2 and v2.0 (v2.1 adoption nascent as of May 2026 data) — "Superseded" below means "not for new builds," not "out of live use."
 
 ## Table of Contents
 1. [Version History Overview](#version-history-overview)
@@ -25,7 +25,7 @@
 | v2.0-final | Apr 4, 2025 | Superseded (heavy live use) | Major uplift |
 | v2.1-final | Jan 7, 2026 | Current Production | Enhanced APIs and operational requirements |
 | v2.1-errata2 | May 7, 2026 | Superseded per-file by errata3 | Doc corrections to v2.1-final + API Hub v8 (17 sections) |
-| **v2.1-errata3** | **Register-published by 13 Jul 2026** | **Current Errata** | 2 corrections — Bank Service Initiation international creditor (SWIFT SR2026); touches auth-endpoints + bank-initiation specs only |
+| **v2.1-errata3** | **Effective 8 Jul 2026 (spec register) / 30 Jun 2026 (doc-level)** | **Current Errata** | 2 corrections — Bank Service Initiation international creditor (SWIFT SR2026); errata folders carry auth-endpoints + bank-initiation; matching in-place corrections in Consent Manager + Ozone Connect bank-service-initiation/consent-events |
 
 **Important**: Always implement against the **latest available version plus its current errata** (v2.1-final + errata3; errata resolve per file — highest errata folder containing the file wins). Deprecated versions should not be used for new implementations. Confirm which version a counterparty LFI actually serves in production — many remain on v1.2/v2.0.
 
@@ -166,7 +166,7 @@ See `api-specifications.md` for complete API reference.
 
 ## Standards v2.1-final
 
-**Publication**: January 7, 2026 (current errata: **errata3**, register-published by 13 Jul 2026; errata2 7 May 2026)
+**Publication**: January 7, 2026 (current errata: **errata3**, effective 30 Jun 2026 doc-level / 8 Jul 2026 spec register; errata2 7 May 2026)
 **Status**: Current Production - Recommended for all new implementations
 
 ### Structure Overview (76 pages across Confluence space)
@@ -280,12 +280,24 @@ The post-publication register has two halves, both on the community hub
 
 ### v2.1-errata3 — international creditor restructure (SWIFT SR2026)
 
-Register-published (community hub erratas page) by **13 July 2026**; spec folders `dist/standards/v2.1-errata3/` contain **only** `uae-authorization-endpoints-openapi.yaml` and `uae-bank-initiation-openapi.yaml` — all other specs remain effective at their errata2/errata1/base levels (per-file resolution rule). **Two corrections, both Bank Service Initiation / international payments:**
+**Effective 8 July 2026** per the spec-level register (`erratas-registry.ts`; verified 17 Aug 2026); the **doc-level record gives 30 June 2026** — see the Confluence "Standards V2.1 & API Hub V8 - Consolidated Errata" page below (the two registers disagree on dates for errata3 just as they did for errata2). Spec folders `dist/standards/v2.1-errata3/` contain **only** `uae-authorization-endpoints-openapi.yaml` and `uae-bank-initiation-openapi.yaml` — all other standards-tree specs remain effective at their errata2/errata1/base levels (per-file resolution rule). The registry's affected-spec list additionally names `uae-api-hub-consent-manager-openapi`, `uae-ozone-connect-bank-service-initiation-openapi` and `uae-ozone-connect-consent-events-actions-openapi` — those trees have no errata folders, so the same corrections land as in-place `v2.1.x` updates. **Two corrections, both Bank Service Initiation / international payments:**
 
 1. **International Creditor restructured into Individual and Organization variants (SWIFT SR2026).** The international `Creditor` on the Bank Service Initiation RAR becomes a `oneOf` of Individual and Organization variants, discriminated by `IdentityType`, carrying structured beneficiary attributes for cross-border payments. New schemas: `AEInternationalCreditorParty`, `AEInternationalIndividualCreditor`, `AEInternationalOrganisationCreditor`, `AEInternationalCreditorName(Component)`, `AEInternationalCreditorEvidence`. **Domestic Creditor schemas unchanged.** Touches PAR, payment-consents (incl. PATCH), payments, Consent Manager, and Consent Events surfaces on both TPP and LFI sides.
 2. **International Creditor Agent address aligned onto shared `AEInternationalAddress`** — `TownName` becomes required and its `maxLength` tightens from 140 to 70; the Creditor Agent address itself remains optional.
 
-**Impact:** any TPP/LFI building or serving v2.1 **international payments** must adopt the new creditor structures; domestic-only flows are unaffected. Detected 13 Jul 2026 with the register landing page still summarising "errata2" while the versioned erratas page listed the errata3 group — trust the versioned page (`erratas/v2.1/`).
+**Impact:** any TPP/LFI building or serving v2.1 **international payments** must adopt the new creditor structures; domestic-only flows are unaffected. (Detection note: on 13 Jul 2026 the register landing page still summarised "errata2" while the versioned page listed errata3; by 17 Aug 2026 the landing page lists errata1–3 — trust the versioned page `erratas/v2.1/` when they disagree.)
+
+### Doc-level errata register on Confluence (verified 17 Aug 2026)
+
+The Catalogue of Standards now carries **three doc-level v2.1 errata pages** (label `errata`):
+"Standards V2.1 & API Hub V8 - final - errata1" (page 1116045313), "Standards v2.1-final-errata2"
+(page 1260355592), and — the one-stop record — **"Standards V2.1 & API Hub V8 - Consolidated
+Errata"** (page 1366294554, published 30 Jun 2026, last edit 8 Jul 2026), which consolidates all
+three erratas with doc-level effective dates: **errata1 — 16 Mar 2026** (Insurance Data Sharing /
+Quote Initiation / Common Rules + API Hub quote-status responses), **errata2 — 7 May 2026**,
+**errata3 — 30 Jun 2026**. Note the systematic date skew vs the spec-level registry (errata1:
+16 Mar doc vs 10 Apr spec; errata3: 30 Jun doc vs 8 Jul spec) — cite the register that matches
+the artefact you are quoting.
 
 ### v2.1-errata2 — two registers, read both
 
@@ -301,10 +313,13 @@ _(Errata1 preceded this; both are folded into the errata2 register. Confirm the 
 **(b) OpenAPI-level (spec) errata register** — the community hub register
 ([erratas page](https://nebras-open-finance.com/tech/release-notes-and-erratas/erratas/v2.1/), source
 [`src/data/erratas-registry.ts`](https://github.com/Nebras-Open-Finance/community-standards/blob/main/src/data/erratas-registry.ts))
-holds **17 sections, all under `v2.1-errata2`** (no errata1 entries): 10 effective **28 Apr 2026**, 7 marked
+holds **17 sections under `v2.1-errata2`**: 10 effective **28 Apr 2026**, 7 marked
 "to be confirmed on merge to main" — a flag the registry kept even after the underlying PR merged on 22 May 2026.
 Note the date mismatch with (a): the doc-level errata says "published 7 May 2026" while spec-level sections carry
-28 Apr effective dates.
+28 Apr effective dates. _Update 17 Aug 2026: the registry now ALSO carries a **v2.1-errata1 group**
+(1 section, effective **10 Apr 2026**, `uae-insurance-openapi` — insurance quote read responses
+restructured as a per-status discriminated `oneOf`, flat `AEInsuranceQuoteStatusCodes` enum removed);
+the earlier "no errata1 entries in the spec register" observation no longer holds._
 
 | # | Spec / area | Correction | Effective |
 |---|---|---|---|
@@ -340,7 +355,7 @@ Release Notes (behaviour-affecting deployments) are kept per platform component 
 
 **API Hub (`2026.x` scheme)** — source
 [`src/data/api-hub-releases-registry.ts`](https://github.com/Nebras-Open-Finance/community-standards/blob/main/src/data/api-hub-releases-registry.ts);
-full table in `implementation-roadmap.md`. Releases to date: **2026.07.0** (11 Mar 2026, v2.1 banking families enabled end-to-end), **2026.13.1** (20 Apr 2026), **2026.19.0** (production 9 Jun 2026; pre-production 2 Jun 2026). Release **2026.19.0** carries two participant-impacting behaviour changes: **mandatory `x-fapi-customer-ip-address` header on Product API endpoints** and **60-second authorisation-code expiry for FAPI 2.0 profiles**.
+full table in `implementation-roadmap.md`. Releases to date: **2026.07.0** (11 Mar 2026, v2.1 banking families enabled end-to-end), **2026.13.1** (20 Apr 2026), **2026.19.0** (production 9 Jun 2026; pre-production 2 Jun 2026), **2026.22.0** (effective 6 Jul 2026). Release **2026.19.0** carries two participant-impacting behaviour changes: **mandatory `x-fapi-customer-ip-address` header on Product API endpoints** and **60-second authorisation-code expiry for FAPI 2.0 profiles**. Release **2026.22.0** restores the mandatory `paymentId` on Consent Manager `GET /payment-log` responses, changes consent revocation in non-revocable states to **HTTP 400 (was 204)**, fixes a `PATCH /consents` 500, and constrains token-endpoint `error_description` to RFC 6749-permitted characters.
 
 **Trust Framework (Raidiam directory — own versioning, separate from `2026.x`)** — register at
 [/tech/release-notes-and-erratas/release-notes/trust-framework/2026](https://nebras-open-finance.com/tech/release-notes-and-erratas/release-notes/trust-framework/2026), source
@@ -350,8 +365,12 @@ full table in `implementation-roadmap.md`. Releases to date: **2026.07.0** (11 M
 |---|---|---|---|
 | 2.0.0 | 19 Feb 2026 | Released | API Families via Reference Data, certificate description field, new Auth Server detail experience, federation endpoint visibility |
 | 2.1.0 | 2 Apr 2026 | Released | New Application details experience, IDP creation wizard, federation visibility |
-| 2.2.0 | 2 Jun 2026 | Planned (flagged planned at 10 Jun 2026 audit) | Directory version display, server roles, OTP validation in onboarding, cross-org audit-log scope |
-| 2.3.0 | 2026 | Planned | Application change history / audit comparison, active-server filter |
+| 2.2.0 | 2 Jun 2026 | **Released** | Directory version display, server roles, OTP validation in onboarding, cross-org audit-log scope |
+| 2.3.0 | 8 Jun 2026 | **Released** | Application change history / audit comparison, authorisation-server filtering, responsive layouts, email validation |
+| 2.4.0 | 7 Jul 2026 | **Released** | Audit-log date sorting, external regulatory documents, certificate-authorities management, organization audit trails, expanded search/filtering |
+| 2.5.0 | 2026 (TBC) | Planned | Cross-client application management scope, unified Documents view, sortable audit tables, enhanced directory-wide search |
+
+_(Statuses re-verified 17 Aug 2026 against `trust-framework-releases-registry.ts` — 2.2.0/2.3.0 were still "planned" at the 10 Jun 2026 audit and have since shipped.)_
 
 ---
 

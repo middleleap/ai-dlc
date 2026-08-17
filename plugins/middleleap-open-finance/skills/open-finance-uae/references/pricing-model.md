@@ -257,6 +257,8 @@ Charged to TPPs based on API call consumption, invoiced and collected by Nebras.
 - Participants may be required to provide Direct Debit/VOD consents to Nebras
 - All participants MUST comply with Nebras collection requirements
 
+**Operational billing cycle (Interaction Guide v5.0, Jun 2026 — full detail in `nebras-interaction-guide.md`):** TPPs receive the **Nebras Tax Invoice**, LFIs the **Collection Memo**, on or before the **5th** of each month (prior calendar month's usage); **DDA presented on the 10th**; collection window to the **30th**; Nebras settles LFI→TPP fees/commissions between the **30th and the 5th** of the following month. **Direct debit is the required primary payment method**; **net settlement** applies where an LFI also operates as a TPP; late payment ⇒ penalty fees, then service suspension. Insurance commissions use bilateral agreements where they exist, else the default commission model above; cancelled-policy **clawbacks** run via a Service Desk ticket. Billing contact: `billing@nebrasopenfinance.ae`. _Caveat: the guide's SAMPLE tax invoice shows a "Confirmation of Payee (Discounted)" unit price of 0.25 AED, which contradicts the pricing doc's 0.5-fils discounted CoP rate — treat sample-document figures as illustrative; this page's fee schedule (doc v1.0) is authoritative._
+
 ---
 
 ## Per-Endpoint Chargeability (API Hub Fees)

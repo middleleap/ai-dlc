@@ -29,6 +29,7 @@ Supporting provisions: Article 31 (technology risk, cyber incident response), Ar
 
 - Verified 10 Jun 2026 (AML and Fraud Guidelines, OF Confluence, doc v1.1): TPPs must "Report any suspicious activities via the **AML GO portal of CBUAE**" (section 2.2, Suspicious Transactions Monitoring). LFIs report to authorities via their established protocols — the guidelines state there is **no need to develop additional Open Finance-specific procedures** on the LFI side.
 - This is in addition to participants' existing statutory STR/SAR obligations to the UAE Financial Intelligence Unit (goAML platform) under the AML Laws — Open Finance reporting does not replace FIU filing.
+- **Operational fraud-incident path (Interaction Guide v5.0, Jun 2026):** distinct from AML GO reporting — a fraud incident involving an LFI/TPP customer MUST also be reported to the **Nebras Helpdesk** (escalated as a P2 case; resolution responsibility stays with the LFI/TPP, and an operational pause on the affected customer may be required per CBUAE regulations). **Systemic fraud** (coordinated, ecosystem-destabilising) is a **P1** event: Nebras management investigates immediately and may impose holds or temporary revocations on affected participants. See `nebras-interaction-guide.md`.
 - Both LFIs and TPPs retain their own institutional AML reporting duties; deemed-licence banks report through their existing compliance functions.
 - Nebras, as API Hub operator, is itself subject to Article 30 and reports platform-level suspicious patterns (verify against source).
 

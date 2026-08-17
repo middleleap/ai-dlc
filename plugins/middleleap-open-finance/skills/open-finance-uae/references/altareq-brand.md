@@ -126,9 +126,10 @@ Each journey type in Standards includes:
 ## Resources
 
 ### Official Sources
-- [AlTareq Brand Guidelines PDF](https://openfinanceuae.atlassian.net/wiki/spaces/OF/pages/196116611)
+- [AlTareq Brand Guidelines PDF](https://openfinanceuae.atlassian.net/wiki/spaces/OF/pages/196116611) (page unchanged since Feb 2025; doc v1.0 of 31 Oct 2024 still current as of 17 Aug 2026)
 - Figma Files per journey (linked from Confluence)
 - Standards CX sections per journey type
+- **AlTareq co-branded messaging templates** on OF Confluence: bilingual LFI templates (Nov 2025) plus **final English insurance templates for LFIs and TPPs published 8 Jul 2026** — use these for customer-facing OF/insurance messaging copy
 
 ### Support
 - Nebras Support: support@nebrasopenfinance.ae

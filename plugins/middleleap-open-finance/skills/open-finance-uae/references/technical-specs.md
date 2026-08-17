@@ -142,7 +142,7 @@ Failure modes (site: `/knowledge-base/articles/request-headers`, `/tech/tpp-stan
 - If omitted, the Hub generates one — knowable only from the response header, so log lines written before the response have no id.
 - **Log the interaction id when composing the request**, not on response, so it exists even if the request never returns.
 
-When raising a support ticket (Service Desk / support@nebrasopenfinance.ae), always include the `x-fapi-interaction-id` (request, and response if available) — **required** to locate the transaction — plus the **ConsentId** for consent/resource issues. Without the interaction id, investigation is significantly delayed.
+When raising a support ticket (Nebras Support Portal / support@nebrasopenfinance.ae; 24/7 incident line +971 4 328 2979 — channels, SLAs and priorities in `nebras-interaction-guide.md`), always include the `x-fapi-interaction-id` (request, and response if available) — **required** to locate the transaction — plus the **ConsentId** for consent/resource issues. Without the interaction id, investigation is significantly delayed.
 
 ## Standard Headers
 
