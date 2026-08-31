@@ -2,7 +2,7 @@
 
 > Regenerated from public sources 9 Jun 2026 (original file lost) — provenance & full verification history: `verification-log.md`. Cross-check time-sensitive figures against the community hub / OF Confluence before relying on them.
 
-Security profile, certificates, environments, traceability, and NFRs for Standards **v2.1-final + errata3** (API Hub v8; errata3 touches auth-endpoints + bank-initiation only). Companion to `api-specifications.md` (endpoints/objects), `payments-and-consent-rules.md` (business rules), and `standards-versions.md` (version history).
+Security profile, certificates, environments, traceability, and NFRs for Standards **v2.1-final + errata3** (API Hub v8; errata3 dist/standards folders are auth-endpoints + bank-initiation, with in-place corrections also on Consent Manager, Ozone Connect bank-service-initiation/consent-events, and — as of the 21 Aug 2026 addition — CAAP operations; see `standards-versions.md` for the full 5-correction breakdown). Companion to `api-specifications.md` (endpoints/objects), `payments-and-consent-rules.md` (business rules), and `standards-versions.md` (version history).
 
 ## Table of Contents
 1. [Security Model Overview](#security-model-overview)

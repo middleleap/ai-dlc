@@ -7,15 +7,15 @@ description: Expert guidance on UAE Open Finance — CBUAE regulation and compli
 
 Expert knowledge base for UAE's Open Finance ecosystem covering CBUAE regulations, Standards versions (v2.1-final production, errata3 current), Al Tareq platform requirements, implementation guidance, testing/certification, commercial model, roadmap, and CAAP authentication.
 
-> **Last verified against sources: 17 August 2026 (full source re-verification; prior passes 13 Jul / 10 Jun 2026).** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py`.
+> **Last verified against sources: 31 August 2026 (errata3 register re-check found 3 corrections added since the 17 Aug full pass; prior passes 17 Aug / 13 Jul / 10 Jun 2026).** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py` (note: the script tracks the errata *number*, not section count — it will not by itself catch an existing errata group growing in place; cross-check `references/standards-versions.md` too).
 
 ## Quick Reference
 
 | Aspect | Detail |
 |--------|--------|
 | Regulation | CBUAE Circular C 03/2025 (10 July 2025) |
-| Current Standards | **v2.1-final** (base 7 Jan 2026) + **errata3** (effective 30 Jun 2026 doc-level / 8 Jul 2026 spec register; scope: intl-payments creditor) |
-| Post-Publication Register | Release Notes (platform deployments) + Errata (doc corrections); current errata = **v2.1-errata3** (auth-endpoints + bank-initiation only; other specs resolve to errata2/errata1/base) |
+| Current Standards | **v2.1-final** (base 7 Jan 2026) + **errata3** (5 corrections: §1–2 effective 30 Jun 2026 doc-level / 8 Jul 2026 spec register, scope intl-payments creditor; **§3–5 effective 21 Aug 2026 spec register, not yet in the doc-level register** — Debtor/Creditor Reference charset, idempotency-key response, ReadStatements/ReadProductFinanceRates on Consent Events/CAAP) |
+| Post-Publication Register | Release Notes (platform deployments) + Errata (doc corrections); current errata = **v2.1-errata3** (auth-endpoints + bank-initiation folders, plus in-place corrections on Consent Manager, Ozone Connect bank-service-initiation/consent-events, and **CAAP operations (new §5)**; other specs resolve to errata2/errata1/base) |
 | API Hub Version | **v8** (current; v7 = v2.0, v6 = v1.2 legacy) |
 | Platform | Al Tareq (consumer brand) / Nebras (operator) |
 | Auth Method | CAAP (Centralized Auth) via AlTareq app + EFR + UAE Pass |
