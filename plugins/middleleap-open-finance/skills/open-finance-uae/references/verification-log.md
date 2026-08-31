@@ -73,6 +73,20 @@ trees/branches checked via raw-file probes instead.
 | Roadmap / Platform Assurance / Brand pages | Unchanged (Roadmap 6259008 v31, 25 Mar 2026; Assurance 405307393 v5, 2 Jun 2026; AlTareq Brand Guidelines 196116611 v9, 27 Feb 2025). NEW: final English **insurance co-branded messaging templates (LFI + TPP)** attached 8 Jul 2026 | `altareq-brand.md` |
 | NOT re-verified this pass | Metrics data range / v2.1 adoption (JSON too large for static fetch — still a 31 May 2026 snapshot); postman `fix/api-hub-and-hh-endpoints` merge status (GitHub API 403); live spec YAML diffs beyond existence probes | flagged in `implementation-roadmap.md`, `repositories.md` |
 
+## Pass of 31 August 2026 — errata3 grew from 2 to 5 corrections since 17 Aug
+
+Trigger: weekly scheduled re-check of the community hub Release Notes & Errata register (the
+"ecosystem watcher" cadence). Method: `check_current.py` (register-only fallback — GitHub API
+403 rate-limited as usual) plus a manual fetch of `erratas/v2.1/`, the `erratas-registry.ts`
+source, and the doc-level Confluence "Consolidated Errata" page (1366294554).
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| `check_current.py` verdict | **FRESH** — it only compares the stated errata *number* (`v2.1-errata3` in both SKILL.md and the register), so it correctly reported no change. **This is a real blind spot**: it cannot detect an existing errata group growing new sections without a number bump. Not fixed this pass (flagged for a follow-up); cross-check `standards-versions.md`'s section count manually until it is | — |
+| errata3 scope | **STALE — 3 new corrections found**, effective **21 Aug 2026** (4 days after the 17 Aug pass), not yet reflected in the skill: **§3** Debtor/Creditor References constrained to the ISO 20022/SWIFT `x` character set (proposal OFP-003); **§4** idempotency-key query response corrected to the signed envelope `AEIdempotencyKeyQuerySigned` (`uae-bank-initiation-openapi` only); **§5** `ReadStatements`/`ReadProductFinanceRates` permission codes extended to `uae-ozone-connect-consent-events-actions-openapi` and — newly added to the errata3 affected-spec list — `uae-ozone-connect-caap-operations-openapi`. errata3 is now 5 sections total (was 2 as of 17 Aug); §1–2 unchanged (eff. 8 Jul 2026, intl-creditor restructure) | `standards-versions.md`, SKILL.md, `api-specifications.md`, `technical-specs.md` |
+| Doc-level Confluence register | **Still at page version 5 / last edit 8 Jul 2026** — covers only §1–2. §3–5 exist only in the spec-level register as of this pass; the systematic spec-runs-ahead-of-doc lag noted on 13 Jul/17 Aug continues | `standards-versions.md` |
+| NOT re-verified this pass | `dist/standards/v2.1-errata3/` folder tree itself (GitHub API 403); whether §3–5 changes are already live on API Hub v8 production (Release Notes not checked this pass — see `implementation-roadmap.md` for the last-known API Hub release, 2026.22.0 / 6 Jul 2026, and Trust Framework release, 2.4.0 / 7 Jul 2026 with 2.5.0 still TBC as of this pass); full site/Confluence re-audit (scoped to errata register only this pass, unlike the 17 Aug full pass) | flagged above |
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the
