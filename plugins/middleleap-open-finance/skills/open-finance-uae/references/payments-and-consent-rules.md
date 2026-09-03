@@ -167,6 +167,7 @@ Delegated SCA is an optional overlay on the multi-payment variants — the TPP p
 - **`ConsentSchedule` must be an empty object `{}`** — no consent-imposed amount caps; the TPP is responsible that each amount was user-approved via its own SCA.
 - **MFA evidence in the Risk block** on every `POST /par` and `POST /payments`: `Risk.DebtorIndicators.Authentication` with `ChallengeOutcome=Pass`, `AuthenticationFlow=MFA`, ≥2 of Possession/Knowledge/Inherence with `IsUsed: true` and a valid `Type`, and a recent `ChallengeDateTime`.
 - UX: the consent page must state that every payment still needs individual customer authentication; no amounts/schedule are shown at consent stage.
+- Any data the Risk schema does not name (device fingerprints, automation/agent context) may only travel in the three `SupplementaryData` objects of `Risk` — never at the Risk root, never in `ControlParameters` (both closed). Structure: `aml-fraud-guidelines.md`.
 - Beneficiary models: Delegated SCA (with VariableOnDemand) is the only context where multiple (2–10) and open creditor models are allowed.
 
 ## Consent Management Interface (CMI)

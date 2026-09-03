@@ -73,6 +73,24 @@ trees/branches checked via raw-file probes instead.
 | Roadmap / Platform Assurance / Brand pages | Unchanged (Roadmap 6259008 v31, 25 Mar 2026; Assurance 405307393 v5, 2 Jun 2026; AlTareq Brand Guidelines 196116611 v9, 27 Feb 2025). NEW: final English **insurance co-branded messaging templates (LFI + TPP)** attached 8 Jul 2026 | `altareq-brand.md` |
 | NOT re-verified this pass | Metrics data range / v2.1 adoption (JSON too large for static fetch — still a 31 May 2026 snapshot); postman `fix/api-hub-and-hh-endpoints` merge status (GitHub API 403); live spec YAML diffs beyond existence probes | flagged in `implementation-roadmap.md`, `repositories.md` |
 
+## Pass of 3 September 2026 — wire-schema verification (api-specs only)
+
+Trigger: a build needed the exact home for custom data in the Risk block. Method: the two
+payment specs at `dist/standards/v2.1-errata3/` read directly from raw.githubusercontent.com,
+repo tree and commit history via an authenticated `gh api` call (no 403s). The community-hub
+register and Confluence were **not** re-checked this pass — items marked PENDING below need that.
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| Risk block structure | **VERIFIED**: `AERisk` (bank-initiation) and `…RichAuthorizationRequests.AERisk` (authorization-endpoints) are identical: exactly `DebtorIndicators`, `DestinationDeliveryAddress`, `TransactionIndicators`, `CreditorIndicators`, `additionalProperties: false`. **No root-level `Risk.SupplementaryData`.** Each of the three indicator objects carries a free-form `SupplementaryData` object — the only extension points. `ChannelType` is a closed seven-value enum; `SubChannelType` eight values; `CreditorIndicators.AccountType` = Retail/SME/Corporate | `aml-fraud-guidelines.md`, `payments-and-consent-rules.md`, SKILL.md |
+| PII envelope | **VERIFIED**: `PersonalIdentifiableInformation` is `AEJWEPaymentPII` (JWE compact string over a JWS; example header `RSA-OAEP` / `A256GCM`) on both the `/par` consent object and `POST /payments`; decrypted content is `{Initiation, Risk}`. Consent-side creditor list is `Initiation.Creditor[]` inside the seal | (already stated; no change) |
+| ControlParameters | **VERIFIED** closed schema: `IsDelegatedAuthentication?` + `ConsentSchedule.{SinglePayment\|MultiPayment\|FilePayment}`; MultiPayment = lifetime `MaximumCumulativeValueOfPayments` / `…NumberOfPayments` + `PeriodicSchedule` (discriminator `Type`; `VariableOnDemand` → `PeriodType`, `PeriodStartDate`, `Controls{MaximumIndividualAmount, MaximumCumulativeValueOfPaymentsPerPeriod, MaximumCumulativeNumberOfPaymentsPerPeriod}`, `minProperties: 1`). Matches `payments-and-consent-rules.md` | — |
+| Paths | **VERIFIED** v2.1 TPP surface: `POST /par`, `GET`/`PATCH /payment-consents/{ConsentId}` (revoke = PATCH, `RevokedBy: TPP \| TPP.InitiatedByUser`), `POST /payments` (`application/jwt`), `GET /payments/{PaymentId}`, `/file-payments`. SKILL.md API Categories row had listed `/domestic-payments`, `/multi-payments`, `/bulk-payments` as paths — corrected (they are consent/payment *types*) | SKILL.md |
+| errata3 repo additions | **PENDING (repo ahead of register?)**: commits of 15 Aug 2026 repointed the `GET /payments` / `GET /file-payments` idempotency-key 200 responses to `AEIdempotencyKeyQuerySigned` (CS-1346, recorded breaking change) and added `uae-insurance-openapi.yaml` to the errata3 folder. Register entry not checked | `standards-versions.md`, SKILL.md |
+| v2.2-rc1 | **NEW LINE DETECTED**: `dist/standards/v2.2-rc1/` promoted from `v2.2-draft1` on 21 Aug 2026, with `api-hub/v2.2.x` and `ozone-connect/v2.2.x`. Pre-release; content summarised from the promotion commit. `check_current.py` previously ignored `-rcN` folders silently — it now reports pre-release lines | `standards-versions.md`, `repositories.md`, SKILL.md, `scripts/check_current.py` |
+| JWE `alg` wording | **OPEN — minor**: `technical-specs.md` states `RSA-OAEP-256` (from the hub encryption guide); the errata3 spec's `AEJWEPaymentPII` example header decodes to `{"alg":"RSA-OAEP","enc":"A256GCM"}`. Both are RSA-OAEP family; confirm which the Hub/LFI JWKS actually advertise before hard-coding either | flagged here only |
+| NOT verified this pass | Register / Confluence status of the Aug additions and of v2.2-rc1; `servers` base paths; anything outside the two payment specs | — |
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the

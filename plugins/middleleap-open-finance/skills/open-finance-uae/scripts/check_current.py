@@ -56,10 +56,20 @@ def skill_stated_current(text: str) -> tuple[str, int]:
     return f"v{m.group(1)}.{m.group(2)}", int(m.group(3))
 
 
-def repo_current(paths: list[str]) -> tuple[str, int, list[str]]:
-    """Latest version line and its highest errata under dist/standards/, plus all lines seen."""
+def repo_current(paths: list[str]) -> tuple[str, int, list[str], list[str]]:
+    """Latest published version line and its highest errata under dist/standards/, all published
+    lines seen, and any pre-release folders (vX.Y-draftN / vX.Y-rcN) staged on main.
+
+    Pre-release folders never count as "current" — the repo's own ordering is
+    draftN < rcN < base < errataN — but they are reported so a coming version line is visible.
+    """
     lines: dict[str, int] = {}
+    prerelease: set[str] = set()
     for p in paths:
+        pre = re.match(r"^dist/standards/(v\d+\.\d+-(?:draft|rc)\d+)/", p)
+        if pre:
+            prerelease.add(pre.group(1))
+            continue
         m = re.match(r"^dist/standards/v(\d+)\.(\d+)(?:-errata(\d+))?/", p)
         if not m:
             continue
@@ -68,7 +78,7 @@ def repo_current(paths: list[str]) -> tuple[str, int, list[str]]:
     if not lines:
         sys.exit("no dist/standards/ version folders found in api-specs repo")
     latest = max(lines, key=lambda v: tuple(int(x) for x in v[1:].split(".")))
-    return latest, lines[latest], sorted(lines)
+    return latest, lines[latest], sorted(lines), sorted(prerelease)
 
 
 def register_current(version_hint: str) -> tuple[str, int] | None:
@@ -107,10 +117,11 @@ def main() -> None:
 
     repo = None
     repo_lines: list[str] = []
+    prerelease: list[str] = []
     repo_note = None
     try:
         paths = list_tree(use_cache=not args.no_cache)
-        v, n, repo_lines = repo_current(paths)
+        v, n, repo_lines, prerelease = repo_current(paths)
         repo = (v, n)
     except urllib.error.HTTPError as e:
         if e.code == 403:
@@ -145,6 +156,7 @@ def main() -> None:
         "register_published": f"{register[0]}-errata{register[1]}" if register else None,
         "repo_latest": f"{repo[0]}-errata{repo[1]}" if repo else None,
         "all_version_lines_in_repo": repo_lines,
+        "prerelease_lines_in_repo": prerelease,
         "status": status,
         "note": repo_note,
     }
@@ -156,6 +168,9 @@ def main() -> None:
         print(f"repo latest (cut)    : {result['repo_latest'] or 'unreachable'}")
         if repo_lines:
             print(f"version lines in repo: {', '.join(repo_lines)}")
+        if prerelease:
+            print(f"pre-release on main  : {', '.join(prerelease)} (draft/rc — not current; "
+                  "note it in standards-versions.md if the skill does not mention it)")
         if repo_note:
             print(f"note                 : {repo_note}")
         if status == "FRESH":

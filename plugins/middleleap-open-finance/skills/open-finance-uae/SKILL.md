@@ -7,15 +7,16 @@ description: Expert guidance on UAE Open Finance — CBUAE regulation and compli
 
 Expert knowledge base for UAE's Open Finance ecosystem covering CBUAE regulations, Standards versions (v2.1-final production, errata3 current), Al Tareq platform requirements, implementation guidance, testing/certification, commercial model, roadmap, and CAAP authentication.
 
-> **Last verified against sources: 17 August 2026 (full source re-verification; prior passes 13 Jul / 10 Jun 2026).** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py`.
+> **Last verified against sources: 17 August 2026 (full source re-verification; prior passes 13 Jul / 10 Jun 2026); wire-schema pass 3 September 2026 (Risk extension points, PII envelope, ControlParameters, v2.2-rc1 detection — api-specs repo only, register not re-checked).** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py`.
 
 ## Quick Reference
 
 | Aspect | Detail |
 |--------|--------|
 | Regulation | CBUAE Circular C 03/2025 (10 July 2025) |
-| Current Standards | **v2.1-final** (base 7 Jan 2026) + **errata3** (effective 30 Jun 2026 doc-level / 8 Jul 2026 spec register; scope: intl-payments creditor) |
-| Post-Publication Register | Release Notes (platform deployments) + Errata (doc corrections); current errata = **v2.1-errata3** (auth-endpoints + bank-initiation only; other specs resolve to errata2/errata1/base) |
+| Current Standards | **v2.1-final** (base 7 Jan 2026) + **errata3** (effective 30 Jun 2026 doc-level / 8 Jul 2026 spec register; scope: intl-payments creditor; **Aug 2026 repo additions**: signed idempotency-key responses on `GET /payments`/`/file-payments`, insurance backport — register entry to verify) |
+| Next version line | **v2.2-rc1** cut to `api-specs` `main` on **21 Aug 2026** (`dist/standards/v2.2-rc1/`, plus `api-hub/v2.2.x` and `ozone-connect/v2.2.x`) — **pre-release, must not be the basis of a production implementation**; register status not yet checked (verify against source) |
+| Post-Publication Register | Release Notes (platform deployments) + Errata (doc corrections); current errata = **v2.1-errata3** (auth-endpoints + bank-initiation + insurance since Aug 2026; other specs resolve to errata2/errata1/base) |
 | API Hub Version | **v8** (current; v7 = v2.0, v6 = v1.2 legacy) |
 | Platform | Al Tareq (consumer brand) / Nebras (operator) |
 | Auth Method | CAAP (Centralized Auth) via AlTareq app + EFR + UAE Pass |
@@ -69,7 +70,8 @@ The UAE model is **centralised** — do not import UK/EU Open Banking assumption
 | v2.0-final | Apr 2025 | Superseded (still in heavy live use) | v7 |
 | **v2.1-final** | **Jan 7 2026** | **✓ CURRENT PRODUCTION** | **v8** |
 | v2.1-errata2 | 7 May 2026 | Superseded per-file by errata3 (17 corrections) | v8 |
-| **v2.1-errata3** | **30 Jun / 8 Jul 2026** | **✓ CURRENT ERRATA** (2 corrections: intl-payments creditor, SWIFT SR2026; auth-endpoints + bank-initiation only) | v8 |
+| **v2.1-errata3** | **30 Jun / 8 Jul 2026** (+ repo additions 15 Aug 2026) | **✓ CURRENT ERRATA** (2 published corrections: intl-payments creditor, SWIFT SR2026; Aug repo additions: signed idempotency-key responses, insurance backport — verify register) | v8 |
+| v2.2-rc1 | 21 Aug 2026 (repo cut) | Pre-release preview — `TransactionInformation` required (min 1 / max 500, placeholders rejected), `DebtorReference` OFP-003 charset, webhook content type `application/jwt`, Sharia/insurance/TPP data-deletion changes; **no agent concepts, `ChannelType` unchanged** | v2.2.x lines staged |
 
 **Errata model:** once published, a version's content MUST NOT change without an Errata record. **Release Notes** capture platform deployments that change participant-facing behaviour; **Errata** capture documentation corrections. Use v2.1-final + errata3 for all new builds — but confirm the counterparty's live version first (see live-traffic note above). Full version comparison, errata detail, and migration guidance: `references/standards-versions.md`.
 
@@ -78,7 +80,7 @@ The UAE model is **centralised** — do not import UK/EU Open Banking assumption
 | Category | Purpose | Key APIs |
 |----------|---------|----------|
 | Bank Data Sharing | Account/transaction data | /accounts, /transactions, /cop-query |
-| Bank Service Initiation | Domestic, international, multi-payments, bulk/batch | /domestic-payments, /international-payments, /multi-payments, /bulk-payments |
+| Bank Service Initiation | Domestic, international, multi-payments, bulk/batch — all are consent *types*, not paths | `POST /par` (consent), `GET`/`PATCH /payment-consents/{ConsentId}`, `POST /payments`, `GET /payments/{PaymentId}`, `/file-payments` (v2.1; there is no `/domestic-payments` or `/multi-payments` path) |
 | Dynamic Account Opening | Account creation with KYC | /accounts/open, /kyc-verification |
 | Insurance Data Sharing | Policy/claims | /policies, /claims |
 | Insurance Quotes | 7 types: Motor, Health, Home, Renters, Travel, Life, Employment | /insurance-quotes |
@@ -131,7 +133,7 @@ Verified 10 Jun 2026 against the OF Confluence "Limitation of Liability Model" (
 - **Multi-user authorization:** per errata2, the consent-management interface must allow remaining approvers to retrieve and act on an "Awaiting Authorization" consent.
 - **CoP (Confirmation of Payee):** mandatory before all payments. `fullName` mandatory for personal accounts.
 - **CAAP authentication:** centralized auth via AlTareq mobile app with EFR and UAE Pass, across all LFIs.
-- **Fraud prevention:** CoP mandatory · 10 high-risk countries excluded · **Risk Information Block** mandatory (Customer Present flag, Creditor Contract flag, Channel, merchant details). AML: suspicious activity reported via CBUAE AML GO portal. Detail: `references/aml-fraud-guidelines.md`.
+- **Fraud prevention:** CoP mandatory · 10 high-risk countries excluded · **Risk Information Block** mandatory (Customer Present flag, Creditor Contract flag, Channel, merchant details), sealed inside the JWE `PersonalIdentifiableInformation` on both `/par` and `/payments`. `Risk` is a closed object with four members; **custom or extension data goes only in `DebtorIndicators`/`TransactionIndicators`/`CreditorIndicators`.`SupplementaryData`** — there is no root-level `Risk.SupplementaryData`. AML: suspicious activity reported via CBUAE AML GO portal. Detail: `references/aml-fraud-guidelines.md`.
 - **International payments:** AED 15,000 limit to a **new beneficiary for 48 hours after beneficiary creation** — per customer, per TPP, per bank, sum of payments (TPP-imposed; verified in the Limitation of Liability Model).
 - **Timing rules:** 10-minute payment initiation window (A15–A17) · 500ms payment status SLA (A20) · 5-second FX quote SLA.
 - **Dynamic Account Opening:** supported; integrates with the 7 insurance quote types.
@@ -149,7 +151,7 @@ Verified 10 Jun 2026 against the OF Confluence "Limitation of Liability Model" (
 | **Business case / commercials** | `pricing-model.md` → `liability-framework.md` → `cbuae-regulations.md` |
 | **Regulatory / licensing** question | `cbuae-regulations.md` → `liability-framework.md` |
 | **Compliance dates / what's live** | `implementation-roadmap.md` → `standards-versions.md` |
-| **Fraud / AML** controls | `aml-fraud-guidelines.md` → `api-specifications.md` (Risk block context) |
+| **Fraud / AML** controls, **Risk block structure / where custom data may go** | `aml-fraud-guidelines.md` → `payments-and-consent-rules.md` (Risk in the consent/payment flow) → `technical-specs.md` (JWE envelope) |
 | **SLA / data-quality / deprecation policy** | `operational-policies.md` → `liability-framework.md` |
 | **Support tickets / service-desk SLAs / disputes / billing ops / CAB change requests / notice periods** | `nebras-interaction-guide.md` → `operational-policies.md` |
 | **Payment/consent business rules, multi-payments, insurance quotes** | `payments-and-consent-rules.md` → `api-specifications.md` |

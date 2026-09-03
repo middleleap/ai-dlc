@@ -96,8 +96,12 @@ questions):
   uppercase `OTHER`** branch dropped from `AEExternalFinancialInstitutionIdentificationCode`
   (anyOf collapses to `[BICFI, Other]`).
 
-**Branches:** `main` is published/authoritative. Other branches are drafts of future content
-(e.g. a forthcoming `v2.2`) and are not authoritative until Nebras announces ecosystem review.
+**Branches and pre-release folders:** `main` is published/authoritative for `base` and `errataN`
+folders. Since **21 Aug 2026** `main` also carries **`dist/standards/v2.2-rc1/`** (promoted from
+`v2.2-draft1`) plus `dist/api-hub/v2.2.x/` and `dist/ozone-connect/v2.2.x/`. The repo's own test
+helpers order a version line as `draftN < rcN < base < errataN`; `-draftN`/`-rcN` folders are
+pre-release content and are not authoritative until Nebras announces ecosystem review. Other
+branches carry further drafts.
 
 **Website spec branch — RESOLVED (17 Aug 2026):** the `caap-refactor` divergence has landed on
 `main`. `dist/ozone-connect/v2.1.x/uae-ozone-connect-caap-operations-openapi.yaml` now exists on

@@ -1,6 +1,6 @@
 # UAE Open Finance Standards Versions
 
-> **Last verified: 17 August 2026** (full register + Confluence re-check; prior passes 13 Jul / 10 Jun 2026) against the community hub Release Notes & Errata register, the erratas-registry source, and the OF Confluence errata pages. Current production standard is **v2.1-final** with **errata3** (spec-register effective 8 Jul 2026; doc-level effective 30 Jun 2026; supersedes errata2 of 7 May 2026 for the touched specs). No errata4 and no v2.2 published as of 17 Aug 2026. Note: live API traffic is still dominated by v1.2 and v2.0 (v2.1 adoption nascent as of May 2026 data) — "Superseded" below means "not for new builds," not "out of live use."
+> **Last verified: 17 August 2026** (full register + Confluence re-check; prior passes 13 Jul / 10 Jun 2026) against the community hub Release Notes & Errata register, the erratas-registry source, and the OF Confluence errata pages. Current production standard is **v2.1-final** with **errata3** (spec-register effective 8 Jul 2026; doc-level effective 30 Jun 2026; supersedes errata2 of 7 May 2026 for the touched specs). No errata4 and no v2.2 *published* as of 17 Aug 2026; **repo-level update 3 Sep 2026:** `v2.2-rc1` was cut to `api-specs` `main` on 21 Aug 2026 (pre-release, see the v2.2-rc1 section below) and the errata3 folders gained additions on 15 Aug 2026 — register status of both unverified. Note: live API traffic is still dominated by v1.2 and v2.0 (v2.1 adoption nascent as of May 2026 data) — "Superseded" below means "not for new builds," not "out of live use."
 
 ## Table of Contents
 1. [Version History Overview](#version-history-overview)
@@ -25,7 +25,8 @@
 | v2.0-final | Apr 4, 2025 | Superseded (heavy live use) | Major uplift |
 | v2.1-final | Jan 7, 2026 | Current Production | Enhanced APIs and operational requirements |
 | v2.1-errata2 | May 7, 2026 | Superseded per-file by errata3 | Doc corrections to v2.1-final + API Hub v8 (17 sections) |
-| **v2.1-errata3** | **Effective 8 Jul 2026 (spec register) / 30 Jun 2026 (doc-level)** | **Current Errata** | 2 corrections — Bank Service Initiation international creditor (SWIFT SR2026); errata folders carry auth-endpoints + bank-initiation; matching in-place corrections in Consent Manager + Ozone Connect bank-service-initiation/consent-events |
+| **v2.1-errata3** | **Effective 8 Jul 2026 (spec register) / 30 Jun 2026 (doc-level)**; repo additions 15 Aug 2026 | **Current Errata** | 2 published corrections — Bank Service Initiation international creditor (SWIFT SR2026); errata folders carry auth-endpoints + bank-initiation (+ insurance since Aug 2026); matching in-place corrections in Consent Manager + Ozone Connect bank-service-initiation/consent-events. Aug 2026 additions below (register entry to verify) |
+| v2.2-rc1 | Repo cut Aug 21, 2026 | Pre-release preview — not for production | `TransactionInformation` required; `DebtorReference` OFP-003 charset; webhook `application/jwt`; Sharia, insurance rework, TPP data deletion. Ordering rule in the repo tests: `draftN < rcN < base < errataN` |
 
 **Important**: Always implement against the **latest available version plus its current errata** (v2.1-final + errata3; errata resolve per file — highest errata folder containing the file wins). Deprecated versions should not be used for new implementations. Confirm which version a counterparty LFI actually serves in production — many remain on v1.2/v2.0.
 
@@ -286,6 +287,15 @@ The post-publication register has two halves, both on the community hub
 2. **International Creditor Agent address aligned onto shared `AEInternationalAddress`** — `TownName` becomes required and its `maxLength` tightens from 140 to 70; the Creditor Agent address itself remains optional.
 
 **Impact:** any TPP/LFI building or serving v2.1 **international payments** must adopt the new creditor structures; domestic-only flows are unaffected. (Detection note: on 13 Jul 2026 the register landing page still summarised "errata2" while the versioned page listed errata3; by 17 Aug 2026 the landing page lists errata1–3 — trust the versioned page `erratas/v2.1/` when they disagree.)
+
+**Repo-level additions to the errata3 folders after publication (api-specs commits of 15 and 21 Aug 2026; register entries not yet verified — treat as PENDING per `check_current.py` semantics):**
+
+- `uae-bank-initiation-openapi.yaml`: the 200 idempotency-key query responses on `GET /payments` and `GET /file-payments` are repointed to `AEIdempotencyKeyQuerySigned` (CS-1346) — a recorded breaking change that corrects the spec to the signed JWT the API Hub has always emitted.
+- `uae-insurance-openapi.yaml` copied into `v2.1-errata3` with the insurance errata applied (per-`QuoteStatus` quote-response subschemas over a shared `AEHealthInsuranceQuoteProperties`, `format: uuid` dropped, `CreditDebitIndicator` on premium adjustments, percentage/ratio schema split). So errata3 now resolves for insurance too, not only auth-endpoints and bank-initiation.
+
+### v2.2-rc1 — pre-release line (repo cut 21 Aug 2026)
+
+`dist/standards/v2.2-rc1/` (promoted from `v2.2-draft1`), with `dist/api-hub/v2.2.x/` and `dist/ozone-connect/v2.2.x/`. Release-candidate content **must not be used as the basis for a production implementation**; it signals what v2.2 will require. Payment-relevant changes so far: `TransactionInformation` required on `AETransaction` (min 1 / max 500 chars, human-readable, placeholders such as `N/A`, `-`, `Unknown` rejected — treat it as untrusted free text in any downstream tooling); `DebtorReference` gains the OFP-003 pattern `^[A-Za-z0-9 \/?:().,'+-]+$`; webhook Event Notification content type corrected to `application/jwt`; consent-manager `GET /psu/{userId}/consents` status becomes a comma-separated `AEConsentStatus` list; `paymentResponse.paymentRail` (`AANI`, `FTS`, `LFI`) on the payment log; `GET /payment-log` paginated. `Risk`, `ChannelType` and the multi-payment control parameters are unchanged.
 
 ### Doc-level errata register on Confluence (verified 17 Aug 2026)
 
