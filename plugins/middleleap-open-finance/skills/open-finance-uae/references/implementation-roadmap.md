@@ -39,7 +39,8 @@ Other dated milestones:
 | TPP regularisation deadline (CBUAE) | **16 Sep 2026** — unchanged as of the 8 Jun 2026 source check |
 | Ozone ISO/IEC 27001:2022 certificate + Platform Assurance docs published | Jun 2026 |
 | v2.1-errata2 published | 7 May 2026 (individual errata sections record effective dates from 28 Apr 2026; some "to be confirmed on merge") |
-| v2.1-errata3 published | Effective 30 Jun 2026 (doc-level) / 8 Jul 2026 (spec register) — 2 corrections, intl-payments creditor restructure (SWIFT SR2026); standards-tree folders: auth-endpoints + bank-initiation (matching in-place Consent Manager / Ozone Connect updates) |
+| v2.1-errata3 published | §1–2 effective 30 Jun 2026 (doc-level) / 8 Jul 2026 (spec register) — intl-payments creditor restructure (SWIFT SR2026); §3–5 effective 21 Aug 2026 (spec register only) — Debtor/Creditor Reference charset, signed idempotency-key response, ReadStatements/ReadProductFinanceRates on Consent Events + CAAP. Standards-tree folder: auth-endpoints + bank-initiation (+ insurance since 15 Aug 2026, repo-level); matching in-place Consent Manager / Ozone Connect updates. Detail: `standards-versions.md` |
+| v2.2-rc1 cut | 21 Aug 2026 on `api-specs` `main` — pre-release, not for production; register status unverified (see `standards-versions.md`) |
 
 ## Deadlines vs Delivery
 

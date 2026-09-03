@@ -41,6 +41,20 @@ The `Risk` object is **mandatory fraud-prevention data**, required in the PII pa
 - Schema enforces `additionalProperties: false` — **errata2 tightened this across the Risk tree on POST /payments, /payment-consents and /file-payments**: undeclared Risk fields now fail validation (breaking change recorded in api-specs `supporting/breaking-changes`). `AccountType` enum is now `[Retail, SME, Corporate]`.
 - Like all PII, the Risk object is **encrypted inside the JWE** and readable only by the destination LFI.
 
+**Structure and extension points (verified 3 Sep 2026 against `dist/standards/v2.1-errata3/uae-bank-initiation-openapi.yaml` `AERisk` and the matching `AEBankServiceInitiationRichAuthorizationRequests.AERisk` in the authorization-endpoints spec — identical on consent and payment):**
+
+```
+Risk                                  additionalProperties: false — exactly these four members
+├── DebtorIndicators                  … SupplementaryData (object, free-form)
+├── DestinationDeliveryAddress        { RecipientType: Individual|Corporate, RecipientName {en, ar}, NationalAddress }
+├── TransactionIndicators             … SupplementaryData (object, free-form)
+└── CreditorIndicators                … SupplementaryData (object, free-form)
+```
+
+- **There is no root-level `Risk.SupplementaryData`.** The only places a TPP may carry data the schema does not name (a device fingerprint, behavioural signals, an agent/automation declaration) are the three `SupplementaryData` objects; each is `type: object` with no property constraints. `TransactionIndicators.SupplementaryData` is the natural home for anything about *this initiation*; the spec's own description of `DebtorIndicators.SupplementaryData` gives behavioural data as the example.
+- Because the whole `Risk` object rides inside the JWE, anything placed in `SupplementaryData` is readable by the LFI only — never by the API Hub.
+- `TransactionIndicators.ChannelType` is a closed seven-value enum (`ECommerce`, `InStore`, `InApp`, `Telephone`, `Mail`, `RecurringPayment`, `Other`); there is no agent- or automation-specific value. `IsCustomerPresent: false` is the standard's own marker for automatic initiation.
+
 | Section | Key fields (verified) |
 |---------|----------------------|
 | `DebtorIndicators.Authentication` | AuthenticationChannel (Web/App), Knowledge/Possession/Inherence factors (`IsUsed`, `Type` — e.g. Password, SMSOTP, FaceRecognition, Passkey, SecureEnclaveKey), ChallengeOutcome (Pass / NotPerformed), AuthenticationFlow (MFA), AuthenticationValue (delegated SCA JWS), ChallengeDateTime |
@@ -48,9 +62,9 @@ The `Risk` object is **mandatory fraud-prevention data**, required in the PII pa
 | `DebtorIndicators.DeviceInformation` / `BrowserInformation` | DeviceType, OS + version, **DeviceBindingId, BindingStatus, BindingDuration**, ConnectionType; or UserAgent, IsCookiesEnabled, PixelRatio |
 | `DebtorIndicators.AppInformation` / `BiometricCapabilities` | AppVersion, PackageName, BuildNumber; SupportsBiometric, BiometricTypes |
 | `DebtorIndicators.AccountRiskIndicators` | UserOnboardingDateTime, LastAccountChangeDate, **SuspiciousActivity** (e.g. NoSuspiciousActivity), TransactionHistory (LastDay / LastYear counts) |
-| `TransactionIndicators` | **IsCustomerPresent** (Customer Present flag), **IsContractPresent** (Creditor Contract flag — true for subscription/recurring under contract), **Channel** (Web/Mobile), ChannelType (ECommerce / InApp / RecurringPayment), SubChannelType, PaymentProcess (durations, session and 24h attempt/failure counts) |
+| `TransactionIndicators` | **IsCustomerPresent** (Customer Present flag), **IsContractPresent** (Creditor Contract flag — true for subscription/recurring under contract), **Channel** (Web/Mobile), ChannelType (ECommerce / InStore / InApp / Telephone / Mail / RecurringPayment / Other), SubChannelType (WebBrowser / MobileApp / SmartTV / WearableDevice / POSTerminal / ATM / KioskTerminal / Other), PaymentProcess (durations, session and 24h attempt/failure counts), SupplementaryData |
 | `TransactionIndicators.MerchantRisk` | DeliveryTimeframe, ReorderItemsIndicator, IsGiftCardPurchase, IsDeliveryAddressMatchesBilling, AddressMatchLevel |
-| `CreditorIndicators` | AccountType (Retail/Corporate), IsCreditorPrePopulated, IsVerifiedByTPP, IsCreditorConfirmed, **MerchantDetails** (MerchantId, MerchantName, MerchantCategoryCode) |
+| `CreditorIndicators` | AccountType (Retail/SME/Corporate), IsCreditorPrePopulated, TradingName, IsVerifiedByTPP, AdditionalAccountHolderIdentifiers (EmiratesID / TradeLicenceNumber), IsCreditorConfirmed, **MerchantDetails** (MerchantId, MerchantName, MerchantSICCode, MerchantCategoryCode), SupplementaryData |
 | `DestinationDeliveryAddress` | RecipientType, RecipientName, NationalAddress (for goods delivery) |
 
 Usage pattern by scenario (verified examples): merchant e-commerce (customer present, merchant details + delivery address), A2A transfer (customer present, no contract), subscription/recurring (customer NOT present, `IsContractPresent: true`, auth ChallengeOutcome NotPerformed), delegated SCA (TPP-side MFA with AuthenticationValue JWS).
