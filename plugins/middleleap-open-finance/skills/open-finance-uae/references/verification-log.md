@@ -73,12 +73,27 @@ trees/branches checked via raw-file probes instead.
 | Roadmap / Platform Assurance / Brand pages | Unchanged (Roadmap 6259008 v31, 25 Mar 2026; Assurance 405307393 v5, 2 Jun 2026; AlTareq Brand Guidelines 196116611 v9, 27 Feb 2025). NEW: final English **insurance co-branded messaging templates (LFI + TPP)** attached 8 Jul 2026 | `altareq-brand.md` |
 | NOT re-verified this pass | Metrics data range / v2.1 adoption (JSON too large for static fetch — still a 31 May 2026 snapshot); postman `fix/api-hub-and-hh-endpoints` merge status (GitHub API 403); live spec YAML diffs beyond existence probes | flagged in `implementation-roadmap.md`, `repositories.md` |
 
+## Pass of 31 August 2026 — errata3 grew from 2 to 5 corrections since 17 Aug
+
+Trigger: weekly scheduled re-check of the community hub Release Notes & Errata register (the
+"ecosystem watcher" cadence). Method: `check_current.py` (register-only fallback — GitHub API
+403 rate-limited as usual) plus a manual fetch of `erratas/v2.1/`, the `erratas-registry.ts`
+source, and the doc-level Confluence "Consolidated Errata" page (1366294554).
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| `check_current.py` verdict | **FRESH** — it only compares the stated errata *number* (`v2.1-errata3` in both SKILL.md and the register), so it correctly reported no change. **This is a real blind spot**: it cannot detect an existing errata group growing new sections without a number bump. Not fixed this pass (flagged for a follow-up); cross-check `standards-versions.md`'s section count manually until it is | — |
+| errata3 scope | **STALE — 3 new corrections found**, effective **21 Aug 2026** (4 days after the 17 Aug pass), not yet reflected in the skill: **§3** Debtor/Creditor References constrained to the ISO 20022/SWIFT `x` character set (proposal OFP-003); **§4** idempotency-key query response corrected to the signed envelope `AEIdempotencyKeyQuerySigned` (`uae-bank-initiation-openapi` only); **§5** `ReadStatements`/`ReadProductFinanceRates` permission codes extended to `uae-ozone-connect-consent-events-actions-openapi` and — newly added to the errata3 affected-spec list — `uae-ozone-connect-caap-operations-openapi`. errata3 is now 5 sections total (was 2 as of 17 Aug); §1–2 unchanged (eff. 8 Jul 2026, intl-creditor restructure) | `standards-versions.md`, SKILL.md, `api-specifications.md`, `technical-specs.md` |
+| Doc-level Confluence register | **Still at page version 5 / last edit 8 Jul 2026** — covers only §1–2. §3–5 exist only in the spec-level register as of this pass; the systematic spec-runs-ahead-of-doc lag noted on 13 Jul/17 Aug continues | `standards-versions.md` |
+| NOT re-verified this pass | `dist/standards/v2.1-errata3/` folder tree itself (GitHub API 403); whether §3–5 changes are already live on API Hub v8 production (Release Notes not checked this pass — see `implementation-roadmap.md` for the last-known API Hub release, 2026.22.0 / 6 Jul 2026, and Trust Framework release, 2.4.0 / 7 Jul 2026 with 2.5.0 still TBC as of this pass); full site/Confluence re-audit (scoped to errata register only this pass, unlike the 17 Aug full pass) | flagged above |
+
 ## Pass of 3 September 2026 — wire-schema verification (api-specs only)
 
 Trigger: a build needed the exact home for custom data in the Risk block. Method: the two
 payment specs at `dist/standards/v2.1-errata3/` read directly from raw.githubusercontent.com,
-repo tree and commit history via an authenticated `gh api` call (no 403s). The community-hub
-register and Confluence were **not** re-checked this pass — items marked PENDING below need that.
+repo tree and commit history via an **authenticated** `gh api` call (no 403s — closes the 31 Aug
+"folder tree not re-checked" item). The community-hub register and Confluence were **not**
+re-checked this pass — items marked PENDING below need that.
 
 | Item | Outcome | Files updated |
 |---|---|---|
@@ -86,10 +101,10 @@ register and Confluence were **not** re-checked this pass — items marked PENDI
 | PII envelope | **VERIFIED**: `PersonalIdentifiableInformation` is `AEJWEPaymentPII` (JWE compact string over a JWS; example header `RSA-OAEP` / `A256GCM`) on both the `/par` consent object and `POST /payments`; decrypted content is `{Initiation, Risk}`. Consent-side creditor list is `Initiation.Creditor[]` inside the seal | (already stated; no change) |
 | ControlParameters | **VERIFIED** closed schema: `IsDelegatedAuthentication?` + `ConsentSchedule.{SinglePayment\|MultiPayment\|FilePayment}`; MultiPayment = lifetime `MaximumCumulativeValueOfPayments` / `…NumberOfPayments` + `PeriodicSchedule` (discriminator `Type`; `VariableOnDemand` → `PeriodType`, `PeriodStartDate`, `Controls{MaximumIndividualAmount, MaximumCumulativeValueOfPaymentsPerPeriod, MaximumCumulativeNumberOfPaymentsPerPeriod}`, `minProperties: 1`). Matches `payments-and-consent-rules.md` | — |
 | Paths | **VERIFIED** v2.1 TPP surface: `POST /par`, `GET`/`PATCH /payment-consents/{ConsentId}` (revoke = PATCH, `RevokedBy: TPP \| TPP.InitiatedByUser`), `POST /payments` (`application/jwt`), `GET /payments/{PaymentId}`, `/file-payments`. SKILL.md API Categories row had listed `/domestic-payments`, `/multi-payments`, `/bulk-payments` as paths — corrected (they are consent/payment *types*) | SKILL.md |
-| errata3 repo additions | **PENDING (repo ahead of register?)**: commits of 15 Aug 2026 repointed the `GET /payments` / `GET /file-payments` idempotency-key 200 responses to `AEIdempotencyKeyQuerySigned` (CS-1346, recorded breaking change) and added `uae-insurance-openapi.yaml` to the errata3 folder. Register entry not checked | `standards-versions.md`, SKILL.md |
-| v2.2-rc1 | **NEW LINE DETECTED**: `dist/standards/v2.2-rc1/` promoted from `v2.2-draft1` on 21 Aug 2026, with `api-hub/v2.2.x` and `ozone-connect/v2.2.x`. Pre-release; content summarised from the promotion commit. `check_current.py` previously ignored `-rcN` folders silently — it now reports pre-release lines | `standards-versions.md`, `repositories.md`, SKILL.md, `scripts/check_current.py` |
+| errata3 folder tree | **CONFIRMED at folder level** (closes the 31 Aug open item): `dist/standards/v2.1-errata3/` = `uae-authorization-endpoints-openapi.yaml` + `uae-bank-initiation-openapi.yaml` + **`uae-insurance-openapi.yaml`** (copied in 15 Aug 2026 with the insurance errata applied — per-QuoteStatus quote subschemas, `format: uuid` dropped, `CreditDebitIndicator`, percentage/ratio split). The bank-initiation file carries the §4 signed idempotency-key response (`AEIdempotencyKeyQuerySigned`, on `GET /file-payments` as well as `GET /payments`; breaking change recorded under `supporting/breaking-changes/standards/v2.1-errata3/`). **PENDING**: the insurance file is not in the register's errata3 affected-spec list — repo ahead of register, or a folder-level backport the register does not track | `standards-versions.md`, SKILL.md |
+| v2.2-rc1 | **NEW LINE DETECTED**: `dist/standards/v2.2-rc1/` promoted from `v2.2-draft1` on 21 Aug 2026, with `api-hub/v2.2.x` and `ozone-connect/v2.2.x`. Pre-release; content summarised from the promotion commit (its `DebtorReference` OFP-003 pattern is the same change as errata3 §3). `check_current.py` previously ignored `-rcN` folders silently — it now reports pre-release lines. It still does **not** count sections, so the 31 Aug blind spot (an errata group growing in place) remains open | `standards-versions.md`, `repositories.md`, SKILL.md, `scripts/check_current.py` |
 | JWE `alg` wording | **OPEN — minor**: `technical-specs.md` states `RSA-OAEP-256` (from the hub encryption guide); the errata3 spec's `AEJWEPaymentPII` example header decodes to `{"alg":"RSA-OAEP","enc":"A256GCM"}`. Both are RSA-OAEP family; confirm which the Hub/LFI JWKS actually advertise before hard-coding either | flagged here only |
-| NOT verified this pass | Register / Confluence status of the Aug additions and of v2.2-rc1; `servers` base paths; anything outside the two payment specs | — |
+| NOT verified this pass | Register / Confluence status of v2.2-rc1 and of the insurance file in the errata3 folder; `servers` base paths; anything outside the two payment specs | — |
 
 ## Other dated verification notes
 
