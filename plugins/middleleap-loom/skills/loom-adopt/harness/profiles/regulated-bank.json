@@ -55,8 +55,12 @@
           "required": true,
           "minimum_version": "3.1",
           "institution_owned": true
+        },
+        "threat_model": {
+          "required": true
         }
-      }
+      },
+      "_threat_model_comment": "2.1.0 (hardening plan 4.6): a MEDIUM software change owes its threat model (A2: threat → control → test) without the full A1–A5 gate. The A gate stays at high; `threat_model` is mandatory-when-compiled, so scripts/architecture-assurance-check.mjs evaluates A2 alone for a medium plan and the change-envelope gate requires architecture-assurance.json from in-delivery. A change too small to have attackers is a documentation change, and that tier is low."
     },
     "high": {
       "gates": [
@@ -137,7 +141,7 @@
         ],
         "max_diff_lines": 60
       },
-      "pre_compiled_plan_hash": "af3f4d7658b9e816bbaf7690153b1b798b051fbcea76404faa56db494ba7c6d5",
+      "pre_compiled_plan_hash": "9e31afb54ef057cf3fb37da4c2090cb67b13678eb0c273ec006e541e1bb3357e",
       "approved_by": "risk-lena",
       "approved_at": "2026-07-22",
       "_expires_comment": "ADOPT: a real pattern's window is short — 90 days is normal, and re-reading it is the point. The date here is far out ON PURPOSE: a shipped fixture with a 90-day expiry is a build that turns red on a calendar, and a check that turns red on a calendar gets deleted rather than renewed. The bundle's CI proves BOTH directions per run by restamping this field, so the expiry is exercised without being load-bearing on the date.",
@@ -177,8 +181,12 @@
           "real_data_controls": {
             "required": true,
             "institution_owned": true
+          },
+          "dpia": {
+            "required": true
           }
-        }
+        },
+        "_dpia_comment": "2.1.0 (hardening plan 4.2): a change flagged personal_data compiles `dpia` — scripts/product-approval-check.mjs then requires a dpia.json beside the envelope at PA1 (categories that resolve in the data-lifecycle register, purpose, lawful basis, residency, necessity, risks each with a mitigation, signed by a data-protection human outside the builders group). It replaces the prose pdpl-and-residency passport section the UAE profile used to compile: a paragraph could satisfy that, a record cannot be satisfied by a paragraph."
       }
     },
     {

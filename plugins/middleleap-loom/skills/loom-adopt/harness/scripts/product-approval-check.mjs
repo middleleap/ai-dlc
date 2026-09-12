@@ -25,6 +25,18 @@
 // by `core/approval-attestations.mjs`. This path tightens the gate; it never loosens it, and a
 // plan that does not compile the capability behaves exactly as before.
 //
+// 2.1.0 (hardening plan 4.2 · 4.4) — TWO RECORDS THAT USED TO BE PROSE.
+//   DPIA: when the plan compiles the `dpia` capability (the base profile does so on the personal_data
+//   flag), PA1 requires a dpia.json beside the envelope — every category it names resolves in the
+//   data-lifecycle register, its residency is stated, its risks each carry a mitigation, and it is
+//   signed by a data-protection HUMAN outside the builders group. The prose `pdpl-and-residency`
+//   passport section it replaces could be satisfied by a paragraph.
+//   MODEL OUTSOURCING: an LLM provider is a third party under the outsourcing rules like any other,
+//   and the provider field in the model manifest is where that fact was hiding. PA1 on a change
+//   that names model roles requires each role's provider to carry a `third_party` block: an
+//   outsourcing assessment, prompt-data residency terms, an exit plan, and an assessor holding an
+//   independent role. Kosli itself is a third party under the same rule.
+//
 // Run from the repo root: `node scripts/product-approval-check.mjs`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
@@ -41,6 +53,86 @@ import {
 import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
+export const DPIA_FILE = 'dpia.json';
+export const DPIA_CAPABILITY = 'dpia';
+// Roles that may assess an outsourcing: the second-line functions plus information security.
+export const OUTSOURCING_ASSESSOR_ROLES = ['compliance', 'risk-second-line', 'information-security'];
+// A provider value that means "we run it ourselves" — no outsourcing to assess.
+export const INTERNAL_PROVIDERS = new Set(['internal', 'in-house', 'self-hosted', 'none']);
+const nonEmptyStr = (v) => typeof v === 'string' && v.trim().length > 0;
+
+/**
+ * 2.1.0 (4.2) — the DPIA record for one change. Findings; empty ⇒ a complete, signed assessment
+ * whose categories are the register's.
+ */
+export function evaluateDpia(dpia, { changeId = '(no id)', dataLifecycle = null, registry = null, notices = null } = {}) {
+  const label = `${changeId} · PA1 · DPIA`;
+  if (!dpia || typeof dpia !== 'object') return [`${label}: ${DPIA_FILE} is missing — the plan compiles ${DPIA_CAPABILITY} for a change touching personal data, and a passport paragraph is not an impact assessment`];
+  const f = [];
+  if (nonEmptyStr(dpia.change_id) && dpia.change_id !== changeId) f.push(`${label}: ${DPIA_FILE} carries change_id ${dpia.change_id} — an assessment for another change`);
+  if (dpia.status !== 'complete') f.push(`${label}: status is ${JSON.stringify(dpia.status)}, not "complete" — an approval over an unfinished assessment is not an approval`);
+  const cats = Array.isArray(dpia.categories) ? dpia.categories : null;
+  if (!cats || cats.length === 0) f.push(`${label}: categories is empty — say which personal-data categories the change processes`);
+  else if (dataLifecycle?.categories) {
+    const known = new Set(dataLifecycle.categories.map((c) => c?.category));
+    for (const c of cats) if (!known.has(c)) f.push(`${label}: category ${JSON.stringify(c)} does not resolve in docs/governance/data-lifecycle.json — the DPIA assesses the register's categories, not a spelling of its own`);
+  } else notices?.push(`${label}: categories NOT verified against the data-lifecycle register — no docs/governance/data-lifecycle.json here`);
+  for (const k of ['purpose', 'lawful_basis', 'residency', 'necessity']) if (!nonEmptyStr(dpia[k])) f.push(`${label}: no ${k}`);
+  const risks = Array.isArray(dpia.risks) ? dpia.risks : null;
+  if (!risks) f.push(`${label}: no risks array — a DPIA that found no risk to assess says so with an empty array and a reason, not by omitting the section`);
+  else risks.forEach((r, i) => { for (const k of ['risk', 'mitigation']) if (!nonEmptyStr(r?.[k])) f.push(`${label}: risk ${i} has no ${k}`); });
+  if (risks && risks.length === 0 && !nonEmptyStr(dpia.no_risk_rationale)) f.push(`${label}: risks is empty and no_risk_rationale is absent`);
+  if (!nonEmptyStr(dpia.signed_at)) f.push(`${label}: no signed_at`);
+  else if (Number.isNaN(Date.parse(dpia.signed_at))) f.push(`${label}: signed_at ${JSON.stringify(dpia.signed_at)} is not a parseable timestamp`);
+  f.push(...resolveApprover(registry, dpia.signed_by, 'data-protection', `${label} · signed_by`, { notices }));
+  if (registry && nonEmptyStr(dpia.signed_by)) {
+    const who = identityOf(registry, dpia.signed_by);
+    if (who && (who.groups || []).includes('builders')) f.push(`${label} · signed_by: ${dpia.signed_by} is in the builders group — the assessor of a change may never be an author of it`);
+  }
+  return f;
+}
+
+/**
+ * 2.1.0 (4.4) — the model roles this change names, each provider assessed as an outsourcing.
+ * `roles` empty with model_involved set reads as "every model in the manifest".
+ */
+export function evaluateModelOutsourcing(envelope, modelManifest, { registry = null, notices = null } = {}) {
+  const changeId = envelope?.change_id || '(no id)';
+  const label = `${changeId} · PA1 · model outsourcing`;
+  const named = Array.isArray(envelope?.model_roles) ? envelope.model_roles : [];
+  const involved = named.length > 0 || envelope?.flags?.model_involved === true;
+  if (!involved) return [];
+  if (!modelManifest) { notices?.push(`${label}: NOT verified — no docs/governance/model-manifest.json here`); return []; }
+  const models = Array.isArray(modelManifest.models) ? modelManifest.models : [];
+  const f = [];
+  const scope = named.length ? models.filter((m) => named.includes(m?.role)) : models;
+  for (const role of named) if (!models.some((m) => m?.role === role)) f.push(`${label}: envelope names model role ${JSON.stringify(role)}, which is not in the model manifest — a change on a model nobody inventoried`);
+  for (const m of scope) {
+    const role = m?.role || '(unnamed role)';
+    const provider = nonEmptyStr(m?.provider) ? m.provider.trim() : '';
+    if (!provider) { f.push(`${label}: role ${role} declares no provider — say who runs it, "internal" included`); continue; }
+    if (INTERNAL_PROVIDERS.has(provider.toLowerCase())) continue;
+    const tp = m.third_party;
+    if (!tp || typeof tp !== 'object') { f.push(`${label}: role ${role} runs on provider ${JSON.stringify(provider)} and carries no third_party block — an LLM provider is an outsourcing, and an outsourcing is assessed before permission to develop`); continue; }
+    for (const k of ['outsourcing_assessment', 'prompt_data_residency', 'exit_plan']) if (!nonEmptyStr(tp[k])) f.push(`${label}: role ${role} (${provider}) third_party has no ${k}`);
+    if (!nonEmptyStr(tp.assessed_at)) f.push(`${label}: role ${role} (${provider}) third_party has no assessed_at`);
+    else if (Number.isNaN(Date.parse(tp.assessed_at))) f.push(`${label}: role ${role} (${provider}) assessed_at ${JSON.stringify(tp.assessed_at)} is not a parseable timestamp`);
+    if (!nonEmptyStr(tp.assessed_by)) f.push(`${label}: role ${role} (${provider}) third_party has no assessed_by`);
+    else if (registry) {
+      const who = identityOf(registry, tp.assessed_by);
+      if (!who) f.push(`${label}: role ${role} assessed_by ${JSON.stringify(tp.assessed_by)} is not in the identity registry`);
+      else {
+        if (who.kind === 'agent') f.push(`${label}: role ${role} assessed_by ${tp.assessed_by} is an AGENT — a model does not assess its own provider`);
+        if ((who.groups || []).includes('builders')) f.push(`${label}: role ${role} assessed_by ${tp.assessed_by} is in the builders group`);
+        if (!(who.roles || []).some((r) => OUTSOURCING_ASSESSOR_ROLES.includes(r))) f.push(`${label}: role ${role} assessed_by ${tp.assessed_by} holds none of ${OUTSOURCING_ASSESSOR_ROLES.join(', ')}`);
+      }
+    }
+  }
+  if (scope.some((m) => nonEmptyStr(m?.provider) && !INTERNAL_PROVIDERS.has(m.provider.trim().toLowerCase())) && envelope?.flags?.third_party !== true) {
+    f.push(`${label}: a model role in scope runs on an external provider but flags.third_party is ${JSON.stringify(envelope?.flags?.third_party ?? null)} — the provider is a third party, and the flag is what compiles the third-party route`);
+  }
+  return f;
+}
 // Roles whose approvals demand organisational independence from the builders. THIRD LINE IS IN
 // HERE TOO (`shariah-audit`): the rule this set encodes is not an org chart, it is "the person who
 // certifies a change may never be an author of it", and an internal Shari'ah auditor — or a scholar
@@ -414,6 +506,12 @@ export function evaluate(passport, plan, registry, att = {}) {
       findings.push(...lane.findings);
       for (const n of lane.notices) attCtx.notices?.push(n);
       findings.push(...checkApprovals(passport.pa1.approvals, lane.roles, registry, `${id} · PA1`, 'PA1', attCtx).findings);
+      // 2.1.0 (4.2) — the DPIA record, mandatory-when-compiled.
+      if (plan?.required_capabilities?.[DPIA_CAPABILITY]?.required) {
+        findings.push(...evaluateDpia(att.dpia, { changeId: id, dataLifecycle: att.dataLifecycle, registry, notices: attCtx.notices }));
+      }
+      // 2.1.0 (4.4) — every external model provider the change touches is an assessed outsourcing.
+      if (att.envelope) findings.push(...evaluateModelOutsourcing(att.envelope, att.modelManifest, { registry, notices: attCtx.notices }));
     } else if (passport.pa1?.decision && passport.pa1.decision !== 'pending' && passport.pa1.decision !== 'rejected') {
       findings.push(`${id} · PA1: decision must be approved|pending|rejected (got ${JSON.stringify(passport.pa1.decision)})`);
     }
@@ -445,6 +543,9 @@ export function run(cwd = process.cwd()) {
   // The decision register, read once. Inert for a repository that has none and never takes the
   // conforming lane; the handle keeps "absent" distinguishable from "unreadable".
   const rulings = loadRulings(cwd);
+  // 2.1.0 — the repository-wide records the DPIA and the model-outsourcing rules read.
+  const dataLifecycle = readJson(`${cwd}/docs/governance/data-lifecycle.json`);
+  const modelManifest = readJson(`${cwd}/docs/governance/model-manifest.json`);
   const seen = new Map();
   const findings = [];
   const notices = [];
@@ -480,6 +581,10 @@ export function run(cwd = process.cwd()) {
       envelope,
       // …and the register the cited ruling has to resolve in, or the lane does not open.
       rulings,
+      // 2.1.0 — the per-change DPIA and the two registers it and the outsourcing rule resolve in.
+      dpia: readJson(`${base}/${DPIA_FILE}`),
+      dataLifecycle,
+      modelManifest,
     };
     findings.push(...evaluate(readJson(`${base}/product-passport.json`), plan, registry, att));
   }

@@ -71,6 +71,14 @@ export const PURIFICATION_DIR = 'docs/governance/purification';
 // unlike any other type's. `shariah-non-compliance` is one of those — nothing else routes money out.
 export const TYPES = new Set(['incident', 'slo-breach', 'drift', 'cve', 'regulatory', 'near-miss', 'customer-signal', 'risk-materialised', 'shariah-non-compliance']);
 export const SEVERITIES = new Set(['low', 'medium', 'high', 'critical']);
+// 2.1.0 (hardening plan 4.7) — REGULATOR NOTIFICATION IS STRUCTURED. A high or critical signal must
+// say whether the regulator has to be told: `regulator_notification: { required, authority?, deadline?,
+// sent_at?, reference?, rationale? }`. required:true owes a deadline, and the MOMENT the deadline
+// passes with no sent_at the signal is a finding; a sent notification carries its reference; a late
+// one is a NOTICE (recorded, not blocked — the regulator already knows); required:false owes a
+// rationale, because "not required" is a determination someone made. The block is a record of what
+// was sent and when; whether the determination was right is compliance's, not this gate's.
+export const NOTIFICATION_SEVERITIES = new Set(['high', 'critical']);
 export const ROUTES = new Set(['spec-fix', 'register', 'discovery', 'accepted', 'purification', 'issc-escalation']);
 
 /** The only routes a Shari'ah non-compliance signal may take. `accepted` is deliberately not one. */
@@ -84,7 +92,37 @@ const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
  * EMPTY log is itself a finding (1.12): a live product that has never produced one incident,
  * complaint, drift or SLO measurement means the sensing is missing, not that Run is perfect.
  */
-export function evaluate(manifest, { inProduction = false, changeIds = null, purificationIds = null, caseIds = null, notices = null } = {}) {
+/** 2.1.0 (4.7) — findings for one signal's regulator-notification block. */
+export function checkRegulatorNotification(s, { now = Date.now(), notices = null } = {}) {
+  const id = (s && s.id) || '(unnamed signal)';
+  if (!NOTIFICATION_SEVERITIES.has(s?.severity)) return [];
+  const rn = s.regulator_notification;
+  const label = `${id}: regulator_notification`;
+  if (!rn || typeof rn !== 'object') return [`${id}: a ${s.severity} signal must say whether the regulator is notified — add regulator_notification { required: true|false, ... }; silence is not a determination`];
+  const f = [];
+  if (typeof rn.required !== 'boolean') { f.push(`${label}.required must be true or false (got ${JSON.stringify(rn.required)})`); return f; }
+  if (rn.required === false) {
+    if (!nonEmpty(rn.rationale)) f.push(`${label}: required is false with no rationale — "not required" is a determination, and it is recorded with its reason`);
+    return f;
+  }
+  if (!nonEmpty(rn.authority)) f.push(`${label}: no authority — say which regulator`);
+  const deadline = Date.parse(rn.deadline);
+  if (!nonEmpty(rn.deadline) || Number.isNaN(deadline)) { f.push(`${label}: required is true but deadline ${JSON.stringify(rn.deadline)} is not a parseable timestamp — a notification obligation has a clock`); return f; }
+  const detected = Date.parse(s.detected);
+  if (!Number.isNaN(detected) && deadline < detected) f.push(`${label}: deadline ${rn.deadline} precedes detected ${s.detected}`);
+  if (rn.sent_at === undefined) {
+    if (now > deadline) f.push(`${label}: deadline ${rn.deadline} has PASSED and no notification was sent — a missed statutory notification is itself a reportable event`);
+    else notices?.push(`${id}: regulator notification to ${rn.authority || '(authority unstated)'} due by ${rn.deadline}`);
+    return f;
+  }
+  const sent = Date.parse(rn.sent_at);
+  if (!nonEmpty(rn.sent_at) || Number.isNaN(sent)) { f.push(`${label}: sent_at ${JSON.stringify(rn.sent_at)} is not a parseable timestamp`); return f; }
+  if (!nonEmpty(rn.reference)) f.push(`${label}: sent with no reference — the regulator's acknowledgement or case number is what makes "sent" verifiable`);
+  if (sent > deadline) notices?.push(`${id}: regulator notification was sent ${rn.sent_at}, after its deadline ${rn.deadline} — recorded, not blocked`);
+  return f;
+}
+
+export function evaluate(manifest, { inProduction = false, changeIds = null, purificationIds = null, caseIds = null, notices = null, now = Date.now() } = {}) {
   const signals = manifest && manifest.signals;
   if (!Array.isArray(signals)) return ['operations-signal manifest has no `signals` array'];
   if (signals.length === 0) {
@@ -102,6 +140,8 @@ export function evaluate(manifest, { inProduction = false, changeIds = null, pur
     if ((s.severity === 'high' || s.severity === 'critical') && !nonEmpty(s.evidence_ref)) {
       findings.push(`${id}: ${s.severity} signal needs an evidence_ref`);
     }
+    // 2.1.0 (4.7) — a high/critical signal states its regulator-notification position.
+    findings.push(...checkRegulatorNotification(s, { now, notices }));
     // A Shari'ah non-compliance signal carries evidence at EVERY severity (the high/critical rule
     // above already covers those two). What follows a low-severity entry is a purification
     // computation, and a computed amount with nothing behind it cannot be re-derived by the

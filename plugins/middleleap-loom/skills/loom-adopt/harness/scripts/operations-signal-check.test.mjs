@@ -5,7 +5,9 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  NOTIFICATION_SEVERITIES,
   ROUTES,
+  checkRegulatorNotification,
   SHARIAH_ROUTES,
   TYPES,
   assuranceCaseIds,
@@ -14,6 +16,8 @@ import {
 } from './operations-signal-check.mjs';
 
 const BASE = { id: 'OPS-1', source: 'pagerduty', type: 'incident', severity: 'medium', summary: 'x', route: 'spec-fix', link: 'PR-1234' };
+const RN_OK = { required: true, authority: 'CBUAE', deadline: '2026-07-16T00:00:00Z', sent_at: '2026-07-15T10:00:00Z', reference: 'IR-2026-0031' };
+const HIGH = (rn, over = {}) => ({ ...BASE, severity: 'high', detected: '2026-07-14', evidence_ref: 'x.md', regulator_notification: rn, ...over });
 const one = (over) => ({ signals: [{ ...BASE, ...over }] });
 
 test('a valid, triaged, traceable signal passes', () => {
@@ -58,7 +62,7 @@ test('accepted (no-op) needs a justification', () => {
 
 test('a high/critical signal needs an evidence_ref', () => {
   assert.ok(evaluate(one({ severity: 'critical', evidence_ref: '' })).some((x) => /needs an evidence_ref/.test(x)));
-  assert.deepEqual(evaluate(one({ severity: 'critical', evidence_ref: 'incident/4471.md' })), []);
+  assert.deepEqual(evaluate(one({ severity: 'critical', evidence_ref: 'incident/4471.md', regulator_notification: RN_OK })), []);
 });
 
 test('a missing signals array is a finding', () => {
@@ -206,4 +210,37 @@ test('RESOLVERS — an absent tree returns null; a present one returns filename 
     const cases = assuranceCaseIds(root);
     assert.ok(cases.has('AC-1') && cases.has('AC-2026-007'), [...cases].join(','));
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+/* ---- 2.1.0 (hardening plan 4.7): regulator notification ---- */
+
+test('NOTIFICATION — a high or critical signal must state its position; low and medium need not', () => {
+  assert.deepEqual([...NOTIFICATION_SEVERITIES].sort(), ['critical', 'high']);
+  assert.ok(evaluate(one(HIGH(undefined))).some((x) => /must say whether the regulator is notified/.test(x)));
+  assert.ok(!evaluate(one({ severity: 'medium' })).some((x) => /regulator/.test(x)));
+  assert.deepEqual(evaluate(one(HIGH(RN_OK))), []);
+});
+
+test('NOTIFICATION — required:false carries a rationale; required:true carries an authority and a deadline', () => {
+  assert.ok(evaluate(one(HIGH({ required: false }))).some((x) => /required is false with no rationale/.test(x)));
+  assert.deepEqual(evaluate(one(HIGH({ required: false, rationale: 'below the reporting threshold; contained' }))), []);
+  assert.ok(evaluate(one(HIGH({ required: true }))).some((x) => /deadline .* is not a parseable timestamp/.test(x)));
+  assert.ok(evaluate(one(HIGH({ required: true, deadline: '2026-07-16' }))).some((x) => /no authority/.test(x)));
+  assert.ok(evaluate(one(HIGH({ required: 'yes' }))).some((x) => /required must be true or false/.test(x)));
+});
+
+test('NOTIFICATION — before the deadline an unsent notification is a NOTICE; after it, a finding', () => {
+  const pending = { required: true, authority: 'CBUAE', deadline: '2026-07-16T00:00:00Z' };
+  const notices = [];
+  assert.deepEqual(evaluate(one(HIGH(pending)), { notices, now: Date.parse('2026-07-15T00:00:00Z') }), []);
+  assert.ok(notices.some((n) => /due by 2026-07-16/.test(n)));
+  assert.ok(evaluate(one(HIGH(pending)), { now: Date.parse('2026-07-17T00:00:00Z') }).some((x) => /has PASSED and no notification was sent/.test(x)));
+});
+
+test('NOTIFICATION — a sent notification carries its reference; a late one is noticed, not blocked', () => {
+  assert.ok(evaluate(one(HIGH({ ...RN_OK, reference: undefined }))).some((x) => /sent with no reference/.test(x)));
+  const notices = [];
+  assert.deepEqual(checkRegulatorNotification(HIGH({ ...RN_OK, sent_at: '2026-07-18T00:00:00Z' }), { notices, now: Date.parse('2026-07-20T00:00:00Z') }), []);
+  assert.ok(notices.some((n) => /after its deadline/.test(n)));
+  assert.ok(evaluate(one(HIGH({ ...RN_OK, deadline: '2026-07-01' }))).some((x) => /precedes detected/.test(x)));
 });

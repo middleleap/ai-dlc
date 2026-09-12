@@ -1,0 +1,9 @@
+{
+  "_comment": "ADOPTER EXAMPLE (2.1.0 · hardening plan 4.1) — the business's acceptance of what was built, mounted beside the envelope under docs/governance/changes/<id>/ (CODEOWNERS-owned, so builders cannot write their own acceptance). From state uat-accepted onward the change-envelope gate requires status 'accepted', by a HUMAN holding product-owner or business-owner who is NOT in the builders group, at a timestamp, naming the 40-hex commit that was exercised; at production authorization that commit must equal docs/governance/release-subject.json source.commit. This change is in delivery, so the acceptance is pending: nothing has been accepted yet, and the file says so rather than not existing.",
+  "change_id": "CHG-2026-0042",
+  "status": "pending",
+  "by": null,
+  "at": null,
+  "release_commit": null,
+  "scope": "ADOPT at acceptance: the journeys the product owner exercised against the acceptance criteria in the PRD, and any deviation accepted with a reason."
+}

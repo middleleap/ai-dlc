@@ -13,7 +13,10 @@
 //   second-line human (missing hold = held, fail closed) + externally-anchored, issuer-
 //   verified evidence at high/critical tiers ·
 //   exemptions have an owner, rationale, compensating control, expiry, second-line approval ·
-//   state_history (rc.37) is an APPEND-ONLY record of the transitions that got the change here.
+//   state_history (rc.37) is an APPEND-ONLY record of the transitions that got the change here ·
+//   2.1.0: the BUSINESS accepts before launch (uat-accepted, a non-builder signature bound to the
+//   release commit — hardening plan 4.1), a medium tier owes its threat model (4.6), and a change in
+//   production owes a post-implementation review on the retrospective's clock (4.5).
 //
 // STATE_HISTORY (flow-plan Phase 3.1). The lifecycle had eight states and no timestamps, so the
 // value stream was unmeasurable from its own artifacts: no lead time, no stage residency, no
@@ -71,7 +74,22 @@ import { pathToFileURL } from 'node:url';
 
 export const CHANGES_DIR = 'docs/governance/changes';
 export const STATES = ['classified', 'permission-to-develop', 'in-delivery', 'delivery-complete',
-  'permission-to-launch', 'operationally-ready', 'production-authorized', 'in-production'];
+  'uat-accepted', 'permission-to-launch', 'operationally-ready', 'production-authorized', 'in-production'];
+// 2.1.0 (hardening plan 4.1) — the business accepts what was built BEFORE permission to launch is
+// asked for. `delivery-complete` is the builders' word that the work is done; `uat-accepted` is
+// the business's, bound to the exact commit it accepted. A history may still step straight from
+// delivery-complete to permission-to-launch (the state is a checkpoint, not a queue), but from
+// uat-accepted onward the receipt below is owed, so the skip changes nothing about what must exist.
+export const UAT_STATE = 'uat-accepted';
+export const UAT_SIGNOFF_FILE = 'uat-signoff.json';
+// The roles that may accept on the business's behalf. Neither is a builder role by construction,
+// and the check below refuses a builders-group holder regardless.
+export const UAT_ROLES = ['product-owner', 'business-owner'];
+// 2.1.0 (hardening plan 4.5) — the ceiling on a post-implementation review date, days after the
+// change went live. The same reasoning as the emergency retrospective: a review date far enough
+// out is a review that never happens, spelled as a date.
+export const PIR_MAX_DAYS = 90;
+const COMMIT_SHA = /^[0-9a-f]{40}$/;
 // rc.34 — terminal states (see core/compiled-requirements.mjs TERMINAL_STATES). A closed or
 // superseded change ships nothing: it stops contributing compiled requirements, its plan is no
 // longer reconciled (profiles move on; a closed change must not go red because a profile did),
@@ -240,6 +258,96 @@ export function checkEmergency(envelope, { registry = null, receipts = [], notic
 }
 
 /**
+ * 2.1.0 (hardening plan 4.1) — UAT ACCEPTANCE, bound to the release commit.
+ *
+ * Between delivery-complete and permission-to-launch there was no state in which the BUSINESS
+ * said the thing built is the thing asked for: PA2 read the passport's sections and the control
+ * functions' signatures, and none of those is a product owner having exercised the software. The
+ * sign-off is a file in the change directory (CODEOWNERS-owned, so builders cannot write their
+ * own acceptance), accepted by a human holding a business role who is not in the builders group,
+ * and naming the 40-hex commit that was accepted — because "we tested the branch" binds to nothing.
+ * At production authorization that commit must be the release subject's: what the business
+ * accepted is what is being released, or the acceptance evidences a different build.
+ */
+export function checkUatSignoff(envelope, uat, { registry = null, releaseSubject = null } = {}) {
+  const id = envelope?.change_id || '(no id)';
+  const state = envelope?.current_state;
+  const label = `${id}: state ${state} requires UAT acceptance`;
+  if (!uat || typeof uat !== 'object') {
+    return [`${label} — ${UAT_SIGNOFF_FILE} is missing; delivery-complete is the builders' word that the work is done, and the business has not yet said it is the work that was asked for`];
+  }
+  const findings = [];
+  if (isStr(uat.change_id) && uat.change_id !== envelope.change_id) findings.push(`${id}: ${UAT_SIGNOFF_FILE} carries change_id ${uat.change_id} — an acceptance for another change`);
+  if (uat.status !== 'accepted') findings.push(`${label} — ${UAT_SIGNOFF_FILE} status is ${JSON.stringify(uat.status)}, not "accepted"`);
+  for (const k of ['by', 'at', 'release_commit', 'scope']) {
+    if (!isStr(uat[k])) findings.push(`${label} — ${UAT_SIGNOFF_FILE} has no ${k}`);
+  }
+  if (isStr(uat.at) && Number.isNaN(Date.parse(uat.at))) findings.push(`${label} — at ${JSON.stringify(uat.at)} is not a parseable ISO-8601 timestamp`);
+  if (isStr(uat.release_commit) && !COMMIT_SHA.test(uat.release_commit)) {
+    findings.push(`${label} — release_commit ${JSON.stringify(uat.release_commit)} is not a 40-hex commit sha; acceptance binds to the exact commit the business exercised, never a branch or a tag`);
+  }
+  if (registry && isStr(uat.by)) {
+    const who = identityOf(registry, uat.by);
+    if (!who) findings.push(`${label} — by ${JSON.stringify(uat.by)} is not in the identity registry`);
+    else {
+      if (who.kind === 'agent') findings.push(`${label} — by ${uat.by} is an AGENT; agents prepare evidence, they never accept`);
+      if ((who.groups || []).includes('builders')) findings.push(`${label} — by ${uat.by} is in the builders group; the business accepts the work, the builders do not accept their own`);
+      if (!(who.roles || []).some((r) => UAT_ROLES.includes(r))) findings.push(`${label} — by ${uat.by} holds none of the business roles (${UAT_ROLES.join(', ')})`);
+    }
+  }
+  const released = releaseSubject?.source?.commit;
+  if (at(state) >= at('production-authorized') && isStr(released) && isStr(uat.release_commit) && released !== uat.release_commit) {
+    findings.push(`${id}: UAT accepted commit ${uat.release_commit.slice(0, 12)}… is not the release subject's commit ${released.slice(0, 12)}… — what the business accepted is not what is being released`);
+  }
+  return findings;
+}
+
+/**
+ * 2.1.0 (hardening plan 4.5) — POST-IMPLEMENTATION REVIEW, on the emergency retrospective's clock.
+ *
+ * A change in production owes one more look: did it do what the passport said, at the cost the
+ * plan said, with the signals the readiness record predicted. The mechanism is the retrospective's
+ * — a block with a due date bounded from the moment the change went live, a NOTICE while the date
+ * is open, a FINDING the moment it passes with no completed review, and a second-line human on the
+ * completed record. Runs on every lane the envelope gate runs on, so a change past its review
+ * date turns the tree red rather than waiting for a calendar nobody reads.
+ */
+export function checkPostImplementationReview(envelope, { registry = null, now = Date.now(), notices = null } = {}) {
+  const id = envelope?.change_id || '(no id)';
+  const pir = envelope?.post_implementation_review;
+  const label = `${id}: post-implementation review`;
+  if (!pir || typeof pir !== 'object') {
+    return [`${label} — state in-production requires a post_implementation_review block { due, completed_at?, reviewed_by?, outcome?, evidence_ref? }; a live change with no review date is a change nobody will look at again`];
+  }
+  const findings = [];
+  const due = Date.parse(pir.due);
+  if (!isStr(pir.due) || Number.isNaN(due)) return [`${label} — due ${JSON.stringify(pir.due)} is not a parseable ISO-8601 timestamp, and a review with no readable date is a review with no date`];
+  const live = Date.parse((envelope.state_history || []).find((e) => e?.state === 'in-production')?.at);
+  if (!Number.isNaN(live)) {
+    if (due <= live) findings.push(`${label} — due ${pir.due} does not follow the in-production transition`);
+    else if (due - live > PIR_MAX_DAYS * DAY) findings.push(`${label} — due ${pir.due} is ${Math.round((due - live) / DAY)} days after the change went live; the ceiling is ${PIR_MAX_DAYS}. A review date far enough out is a review that never happens`);
+  }
+  const completed = Date.parse(pir.completed_at);
+  if (isStr(pir.completed_at) && !Number.isNaN(completed)) {
+    for (const k of ['reviewed_by', 'outcome', 'evidence_ref']) if (!isStr(pir[k])) findings.push(`${label} — completed but has no ${k}`);
+    if (registry && isStr(pir.reviewed_by)) {
+      const who = identityOf(registry, pir.reviewed_by);
+      if (!who || who.kind === 'agent' || !(who.groups || []).includes('second-line')) {
+        findings.push(`${label} — reviewed_by ${JSON.stringify(pir.reviewed_by)} is not a second-line HUMAN identity; the review is held to the retrospective's rule`);
+      }
+    }
+    if (completed > due) notices?.push(`${id}: the post-implementation review was completed ${Math.round((completed - due) / DAY)} day(s) after its due date ${pir.due} — recorded, not blocked`);
+  } else if (pir.completed_at !== undefined) {
+    findings.push(`${label} — completed_at ${JSON.stringify(pir.completed_at)} is not a parseable ISO-8601 timestamp`);
+  } else if (now > due) {
+    findings.push(`${label} — due ${pir.due} has PASSED with no completed review; a live change past its review date is the emergency retrospective's defect wearing a normal change's clothes`);
+  } else {
+    notices?.push(`${id}: post-implementation review due by ${pir.due}`);
+  }
+  return findings;
+}
+
+/**
  * rc.38 (flow-plan Phase 4.7) — FLAG CORROBORATION.
  *
  * The envelope's `flags` decide which conditional profile rules fire, and every one of them only
@@ -332,7 +440,7 @@ export function checkRequiredInstitutions(envelope, institutions = []) {
  * Findings for one change. `files` gives the sibling artifacts already parsed:
  * { plan, passport, architecture (booleans/objects) }; `registry` resolves identities.
  */
-export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, institutions = [], diff, now = Date.now() } = {}) {
+export function evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, institutions = [], diff, uat = null, releaseSubject = null, now = Date.now() } = {}) {
   const findings = [];
   const id = envelope?.change_id || '(no id)';
   if (!known(envelope?.current_state)) {
@@ -426,6 +534,19 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
     if (at(state) >= at('in-delivery') && gates.has('A') && !architectureExists) {
       receipts.push(`${id}: state ${state} requires architecture assurance (A1–A5) — architecture-assurance.json is missing (an unresolved A-gate blocks backlog creation)`);
     }
+    // 2.1.0 (hardening plan 4.6) — a tier that compiles the threat model WITHOUT the full A gate
+    // (medium, in the shipped base profile) still owes the artifact that carries A2.
+    // A change riding a pre-approved pattern was threat-modelled when the PATTERN was approved
+    // (its shape, its size ceiling, its paths); a per-instance model for each dependency patch
+    // would be ceremony. Coverage is verified above, and a failed claim brings the receipt back.
+    if (at(state) >= at('in-delivery') && !gates.has('A') && effective.required_capabilities?.threat_model?.required && !architectureExists && !patternCovered) {
+      receipts.push(`${id}: state ${state} requires a threat model (A2) — the plan compiles threat_model at this tier and architecture-assurance.json is missing; a medium change still has attackers`);
+    }
+    // 2.1.0 (hardening plan 4.1) — the business accepts before launch is asked for. Collected as a
+    // receipt so the emergency route resequences it like the rest, and never drops it.
+    if (at(state) >= at(UAT_STATE) && !patternCovered) {
+      receipts.push(...checkUatSignoff(envelope, uat, { registry, releaseSubject }));
+    }
     if (at(state) >= at('permission-to-launch') && gates.has('PA2') && passport?.pa2?.decision !== 'approved' && !patternCovered) {
       receipts.push(`${id}: state ${state} requires PA2 approved — the product passport says ${JSON.stringify(passport?.pa2?.decision)}`);
     }
@@ -475,6 +596,9 @@ export function evaluate(envelope, { plan, passport, architectureExists, registr
   } else {
     findings.push(...receipts);
   }
+
+  // 2.1.0 (hardening plan 4.5) — once live, the change owes its post-implementation review on a clock.
+  if (state === 'in-production') findings.push(...checkPostImplementationReview(envelope, { registry, now, notices }));
 
   // rc.38 (Phase 4.7) — the flags that decide the route are corroborated against the repo's data,
   // including the institution profiles' own assertions, and the profiles an institution requires
@@ -610,12 +734,15 @@ export function run(cwd = process.cwd(), { baseRef = null, now = Date.now() } = 
       }));
     }
     const hold = readJson(`${base}/release-hold.json`);
+    // 2.1.0 — the business acceptance (per change) and the release subject it must bind to.
+    const uat = readJson(`${base}/${UAT_SIGNOFF_FILE}`);
+    const releaseSubject = readJson(`${cwd}/docs/governance/release-subject.json`);
     const manifest = readJson(`${cwd}/docs/governance/evidence/manifest.json`);
     const evidence = manifest && {
       anchor: manifest.anchor,
       attestationFindings: verifyAnchorAttestation(manifest, loadIssuers(cwd)),
     };
-    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, institutions, diff, now }));
+    findings.push(...evaluate(envelope, { plan, passport, architectureExists, registry, freshPlan, readiness, hold, evidence, notices, patterns, dataLifecycle, modelManifest, institutions, diff, uat, releaseSubject, now }));
   }
   return { findings, notices, count };
 }

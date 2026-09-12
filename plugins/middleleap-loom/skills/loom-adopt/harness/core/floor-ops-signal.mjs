@@ -250,7 +250,9 @@ export function intake({ filed, adjudication = null } = {}, { transcribedBy = TR
       severity: adjudication.severity,
       route: adjudication.route,
     };
-    for (const k of ['link', 'justification', 'status']) {
+    // 2.1.0 (hardening plan 4.7): the regulator-notification position is the ADJUDICATOR's
+    // determination, carried verbatim — the gate then holds it to its clock and its reference.
+    for (const k of ['link', 'justification', 'status', 'regulator_notification']) {
       if (adjudication[k] !== undefined) adj[k] = adjudication[k];
     }
   }
@@ -314,7 +316,7 @@ export function entryFrom(record) {
   };
   if (filed.evidence_ref !== undefined) entry.evidence_ref = filed.evidence_ref;
   entry.route = adj.route;
-  for (const k of ['link', 'justification', 'status']) if (adj[k] !== undefined) entry[k] = adj[k];
+  for (const k of ['link', 'justification', 'status', 'regulator_notification']) if (adj[k] !== undefined) entry[k] = adj[k];
   entry.intake = {
     schema: SCHEMA_ID,
     filed_digest: record?.filed_digest,

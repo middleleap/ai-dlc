@@ -1,0 +1,14 @@
+{
+  "suite": "evals/affordability",
+  "dataset_version": "evalset@3",
+  "runner_version": "loom-eval-runner@1.2.0",
+  "ran_at": "2026-07-20",
+  "evaluated_model_id": "example-model@2026-01",
+  "evaluated_prompt_version": "affordability-prompt@2.3.0",
+  "cases": 400,
+  "passed": 388,
+  "failed": 12,
+  "threshold": 0.95,
+  "score": 0.97,
+  "result": "pass"
+}

@@ -53,6 +53,16 @@
       "required": true,
       "minimum_version": "3.1",
       "institution_owned": true
+    },
+    "threat_model": {
+      "required": true
+    },
+    "real_data_controls": {
+      "required": true,
+      "institution_owned": true
+    },
+    "dpia": {
+      "required": true
     }
   },
   "profile_bindings": [
@@ -60,8 +70,8 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:5d39041baaa24afeded181508f81993ffb2c22ae992faffc7ccfad8d80c2ab29"
+      "digest": "sha256:b5fb7148360237c3a1c96ad60772ea5e931ea1d79dc831906cfd04250a77c496"
     }
   ],
-  "plan_hash": "af3f4d7658b9e816bbaf7690153b1b798b051fbcea76404faa56db494ba7c6d5"
+  "plan_hash": "9e31afb54ef057cf3fb37da4c2090cb67b13678eb0c273ec006e541e1bb3357e"
 }

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, SECTIONS } from './architecture-assurance-check.mjs';
+import { evaluate, SECTIONS, scopeOf } from './architecture-assurance-check.mjs';
 
 import { existsSync } from 'node:fs';
 
@@ -58,5 +58,22 @@ test('a material OPEN finding blocks backlog creation; accepted or minor does no
 test('the section set is exactly A1–A5', () => {
   assert.equal(SECTIONS.length, 5);
   assert.ok(SECTIONS.every((s) => /^A[1-5]-/.test(s)));
+});
+
+/* ---- 2.1.0 (hardening plan 4.6): A2 alone at medium ---- */
+
+test('A2 SCOPE — a plan with the threat_model capability and no A gate is in scope for A2 alone', () => {
+  assert.equal(scopeOf({ required_gates: ['A'] }), 'A');
+  assert.equal(scopeOf({ required_gates: ['PA1', 'PA2'], required_capabilities: { threat_model: { required: true } } }), 'A2');
+  assert.equal(scopeOf({ required_gates: ['PA1'] }), null);
+});
+
+test('A2 SCOPE — the threat model alone is judged: a missing artifact fails, missing A1/A3–A5 do not, an untraced threat still does', () => {
+  assert.match(evaluate(null, 'CHG-M', { scope: 'A2' })[0], /A2 threat model is owed/);
+  const a2Only = { change_id: 'CHG-M', 'A2-security-threat-model': GOOD['A2-security-threat-model'] };
+  assert.deepEqual(evaluate(a2Only, 'CHG-M', { scope: 'A2' }), []);
+  assert.ok(evaluate(a2Only, 'CHG-M').some((x) => /A1-data-privacy: section missing/.test(x)), 'the full scope still demands every section');
+  const untraced = { ...a2Only, 'A2-security-threat-model': { status: 'complete', threats: [{ threat: 'prompt injection', control: 'pii-guard' }] } };
+  assert.ok(evaluate(untraced, 'CHG-M', { scope: 'A2' }).some((x) => /no test — every threat traces to a control and a test/.test(x)));
 });
 }
