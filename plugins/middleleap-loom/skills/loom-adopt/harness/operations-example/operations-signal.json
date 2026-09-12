@@ -13,7 +13,11 @@
       "route": "spec-fix",
       "link": "PR-482",
       "caused_by_change": "CHG-2026-0042",
-      "resolved_at": "2026-07-15T11:40:00Z"
+      "resolved_at": "2026-07-15T11:40:00Z",
+      "regulator_notification": {
+        "required": false,
+        "rationale": "within SLA and no data exposure; a latency degradation below the operational-incident reporting threshold — determination recorded by compliance on 2026-07-14"
+      }
     },
     {
       "id": "OPS-2418",
@@ -24,7 +28,14 @@
       "summary": "Newly-disclosed CVE in a shipped TLS dependency raised the residual position of the personal-data handling risk.",
       "evidence_ref": "advisory/CVE-2026-04182.md",
       "route": "register",
-      "link": "DR-1.1-001"
+      "link": "DR-1.1-001",
+      "regulator_notification": {
+        "required": true,
+        "authority": "CBUAE",
+        "deadline": "2026-07-16",
+        "sent_at": "2026-07-15T14:20:00Z",
+        "reference": "ADOPT: the regulator's acknowledgement or case reference for this notification"
+      }
     },
     {
       "id": "OPS-2423",
@@ -56,7 +67,11 @@
       "summary": "Standards errata tightened consent-record retention wording; touches the personal-data category. The risk position moved.",
       "evidence_ref": "horizon/errata-2026-07.md",
       "route": "register",
-      "link": "DR-1.1"
+      "link": "DR-1.1",
+      "regulator_notification": {
+        "required": false,
+        "rationale": "the regulator issued the errata; a notification runs the other way (the register update and the reopened discovery are the response) — determination recorded by compliance on 2026-07-18"
+      }
     },
     {
       "id": "OPS-2436",
@@ -80,7 +95,11 @@
       "evidence_ref": "incident/OPS-2440.md",
       "route": "register",
       "link": "DR-1.1-001",
-      "resolved_at": "2026-07-24T13:00:00Z"
+      "resolved_at": "2026-07-24T13:00:00Z",
+      "regulator_notification": {
+        "required": false,
+        "rationale": "near-miss with no customer impact and no data leaving the boundary; below the reporting threshold, logged for the quarterly operational-risk return — determination recorded by compliance on 2026-07-20"
+      }
     },
     {
       "id": "OPS-2447",
