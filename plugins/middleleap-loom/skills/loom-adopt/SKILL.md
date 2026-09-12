@@ -219,11 +219,15 @@ all: `grep -rn "ADOPT" .claude/ discovery/ scripts/`. As of this bundle:
   non-negotiables (keep the FAIL/VERDICT protocol and file:line citation rule).
 - `.claude/agents/contract-conformance-reviewer.md` — replace with THIS project's binding API
   conventions.
-- `.claude/hooks/spec-tripwire.sh` — set `SPEC_PATH` to the project's contract file.
+- `.claude/hooks/spec-tripwire.sh` — set `SPEC_PATHS` to the project's contract file(s). Since
+  2.1.0 the tripwire also reads the Bash tool's command string (a `sed -i` or a heredoc naming
+  the contract on a working branch is denied), and `claude/*` branches are covered like `feature/*`.
 - `.claude/hooks/pii-patterns.json` — swap the UAE PII shapes for the project's jurisdiction. The
   shapes are data now, not code: add a row, never edit `pii-guard.sh`. The guard **denies every
   write** if this file is missing or unparseable, so it installs at every tier and must stay
-  beside the hook.
+  beside the hook. Since 2.1.0 the guard is also bound to the Bash tool (the command string is
+  scanned, so a heredoc is no longer a bypass) and every non-alphanumeric separator is stripped
+  before matching; the UAE instance ships an Emirates ID, IBAN and mobile shape.
 - `scripts/discovery-link-check.mjs` — set `FEATURE` to the project's story-id convention.
 - `.claude/skills/next-story/SKILL.md` and `implement-story/SKILL.md` — name the project's
   verify commands and binding test cases.

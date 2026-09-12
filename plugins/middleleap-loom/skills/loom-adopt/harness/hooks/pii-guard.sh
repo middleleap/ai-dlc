@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# PreToolUse guard (Write|Edit|MultiEdit|NotebookEdit): blocks content introducing PII-shaped literals.
+# PreToolUse guard (Write|Edit|MultiEdit|NotebookEdit, and Bash): blocks content introducing PII-shaped literals.
+#
+# 2.1.0 — bound to the Bash tool as well (settings.hooks.json, matcher "Bash"): the command string is
+# scanned like written content, so a heredoc, `sed -i`, `printf > file` or `python -c` carrying a real
+# ID is denied at the same point a Write would be. Before this the file-tool matcher was a complete
+# bypass — write it through the shell and no hook ran.
 # Loom hard stop: no real PII in fixtures, test names, logs, or telemetry — synthetic data only.
 #
 # The shapes are DATA, not code: they live in pii-patterns.json beside this script (F3). They used to
@@ -52,12 +57,14 @@ content=$(printf '%s' "$input" | jq -r '
   (.tool_input.content // "") + "\n" +
   (.tool_input.new_string // "") + "\n" +
   (.tool_input.new_source // "") + "\n" +
+  (.tool_input.command // "") + "\n" +
   ([.tool_input.edits[]?.new_string // empty] | join("\n"))')
-# Separator-insensitive copy: spacing/hyphen/DOT grouping must not evade the patterns (a
-# dot-separated Emirates ID like 784.1990.1234567.1 slipped a space/hyphen-only strip). IBANs are
-# upcased so a lowercase ae07… cannot dodge the uppercase pattern. Patterns are written against
-# THIS form — see pii-patterns.json's _matching_comment.
-normalized=$(printf '%s' "$content" | tr -d ' \t.-' | tr '[:lower:]' '[:upper:]')
+# Separator-insensitive copy: EVERY non-alphanumeric character is stripped (2.1.0 — the old
+# space/tab/dot/hyphen list let 784_1990_1234567_1, 784/1990/…, and "784" + "199012345671" through),
+# then upcased so a lowercase ae07… cannot dodge the uppercase IBAN pattern. Newlines are KEPT so
+# grep still works line by line and digits on one line do not run into digits on the next. Patterns
+# are written against THIS form — see pii-patterns.json's _matching_comment.
+normalized=$(printf '%s' "$content" | tr -cd '[:alnum:]\n' | tr '[:lower:]' '[:upper:]')
 
 # The loop reads from a here-doc, NOT a pipe: a piped `while` runs in a subshell, where deny()'s
 # `exit 0` would end the subshell and let the write through. That is a real disarm, one character wide.
