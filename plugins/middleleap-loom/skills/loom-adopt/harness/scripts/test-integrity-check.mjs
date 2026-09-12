@@ -14,6 +14,7 @@
 // [--base <ref>]` (default: merge-base with origin/main, then main). Exit 1 on findings,
 // exit 2 when there is no git history to diff against — unverifiable is not a pass.
 import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
@@ -101,6 +102,16 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       process.stderr.write('\nA red bar goes green by fixing the code, never by weakening the test. A genuine\ntest defect is fixed in the open on a dedicated -testfix- branch (delivery-harness.md).\n');
       process.exit(1);
     }
+  }
+  // 2.1.0 — a record in the gate runner's shape, so a downstream consumer (the routine lane) can
+  // read Q1B as green at THIS commit from evidence rather than from a claim. Written only on a
+  // pass (a failing run exits above); `--out <file>`.
+  const outIdx = process.argv.indexOf('--out');
+  if (outIdx >= 0 && process.argv[outIdx + 1]) {
+    let commit = null;
+    try { commit = git(['rev-parse', 'HEAD']); } catch { /* recorded as null */ }
+    const record = { lane: 'pr', base, commit, executed: [{ controls: ['Q1B'], mechanism: 'scripts/test-integrity-check.mjs', status: 'pass' }], skipped: [], result: 'pass', produced_at: new Date().toISOString() };
+    writeFileSync(process.argv[outIdx + 1], JSON.stringify(record, null, 2) + '\n');
   }
   process.stdout.write(`Test-integrity gate (Q1b) — OK (base ${base.slice(0, 12)})\n`);
 }

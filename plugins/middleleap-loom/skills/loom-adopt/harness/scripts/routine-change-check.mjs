@@ -29,13 +29,23 @@
 //   3. The lane is CLAIMED, not defaulted. Absent a claim, every PR takes the normal lane.
 //      A claim that does not fit the envelope in EVERY respect fails the gate, so a claim can
 //      only ever narrow scrutiny to exactly what the second line pre-authorized.
+//   4. (2.1.0) The claim is not evidence. Two fields used to be read from it and are not any
+//      more: `gates_green` now comes from the gate runner's own records (`gate-run-*.json`, at
+//      THIS commit), and `class` is VERIFIED against the diff's content, not just its paths — a
+//      `dependency-patch` that introduces a new package name, or bumps a major, is not a patch;
+//      a `doc-fix` that touches a source file is not a doc fix; a `formatting` change must
+//      leave every non-whitespace character where it was. Before this, a typosquat swap inside
+//      the diff cap, under `package-lock.json`, with `gates_green` typed into the claim, would
+//      auto-merge.
 //
 // Enforcement of record: a merge-queue/branch ruleset that auto-merges a PR only when this
 // gate is among the passing required checks. As shipped this gate is mechanically-validated;
 // platform-enforced is the adopter's (activation-runbook + a negative bypass probe).
 //
-// Run from the repo root: `node scripts/routine-change-check.mjs [--base <ref>]`.
+// Run from the repo root: `node scripts/routine-change-check.mjs [--base <ref>] [--gate-records a.json,b.json]`
+// (default: every gate-run-*.json in the working directory).
 import { execSync } from 'node:child_process';
+import { readdirSync } from 'node:fs';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
@@ -129,11 +139,133 @@ export function evaluate(envelope, claim, registry, asOf) {
   if (typeof max === 'number' && typeof claim?.diff_lines === 'number' && claim.diff_lines > max) {
     findings.push(`${eid}: diff is ${claim.diff_lines} lines, over the envelope cap of ${max}`);
   }
-  const green = new Set(claim?.gates_green || []);
+  // 2.1.0: the runner's records are the evidence; `claim.gates_green` is ignored. check() places the
+  // record-derived set on the claim as `_green_recorded` (a Set); a test double may do the same.
+  // A claim with no records at all has nothing green, whatever it typed.
+  const green = claim?._green_recorded instanceof Set ? claim._green_recorded : new Set();
   for (const g of envelope.required_green_gates || []) {
-    if (!green.has(g)) findings.push(`${eid}: required gate ${g} is not recorded green in the claim`);
+    if (!green.has(String(g).toLowerCase())) findings.push(`${eid}: required gate ${g} is not recorded green by the gate runner at this commit (the claim's own gates_green is not evidence — pass the runner's gate-run-*.json)`);
+  }
+  // The class is verified against content, not asserted.
+  if (cls && ROUTINE_CLASSES.includes(cls) && Array.isArray(claim?._files)) findings.push(...verifyClass(cls, claim._files).map((f) => `${eid}: ${f}`));
+  return findings;
+}
+
+// ── 2.1.0 — the claim is not evidence ────────────────────────────────────────────────────────
+
+/** Manifest and lockfile shapes a dependency-patch may touch, with a package-name extractor each. */
+export const DEPENDENCY_FILES = [
+  { re: /(^|\/)package\.json$/, names: (t) => { try { const j = JSON.parse(t); return new Set(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'].flatMap((k) => Object.keys(j[k] || {}))); } catch { return null; } } },
+  { re: /(^|\/)package-lock\.json$/, names: (t) => { try { const j = JSON.parse(t); const out = new Set(); for (const k of Object.keys(j.packages || {})) { const m = k.match(/node_modules\/((?:@[^/]+\/)?[^/]+)$/); if (m) out.add(m[1]); } for (const k of Object.keys(j.dependencies || {})) out.add(k); return out; } catch { return null; } } },
+  { re: /(^|\/)pnpm-lock\.ya?ml$/, names: (t) => new Set([...t.matchAll(/^ {2}['"]?\/?((?:@[^/@'"\s]+\/)?[^/@'"\s]+)[@/]\d/gm)].map((m) => m[1])) },
+  { re: /(^|\/)yarn\.lock$/, names: (t) => new Set([...t.matchAll(/^"?((?:@[^@"\s]+\/)?[^@"\s]+)@/gm)].map((m) => m[1])) },
+  { re: /(^|\/)requirements[^/]*\.txt$/, names: (t) => new Set([...t.matchAll(/^\s*([A-Za-z0-9_.-]+)\s*(?:[=<>!~]=|@|$)/gm)].map((m) => m[1].toLowerCase())) },
+  { re: /(^|\/)(poetry|uv)\.lock$/, names: (t) => new Set([...t.matchAll(/^name\s*=\s*"([^"]+)"/gm)].map((m) => m[1].toLowerCase())) },
+  { re: /(^|\/)pyproject\.toml$/, names: (t) => new Set([...t.matchAll(/^\s*"?([A-Za-z0-9_.-]+)"?\s*(?:[=<>!~]=|>=|\[|$)/gm)].map((m) => m[1].toLowerCase())) },
+  { re: /(^|\/)go\.(mod|sum)$/, names: (t) => new Set([...t.matchAll(/^\s*(\S+\.\S+\/\S+)\s+v/gm)].map((m) => m[1])) },
+  { re: /(^|\/)Cargo\.(toml|lock)$/, names: (t) => new Set([...t.matchAll(/^name\s*=\s*"([^"]+)"|^([A-Za-z0-9_-]+)\s*=\s*["{]/gm)].map((m) => m[1] || m[2])) },
+  { re: /(^|\/)Gemfile(\.lock)?$/, names: (t) => new Set([...t.matchAll(/^\s{4}([A-Za-z0-9_-]+) \(|^\s*gem ['"]([^'"]+)['"]/gm)].map((m) => m[1] || m[2])) },
+];
+const DOC_FILE = /\.(md|mdx|markdown|txt|rst|adoc)$|(^|\/)docs?\//i;
+const COMMENT_LINE = /^\s*(\/\/|#(?!!)|\*|\/\*|\*\/|<!--|-->|--\s|;|%|'|rem\s)/i;
+const IMPORT = /\bimport\s[^'"]*['"]([^'"]+)['"]|\brequire\s*\(\s*['"]([^'"]+)['"]|^\s*(?:from\s+(\S+)\s+import|import\s+(\S+))|^\s*use\s+([A-Za-z_][\w:]*)/;
+const majorOf = (spec) => { const m = String(spec || '').match(/(\d+)/); return m ? m[1] : null; };
+
+/**
+ * Does the diff's CONTENT fit the claimed class? `files` is [{ path, added, removed, base, head }]
+ * (line arrays and full before/after text; base/head null when the file is absent on that side).
+ * Findings, [] ⇒ the content is what the class says it is. Path allow/deny/floor are checked
+ * separately in evaluate(); this is the question the envelope's class pre-authorized an answer to.
+ */
+export function verifyClass(cls, files) {
+  const findings = [];
+  const nonBlank = (lines) => (lines || []).filter((l) => l.trim());
+  switch (cls) {
+    case 'doc-fix':
+      for (const f of files) if (!DOC_FILE.test(f.path)) findings.push(`class doc-fix: ${f.path} is not a documentation file`);
+      break;
+    case 'comment-fix':
+      for (const f of files) {
+        if (DOC_FILE.test(f.path)) continue;
+        for (const l of [...nonBlank(f.added), ...nonBlank(f.removed)]) {
+          if (!COMMENT_LINE.test(l)) { findings.push(`class comment-fix: ${f.path} changes a non-comment line: ${JSON.stringify(l.trim().slice(0, 60))}`); break; }
+        }
+      }
+      break;
+    case 'formatting':
+      for (const f of files) {
+        if (f.base === null || f.head === null) { findings.push(`class formatting: ${f.path} was ${f.base === null ? 'added' : 'deleted'} — formatting changes no file's existence`); continue; }
+        if (f.base.replace(/\s+/g, '') !== f.head.replace(/\s+/g, '')) findings.push(`class formatting: ${f.path} changes something other than whitespace`);
+      }
+      break;
+    case 'lint-fix':
+      for (const f of files) {
+        if (f.base === null) { findings.push(`class lint-fix: ${f.path} is a new file — a lint fix edits, it does not create`); continue; }
+        if (DEPENDENCY_FILES.some((d) => d.re.test(f.path))) { findings.push(`class lint-fix: ${f.path} is a dependency manifest — not a lint fix`); continue; }
+        const before = new Set([...(f.base || '').split('\n')].map((l) => l.match(IMPORT)).filter(Boolean).map((m) => m.slice(1).find(Boolean)));
+        for (const l of nonBlank(f.added)) {
+          const m = l.match(IMPORT);
+          const mod = m && m.slice(1).find(Boolean);
+          if (mod && !before.has(mod)) findings.push(`class lint-fix: ${f.path} imports ${mod}, which the file did not import before — a new dependency is not a lint fix`);
+        }
+      }
+      break;
+    case 'dependency-patch':
+      for (const f of files) {
+        const kind = DEPENDENCY_FILES.find((d) => d.re.test(f.path));
+        if (!kind) { findings.push(`class dependency-patch: ${f.path} is not a dependency manifest or lockfile`); continue; }
+        if (f.base === null) { findings.push(`class dependency-patch: ${f.path} is a new file — a patch updates a manifest, it does not add one`); continue; }
+        const before = kind.names(f.base), after = kind.names(f.head ?? '');
+        if (!before || !after) { findings.push(`class dependency-patch: ${f.path} could not be parsed on both sides — unverifiable is not a patch`); continue; }
+        const added = [...after].filter((n) => !before.has(n));
+        if (added.length) findings.push(`class dependency-patch: ${f.path} introduces ${added.length} package(s) not present before (${added.slice(0, 5).join(', ')}) — a new dependency is a change, not a patch`);
+        if (/(^|\/)package\.json$/.test(f.path)) {
+          try {
+            const b = JSON.parse(f.base), h = JSON.parse(f.head ?? '{}');
+            for (const k of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+              for (const [name, spec] of Object.entries(h[k] || {})) {
+                const was = (b[k] || {})[name];
+                if (was !== undefined && majorOf(was) !== null && majorOf(spec) !== majorOf(was)) findings.push(`class dependency-patch: ${f.path} moves ${name} across a major (${was} → ${spec}) — a major bump is not a patch`);
+              }
+            }
+          } catch { /* the name check above already reported an unparseable side */ }
+        }
+      }
+      break;
+    default:
+      break; // an unknown class is already a finding in evaluate()
   }
   return findings;
+}
+
+/**
+ * Which gate ids the gate runner recorded green AT THIS COMMIT. `records` are parsed
+ * gate-run-*.json documents (core/gate-runner.mjs `--out`, or any tool writing the same shape:
+ * `{ commit, executed: [{ controls, status }] }`). A record for another commit is not evidence for
+ * this one, and only `pass` / `pass-cached` count. Ids compare case-insensitively (Q1b ≡ Q1B).
+ */
+export function gatesGreenFromRecords(records, head) {
+  const green = new Set();
+  for (const r of records || []) {
+    if (!r || (head && r.commit && r.commit !== head)) continue;
+    for (const row of r.executed || []) {
+      if (row.status === 'pass' || row.status === 'pass-cached') for (const id of row.controls || []) green.add(String(id).toLowerCase());
+    }
+  }
+  return green;
+}
+
+/** Read every gate-run record named (paths, or a directory scanned for gate-run-*.json). */
+export function loadGateRecords(cwd, spec) {
+  const out = [];
+  const names = spec ? String(spec).split(',').map((x) => x.trim()).filter(Boolean) : [];
+  if (!names.length) {
+    try { for (const n of readdirSync(cwd)) if (/^gate-run-.*\.json$/.test(n)) names.push(n); } catch { /* no dir */ }
+  }
+  for (const n of names) {
+    try { out.push(JSON.parse(readFileSync(`${cwd}/${n}`, 'utf8'))); } catch { /* unreadable → not evidence */ }
+  }
+  return out;
 }
 
 /** Derive the real changed paths + line count from git, so the lane is judged on the actual
@@ -156,7 +288,26 @@ export function gitDiff(base) {
   } catch { return null; }
 }
 
-export function check(cwd = process.cwd(), base = 'origin/main') {
+/** Per-file added/removed lines plus full before/after text, from git. null if git is unavailable. */
+export function gitDiffDetail(base, paths) {
+  try {
+    const files = [];
+    for (const path of paths) {
+      const show = (ref) => { try { return execSync(`git show ${ref}:${JSON.stringify(path)}`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 }); } catch { return null; } };
+      const patch = execSync(`git diff --no-renames -U0 ${base}...HEAD -- ${JSON.stringify(path)}`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 });
+      const added = [], removed = [];
+      for (const line of patch.split('\n')) {
+        if (/^\+\+\+ |^--- /.test(line)) continue;
+        if (line.startsWith('+')) added.push(line.slice(1));
+        else if (line.startsWith('-')) removed.push(line.slice(1));
+      }
+      files.push({ path, added, removed, base: show(base), head: show('HEAD') });
+    }
+    return files;
+  } catch { return null; }
+}
+
+export function check(cwd = process.cwd(), base = 'origin/main', { gateRecords } = {}) {
   if (!existsSync(`${cwd}/${CLAIM_PATH}`)) return { claimed: false, findings: [] };
   const claim = JSON.parse(readFileSync(`${cwd}/${CLAIM_PATH}`, 'utf8'));
   const envelope = existsSync(`${cwd}/${ENVELOPE_PATH}`) ? JSON.parse(readFileSync(`${cwd}/${ENVELOPE_PATH}`, 'utf8')) : null;
@@ -171,6 +322,14 @@ export function check(cwd = process.cwd(), base = 'origin/main') {
   }
   claim.changed_paths = real.changed_paths;
   claim.diff_lines = real.diff_lines;
+  // 2.1.0: content, not assertion. The diff detail feeds verifyClass; the runner's records feed
+  // the required-gates check. Neither can be typed into the claim.
+  const detail = gitDiffDetail(base, real.changed_paths);
+  if (!detail) return { claimed: true, findings: [`cannot read the diff content against ${base} — the class cannot be verified; take the normal human-merge lane`] };
+  claim._files = detail;
+  let head = null;
+  try { head = execSync('git rev-parse HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { /* recorded below as no evidence */ }
+  claim._green_recorded = gatesGreenFromRecords(loadGateRecords(cwd, gateRecords), head);
   return { claimed: true, findings: evaluate(envelope, claim, registry, new Date()) };
 }
 
@@ -189,7 +348,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const baseArg = process.argv.indexOf('--base');
   const base = baseArg >= 0 ? process.argv[baseArg + 1] : 'origin/main';
   const assertRoutine = process.argv.includes('--assert-routine');
-  const { claimed, findings } = check(process.cwd(), base);
+  const recArg = process.argv.indexOf('--gate-records');
+  const gateRecords = recArg >= 0 ? process.argv[recArg + 1] : undefined;
+  const { claimed, findings } = check(process.cwd(), base, { gateRecords });
 
   if (assertRoutine) {
     // routine-qualified: pass ONLY for a qualifying claim.
