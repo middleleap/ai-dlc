@@ -118,6 +118,17 @@ export function prototypeDigest(runDir, wireframe = 'wireframe.html') {
   return h.digest('hex');
 }
 
+/** signal id → its Source cell (column 2 of the research-log Signals table), normalised. */
+export function signalSources(signalsBlock) {
+  const out = new Map();
+  for (const cells of filledRows(signalsBlock, ['signal id', 'source'])) {
+    const id = (cells[0] || '').match(/\bS-\d{2,}\b/)?.[0];
+    const src = (cells[1] || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (id && src && !PLACEHOLDER.test(src)) out.set(id, src);
+  }
+  return out;
+}
+
 export function validateRun(runDir, opts = {}) {
   const p = (f) => join(runDir, f);
   const docs = {};
@@ -153,6 +164,16 @@ export function validateRun(runDir, opts = {}) {
     ]);
     for (const id of referenced) if (!defined.has(id)) issues.push(`${id} cited but not in research-log`);
     if (referenced.size === 0 && defined.size > 0) issues.push('synthesis/problem cite no signals (assertion without evidence)');
+    // 2.1.0 — breadth. One signal, cited once, used to satisfy this gate: fifty unsourced claims
+    // beside it passed. Discover is the DIVERGE half of the left diamond, and evidence that all
+    // comes from one place is a single opinion with an id. The signals the framing rests on must
+    // come from at least two distinct sources (the Source column of the research log).
+    const sources = signalSources(section(docs.research.body, 'Signals'));
+    const cited = [...referenced].filter((id) => defined.has(id));
+    const distinct = new Set(cited.map((id) => sources.get(id)).filter(Boolean));
+    if (cited.length > 0 && distinct.size < 2) {
+      issues.push(`evidence rests on a single source (${[...distinct][0] ? JSON.stringify([...distinct][0]) : 'none recorded'}) — cite signals from at least two distinct sources, or the framing is one opinion with an id`);
+    }
     gates.push(gate('D2', 'Evidence', issues));
   }
 

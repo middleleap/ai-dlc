@@ -46,14 +46,14 @@
     },
     "discovery/gates/validate.mjs": {
       "base": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
-      "bundle": "sha256:8c950337f281d3c82a53b86c597d162a6c9aee17358fae08c7d80d885f66becc",
+      "bundle": "sha256:8a3968493ce018e85362773d233997346f26c2828189a66bba12e4162321660f",
       "upstream": null,
       "state": "owed",
       "note": "changed here 2026-09-12; see `git log -- discovery/gates/validate.mjs`"
     },
     "discovery/gates/validate.test.mjs": {
       "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
-      "bundle": "sha256:1dcda0ac5288157713269e176c333f19dbdfed419121cf8df7fd458f40bc142e",
+      "bundle": "sha256:10dc4bdf503823f756d90822674f310077cee453f8a53d23d357358507e65a0c",
       "upstream": null,
       "state": "owed",
       "note": "changed here 2026-09-12; see `git log -- discovery/gates/validate.test.mjs`"

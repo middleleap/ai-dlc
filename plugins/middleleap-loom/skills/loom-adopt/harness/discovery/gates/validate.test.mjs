@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdirSync } from 'node:fs';
-import { validateRun, registerMandatory, prototypeDigest } from './validate.mjs';
+import { validateRun, registerMandatory, prototypeDigest, signalSources } from './validate.mjs';
 
 // rc.13 WS3 (F5) — the register requirement is DERIVED from compiled policy, not a CLI flag.
 function repoWithChange(caps) {
@@ -64,8 +64,8 @@ const DR = taxonomy[0].risk_category_id; // any resolvable category in the mount
 const FM = 'design_profile: discovery/brand/design.md';
 
 const FILES = {
-  'research-log.md': `---\nartifact: research-log\n${FM}\n---\n## Signals\n| S-001 | care queue | revoke ack lag observed | pain | high |\n`,
-  'synthesis.md': `---\nartifact: synthesis\n${FM}\n---\n## Themes\n| T-1 | revoke latency erodes trust | S-001 | regulatory + trust risk |\n## Prioritisation\n- **Method:** impact × reach ÷ effort\n`,
+  'research-log.md': `---\nartifact: research-log\n${FM}\n---\n## Signals\n| S-001 | care queue | revoke ack lag observed | pain | high |\n| S-002 | support tickets | 14 tickets cite slow revoke | pain | high |\n`,
+  'synthesis.md': `---\nartifact: synthesis\n${FM}\n---\n## Themes\n| T-1 | revoke latency erodes trust | S-001, S-002 | regulatory + trust risk |\n## Prioritisation\n- **Method:** impact × reach ÷ effort\n`,
   'problem-statement.md': `---\nartifact: problem-statement\n${FM}\n---\n## The problem (falsifiable)\nFor a care agent (synthetic) handling a revoke, today acknowledgement lags, per S-001.\n## Target user\nCare agent, synthetic persona, during a consent revoke.\n## Success measures\n| Measure | Baseline | Target | How |\n| Revoke ack | 12s | under 5s | sim metric |\n## Stakeholders & scope (D3)\n| Care lead | in | owns the queue |\n- Out of scope (explicit): bulk export tooling\n`,
   'data-governance.md': `---\nartifact: data-governance\n${FM}\n---\n## Risk mapping\n| consent record | ${DR} | High | PDPL Art. 5 | ${CTRL} |\n## Residual-risk verdict (D6)\n- **Acceptable for delivery?** Conditional — monitor fee variance\n`,
   'prototype.md': `---\nartifact: prototype\n${FM}\nfidelity: low\nwireframe: wireframe.html\n---\n## What this prototype tests\n| Hypothesis | Region | Positive reaction |\n| H1 — revoke timeliness made visible | ack tile | "the number I chase blind" |\n`,
@@ -396,6 +396,32 @@ test('prototypeDigest changes when a spec, the asset, or the brief changes — a
 test('D6 carries its verdict value on the gate result', () => {
   const dir = makeRun();
   try { assert.equal(gateOf(validateRun(dir, OPTS), 'D6').verdict, 'conditional'); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ── 2.1.0 — D2 breadth (plan row 1.8) ─────────────────────────────────────────────────────────
+test('D2 fails when every cited signal comes from one source', () => {
+  const dir = makeRun({ 'synthesis.md': FILES['synthesis.md'].replace('S-001, S-002', 'S-001') });
+  try {
+    const g = gateOf(validateRun(dir, OPTS), 'D2');
+    assert.equal(g.status, 'fail');
+    assert.ok(g.issues.some((i) => /single source \("care queue"\)/.test(i)), g.issues.join('; '));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D2 passes with two distinct sources, and signalSources normalises the Source column', () => {
+  const dir = makeRun();
+  try { assert.equal(gateOf(validateRun(dir, OPTS), 'D2').status, 'pass'); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+  const m = signalSources('| Signal id | Source | Obs |\n|---|---|---|\n| S-001 | Care  Queue | x |\n| S-002 | <fill> | y |\n| S-003 | care queue | z |');
+  assert.equal(m.get('S-001'), 'care queue');
+  assert.equal(m.get('S-003'), 'care queue');
+  assert.equal(m.has('S-002'), false, 'a placeholder source is no source');
+});
+
+test('D2 same-source signals with different ids are still one source', () => {
+  const dir = makeRun({ 'research-log.md': FILES['research-log.md'].replace('support tickets', 'care queue') });
+  try { assert.equal(gateOf(validateRun(dir, OPTS), 'D2').status, 'fail'); }
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
