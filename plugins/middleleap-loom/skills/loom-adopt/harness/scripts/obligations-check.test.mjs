@@ -30,15 +30,24 @@ test('a complete, verified obligation passes', { skip: !register && 'register ex
   assert.deepEqual(findings, []);
 });
 
+// The mounted register is the BUNDLE template (all ten entries illustrative) or, in an ADOPTED
+// tree, whatever the adopter — or the CI dry-run's fixture step — has made of it. The expectation
+// is therefore read from the file: every entry flagged illustrative is a notice on a generic repo
+// and a finding under a regulated one, however many there are.
 test('the shipped template is ILLUSTRATIVE: it passes with notices on a generic repo and FAILS under a regulated profile', { skip: !TEMPLATE && 'template absent' }, () => {
   const l = loadObligations(TEMPLATE);
   assert.equal(l.findings.length, 0, l.findings.join('; '));
   assert.equal(l.obligations.length, 10);
+  const illustrative = l.obligations.filter((o) => o.illustrative).length;
   const generic = evaluate(l, { register, registry: REGISTRY, catalogIds, regulated: false, now: NOW });
   assert.deepEqual(generic.findings, [], generic.findings.join('; '));
-  assert.ok(generic.notices.some((n) => /ILLUSTRATIVE/.test(n)));
+  assert.equal(generic.notices.filter((n) => /ILLUSTRATIVE/.test(n)).length, illustrative);
   const regulated = evaluate(l, { register, registry: REGISTRY, catalogIds, regulated: true, now: NOW });
-  assert.equal(regulated.findings.filter((f) => /ILLUSTRATIVE/.test(f)).length, 10, 'every illustrative entry fails under a regulated profile');
+  assert.equal(regulated.findings.filter((f) => /ILLUSTRATIVE/.test(f)).length, illustrative, 'every illustrative entry fails under a regulated profile');
+  // the property itself, independent of what is mounted: one illustrative entry, one finding
+  const one = evaluate(loaded([good({ illustrative: true })]), { register, registry: REGISTRY, catalogIds, regulated: true, now: NOW });
+  assert.ok(one.findings.some((f) => /ILLUSTRATIVE/.test(f)));
+  assert.deepEqual(evaluate(loaded([good({ illustrative: true })]), { register, registry: REGISTRY, catalogIds, regulated: false, now: NOW }).findings, []);
 });
 
 test('NEGATIVE — unresolved risk, unresolved control, unknown catalog control, bad FINOS id', () => {
@@ -136,7 +145,7 @@ test('the report joins obligations to register risks, register controls and cata
     cpSync(CATALOG, join(dir, 'docs/governance/control-catalog.json'));
     const rep = build(dir);
     assert.equal(rep.obligations.length, 10);
-    assert.equal(rep.illustrative, 10);
+    assert.equal(rep.illustrative, JSON.parse(readFileSync(TEMPLATE, 'utf8')).obligations.filter((o) => o.illustrative).length);
     const pdpl = rep.obligations.find((o) => o.id === 'OB-AE-PDPL-003');
     assert.equal(pdpl.risks[0].inherent, 'High');
     assert.equal(pdpl.register_controls[0].resolved, true);
