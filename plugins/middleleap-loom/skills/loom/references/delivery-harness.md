@@ -82,17 +82,31 @@ concrete fills — SCA, SAST, container and IaC scanning, hardened base images �
 
 ## The guardrail hooks (enforced every session, every edit)
 
-The loop's discipline is not left to the agent's restraint. Pre-write hooks block the failure
-modes that matter most, at the moment they would happen:
+The loop's discipline is not left to the agent's restraint. Pre-write hooks stop the failure
+modes that matter most at the moment they would happen — **and they are session hygiene, not
+the control of record.** A hook sees a tool call; it does not see a subprocess the agent's own
+code spawns, a write made outside the session, or a pattern it was not written for. The
+control of record for each of them is the CI gate that reads the merge-base diff, and, once the
+Kosli seam is mounted, the attestation Kosli holds outside the tree the agent edits. Read the
+three below as the first line, never the last:
 
-- **pii-guard** — blocks PII-shaped literals (jurisdiction-specific patterns; the bundled
-  instance ships UAE shapes) in any written content. Synthetic data only, everywhere.
-- **spec-tripwire** — blocks edits to the API contract on a feature branch. The contract
-  changes via its own spec-only PR (`spec-change` skill), reviewed by a human.
-- **test-tripwire** — blocks test-disabling edits (`it.skip`/`.only`/`.fails`, commented-out
-  assertions) on working branches. A red bar goes green by fixing the code, never by weakening
-  the test; a genuine test defect is fixed in the open on a dedicated `-testfix-` branch.
-  Defense in depth with CI gate Q1b: hook here, gate there.
+- **pii-guard** — denies PII-shaped literals (jurisdiction-specific patterns; the bundled
+  instance ships UAE shapes for Emirates ID, IBAN and mobile) in written content **and in the
+  Bash tool's command string**, with every non-alphanumeric separator stripped before matching.
+  Control of record: `secrets-scan.mjs` over the tree and history (Q4), and review.
+- **spec-tripwire** — denies edits to the API contract on a working branch (`feature/*`,
+  `claude/*`), through the file tools and through a shell command that names the contract with
+  a write signal. The contract changes via its own spec-only PR (`spec-change` skill), reviewed
+  by a human. Control of record: branch protection on the contract path plus CODEOWNERS.
+- **test-tripwire** — denies test-disabling edits (skip/only/todo/fails, bracket access,
+  x-/f-prefixed cases, the options object, skip decorators, commented-out and tautological
+  assertions) on working branches, across the JS, Python, Go and JVM conventions. A red bar goes
+  green by fixing the code, never by weakening the test; a genuine test defect is fixed in the
+  open on a dedicated `-testfix-` branch. Control of record: **Q1b**, `test-integrity-check.mjs`,
+  which diffs the whole test surface against the merge base.
+
+The hooks' own suite (`scripts/hooks.test.mjs`) runs each one as a process on a real tool
+payload, so a bypass found once cannot come back quietly.
 
 ## The merge policy — propose, never dispose
 
