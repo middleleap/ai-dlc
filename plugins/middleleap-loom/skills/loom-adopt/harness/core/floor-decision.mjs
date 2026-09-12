@@ -124,6 +124,7 @@ import {
 } from './approval-attestations.mjs';
 import { CLOCK_SKEW_MS, REFUSED_AUTHOR_TYPES } from './floor-webhook.mjs';
 import { RECONCILIATION_MAX_AGE_DAYS, checkMapInvariants, mappingActiveAt } from './identity-map.mjs';
+import { sameIdentity } from './separation.mjs'; // 2.1.0 — the one separation rule, shared
 
 /** The schema of the thing this emits. It is D2.4's, not a new one — see the header. */
 export { SCHEMA_ID, APPROVALS_SUBDIR };
@@ -497,7 +498,7 @@ function build(input, ctx, emit) {
       findings.push(refuse('DC-R18', f));
     }
   }
-  if (entry && entry.registry_id === ctx.transcriber) {
+  if (entry && sameIdentity(entry.registry_id, ctx.transcriber)) {
     findings.push(refuse('DC-R21', `the map binds this click to ${entry.registry_id}, which is the transcriber. Custody and decision must be separable, and an identity that is both is neither`));
   }
 
