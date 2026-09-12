@@ -462,6 +462,17 @@
         "NO ACTION for anyone not running a pilot. docs/governance/pilot-record.json installs at core and is INERT until you set `status` to `active` — an untouched copy is silent forever, and no compiled plan can arm it.",
         "IF YOU ARE ABOUT TO PILOT: fill the record before stage 2, not after. Two rules bite retroactively and cannot be satisfied backwards — stage exits need a date, evidence and an approver from outside the build team for every stage you have already left, and a rollback drill must predate production exposure. A pilot that reaches stage 4 and then writes its record will find it cannot honestly produce either."
       ]
+    },
+    {
+      "version": "2.1.0",
+      "headline": "2.1.0 — canon drift corrected; the hardening series begins",
+      "notes": [
+        "The method skill and README now cite the HG catalog as HG-0001…HG-0014; HG-0014 (determinations are institutional context, never agent work-product) had been in governance.md since the Shari'ah stream landed and the entry point still said 0013.",
+        "Every plugin agent cites its canon as skills/loom/references/<file>, a path that resolves from the plugin root and from an adopting repository. Two agents previously used paths that resolved from neither.",
+        "operations.md no longer implies the CVE route ships wired. change-watch reads a scanner's output once the adopter connects the post-release event; supply-chain-security.md §5 was already honest about that and now both files say the same thing.",
+        "Agent-run steps are graded DEFINED, not mechanically validated. model-risk.md graded change-watch's drift scan as mechanically validated and operations.md listed the two assurance agents under shipped machinery without a grade. Under the five-state model a prompt is not a gate; the grade now says so."
+      ],
+      "action_required": []
     }
   ]
 }

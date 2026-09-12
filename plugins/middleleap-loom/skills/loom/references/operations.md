@@ -40,7 +40,7 @@ prod. So Run re-enters through the same doors any evidence uses:
 | **incident** / **near-miss** | something broke, or nearly | research-log evidence (D2) → usually a Delivery fix |
 | **slo-breach** | a reliability objective missed | evidence (D2); an error-budget freeze touches the delivery line |
 | **drift** | model / eval / config drift | `change-watch` (① Watch) catches it → the D6 register or a fix |
-| **cve** | a shipped dependency is now vulnerable | `change-watch` (① Watch) → a patch (spec-fix) or the register |
+| **cve** | a shipped dependency is now vulnerable | `change-watch` (① Watch) reads the scanner's output **once the adopter wires the post-release event** (`supply-chain-security.md` §5 — nothing in the bundle wires it) → a patch (spec-fix) or the register |
 | **regulatory** | a rule changed | `change-watch` horizon scan → the register, or reopen Discovery |
 | **risk-materialised** | a register risk actually happened | the **D6 register** (`discovery-harness.md` §5.1) — cite its `DR-*` |
 | **customer-signal** | the market said something | research-log evidence → synthesis, possibly a new problem |
@@ -107,8 +107,9 @@ it cannot fall on the floor untriaged.
 - **Continuous Assurance's triggers** — the on-schedule / on-event run-time loop
   (`continuous-assurance.md`).
 - **① Watch (`change-watch`)** and **② Assess (`risk-reviewer`)** — the two continuous-assurance
-  agents that ship; ① catches drift / CVE / regulatory horizon items, ② produces the ROUTE
-  verdict.
+  agents that ship, graded **Defined** on the five-state model: a prompt is not a gate. ① surfaces
+  drift / CVE / regulatory horizon items when the feed that carries them is wired (the CVE feed
+  is not, `supply-chain-security.md` §5); ② produces the ROUTE verdict.
 - **The operations-signal seam + `operations-signal-check.mjs`** — this gate, enforcing triage
   and traceability.
 
