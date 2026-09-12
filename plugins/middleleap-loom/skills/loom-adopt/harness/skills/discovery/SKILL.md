@@ -61,6 +61,12 @@ Pick a slug. Create `discovery/runs/<slug>/` and copy each `discovery/templates/
   `research-log.md` (continue the `S-NNN` numbering) so it is evidence, not opinion — D9 fails a
   run whose prototype was reacted to by no one. Demo runs use **synthetic stakeholders** tagged
   `[synthetic]`; zero real PII. A prototype no one reacted to tested nothing.
+- **Bind the reaction to what was shown.** Run
+  `node discovery/gates/validate.mjs discovery/runs/<slug> --prototype-digest` and put the value in
+  `stakeholder-reaction.md` front-matter as `prototype_digest:`. D9 fails a reaction with no
+  binding, and fails again if the prototype (brief, wireframe, `specs/*.json`) changes afterwards —
+  a reaction evidences the prototype somebody saw, not the one that exists now. Editing the
+  hand-off or the reaction itself does not move the digest.
 
 ## 4. Gate, review, hand off
 
@@ -72,7 +78,12 @@ Pick a slug. Create `discovery/runs/<slug>/` and copy each `discovery/templates/
    `discovery-boundary-reviewer` (no-solutioning / prototype fidelity). Resolve any FAIL.
 3. `handoff.md`: the boundary object — problem, success measures, out-of-scope, the
    data-governance verdict + inherited conditions, and the prototype as *direction, not
-   specification*. No delivery design in it. Optionally render a stakeholder-facing
+   specification*. No delivery design in it. Its front-matter `licenses:` names the backlog
+   item ids this hand-off admits to delivery (`licenses: [STORY-12, STORY-13]`): the waist gate
+   refuses a feature whose run does not name it, so one green run can never license the whole
+   backlog. A verdict of **No** in `data-governance.md` blocks at the waist, and a
+   **Conditional** verdict must have its conditions carried into "Conditions delivery inherits".
+   Optionally render a stakeholder-facing
    `handoff.document.html` (print-to-PDF) and `summary.deck.html` with the renderer — same
    content, on-brand, zero external tooling.
 

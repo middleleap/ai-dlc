@@ -46,17 +46,17 @@
     },
     "discovery/gates/validate.mjs": {
       "base": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
-      "bundle": "sha256:dc8d826ccbd3e5df6bac24bb9388711f0cdb2bec657c4e0715398faa1fd2676b",
+      "bundle": "sha256:8c950337f281d3c82a53b86c597d162a6c9aee17358fae08c7d80d885f66becc",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: D6 accepts mounted regulatory drivers on top of the built-in regex (escaped literals, add-only), and the residual-verdict check is \\b-anchored so \"Not yet.\" no longer passes as a verdict via the \"no\" inside \"Not\" (F7)"
+      "note": "changed here 2026-09-12; see `git log -- discovery/gates/validate.mjs`"
     },
     "discovery/gates/validate.test.mjs": {
       "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
-      "bundle": "sha256:a6576d86bf960c97a9fcd3015128741dcb751db10a318d80398d3374263e7c4b",
+      "bundle": "sha256:1dcda0ac5288157713269e176c333f19dbdfed419121cf8df7fd458f40bc142e",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: rc.10 silent-green gaps, WS3 F5 regulated requirements, rc.31 D8 wireframe/spec over-specification cases, F7 mounted-driver + whole-word-verdict cases"
+      "note": "changed here 2026-09-12; see `git log -- discovery/gates/validate.test.mjs`"
     },
     "discovery/render/README.md": {
       "base": "sha256:3b347396252b6b3aaa6c3db997753a6c46a702a25eae401b6b315249c145a82d",
@@ -128,10 +128,10 @@
     },
     "discovery/templates/handoff.md": {
       "base": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
-      "bundle": "sha256:1f72fb051550dc5fee73c6919be81a6779f930df9f102a8a9d7cb580567422f9",
+      "bundle": "sha256:83101d21064c4fbf82287b09610c52fcb42c4e865e8184d1c7edae7b68942a2f",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "changed here 2026-09-12; see `git log -- discovery/templates/handoff.md`"
     },
     "discovery/templates/problem-statement.md": {
       "base": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
@@ -156,10 +156,10 @@
     },
     "discovery/templates/stakeholder-reaction.md": {
       "base": "sha256:5dd3fc31cb9f75081ede8911cd56088264ce30ecb4b05489d55b7de2264f2b0c",
-      "bundle": "sha256:8b50ef31e76e937a9d974f5d480a520d12e0512b068b0acef081583b075ce9df",
+      "bundle": "sha256:3693dea1e90926fa61d39cf91a0b48e8098225d0d242d7fec515c80f90e8b18d",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "changed here 2026-09-12; see `git log -- discovery/templates/stakeholder-reaction.md`"
     },
     "discovery/templates/synthesis.md": {
       "base": "sha256:c973b59b7bd4d420aac63e93e157879f78cfaaf20bd157ecfb829579b2386137",

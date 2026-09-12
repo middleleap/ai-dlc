@@ -6,7 +6,7 @@
   "stage": "define",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/stakeholder-reaction.md",
-  "source_digest": "sha256:8b50ef31e76e937a9d974f5d480a520d12e0512b068b0acef081583b075ce9df",
+  "source_digest": "sha256:3693dea1e90926fa61d39cf91a0b48e8098225d0d242d7fec515c80f90e8b18d",
   "gates": [
     "D2",
     "D9"

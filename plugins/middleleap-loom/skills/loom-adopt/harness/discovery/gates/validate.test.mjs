@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdirSync } from 'node:fs';
-import { validateRun, registerMandatory } from './validate.mjs';
+import { validateRun, registerMandatory, prototypeDigest } from './validate.mjs';
 
 // rc.13 WS3 (F5) — the register requirement is DERIVED from compiled policy, not a CLI flag.
 function repoWithChange(caps) {
@@ -69,17 +69,26 @@ const FILES = {
   'problem-statement.md': `---\nartifact: problem-statement\n${FM}\n---\n## The problem (falsifiable)\nFor a care agent (synthetic) handling a revoke, today acknowledgement lags, per S-001.\n## Target user\nCare agent, synthetic persona, during a consent revoke.\n## Success measures\n| Measure | Baseline | Target | How |\n| Revoke ack | 12s | under 5s | sim metric |\n## Stakeholders & scope (D3)\n| Care lead | in | owns the queue |\n- Out of scope (explicit): bulk export tooling\n`,
   'data-governance.md': `---\nartifact: data-governance\n${FM}\n---\n## Risk mapping\n| consent record | ${DR} | High | PDPL Art. 5 | ${CTRL} |\n## Residual-risk verdict (D6)\n- **Acceptable for delivery?** Conditional — monitor fee variance\n`,
   'prototype.md': `---\nartifact: prototype\n${FM}\nfidelity: low\nwireframe: wireframe.html\n---\n## What this prototype tests\n| Hypothesis | Region | Positive reaction |\n| H1 — revoke timeliness made visible | ack tile | "the number I chase blind" |\n`,
-  'stakeholder-reaction.md': `---\nartifact: stakeholder-reaction\n${FM}\n---\n## Reactions\n| Hypothesis | Stakeholder | Verdict | Reaction | Signal |\n| H1 | care agent (synthetic) | confirmed | "the number I chase blind" | S-001 |\n`,
+  'stakeholder-reaction.md': `---\nartifact: stakeholder-reaction\n${FM}\nprototype_digest: __DIGEST__\n---\n## Reactions\n| Hypothesis | Stakeholder | Verdict | Reaction | Signal |\n| H1 | care agent (synthetic) | confirmed | "the number I chase blind" | S-001 |\n`,
   'wireframe.html': `<!doctype html><html><head><!-- brand-profile: discovery/brand/design.md@v1 -->\n<style>body{font-family:"Inter","Helvetica Neue",Arial,sans-serif;background:#F7F8FA;color:#0B1221}.primary{background:#1F4DB8;color:#FFFFFF}</style></head><body>wireframe</body></html>`,
   'handoff.md': `---\nartifact: handoff\n${FM}\n---\n## Problem\nRevoke acknowledgement lags.\n## What delivery owns now\nDelivery authors the solution from the validated brief.\n`,
 };
 
+// 2.1.0 — a reaction is bound to the prototype it reacted to (D9). The fixture stamps the real
+// digest AFTER the prototype files are written, the way a facilitator does with --prototype-digest;
+// a test that wants a stale binding passes its own `prototype_digest:` and the stamp is skipped.
 function makeRun(overrides = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'disc-run-'));
   const files = { ...FILES, ...overrides };
   for (const [name, content] of Object.entries(files)) {
     if (content === null) continue; // omit this artifact
+    if (name.startsWith('specs/')) mkdirSync(join(dir, 'specs'), { recursive: true });
     writeFileSync(join(dir, name), content);
+  }
+  const reaction = join(dir, 'stakeholder-reaction.md');
+  if (existsSync(reaction) && readFileSync(reaction, 'utf8').includes('__DIGEST__')) {
+    const wf = (files['prototype.md'] || '').match(/wireframe:\s*(\S+)/)?.[1] || 'wireframe.html';
+    writeFileSync(reaction, readFileSync(reaction, 'utf8').replace('__DIGEST__', prototypeDigest(dir, wf)));
   }
   return dir;
 }
@@ -305,10 +314,10 @@ test('D8 does NOT fire on the renderer-generated <style> block (no false positiv
 });
 
 test('D8 still passes a clean prototype with a rendered wireframe and a spec', () => {
-  const dir = makeRun();
+  // the spec goes through makeRun so the reaction's digest covers it (2.1.0): a spec added after
+  // the stakeholder reacted is exactly the change D9 now refuses to read as green.
+  const dir = makeRun({ 'specs/wireframe.prototype.json': JSON.stringify({ title: 'The moment the offer arrives', tiles: [{ label: 'Time to a decision', value: 'This session' }] }, null, 2) });
   try {
-    mkdirSync(join(dir, 'specs'), { recursive: true });
-    writeFileSync(join(dir, 'specs/wireframe.prototype.json'), JSON.stringify({ title: 'The moment the offer arrives', tiles: [{ label: 'Time to a decision', value: 'This session' }] }, null, 2));
     const res = validateRun(dir, OPTS);
     assert.equal(gateOf(res, 'D8').status, 'pass');
     assert.ok(res.ok, 'a clean run must stay green: ' + JSON.stringify(res.gates.filter((g) => g.status === 'fail')));
@@ -341,4 +350,53 @@ test('D9 skips when there is no prototype to react to', () => {
   try { assert.equal(gateOf(validateRun(dir, OPTS), 'D9').status, 'skip'); }
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+// ── 2.1.0 — D9 binds the reaction to the prototype (plan row 1.2) ────────────────────────────
+test('D9 fails when the reaction is not bound to a prototype digest', () => {
+  const dir = makeRun({ 'stakeholder-reaction.md': FILES['stakeholder-reaction.md'].replace('prototype_digest: __DIGEST__\n', '') });
+  try {
+    const g = gateOf(validateRun(dir, OPTS), 'D9');
+    assert.equal(g.status, 'fail');
+    assert.ok(g.issues.some((i) => /not bound to the prototype/.test(i)), g.issues.join('; '));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D9 fails when the prototype changed after the reaction was recorded', () => {
+  const dir = makeRun();
+  try {
+    assert.equal(gateOf(validateRun(dir, OPTS), 'D9').status, 'pass');
+    writeFileSync(join(dir, 'prototype.md'), FILES['prototype.md'] + '| H2 — a second hypothesis nobody saw | tile | "?" |\n');
+    const g = gateOf(validateRun(dir, OPTS), 'D9');
+    assert.equal(g.status, 'fail');
+    assert.ok(g.issues.some((i) => /changed after the reaction/.test(i)), g.issues.join('; '));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D9 treats a placeholder digest as unbound', () => {
+  const dir = makeRun({ 'stakeholder-reaction.md': FILES['stakeholder-reaction.md'].replace('__DIGEST__', '<sha256 of the prototype shown>') });
+  try { assert.ok(gateOf(validateRun(dir, OPTS), 'D9').issues.some((i) => /not bound/.test(i))); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('prototypeDigest changes when a spec, the asset, or the brief changes — and not otherwise', () => {
+  const dir = makeRun();
+  try {
+    const d0 = prototypeDigest(dir);
+    writeFileSync(join(dir, 'handoff.md'), FILES['handoff.md'] + '\nextra line\n');
+    assert.equal(prototypeDigest(dir), d0, 'the hand-off is not part of the prototype');
+    mkdirSync(join(dir, 'specs'), { recursive: true });
+    writeFileSync(join(dir, 'specs/screen.json'), '{"screen":"ack"}');
+    const d1 = prototypeDigest(dir);
+    assert.notEqual(d1, d0);
+    writeFileSync(join(dir, 'wireframe.html'), FILES['wireframe.html'] + '<!-- edited -->');
+    assert.notEqual(prototypeDigest(dir), d1);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('D6 carries its verdict value on the gate result', () => {
+  const dir = makeRun();
+  try { assert.equal(gateOf(validateRun(dir, OPTS), 'D6').verdict, 'conditional'); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 }

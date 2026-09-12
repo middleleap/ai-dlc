@@ -6,7 +6,7 @@
   "stage": "handoff",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/handoff.md",
-  "source_digest": "sha256:1f72fb051550dc5fee73c6919be81a6779f930df9f102a8a9d7cb580567422f9",
+  "source_digest": "sha256:83101d21064c4fbf82287b09610c52fcb42c4e865e8184d1c7edae7b68942a2f",
   "gates": [
     "D1",
     "D2",
