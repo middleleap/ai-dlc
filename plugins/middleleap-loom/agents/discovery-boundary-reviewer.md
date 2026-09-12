@@ -21,7 +21,11 @@ Run `node discovery/gates/validate.mjs <runDir>` first. Then review the run's ar
 2. **Prototype fidelity (D8/§4).** Is `wireframe.html` a *low-fidelity validation* artifact
    (layout, flow, labelled regions, synthetic data) — or has it drifted into a delivery spec
    (component contracts, real data shapes, production polish presented as final)? The
-   prototype must be brand-real but behaviour-hollow.
+   prototype must be brand-real but behaviour-hollow. The committed `wireframe.html` is the
+   asset under review, not the `/design` canvas it was drafted on: a canvas URL in
+   `prototype.md` with no rendered asset, or an asset that is a raw canvas export (no brand
+   marker, literal values), is a FAIL. A wireframe drafted with the institution's real
+   component library synced in (`/design-sync`) has crossed into delivery fidelity.
 3. **Direction-not-specification.** Does `handoff.md` hand over the prototype as *direction*,
    or does it instruct delivery to build it as-is? The hand-off must leave the solution for
    delivery to author from scratch.

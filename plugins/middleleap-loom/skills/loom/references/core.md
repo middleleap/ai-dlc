@@ -19,7 +19,8 @@ four-eyes approval.** Every mechanism in the Loom is a concrete form of that sen
 ```
 
 - The **left diamond** finds the right problem. Discover diverges over evidence; Define converges
-  on one falsifiable problem and makes it tangible with a prototype a stakeholder reacts to.
+  on one falsifiable problem and makes it tangible with a prototype a stakeholder reacts to
+  (drafted with `/design`, committed through the brand renderer).
   Gates **D1–D9** hold it. A discovery is **allowed to fail**: stopping the wrong problem early is
   a win, and it is recorded as an outcome, not hidden.
 - The **waist** is the hand-off: one artifact, the PRD, is the entry condition for delivery. The

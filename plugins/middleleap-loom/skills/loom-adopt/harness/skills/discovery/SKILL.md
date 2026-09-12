@@ -41,13 +41,22 @@ Pick a slug. Create `discovery/runs/<slug>/` and copy each `discovery/templates/
 
 - `prototype.md`: the brief — which framing hypotheses the wireframe tests, scope, fidelity
   guardrails. `fidelity: low`.
-- `wireframe.html`: a **low-fidelity, disposable** wireframe. Generate it with the renderer
-  (`node discovery/render/render.mjs prototype
-  discovery/runs/<slug>/specs/wireframe.prototype.json discovery/runs/<slug>/wireframe.html`) —
-  author the regions as structured JSON; the renderer applies `design.md` tokens and embeds the
-  marker, so it is brand-conformant by construction. Brand-real, behaviour-hollow: synthetic
-  data, no live reads, no component/data contracts. This tests *the problem and direction*, not
-  the solution. **No external design tool is required.**
+- `wireframe.html`: a **low-fidelity, disposable** wireframe, made in two steps:
+  1. **Draft it with `/design`.** Run `/design <the brief>` in Claude Code, giving it the
+     hypotheses and screens from `prototype.md`, the fidelity guardrails (boxes, labels, flow;
+     synthetic data; no routes, stores or stacks), and the `design.md` tokens. Pick one of the
+     options, tweak it on the canvas, and walk the named stakeholders through it there. Put the
+     canvas URL in `prototype.md` front-matter as `design_canvas:`. Do **not** `/design-sync` a
+     component library into it — that is delivery fidelity (canon §4).
+  2. **Commit it through the renderer.** Transcribe the chosen option into
+     `discovery/runs/<slug>/specs/wireframe.prototype.json` and run
+     `node discovery/render/render.mjs prototype discovery/runs/<slug>/specs/wireframe.prototype.json
+     discovery/runs/<slug>/wireframe.html`. The renderer applies `design.md` tokens and embeds the
+     marker, so the committed asset is brand-conformant by construction; it is what D7/D8 read and
+     what the D9 digest binds. A canvas export committed as-is fails D7.
+  Brand-real, behaviour-hollow: synthetic data, no live reads, no component/data contracts. This
+  tests *the problem and direction*, not the solution. Where `/design` is unavailable (an Agent
+  SDK run, no artifacts), author the specs JSON directly — the renderer is the floor.
 
 > **Brand rule (D7).** Anything visual this harness emits — HTML, generated docs, decks,
 > spreadsheets, wireframes — renders against `discovery/brand/design.md` with tokens only and
@@ -55,7 +64,8 @@ Pick a slug. Create `discovery/runs/<slug>/` and copy each `discovery/templates/
 
 ## 3b. Validate — close the make-tangible loop (D9)
 
-- `stakeholder-reaction.md`: show `wireframe.html` to the roles the problem statement names and
+- `stakeholder-reaction.md`: show `wireframe.html` (the committed asset, not the canvas draft) to
+  the roles the problem statement names and
   record their reaction **per framing hypothesis** (`H1`, `H2`, …) with a verdict
   (confirmed/refuted/uncertain/partially). Log **each reaction as a new signal** in
   `research-log.md` (continue the `S-NNN` numbering) so it is evidence, not opinion — D9 fails a

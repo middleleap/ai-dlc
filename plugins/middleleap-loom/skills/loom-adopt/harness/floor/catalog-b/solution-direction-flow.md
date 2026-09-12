@@ -50,11 +50,11 @@ stage: develop
 > real alternative was live at the moment of the decision. Fill this in *before* the judgment step:
 > a flow filled backwards from the answer produces three directions, one of which was ever real.
 
-| # | Direction | Shape in one line | Killed by / survived because |
-|---|---|---|---|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
+| # | Direction | Shape in one line | Sketch (`/design` canvas, if it has a surface) | Killed by / survived because |
+|---|---|---|---|---|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
 
 ## The judgment
 
