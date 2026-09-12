@@ -21,8 +21,17 @@ import { pathToFileURL } from 'node:url';
 // ADOPT: what counts as a test file, and what counts as an assertion, in your stack.
 export const TEST_FILE = /(\.|_|\/)(test|spec)s?\.[cm]?[jt]sx?$|(^|\/)tests?\//i;
 export const ASSERTION = /\bassert\s*[.(]|\bexpect\s*\(|\.should\b|\bt\.(is|deepEqual|truthy|falsy|throws)\b/g;
-export const WEAKENER = /\.(skip|only|todo|failing|fails)\s*\(|\bx(it|describe|test)\s*\(/g;
-export const COMMENTED_ASSERTION = /^[ \t]*(\/\/|#).*(\bassert\s*[.(]|\bexpect\s*\()/gm;
+// 2.1.0 — the spellings the old line missed: bracket access, x-/f-prefixed cases, the node:test /
+// vitest options object, and the Python / Go / JVM decorators.
+export const WEAKENER = /\.\s*(skip|only|todo|failing|fails)\s*\(|\b(it|test|describe|context)\s*\[\s*["'](skip|only|todo)["']\s*\]|\b(xit|xdescribe|xtest|xcontext|fit|fdescribe|ftest)\s*\(|\{\s*(skip|todo|only)\s*:\s*(true|["'])|@pytest\.mark\.(skip|xfail)|@unittest\.skip|\bpytest\.skip\s*\(|\bt\.(Skip|SkipNow)\s*\(|@Disabled\b|@Ignore\b/g;
+export const COMMENTED_ASSERTION = /^[ \t]*(\/\/|#|--).*(\bassert\s*[.(]|\bexpect\s*\()/gm;
+// A block comment wrapping an expectation — the multi-line form the line regex cannot see.
+export const BLOCK_COMMENTED_ASSERTION = /\/\*(?:[^*]|\*+[^*/])*\b(?:expect|assert)\s*\(/g;
+// An assertion that cannot fail: it keeps the count this gate compares while proving nothing.
+export const TAUTOLOGY = /\bexpect\s*\(\s*(?:true|1|!0)\s*\)\s*\.\s*(?:toBe|toEqual|toStrictEqual|toBeTruthy)\s*\(\s*(?:true|1)?\s*\)|\bassert(?:\.ok|\.equal|\.strictEqual)?\s*\(\s*(?:true|1)\s*(?:,\s*(?:true|1)\s*)?\)|^[ \t]*assert\s+True\b/gm;
+// A test CASE, so an emptied file (still present, no cases left) is caught even when its
+// assertions were never counted as lost by the deletion rule.
+export const TEST_CASE = /\b(?:it|test|specify)\s*(?:\.\s*\w+\s*)?\(|^\s*def\s+test_|^\s*func\s+Test[A-Z]|@Test\b/gm;
 
 const count = (text, re) => (text.match(new RegExp(re.source, re.flags)) || []).length;
 
@@ -32,18 +41,41 @@ const count = (text, re) => (text.match(new RegExp(re.source, re.flags)) || []).
  */
 export function evaluate(baseFiles, headFiles) {
   const findings = [];
+  // Real assertions: the raw count minus the tautologies. A tautology is not evidence, so it
+  // must not offset a removed assertion (2.1.0).
+  const real = (t) => count(t, ASSERTION) - count(t, TAUTOLOGY);
+  let baseTotal = 0, headTotal = 0;
   for (const [path, baseText] of baseFiles) {
+    baseTotal += real(baseText);
     const headText = headFiles.get(path);
     if (headText === undefined) {
       findings.push(`${path} — test file deleted (a red bar goes green by fixing the code, never by removing the test)`);
       continue;
     }
-    const dAssert = count(headText, ASSERTION) - count(baseText, ASSERTION);
+    headTotal += real(headText);
+    const dAssert = real(headText) - real(baseText);
     if (dAssert < 0) findings.push(`${path} — net assertion loss (${dAssert}): assertions were removed or weakened`);
+    const dTaut = count(headText, TAUTOLOGY) - count(baseText, TAUTOLOGY);
+    if (dTaut > 0) findings.push(`${path} — ${dTaut} tautological assertion(s) added (asserting true is true keeps the count and proves nothing)`);
     const dWeak = count(headText, WEAKENER) - count(baseText, WEAKENER);
     if (dWeak > 0) findings.push(`${path} — ${dWeak} skip/only/todo/expected-failure marker(s) added`);
-    const dComment = count(headText, COMMENTED_ASSERTION) - count(baseText, COMMENTED_ASSERTION);
+    const dComment = (count(headText, COMMENTED_ASSERTION) + count(headText, BLOCK_COMMENTED_ASSERTION)) - (count(baseText, COMMENTED_ASSERTION) + count(baseText, BLOCK_COMMENTED_ASSERTION));
     if (dComment > 0) findings.push(`${path} — ${dComment} assertion(s) newly commented out`);
+    // Emptied, not deleted: the file survives so the deletion rule is silent, but every case is gone.
+    if (count(baseText, TEST_CASE) > 0 && count(headText, TEST_CASE) === 0) findings.push(`${path} — test file emptied: it had ${count(baseText, TEST_CASE)} case(s) and now has none`);
+  }
+  // Files that exist only at head still count toward the surface-wide total — and a NEW file made
+  // of tautologies is fake coverage, reported as such.
+  for (const [path, headText] of headFiles) {
+    if (baseFiles.has(path)) continue;
+    headTotal += real(headText);
+    const taut = count(headText, TAUTOLOGY);
+    if (taut > 0) findings.push(`${path} — new test file carries ${taut} tautological assertion(s) (asserting true is true is not coverage)`);
+  }
+  // The surface-wide total (2.1.0): a loss spread across files so that no single file trips the
+  // per-file rule is still a loss. Only reported when no per-file finding already names it.
+  if (headTotal < baseTotal && !findings.some((f) => /net assertion loss|deleted|emptied/.test(f))) {
+    findings.push(`test surface — net assertion loss across all test files (${headTotal - baseTotal}): the suite as a whole got weaker`);
   }
   return findings;
 }
