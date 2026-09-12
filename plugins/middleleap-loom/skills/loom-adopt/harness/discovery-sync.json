@@ -54,7 +54,7 @@
     },
     "discovery/gates/validate.test.mjs": {
       "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
-      "bundle": "sha256:4dc478db0bdac19e336142b3ad043b3d984cf7ebf0624ee3877cf8a6aa0be7f7",
+      "bundle": "sha256:e30b9522455b25db0ba93b9bbc95cde9a9baab5fc1319bb8b591182fe792e385",
       "upstream": null,
       "state": "owed",
       "note": "changed here 2026-09-12; see `git log -- discovery/gates/validate.test.mjs`"
