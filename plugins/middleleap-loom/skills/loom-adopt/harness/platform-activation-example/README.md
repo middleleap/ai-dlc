@@ -23,8 +23,8 @@ graduation rule fails the build if any catalog control claims `platform-enforced
 verified record naming it.
 
 **Not every mechanism is a git forge.** `egress_proxy` covers the network chokepoint an agent's
-outbound traffic is forced through — the optional agent-egress-control component (HG-0011 /
-HG-0012), whose canon is `../../../loom/references/agent-egress-control.md` and whose reference
+outbound traffic is forced through — the optional agent egress gateway (HG-0011 /
+HG-0012), whose canon is `../../../loom/references/agent-runtime.md` and whose reference
 record is `crabtrap-egress-proxy.json`. The rule that makes it a mechanism rather than a
 deployment is the same one that governs branch protection: the `bypass_test` proves the platform
 *refused a route around it*, not that a config file says the right words.

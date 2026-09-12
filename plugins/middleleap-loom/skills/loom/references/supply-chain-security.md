@@ -109,7 +109,7 @@ build/eval runtime**. Neither is satisfied by a sandbox image nobody can account
 
 Chainguard VMs and Containers — built from source in SLSA-certified infrastructure, carrying only
 what a container host needs — fill that slot directly, and compose with the egress half already in
-the canon (`agent-egress-control.md`, `agent-credential-brokering.md`). The second-order benefit is
+the canon (`agent-runtime.md`). The second-order benefit is
 containment: an image with no shell and no package manager narrows what a compromised *or merely
 misdirected* agent can do inside its own sandbox. The `HG-0012` egress allow-list stops the agent
 reaching out; a minimal runtime stops it reaching for tools that were never installed.
@@ -214,5 +214,5 @@ inert control — exactly the failure mode `governance.md` warns about.
 
 See also: `delivery-harness.md` (the Q-gate pattern), `governance.md` (HG-0002 and the
 enforcement-of-record rule), `continuous-assurance.md` (the assurance triggers),
-`agent-egress-control.md` (the runtime half of §2), `brainkit.md` (where `technology-policy.json`
+`agent-runtime.md` (the runtime half of §2), `brainkit.md` (where `technology-policy.json`
 sits), and `bank-grade-gap.md` (where these gates sit on the enforced/named-only/absent scorecard).

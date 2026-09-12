@@ -113,6 +113,10 @@ jobs:
           cp "$H/evidence-example/"*.json "$A/docs/governance/evidence/"
           cp "$H/evidence-example/sast.sarif" "$A/docs/governance/evidence/"
           cp -r "$H/register-example" "$A/docs/governance/data-risk-register"
+          # 2.1.0 (plan phase 5): the reviewer agent definitions are hand-copied by an adopter
+          # (project-specific templates, outside the copy manifest). Mount them here so the
+          # agent-output gate examines the definitions, not only the schema and fixtures.
+          cp "$H/agents/"*.md "$A/.claude/agents/"
           cp "$H/assurance-example/assurance-cycle.json" "$A/docs/governance/assurance-cycles/AC-2026-W29.json"
           # The committed example carries fixed dates and the assurance-cycle gate judges them
           # against the real clock: the moment the wall clock passed AC-F-1's due date the gate

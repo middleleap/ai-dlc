@@ -51,9 +51,9 @@ history, not a note.
 
 Not all of Run is the *product's* production. The build environment runs too, and it has sensors of
 its own. An egress gateway in front of the agent emits onto this same wire — a routine deny is a
-`near-miss`, a deny matching a registered data risk is `risk-materialised` (`agent-egress-control.md`)
+`near-miss`, a deny matching a registered data risk is `risk-materialised` (`agent-runtime.md` §7)
 — and a credential broker adds one more: an unsubstituted placeholder reaching the wire is an
-`incident` (`agent-credential-brokering.md`). Both route through exactly this triage, and neither
+`incident` (`agent-runtime.md` §7). Both route through exactly this triage, and neither
 needs a new signal type.
 
 ## The routing triage
@@ -136,7 +136,7 @@ nothing more. Claiming otherwise would be the exact dishonesty cluster E exists 
   waist-gate pattern this seam mirrors.
 - `delivery-harness.md` — the **⑦ DEPLOY / ⑧ EVIDENCE** seam Run begins at, and `spec-change`
   (the spec-fix route).
-- `agent-egress-control.md` / `agent-credential-brokering.md` — the build environment's own
+- `agent-runtime.md` — the build environment's own
   sensors: what an egress gateway and a credential broker emit onto this wire, and the routes
   their denials and failures take.
 - `bank-grade-gap.md` — **cluster E** (operational resilience: the R1–R6 readiness declarations

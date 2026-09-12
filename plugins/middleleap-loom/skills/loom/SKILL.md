@@ -46,10 +46,15 @@ into Discovery as evidence — the third arc (`references/operations.md`).
                      └── hand-off (the PRD) ──┘
 ```
 
-Full canon for each half:
+**Read `references/core.md` first** — the whole method in two pages. Everything else is either
+the full canon for one part of that page, or an appendix.
+
+**Canon** — the parts every adopter reads:
+- `references/core.md` — the two-page core: the one sentence, the double diamond closed into a
+  loop, the five decisions that carry the weight, the register chain, the maturity ladder.
 - `references/glossary.md` — **every identifier expanded**: the discovery gates `D1`–`D9`, the
   quality gates `Q1`–`Q5`, signals (`S-001`), themes (`T-1`), hypotheses (`H1`), gaps (`G-01`),
-  and the governance ids. Read this first if an id anywhere else is opaque.
+  and the governance ids. Read this if an id anywhere else is opaque.
 - `references/discovery-harness.md` — stages, artifacts, the D1–D9 gate model, the prototype
   boundary, the two seams, and the hand-off contract. This file **is** the canon an adopting
   repo mounts as `discovery/DISCOVERY.md`.
@@ -64,6 +69,29 @@ Full canon for each half:
 - `references/operations.md` — the third arc: how **Run/Operations** feeds signals back into
   Discovery to close the loop, the routing triage, and the `operations-signal` seam that keeps
   the feedback wire triaged and traceable.
+- `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
+  bar, on the five-state model (absent → defined → mechanically validated → platform
+  enforced → organisationally enforced) — plus the order to close the gaps in.
+- `assets/loom-stream.html` — a standalone, brand-styled visualization of the whole stream: the
+  double diamond closed into a loop, the security / governance / business checkpoints, where
+  Chainguard & Snyk attach, and the bank-grade maturity traffic-light. Open it in a browser.
+
+**Appendix** — one part each, read when that part is yours:
+- `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
+  eval-before-release, and independent validation, with the model-provenance gate that enforces
+  the repo-side half. Since 2.1.0 this covers the reviewer agents too: they emit one output
+  schema (`loom.agent-output/v1`), say `INSUFFICIENT_EVIDENCE` when their register is absent,
+  and are a role in the model manifest.
+- `references/agent-runtime.md` — the agent's own runtime, **optional** components: the egress
+  gateway that fills HG-0011's block half and HG-0012's allow-list, and the credential broker
+  that holds the secret so the agent never does (HG-0004's vault half); the deny → proposal →
+  human-approval property worth requiring of any instance; why the judge inside is a model.
+- `references/kosli-seam.md` — where the Loom stops and the record begins: the sealed bundle is
+  the outbox, Kosli is the record; the eight decisions and the seven questions that gate the
+  build.
+- `references/supply-chain-security.md` — how concrete SCA / SAST / image-scanning tooling
+  (Chainguard, Snyk) fills slots the frame already has (Q2, Q4, HG-0002, the evidence bundle,
+  continuous assurance) without changing the frame.
 - `references/factory-floor.md` — the **optional** collaboration surface for the people who never
   open a repository: the four planes and the one path that must bypass the seam, the three write
   classes, the freeze round trip, the four non-approving seam identities, and the ten gates that
@@ -71,29 +99,12 @@ Full canon for each half:
 - `references/enterprise-rings.md` — the fractal framing: the Loom as the micro ring (one
   change) plus the shipped half of the meso ring (one product), and an honest naming of the
   macro ring (the enterprise operating model) as adopter- and advisory-side, not bundled.
-- `assets/loom-stream.html` — a standalone, brand-styled visualization of the whole stream: the
-  double diamond closed into a loop, the security / governance / business checkpoints, where
-  Chainguard & Snyk attach, and the bank-grade maturity traffic-light. Open it in a browser.
-- `references/bank-grade-gap.md` — the method's honest self-grade against a regulated-bank
-  bar, on the five-state model (absent → defined → mechanically validated → platform
-  enforced → organisationally enforced) — plus the order to close the gaps in.
-- `references/supply-chain-security.md` — how concrete SCA / SAST / image-scanning tooling
-  (Chainguard, Snyk) fills slots the frame already has (Q2, Q4, HG-0002, the evidence bundle,
-  continuous assurance) without changing the frame.
-- `references/agent-egress-control.md` — an **optional** component: the agent egress gateway that
-  fills HG-0011's block half and HG-0012's allow-list, the `egress_proxy` activation mechanism
-  that lets those rows graduate, and why the judge inside it is itself a model to govern.
-- `references/agent-credential-brokering.md` — its sibling on the **credential** side: the broker
-  that holds the secret so the agent never does, filling the vault half of HG-0004 that a gateway
-  leaves open. Why a placeholder beats a short-lived secret for a process that reads untrusted
-  input, and the deny → proposal → human-approval property worth requiring of any instance.
-- `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
-  eval-before-release, and independent validation, with the model-provenance gate that enforces
-  the repo-side half.
 - `references/jurisdiction-scale-out.md` — entering a new market: the six data seams (jurisdiction
   profile, PII shapes, regulatory vocabulary, brand `lang`/`dir`, identities + quorum, data-risk
   rows) that make scale-out zero-code, and the documented data-contract gaps that belong in the
   register rather than in an invented enum value.
+- `references/brainkit.md` — the Institutional BrainKit, the seed of the third context dimension
+  (see below).
 
 ## The context brain — why the method compounds
 
