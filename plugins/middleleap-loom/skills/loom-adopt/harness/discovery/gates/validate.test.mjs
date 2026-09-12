@@ -93,7 +93,10 @@ function makeRun(overrides = {}) {
   return dir;
 }
 
-const OPTS = { registerDir: REGISTER_DIR, brandPath: BRAND_PATH };
+// obligations: null — the fixture runs are register-only. In an ADOPTED tree docs/governance/
+// obligations.json is installed (full tier) and would otherwise be picked up by the default path,
+// turning every fixture into a run that cites no obligation. The obligation tests mount their own.
+const OPTS = { registerDir: REGISTER_DIR, brandPath: BRAND_PATH, obligations: null };
 const gateOf = (res, id) => res.gates.find((g) => g.id === id);
 
 test('a complete run passes all gates', () => {
@@ -440,19 +443,19 @@ test('D6 with an obligations register mounted requires an OB-* citation that res
   withObligations((obligationsPath) => {
     const noCite = makeRun();
     try {
-      const g = gateOf(validateRun(noCite, { ...OPTS, obligationsPath }), 'D6');
+      const g = gateOf(validateRun(noCite, { ...OPTS, obligations: undefined, obligationsPath }), 'D6');
       assert.equal(g.status, 'fail');
       assert.ok(g.issues.some((i) => /cites no obligation/.test(i)), g.issues.join('; '));
     } finally { rmSync(noCite, { recursive: true, force: true }); }
     const cited = makeRun({ 'data-governance.md': FILES['data-governance.md'].replace('PDPL Art. 5', 'OB-AE-PDPL-001') });
-    try { assert.equal(gateOf(validateRun(cited, { ...OPTS, obligationsPath }), 'D6').status, 'pass'); }
+    try { assert.equal(gateOf(validateRun(cited, { ...OPTS, obligations: undefined, obligationsPath }), 'D6').status, 'pass'); }
     finally { rmSync(cited, { recursive: true, force: true }); }
     const ghost = makeRun({ 'data-governance.md': FILES['data-governance.md'].replace('PDPL Art. 5', 'OB-AE-PDPL-404') });
-    try { assert.ok(gateOf(validateRun(ghost, { ...OPTS, obligationsPath }), 'D6').issues.some((i) => /OB-AE-PDPL-404 does not resolve/.test(i))); }
+    try { assert.ok(gateOf(validateRun(ghost, { ...OPTS, obligations: undefined, obligationsPath }), 'D6').issues.some((i) => /OB-AE-PDPL-404 does not resolve/.test(i))); }
     finally { rmSync(ghost, { recursive: true, force: true }); }
     // an obligation whose risks this document never maps is a disagreement, not a citation
     const mismatch = makeRun({ 'data-governance.md': FILES['data-governance.md'].replace('PDPL Art. 5', 'OB-AE-OTHER-001') });
-    try { assert.ok(gateOf(validateRun(mismatch, { ...OPTS, obligationsPath }), 'D6').issues.some((i) => /obligation and the risk mapping disagree/.test(i))); }
+    try { assert.ok(gateOf(validateRun(mismatch, { ...OPTS, obligations: undefined, obligationsPath }), 'D6').issues.some((i) => /obligation and the risk mapping disagree/.test(i))); }
     finally { rmSync(mismatch, { recursive: true, force: true }); }
   });
 });
