@@ -20,10 +20,22 @@ import { pathToFileURL } from 'node:url';
 // hook, workflow, and governance manifest, not representative samples (1.10: an unlisted gate
 // is an unprotected gate). Add yours; remove any this repo doesn't have. Keep CODEOWNERS and
 // this gate in the list — a control plane that doesn't protect itself isn't one.
+//
+// 2.1.0 — this list is the BASE, not the whole set. The gates themselves are derived from the
+// control catalog at run time (`deriveTargets`): every `mechanism_ref` the catalog names is a
+// target, so a gate can no longer be catalogued and unlisted here at the same time. Before this,
+// 35 of 67 catalogued mechanisms were outside the list — an agent could rewrite any of them to
+// exit 0 without Code Owner review while this gate stayed green. What stays hand-listed is what
+// the catalog does not name: hooks and their data, settings, workflows, governance manifests,
+// and the ownership probes. The catalog's `paths` field is deliberately NOT used: it names what
+// TRIGGERS a control (discovery runs, backlog items — agent-written content), not what protects it.
 export const CONTROL_TARGETS = [
   '.claude/hooks/pii-guard.sh',
+  '.claude/hooks/pii-patterns.json',       // 2.1.0 — the file whose absence makes pii-guard fail closed; editable, it is the guard's allow-list
   '.claude/hooks/spec-tripwire.sh',
   '.claude/hooks/test-tripwire.sh',
+  '.claude/hooks/shariah-term-guard.sh',   // 2.1.0 — a hook is a hook; the Islamic one was catalogued and unlisted
+  '.claude/hooks/shariah-surfaces.txt',    // 2.1.0 — the scope list that decides where the term guard bites
   '.claude/settings.json',
   'discovery/gates/validate.mjs',
   'scripts/discovery-link-check.mjs',
@@ -100,6 +112,23 @@ export const CONTROL_TARGETS = [
 ];
 
 const CODEOWNERS_LOCATIONS = ['CODEOWNERS', '.github/CODEOWNERS', 'docs/CODEOWNERS'];
+// Where the adopted catalog lives (mirrors core/gate-runner.mjs and scripts/ci-catalog-check.mjs).
+export const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
+
+/**
+ * The full target set: the hand-listed base plus every mechanism the control catalog names.
+ * A catalogued gate is, by the catalog's own claim, a control — so its code is control plane
+ * whether or not anyone remembered to list it. Sorted and de-duplicated so the finding order
+ * is stable. `mechanism_ref` values that are not repo files (null, a runbook, a URL) are skipped.
+ */
+export function deriveTargets(catalog, base = CONTROL_TARGETS) {
+  const set = new Set(base);
+  for (const c of catalog?.controls || []) {
+    const m = c?.mechanism_ref;
+    if (typeof m === 'string' && /\.(mjs|js|sh|yml|yaml)$/.test(m) && !/^https?:/.test(m)) set.add(m.replace(/^\.\//, ''));
+  }
+  return [...set].sort();
+}
 
 // The shipped template's placeholder owner. A control plane "owned" by @your-org/… is not
 // owned by anyone — the gate fails until the ADOPT step replaces it with a real team, so a
@@ -155,7 +184,15 @@ function run(cwd = process.cwd()) {
   if (!path) {
     return [`no CODEOWNERS file found (looked in ${CODEOWNERS_LOCATIONS.join(', ')}) — the control plane is unowned`];
   }
-  return evaluate(readFileSync(path, 'utf8'));
+  // Fail closed on a missing catalog: without it the target set is the base list only, and a
+  // gate that is catalogued but unlisted would be exactly the unprotected gate this exists to catch.
+  const catalogPath = CATALOG_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
+  if (!catalogPath) {
+    return [`no control catalog found (looked in ${CATALOG_LOCATIONS.join(', ')}) — the control-plane target set cannot be derived, so it cannot be shown owned`];
+  }
+  let catalog;
+  try { catalog = JSON.parse(readFileSync(catalogPath, 'utf8')); } catch (e) { return [`${catalogPath}: unreadable control catalog (${e.message})`]; }
+  return evaluate(readFileSync(path, 'utf8'), deriveTargets(catalog));
 }
 
 // CLI (skipped when imported by the test suite).
