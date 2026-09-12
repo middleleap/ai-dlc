@@ -110,6 +110,22 @@
       "note": "2.1.0 — HG-0009 was a decision with no mechanism since 1.11; a record naming one direction dressed as a choice passed everything. Structural like the D gates: it checks that the shape of a decision exists, never that the decision was right"
     },
     {
+      "control_id": "OBLIGATIONS",
+      "objective": "Every regulatory obligation the institution answers to is registered with a source, an owner, a verification date, and the risks and controls that answer it; D6 cites obligations, not regulations from memory",
+      "owner_role": "compliance",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/obligations-check.mjs",
+      "test_ref": "scripts/obligations-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/obligations.json",
+        "docs/governance/data-risk-register/",
+        "docs/governance/identities.json"
+      ],
+      "note": "2.1.0 (plan phase 3) — the register is the spine that turns risk → control into obligation → risk → control → maturity. The gate holds shape and resolution; whether the entries are the right obligations, correctly cited, is compliance's — an illustrative entry fails under a regulated profile so the shipped example cannot pass for a real register"
+    },
+    {
       "control_id": "D-GATES",
       "objective": "Discovery runs are evidence-traced, register-mapped, brand-real and stakeholder-tested (D1–D9)",
       "owner_role": "product-owner",

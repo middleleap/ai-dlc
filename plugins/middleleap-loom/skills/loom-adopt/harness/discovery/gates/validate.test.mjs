@@ -425,4 +425,42 @@ test('D2 same-source signals with different ids are still one source', () => {
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// ── 2.1.0 — D6 cites an obligation when the register is mounted (plan row 3.3) ───────────────
+const OBLIGATIONS = JSON.stringify({ finos_catalogue: { ref: 'finos-labs/SDLC-Controls-Framework readiness report 2026-06-20' }, obligations: [
+  { id: 'OB-AE-PDPL-001', source: 'PDPL', article: 'Art. 7', title: 'Lawful processing', owner_role: 'compliance', last_verified: '2026-09-01', risk_ids: [DR], control_ids: [CTRL], finos: ['mi-4'] },
+  { id: 'OB-AE-OTHER-001', source: 'Other', article: 'Art. 1', title: 'Unrelated', owner_role: 'compliance', last_verified: '2026-09-01', risk_ids: ['DR-9.9'], control_ids: [CTRL], finos: [] },
+] });
+const withObligations = (fn) => {
+  const dir = mkdtempSync(join(tmpdir(), 'obl-'));
+  try { const p = join(dir, 'obligations.json'); writeFileSync(p, OBLIGATIONS); return fn(p); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+};
+
+test('D6 with an obligations register mounted requires an OB-* citation that resolves', () => {
+  withObligations((obligationsPath) => {
+    const noCite = makeRun();
+    try {
+      const g = gateOf(validateRun(noCite, { ...OPTS, obligationsPath }), 'D6');
+      assert.equal(g.status, 'fail');
+      assert.ok(g.issues.some((i) => /cites no obligation/.test(i)), g.issues.join('; '));
+    } finally { rmSync(noCite, { recursive: true, force: true }); }
+    const cited = makeRun({ 'data-governance.md': FILES['data-governance.md'].replace('PDPL Art. 5', 'OB-AE-PDPL-001') });
+    try { assert.equal(gateOf(validateRun(cited, { ...OPTS, obligationsPath }), 'D6').status, 'pass'); }
+    finally { rmSync(cited, { recursive: true, force: true }); }
+    const ghost = makeRun({ 'data-governance.md': FILES['data-governance.md'].replace('PDPL Art. 5', 'OB-AE-PDPL-404') });
+    try { assert.ok(gateOf(validateRun(ghost, { ...OPTS, obligationsPath }), 'D6').issues.some((i) => /OB-AE-PDPL-404 does not resolve/.test(i))); }
+    finally { rmSync(ghost, { recursive: true, force: true }); }
+    // an obligation whose risks this document never maps is a disagreement, not a citation
+    const mismatch = makeRun({ 'data-governance.md': FILES['data-governance.md'].replace('PDPL Art. 5', 'OB-AE-OTHER-001') });
+    try { assert.ok(gateOf(validateRun(mismatch, { ...OPTS, obligationsPath }), 'D6').issues.some((i) => /obligation and the risk mapping disagree/.test(i))); }
+    finally { rmSync(mismatch, { recursive: true, force: true }); }
+  });
+});
+
+test('D6 without an obligations register keeps the keyword-driver fallback (backward compatible)', () => {
+  const dir = makeRun();
+  try { assert.equal(gateOf(validateRun(dir, OPTS), 'D6').status, 'pass'); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 }

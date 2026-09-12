@@ -10,9 +10,9 @@ import { pathToFileURL } from 'node:url';
 import { existsSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import {
-  read, frontMatter, section, filledRows, hasContent, signalIds, drIds, ctrlIds, listFiles, PLACEHOLDER,
+  read, frontMatter, section, filledRows, hasContent, signalIds, drIds, ctrlIds, obIds, listFiles, PLACEHOLDER,
 } from './lib.mjs';
-import { loadRegister } from './registers.mjs';
+import { loadRegister, loadObligations } from './registers.mjs';
 import { parseBrand, checkVisualHtml, checkVisualMarkdown, checkVisualOoxml, MARKER } from './brand.mjs';
 import { aggregateRequirements, capabilityRequired } from '../../core/compiled-requirements.mjs';
 
@@ -137,6 +137,7 @@ export function validateRun(runDir, opts = {}) {
     docs[k] = { raw, ...frontMatter(raw), exists: existsSync(p(f)), file: f };
   }
   const register = opts.register !== null ? loadRegister(opts.registerDir) : null;
+  const obligations = opts.obligations !== null ? loadObligations(opts.obligationsPath) : null;
   const brand = parseBrand(opts.brandPath || 'discovery/brand/design.md');
   const gates = [];
 
@@ -237,7 +238,21 @@ export function validateRun(runDir, opts = {}) {
         if (drs.size === 0) issues.push('cites no DR-* risk category');
         for (const id of drs) if (!register.drIds.has(id)) issues.push(`DR id ${id} does not resolve in register`);
         for (const id of ctrls) if (!register.ctrlIds.has(id)) issues.push(`control ${id} does not resolve in register`);
-        if (!citesRegulatoryDriver(docs.dataGov.body, register.drivers)) issues.push('cites no regulatory driver');
+        // 2.1.0 — with an obligations register mounted, the driver is an OBLIGATION ID, not a
+        // regulation remembered in prose. The keyword vocabulary stays as the fallback for a repo that
+        // has not mounted one; once it is mounted, D6 asks for the id the register can answer for.
+        if (obligations) {
+          const cited = obIds(docs.dataGov.body);
+          if (cited.size === 0) issues.push('cites no obligation (OB-*) — the obligations register is mounted; cite the obligation the data position answers to, not the regulation from memory');
+          for (const id of cited) if (!obligations.byId.has(id)) issues.push(`obligation ${id} does not resolve in docs/governance/obligations.json`);
+          // the cited obligations should bear on the risks this document maps
+          for (const id of cited) {
+            const o = obligations.byId.get(id);
+            if (o && Array.isArray(o.risk_ids) && drs.size && !o.risk_ids.some((r) => [...drs].some((d) => d === r || d.startsWith(r + '.') || d.startsWith(r + '-')))) {
+              issues.push(`obligation ${id} maps to ${o.risk_ids.join(', ')}, none of which this document cites — the obligation and the risk mapping disagree`);
+            }
+          }
+        } else if (!citesRegulatoryDriver(docs.dataGov.body, register.drivers)) issues.push('cites no regulatory driver');
         const verdict = ((docs.dataGov.body.match(/Acceptable for delivery\?\*\*\s*(.*)/i) || [])[1] || '').trim();
         const unfilled = /^yes\s*\/\s*no\s*\/\s*conditional\s*[—-]?\s*$/i.test(verdict);
         // \b-anchored: unanchored, the "no" inside "Not yet." counted as a verdict, so the one
@@ -379,6 +394,7 @@ function main(argv) {
   const opts = {
     registerDir: regIdx >= 0 ? args[regIdx + 1] : undefined,
     register: args.includes('--no-register') ? null : undefined,
+    obligationsPath: (() => { const i = args.indexOf('--obligations'); return i >= 0 ? args[i + 1] : undefined; })(),
     brandPath: brandIdx >= 0 ? args[brandIdx + 1] : undefined,
     requireRegister: registerMandatory(process.cwd(), { flag: args.includes('--require-register') || process.env.LOOM_REQUIRE_REGISTER === '1' }),
   };

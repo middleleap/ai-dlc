@@ -33,27 +33,28 @@
     },
     "discovery/gates/lib.mjs": {
       "base": "sha256:5d68006763c5e488380e574e3aa7a9a2558c2d5af2d58210823f4d45a8d85d2d",
-      "bundle": "sha256:5d68006763c5e488380e574e3aa7a9a2558c2d5af2d58210823f4d45a8d85d2d",
+      "bundle": "sha256:6c93b825a8c89af5dd4153696d7d0d5757a0908be040d7a3d5d9346350ce31d9",
       "upstream": null,
-      "state": "at-extraction"
+      "state": "owed",
+      "note": "changed here 2026-09-12; see `git log -- discovery/gates/lib.mjs`"
     },
     "discovery/gates/registers.mjs": {
       "base": "sha256:16d6e7b0d93673d2d29a7786b1f037523a94562f2d6b9052cbe0c91f43a88cc8",
-      "bundle": "sha256:8fe6c9d13e2030035a3000a5468712ee037b6ef35260e338226f80ca00297bf9",
+      "bundle": "sha256:5e294015fbea7fa738466073602c46cbb10180cd88f87ae3ee08489e44077cb4",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: loadRegister() also mounts reg-drivers.json — the regulatory-driver vocabulary becomes register DATA instead of gate logic (F7)"
+      "note": "changed here 2026-09-12; see `git log -- discovery/gates/registers.mjs`"
     },
     "discovery/gates/validate.mjs": {
       "base": "sha256:4e633d21e97fd0080622eecd91414343de8e519adcf28bc22c8eecd78252840e",
-      "bundle": "sha256:8a3968493ce018e85362773d233997346f26c2828189a66bba12e4162321660f",
+      "bundle": "sha256:44b36f3bf439d1e990e0b7b41ddf7e9a2a1c7bf5c9015f0e59cf02c9326d83c8",
       "upstream": null,
       "state": "owed",
       "note": "changed here 2026-09-12; see `git log -- discovery/gates/validate.mjs`"
     },
     "discovery/gates/validate.test.mjs": {
       "base": "sha256:642cf6b49d931b506f8b77b11c26806862cb63b9cf6200da60bbfa7a62308bd9",
-      "bundle": "sha256:10dc4bdf503823f756d90822674f310077cee453f8a53d23d357358507e65a0c",
+      "bundle": "sha256:4dc478db0bdac19e336142b3ad043b3d984cf7ebf0624ee3877cf8a6aa0be7f7",
       "upstream": null,
       "state": "owed",
       "note": "changed here 2026-09-12; see `git log -- discovery/gates/validate.test.mjs`"

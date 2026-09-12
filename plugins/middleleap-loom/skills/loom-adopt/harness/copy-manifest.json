@@ -283,6 +283,14 @@
       "tier": "governed"
     },
     {
+      "source": "governance/obligations.template.json",
+      "dest": "docs/governance/obligations.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The obligations register (2.1.0): obligation → risk → control → FINOS id; read by obligations-check, D6, change-watch and the obligation report",
+      "tier": "governed"
+    },
+    {
       "source": "governance/config-baseline.template.json",
       "dest": "docs/governance/config-baseline.json",
       "kind": "file",

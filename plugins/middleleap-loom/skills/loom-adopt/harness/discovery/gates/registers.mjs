@@ -50,3 +50,43 @@ export function loadRegister(dir = DEFAULT_DIR) {
 
   return { drIds, ctrlIds, taxonomy, statements, controls, drivers };
 }
+
+// ── Obligations register (2.1.0, hardening plan phase 3) ─────────────────────────────────────
+export const OBLIGATIONS_DEFAULT = 'docs/governance/obligations.json';
+export const OB_ID = /^OB-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
+// The FINOS SDLC controls catalogue editions this loader knows. Draft ids move between editions,
+// so an unknown ref is refused loudly rather than matched to ids that may mean something else now.
+export const KNOWN_FINOS_CATALOGUES = new Set([
+  'finos-labs/SDLC-Controls-Framework readiness report 2026-06-20',
+]);
+
+/**
+ * Load the obligations register. Returns null when not mounted. `private_path` (a file outside the
+ * tree, for an institution whose taxonomy cannot be public) is followed when set. The result carries
+ * the raw document, an id → obligation map, and a loader finding list (unknown catalogue, unreadable
+ * private file) the gate reports — a loader that silently returned fewer entries would be the quiet
+ * failure this register exists to end.
+ */
+export function loadObligations(path = OBLIGATIONS_DEFAULT) {
+  if (!existsSync(path)) return null;
+  const findings = [];
+  let doc;
+  try { doc = JSON.parse(readFileSync(path, 'utf8')); } catch (e) { return { doc: null, byId: new Map(), obligations: [], findings: [`${path}: unreadable (${e.message})`] }; }
+  let obligations = Array.isArray(doc?.obligations) ? doc.obligations : [];
+  if (typeof doc?.private_path === 'string' && doc.private_path.trim()) {
+    const pp = doc.private_path;
+    if (!existsSync(pp)) findings.push(`${path}: private_path ${pp} does not exist — the register it points at is the one that counts, and it is not there`);
+    else {
+      try {
+        const priv = JSON.parse(readFileSync(pp, 'utf8'));
+        obligations = Array.isArray(priv?.obligations) ? priv.obligations : [];
+        if (priv?.finos_catalogue) doc = { ...doc, finos_catalogue: priv.finos_catalogue };
+      } catch (e) { findings.push(`${pp}: unreadable private register (${e.message})`); }
+    }
+  }
+  const ref = doc?.finos_catalogue?.ref;
+  if (ref && !KNOWN_FINOS_CATALOGUES.has(ref)) findings.push(`${path}: unknown FINOS catalogue ${JSON.stringify(ref)} — draft ids are edition-bound; known: ${[...KNOWN_FINOS_CATALOGUES].join(', ')}`);
+  const byId = new Map();
+  for (const o of obligations) if (o && typeof o.id === 'string') byId.set(o.id, o);
+  return { doc, obligations, byId, findings, path };
+}
