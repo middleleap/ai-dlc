@@ -474,3 +474,39 @@ test('BACKWARD COMPATIBILITY — the shipped worked evidence bundle still passes
   // …and with no registry loaded either, which is the state every conventional adopter is in.
   assert.deepEqual(evaluate(manifest, { baseDir: dir, registry: null }), []);
 });
+
+/* ---- 2.1.0 (plan row 2.5, decision K9): the anchor outside the tree ---- */
+import { externalRecordFindings } from './evidence-seal-check.mjs';
+
+const xrManifest = (over = {}) => ({ ...sealed(), external_record: { provider: 'kosli', id: 'att-1', ref: { provider: 'kosli', flow: 'f', trail: 'CHG-1', name: 'seal-anchor', id: 'att-1' }, recorded_at: '2026-09-13T00:00:00Z' }, ...over });
+const MOUNTED = { mounted: true, provider: 'kosli', active: true };
+const resolvedWith = (anchor) => async () => ({ status: 'resolved', record: { attestation_name: 'seal-anchor', user_data: { payload: { anchor } } } });
+
+test('not required: nothing owed, whatever the manifest carries', async () => {
+  assert.deepEqual(await externalRecordFindings(sealed(), { required: false, status: { mounted: false }, resolveFn: async () => { throw new Error('must not be called'); } }), []);
+});
+
+test('required but unmounted: a NOTE naming PS-R06 as the owner, never a finding here', async () => {
+  const notes = [];
+  assert.deepEqual(await externalRecordFindings(sealed(), { required: true, status: { mounted: false, reason: 'no provider selected' }, resolveFn: async () => ({}), notes }), []);
+  assert.ok(notes.some((n) => /PS-R06/.test(n)));
+});
+
+test('required and mounted: the manifest must carry a record id, from the selected provider', async () => {
+  const noField = await externalRecordFindings(sealed(), { required: true, status: MOUNTED, resolveFn: async () => ({}) });
+  assert.ok(noField.some((f) => /carries no external_record id/.test(f)));
+  const other = await externalRecordFindings(xrManifest({ external_record: { provider: 'worm-store', id: 'x' } }), { required: true, status: MOUNTED, resolveFn: async () => ({}) });
+  assert.ok(other.some((f) => /names provider "worm-store" but the institution selected kosli/.test(f)));
+});
+
+test('a resolvable id holding the same anchor passes; a different anchor, an unknown id and an outage each fail in their own words', async () => {
+  const m = xrManifest();
+  assert.deepEqual(await externalRecordFindings(m, { required: true, status: MOUNTED, resolveFn: resolvedWith(m.anchor) }), []);
+  assert.deepEqual(await externalRecordFindings(m, { required: true, status: MOUNTED, resolveFn: async () => ({ status: 'resolved', record: { attestation_name: 'seal-anchor' } }) }), [], 'a provider that does not echo the payload still resolves');
+  assert.ok((await externalRecordFindings(m, { required: true, status: MOUNTED, resolveFn: resolvedWith('f'.repeat(64)) })).some((f) => /holds a different seal/.test(f)));
+  assert.ok((await externalRecordFindings(m, { required: true, status: MOUNTED, resolveFn: async () => ({ status: 'unresolved', reason: 'not found' }) })).some((f) => /does NOT hold anchor id att-1/.test(f)));
+  assert.ok((await externalRecordFindings(m, { required: true, status: MOUNTED, resolveFn: async () => ({ status: 'unavailable', reason: 'binary missing' }) })).some((f) => /could not be reached/.test(f)));
+  const notes = [];
+  await externalRecordFindings(m, { required: true, status: { ...MOUNTED, active: false }, resolveFn: resolvedWith(m.anchor), notes });
+  assert.ok(notes.some((n) => /selected, not active/.test(n)));
+});

@@ -483,3 +483,79 @@ test('the RELEASE lane is never cached, whatever the control declares', () => {
     assert.match(r.stdout, /release gate ran/, 'the release re-runs its gates, for real');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+/* ---- 2.1.0 (plan row 2.4, decision K9): --record posts through the external-record seam ---- */
+import { generateKeyPairSync } from 'node:crypto';
+import { cpSync } from 'node:fs';
+import { calls as fakeCalls, createFakeKosli, respond as fakeRespond } from './kosli-fake.mjs';
+const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+function recordFixture({ mount }) {
+  const dir = emitFixture();
+  writeFileSync(join(dir, 'control-catalog.json'), JSON.stringify({ controls: [{ control_id: 'OK-1', mechanism_ref: 'scripts/ok.mjs', lane: 'pr', always: true }] }));
+  const keys = generateKeyPairSync('ed25519');
+  const pem = (k, type) => k.export({ type, format: 'pem' }).toString();
+  mkdirSync(join(dir, 'docs/governance/adapters'), { recursive: true });
+  writeFileSync(join(dir, 'docs/governance/attestation-issuers.json'), JSON.stringify({ issuers: [{ id: 'ci-runner', mechanism: 'ed25519', verify: { public_key: pem(keys.publicKey, 'spki') } }] }));
+  writeFileSync(join(dir, 'docs/governance/identities.json'), JSON.stringify({ identities: [{ id: 'agent-loom-delivery', kind: 'agent', model: { provider: 'p', model_id: 'm@1', prompt_version: 'v' }, harness_role: 'delivery-loop' }] }));
+  writeFileSync(join(dir, 'key.pem'), pem(keys.privateKey, 'pkcs8'));
+  const src = resolve(HARNESS, 'change-example');
+  if (existsSync(src)) cpSync(src, join(dir, 'docs/governance/changes/CHG-2026-0042'), { recursive: true });
+  if (mount) {
+    writeFileSync(join(dir, 'docs/governance/provider-selection.json'), JSON.stringify({ selections: [{ role: 'external-record', provider: 'kosli', adapter_id: 'kosli-external-record', decided_by: 'x', decided_at: '2026-09-13', source: 'y' }] }));
+    writeFileSync(join(dir, 'docs/governance/adapters/kosli.json'), JSON.stringify({ role: 'external-record', provider: 'kosli', adapter_id: 'kosli-external-record', config: { org: 'acme' }, activation_evidence: {} }));
+  }
+  const fake = createFakeKosli(join(dir, 'fake'));
+  spawnSync('git', ['init', '-q'], { cwd: dir }); spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'base'], { cwd: dir });
+  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).stdout.trim();
+  const env = { ...process.env, KOSLI_BIN: fake.bin, GITHUB_REPOSITORY: 'acme/x', GITHUB_REF: 'refs/heads/main', GITHUB_SHA: head };
+  return { dir, fake: fake.dir, env, head };
+}
+const recordArgs = ['--lane', 'pr', '--record', '--actor', 'agent-loom-delivery', '--record-issuer', 'ci-runner', '--record-key', 'key.pem', '--emit-dir', 'emitted', '--out', 'record.json'];
+
+test('--record unmounted: the run record says so, nothing reaches a binary, the run still passes', () => {
+  const f = recordFixture({ mount: false });
+  try {
+    const r = spawnSync(process.execPath, [RUNNER, ...recordArgs], { cwd: f.dir, encoding: 'utf8', env: f.env });
+    assert.equal(r.status, 0, r.stderr);
+    const rec = JSON.parse(readFileSync(join(f.dir, 'record.json'), 'utf8'));
+    assert.equal(rec.external_record.mounted, false);
+    assert.ok(rec.external_record.notes.some((n) => /not mounted/.test(n)));
+    assert.match(r.stdout, /external record: not mounted/);
+    assert.deepEqual(fakeCalls(f.fake), []);
+  } finally { rmSync(f.dir, { recursive: true, force: true }); }
+});
+
+test('--record mounted: each executed mechanism is posted as a signed gate record on the implicated change\'s trail, and the kept copy carries the id', { skip: existsSync(resolve(HARNESS, 'change-example')) ? false : 'worked example absent' }, () => {
+  const f = recordFixture({ mount: true });
+  try {
+    fakeRespond(f.fake, ['get', 'trail'], { stdout: { name: 'CHG-2026-0042', compliance_status: { attestations_statuses: [{ attestation_name: 'gate.scripts-ok', attestation_type: 'generic', attestation_id: 'att-42', status: 'COMPLETE', is_compliant: true, unexpected: false }] } } });
+    const r = spawnSync(process.execPath, [RUNNER, ...recordArgs], { cwd: f.dir, encoding: 'utf8', env: f.env });
+    assert.equal(r.status, 0, r.stderr);
+    const xr = JSON.parse(readFileSync(join(f.dir, 'record.json'), 'utf8')).external_record;
+    assert.equal(xr.provider, 'kosli');
+    assert.deepEqual(xr.posted, [{ trail: 'CHG-2026-0042', name: 'gate.scripts-ok', status: 'recorded', id: 'att-42' }]);
+    assert.deepEqual(xr.rejected, []); assert.deepEqual(xr.queued, []);
+    const argv = fakeCalls(f.fake).map((c) => c.argv);
+    assert.deepEqual(argv.map((a) => a.slice(0, 2)), [['begin', 'trail'], ['attest', 'generic'], ['get', 'trail']]);
+    assert.equal(argv[1][argv[1].indexOf('--trail') + 1], 'CHG-2026-0042');
+    const kept = JSON.parse(readFileSync(join(f.dir, 'emitted/records/CHG-2026-0042-gate.scripts-ok.json'), 'utf8'));
+    assert.equal(kept.record.status, 'recorded'); assert.equal(kept.record.id, 'att-42');
+    assert.equal(kept.attestation.issuer, 'ci-runner'); assert.equal(kept.commit, f.head); assert.equal(kept.runner.sha, f.head);
+    assert.equal(kept.payload.gate, 'scripts/ok.mjs'); assert.equal(kept.payload.result, 'pass');
+  } finally { rmSync(f.dir, { recursive: true, force: true }); }
+});
+
+test('--record with no signing key: every envelope is REJECTED (unsigned), nothing is posted or queued, and the log says why', { skip: existsSync(resolve(HARNESS, 'change-example')) ? false : 'worked example absent' }, () => {
+  const f = recordFixture({ mount: true });
+  try {
+    const r = spawnSync(process.execPath, [RUNNER, ...recordArgs.filter((a, i, all) => !['--record-issuer', '--record-key'].includes(a) && !['--record-issuer', '--record-key'].includes(all[i - 1]))], { cwd: f.dir, encoding: 'utf8', env: f.env });
+    assert.equal(r.status, 0, r.stderr);
+    const xr = JSON.parse(readFileSync(join(f.dir, 'record.json'), 'utf8')).external_record;
+    assert.equal(xr.rejected.length, 1); assert.ok(xr.rejected[0].findings.some((x) => /unsigned/.test(x)));
+    assert.deepEqual(xr.posted, []);
+    assert.deepEqual(fakeCalls(f.fake), [], 'a rejected envelope never reaches the binary');
+    assert.ok(!existsSync(join(f.dir, '.loom/record-outbox')));
+    assert.match(r.stdout, /REJECTED gate\.scripts-ok/);
+  } finally { rmSync(f.dir, { recursive: true, force: true }); }
+});

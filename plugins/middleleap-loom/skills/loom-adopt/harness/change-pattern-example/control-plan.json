@@ -70,8 +70,8 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:b5fb7148360237c3a1c96ad60772ea5e931ea1d79dc831906cfd04250a77c496"
+      "digest": "sha256:b93d101681491c5fee296a279b1981f0446ab5d7cf42b7fc1dddfe82e55b721b"
     }
   ],
-  "plan_hash": "9e31afb54ef057cf3fb37da4c2090cb67b13678eb0c273ec006e541e1bb3357e"
+  "plan_hash": "bff6fabb3a943a7bb2f6397266ba43921c39667f4665283312513fadaca6bd89"
 }

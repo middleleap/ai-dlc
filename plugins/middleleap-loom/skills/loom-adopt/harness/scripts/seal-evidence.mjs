@@ -28,6 +28,8 @@ import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { buildChain, evaluate, requiredTypesFor, verifyReleaseCommit } from './evidence-seal-check.mjs';
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
+import { actorFor, post as recordPost, runnerFromEnv, signerFromArgs, status as recordStatus } from '../core/external-record.mjs';
+import { buildEnvelope, signEnvelope } from '../core/provenance.mjs';
 
 export const DEFAULT_DIR = 'docs/governance/evidence';
 
@@ -172,5 +174,51 @@ export function main(argv = process.argv.slice(2), cwd = process.cwd()) {
   return 0;
 }
 
+/**
+ * 2.1.0 (hardening plan row 2.5, decision K9): put the anchor in the external record. Posts a
+ * signed `seal-anchor` envelope through core/external-record.mjs and, when the provider returns
+ * an id, writes `external_record { provider, id, ref, recorded_at }` on the manifest — the field
+ * scripts/evidence-seal-check.mjs resolves at the provider when a compiled plan requires
+ * `external_record`. Unmounted: a note, the manifest untouched, exit 0 — PS-R06 owns that
+ * finding. Queued: a note, exit 4. Rejected: exit 3 — a seal whose record the rules refuse is
+ * reported, never quietly unrecorded.
+ */
+export async function recordAnchor({ cwd = process.cwd(), dir, trail = null, actor = null, issuer = null, keyPath = null, dryRun = false } = {}) {
+  const manifestPath = join(dir, 'manifest.json');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const st = recordStatus(cwd);
+  if (!st.mounted) return { status: 'unmounted', reason: st.reason };
+  const signer = signerFromArgs({ issuer, keyPath });
+  const subjectTrail = trail || (aggregateRequirements(cwd).changes.map((c) => c.change_id).filter(Boolean).sort()[0] ?? null);
+  if (!subjectTrail) return { status: 'rejected', findings: ['no implicated change envelope and no --trail — a seal anchor binds to a change'] };
+  let envl = buildEnvelope({ kind: 'seal-anchor', name: 'seal-anchor', subject: { flow: 'delivery', trail: subjectTrail }, commit: manifest.release_commit,
+    actor: actorFor(cwd, actor || process.env.LOOM_ACTOR_ID || null), runner: runnerFromEnv(process.env, manifest.release_commit),
+    payload: { anchor: manifest.anchor, release: manifest.release ?? null, release_commit: manifest.release_commit, entries: manifest.entries.length, types: manifest.entries.map((e) => e.type) } });
+  if (signer) envl = signEnvelope(envl, signer);
+  const r = await recordPost(envl, { cwd, dryRun });
+  if (r.status === 'recorded' && !r.dry_run) {
+    manifest.external_record = { provider: r.provider, id: r.id, ref: r.ref, recorded_at: r.recorded_at };
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+  }
+  return r;
+}
+
 // CLI (skipped when imported by the test suite).
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exit(main());
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const argv = process.argv.slice(2);
+  // --record: seal, then record the anchor. --record-only: record the anchor of the manifest as
+  // it stands (after a re-derive that already signed it — resealing would drop that signature).
+  const recordOnly = argv.includes('--record-only');
+  const code = recordOnly ? 0 : main(argv);
+  if (code !== 0 || !(argv.includes('--record') || recordOnly)) process.exit(code);
+  const arg = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const dirArg = arg('--dir') || DEFAULT_DIR;
+  recordAnchor({ dir: isAbsolute(dirArg) ? dirArg : resolve(process.cwd(), dirArg), trail: arg('--trail'), actor: arg('--actor'), issuer: arg('--record-issuer'), keyPath: arg('--record-key'), dryRun: argv.includes('--dry-run') }).then((r) => {
+    if (r.status === 'recorded') { process.stdout.write(`  external record (${r.provider}): anchor recorded${r.dry_run ? ' (dry run — manifest untouched)' : ` as ${r.id} — written to manifest.external_record`}\n`); process.exit(0); }
+    if (r.status === 'unmounted') { process.stdout.write(`  external record: not mounted — ${r.reason}\n`); process.exit(0); }
+    if (r.status === 'queued') { process.stdout.write(`  external record: provider call failed — envelope queued${r.file ? ` at ${r.file}` : ''} (${r.error})\n`); process.exit(4); }
+    process.stderr.write('\nseal-evidence --record — the seal-anchor envelope was REFUSED by the provenance rules (nothing posted):\n');
+    for (const f of r.findings || []) process.stderr.write(`  - ${f}\n`);
+    process.exit(3);
+  });
+}

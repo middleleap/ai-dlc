@@ -1,15 +1,14 @@
 # The Kosli seam — where the Loom stops and the record begins
 
-> Appendix. **Decisions K1–K8 and hardening-plan rows 0.6–0.10 were ratified on 13 September
-> 2026.** The decisions here are settled; the machinery (`core/kosli-*.mjs`,
-> `scripts/kosli-*.mjs`, `docs/governance/kosli.json`) lands with hardening-plan phase 2, after
-> the seven questions in §5 are answered. Until it lands, every sentence below that says
-> "posts" or "reads" describes a contract, not shipped code, and `bank-grade-gap.md` grades the
-> corresponding rows accordingly.
+> Appendix. **Decisions K1–K9 and hardening-plan rows 0.6–0.10 were ratified on 13 September
+> 2026.** Rows 2.1–2.6, 2.8 and 2.14 are shipped (§4b, §4c); the rest of phase 2 lands after
+> the seven questions in §5 are answered on the 18 September call. Where a sentence below says
+> "posts" or "reads" about a row not yet shipped, it describes a contract, not code, and
+> `bank-grade-gap.md` grades the corresponding rows accordingly.
 
 ## 1. The one-line division
 
-**The Loom decides what must be true; Kosli records what happened.** The Loom compiles the
+**The Loom decides what must be true; the external record keeps what happened, and Kosli is the first provider of that record.** The Loom compiles the
 route (which gates, which approvers, which evidence), runs the gates, and signs every result.
 Kosli holds the record of those results outside the tree the agent edits, evaluates policy
 over it, and — from deploy onward — sees the one thing the Loom cannot: what is running.
@@ -32,6 +31,7 @@ holds is.
 | K6 | **Deploy onward is Kosli's.** Environment snapshots, drift, runtime evidence: the Loom's deploy lane *reads* the snapshot and never re-implements it | The Loom is a build-time frame (`SKILL.md` limits); pretending otherwise is the claim the method refuses to make |
 | K7 | **Shell out to the official CLI; never re-implement the API** | The CLI is the supported surface; auth and fingerprinting stay Kosli's |
 | K8 | **Unit tests pass without a Kosli org** (a record/replay fake); integration runs only with a token | An adopter's CI cannot depend on a SaaS being reachable to know its own gates pass |
+| K9 | **Kosli is a provider, never a dependency.** The control is HG-0003, a record outside the tree the agent edits; `external_record` is a provider role in `adapters/providers/roles.json`, chosen in `provider-selection.json` and required by the base profile at high tier. `core/external-record.mjs` is the only seam; `core/providers/kosli.mjs` is the first adapter; a WORM store with RFC 3161 timestamps, a transparency log, or a bank's own evidence platform are others. Unmounted, every seam call is a named no-op and the status report says so | HG-0008 says roles, never vendors; a bank that already runs an evidence platform adopts the Loom without buying a second one, and the Loom stays the deliverable |
 
 ## 3. What crosses the seam, and in which direction
 
@@ -82,7 +82,34 @@ are answered:
   so the rest of phase 2 has a CI harness waiting (decision K8).
 
 Each record is signed with the one attestation stack and refused as evidence while unsigned.
-Posting them is `kosli-attest`'s job, and that waits on question 1.
+
+## 4c. What phase 2 rows 2.2–2.6 shipped (13 September 2026)
+
+- **The role and the seam** (row 2.2): `external-record` is a role in
+  `adapters/providers/roles.json` with two offers (`kosli`, `transparency-log`); the
+  `regulated-bank` profile requires the capability at high tier; `core/external-record.mjs`
+  is the only module the harness calls — `status`, `post`, `resolve`, `trailStatus`,
+  `flushOutbox` — and `core/providers/kosli.mjs` the only place a Kosli command is spelled.
+  Unmounted is a named no-op everywhere. The verified CLI surface is `docs/kosli-surface.md`.
+- **The envelope and its rules** (row 2.6): `core/provenance.mjs` builds, signs and judges the
+  `loom.record-envelope/v1` envelope — PR1 tool run, PR2 no self-attestation, PR3 not narrated,
+  PR4 human acceptance, PR5 timestamps, PR6 runner identity. The seam refuses before it posts;
+  `scripts/provenance-check.mjs` (catalog `RECORD-PROVENANCE`) refuses what is still in the
+  tree — the outbox `.loom/record-outbox/` and the copies kept beside the evidence.
+- **The trail** (row 2.3): one trail per change envelope on the delivery flow, one per run on
+  the discovery flow; `begin trail` is idempotent; `scripts/record-trail-status.mjs` prints
+  expected (from the catalog) against present (from the provider).
+- **Posting** (row 2.4): `core/gate-runner.mjs --record` posts each executed mechanism's row
+  as a signed `gate` record on every implicated change's trail, and writes the run record's
+  `external_record` block; `scripts/record-flush-outbox.mjs` retries what the provider refused.
+- **The anchor** (row 2.5): `scripts/seal-evidence.mjs --record` posts the `seal-anchor`
+  envelope and writes `manifest.external_record { provider, id }`; when a plan requires the
+  capability and a provider is mounted, `scripts/evidence-seal-check.mjs` resolves that id at
+  the provider and fails a fabricated one, a mismatched provider, or a different anchor.
+
+Still ahead: the type and policy compilers (2.9), environments (2.10), the read-only server
+(2.11), the audit package (2.12), and the refusal half of question 2 (2.7), which waits on the
+18 September call.
 
 ## 5. Open questions — answered before phase 2 builds
 

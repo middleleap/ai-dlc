@@ -261,7 +261,7 @@
     },
     {
       "control_id": "HG-0003",
-      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain with a MANDATORY external anchor; release_commit must be a real commit that exists in this repository and is an ancestor of HEAD (a non-git context records the check as not-performable, never as a pass), and a plan-only evidence type (brainkit-provenance, shariah-attestation) is demanded and semantically verified only where a compiled plan names it",
+      "objective": "Release evidence is a sealed, commit-bound, semantically-verified hash chain with a MANDATORY external anchor; release_commit must be a real commit that exists in this repository and is an ancestor of HEAD (a non-git context records the check as not-performable, never as a pass), and a plan-only evidence type (brainkit-provenance, shariah-attestation) is demanded and semantically verified only where a compiled plan names it; when a compiled plan requires `external_record` and a provider is mounted, the manifest's external_record id must resolve at that provider and hold the same anchor (2.1.0, decision K9)",
       "owner_role": "platform-admin",
       "line": 1,
       "state": "mechanically-validated",
@@ -764,6 +764,21 @@
         "docs/governance/adapters/"
       ],
       "note": "Mandatory-when-compiled: silent where nothing is selected and no plan requires a provider capability; PS-R06 fires the moment one does"
+    },
+    {
+      "control_id": "RECORD-PROVENANCE",
+      "objective": "Every record envelope still in the tree — queued in .loom/record-outbox/ or kept beside the sealed evidence — passes the provenance rules PR1–PR6: a tool produced it, its actor is not its author, it is not narrated past intent, acceptance is human, its timestamps hold, and the CI runner that produced it is named; the same rules run inside core/external-record.mjs before anything is posted",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/provenance-check.mjs",
+      "test_ref": "scripts/provenance-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        ".loom/record-outbox/",
+        "docs/governance/evidence/"
+      ],
+      "note": "Mandatory-when-present: inert with no envelopes (the honest state of an adopter with no provider mounted), and every envelope is checked the moment one exists"
     },
     {
       "control_id": "HG-0013",

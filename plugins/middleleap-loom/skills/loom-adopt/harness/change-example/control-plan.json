@@ -105,6 +105,9 @@
       "required": true,
       "institution_owned": true
     },
+    "external_record": {
+      "required": true
+    },
     "real_data_controls": {
       "required": true,
       "institution_owned": true
@@ -124,7 +127,7 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:b5fb7148360237c3a1c96ad60772ea5e931ea1d79dc831906cfd04250a77c496"
+      "digest": "sha256:b93d101681491c5fee296a279b1981f0446ab5d7cf42b7fc1dddfe82e55b721b"
     },
     {
       "profile": "uae-bank",
@@ -133,5 +136,5 @@
       "digest": "sha256:802a87a9397b90cffd86dfbd2c7c94dd65facab4d055c395536f86ce21b0974e"
     }
   ],
-  "plan_hash": "6f96e27c0a5b4fc3120ba4bf4ebc992b07f144d5474fa7c9a5d03d0a3ded32a8"
+  "plan_hash": "b706c669699a8b226da6f4417ad3c810b4f155ffde360bcbe270012934430ffb"
 }
