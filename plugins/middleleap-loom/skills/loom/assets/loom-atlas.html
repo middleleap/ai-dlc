@@ -282,7 +282,7 @@ footer{padding-top:40px;border-top:1px solid var(--line);font-size:13px;color:va
     </div>
     <div class="grid2">
       <figure>
-        <svg id="loopsvg" viewBox="0 0 900 430" role="img" aria-label="The discovery diamond on the left with stages discover, define, prototype and react, then business case and hand-off at the waist; the delivery diamond on the right with develop, the build loop and release; a return arrow from run and operations back into discovery as signals.">
+        <svg id="loopsvg" viewBox="0 0 1000 430" role="img" aria-label="The discovery diamond on the left with stages discover, define, prototype and react, then business case and hand-off at the waist; the delivery diamond on the right with develop, the build loop, business acceptance and release; run sits outside the delivery diamond, and a return arrow carries operations signals back into discovery.">
           <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
           <path d="M40 200 L220 75 L400 200 L220 325 Z" fill="none" class="s-line" stroke-width="1.5"/>
           <path d="M500 200 L680 75 L860 200 L680 325 Z" fill="none" class="s-line" stroke-width="1.5"/>
@@ -332,11 +332,17 @@ footer{padding-top:40px;border-top:1px solid var(--line);font-size:13px;color:va
             <text x="790" y="198" class="t-h" text-anchor="middle" style="font-size:14px">Release</text>
             <text x="790" y="211" class="t-m" text-anchor="middle">Q5 · PA2 · sealed</text>
           </g>
-          <g class="stage" data-k="run" tabindex="0" role="button" aria-label="Stage: Run and operations">
+          <g class="stage" data-k="accept" tabindex="0" role="button" aria-label="Stage: Business acceptance">
             <rect class="box f-surf s-ink" x="625" y="272" width="110" height="36" stroke-width="1.5"/>
-            <text x="680" y="288" class="t-h" text-anchor="middle" style="font-size:14px">Run</text>
-            <text x="680" y="301" class="t-m" text-anchor="middle">signals · assurance</text>
+            <text x="680" y="288" class="t-h" text-anchor="middle" style="font-size:14px">Accept · UAT</text>
+            <text x="680" y="301" class="t-m" text-anchor="middle">uat-signoff · a human</text>
           </g>
+          <g class="stage" data-k="run" tabindex="0" role="button" aria-label="Stage: Run and operations">
+            <rect class="box f-surf s-ink" x="880" y="182" width="100" height="36" stroke-width="1.5"/>
+            <text x="930" y="198" class="t-h" text-anchor="middle" style="font-size:14px">Run</text>
+            <text x="930" y="211" class="t-m" text-anchor="middle">signals · assurance</text>
+          </g>
+          <text x="930" y="158" class="t-m" text-anchor="middle">OUTSIDE</text><text x="930" y="171" class="t-m" text-anchor="middle">THE DIAMONDS</text>
           <g class="s-ink" stroke-width="1.5" fill="none">
             <path d="M160 192 L172 128" marker-end="url(#ah3)"/>
             <path d="M160 208 L172 274" marker-end="url(#ah3)"/>
@@ -345,18 +351,19 @@ footer{padding-top:40px;border-top:1px solid var(--line);font-size:13px;color:va
             <path d="M390 172 L412 213" marker-end="url(#ah3)"/>
             <path d="M505 228 L526 218" marker-end="url(#ah3)"/>
             <path d="M620 192 L632 128" marker-end="url(#ah3)"/>
-            <path d="M735 120 L745 182" marker-end="url(#ah3)"/>
-            <path d="M745 216 L735 272" marker-end="url(#ah3)"/>
+            <path d="M680 128 L680 270" marker-end="url(#ah3)"/>
+            <path d="M735 284 L745 220" marker-end="url(#ah3)"/>
+            <path d="M840 200 L878 200" marker-end="url(#ah3)"/>
           </g>
-          <path d="M680 308 L680 372 L110 372 L110 220" fill="none" class="ember-s" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ah3)"/>
-          <text x="400" y="390" class="t-e" text-anchor="middle">RUN → DISCOVERY · OPERATIONS SIGNALS BECOME EVIDENCE (THE THIRD ARC)</text>
+          <path d="M930 218 L930 372 L110 372 L110 220" fill="none" class="ember-s" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ah3)"/>
+          <text x="520" y="390" class="t-e" text-anchor="middle">RUN → DISCOVERY · OPERATIONS SIGNALS BECOME EVIDENCE (THE THIRD ARC)</text>
           <path d="M337 186 L337 240 L358 240" fill="none" class="s-line" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#ah3)"/>
           <text x="364" y="244" class="t-m" style="font-size:9.5px">stop · outcome.md</text>
           <path d="M570 182 L570 135 L337 135 L337 148" fill="none" class="s-line" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#ah3)"/>
           <text x="453" y="129" class="t-m" text-anchor="middle" style="font-size:9.5px">outside the cost band → re-decide</text>
           <text x="20" y="418" class="t-m">A DISCOVERY IS ALLOWED TO FAIL. STOPPING THE WRONG PROBLEM EARLY IS A WIN.</text>
         </svg>
-        <figcaption>Left diamond: the problem. Right diamond: the solution. They meet at one artifact, the hand-off, and nothing crosses the waist without it. Run feeds signals back as evidence, so the loop closes. The dashed exits are real: a run may stop, and a chosen direction outside the case's cost band goes back to its decision authority.</figcaption>
+        <figcaption>Left diamond: the problem. Right diamond: the solution. They meet at one artifact, the hand-off, and nothing crosses the waist without it. Run sits outside both diamonds; its signals come back as evidence, so the loop closes. The dashed exits are real: a run may stop, and a chosen direction outside the case's cost band goes back to its decision authority.</figcaption>
       </figure>
       <div class="panel" id="panel" aria-live="polite">
         <span class="eyebrow" id="p-eyebrow">Stage</span>
@@ -527,8 +534,9 @@ footer{padding-top:40px;border-top:1px solid var(--line);font-size:13px;color:va
     handoff:{eb:'Stage 6 · The waist', t:'The boundary object', b:'Delivery-ready only when D1–D9 are green and it contains no delivery design. It quotes the problem, the governance position, the direction as direction not specification, and the funding position. Its licenses: line names the backlog items it admits, so one run never licenses the whole backlog.', who:[['h','facilitator'],['h','second human merges']], arts:['handoff.md · licenses: [STORY-…]','discovery-link-check · HG-0007','or: outcome.md · a human decided to stop']},
     develop:{eb:'Right diamond · diverge', t:'Three or more directions, judged', b:'Independent agents propose directions under distinct lenses; a judge scores them on success-measure fit, inherited conditions, composition, delivery cost and institutional fit. Forbidden or held technology disqualifies; trial needs the named authority; the chosen direction must land inside the case\'s cost band.', who:[['a','fan-out agents'],['a','judge'],['h','solution architect']], arts:['docs/develop/<slug>.md · Solution Direction Record','develop-direction-check · HG-0009','backlog item · discovery: <slug> · sdr:','ADR for any new primitive, human-approved']},
     build:{eb:'Right diamond · converge', t:'The autonomous build loop', b:'Spec first, then story by story under quality gates: unit, spec conformance, integration, security and dependencies, lineage. The agent proposes a merge; a human in a CODEOWNERS group the agent is not in disposes. Guardrail hooks refuse PII and spec tampering before the file is written.', who:[['a','next-story · implement-story'],['h','four-eyes reviewer']], arts:['Q1 · Q2 · Q3 · Q4 · Q4.5','HG-0001 four-eyes · HG-0002 immutable control plane','HG-0013 routine lane inside an expiring envelope','decision log · replayable reasoning']},
+    accept:{eb:'Deliver · the business accepts', t:'What was built is accepted before launch is asked for', b:'A non-builder human holding product-owner or business-owner signs uat-signoff.json, bound to the exact commit exercised. The lifecycle state uat-accepted sits between delivery-complete and permission-to-launch; a change may not step past it without the receipt, and at production authorization that commit must equal the release subject\'s.', who:[['h','product owner / business owner'],['h','facilitator']], arts:['uat-signoff.json · status accepted · bound to the commit','lifecycle: delivery-complete → uat-accepted → permission-to-launch','staged rollout cohorts (pilot playbook)']},
     release:{eb:'Release', t:'A human, at release time, evidenced', b:'The release subject binds source, artifact, evals and evidence by one digest. Product approval PA2 resolves to human identities holding the role. The evidence bundle is hash-chained and anchored outside the tree.', who:[['h','product owner'],['h','risk second line'],['h','accountable executive']], arts:['Q5 production approval','product-passport.json · PA1 · PA2','product-evals.json · every D1 measure scored','sealed evidence · external record']},
-    run:{eb:'Run · the third arc', t:'Operations feeds discovery', b:'Shipped software runs. Incidents, complaints, SLO breaches and regulatory change arrive as operations signals, are triaged and routed, and become evidence in the next discovery. Continuous assurance walks watch, assess, check, test, evidence, confirm on every trigger.', who:[['a','change-watch'],['a','risk-reviewer'],['h','operations']], arts:['operations-signal.json · routed to discovery','assurance-cycle · six steps','the loop closes']}
+    run:{eb:'Run · outside the diamonds', t:'Operations feeds discovery', b:'Shipped software runs, outside both diamonds. Incidents, complaints, SLO breaches and regulatory change arrive as operations signals, are triaged and routed, and become evidence in the next discovery. Continuous assurance walks watch, assess, check, test, evidence, confirm on every trigger.', who:[['a','change-watch'],['a','risk-reviewer'],['h','operations']], arts:['operations-signal.json · routed to discovery','assurance-cycle · six steps','the loop closes']}
   };
   var svg=document.getElementById('loopsvg'); if(!svg) return;
   var nodes=svg.querySelectorAll('.stage');
