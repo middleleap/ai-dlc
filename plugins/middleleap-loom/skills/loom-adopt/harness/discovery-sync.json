@@ -175,6 +175,13 @@
       "upstream": null,
       "state": "bundle-only",
       "note": "added here 2026-08-06 (F6) — a synthetic right-to-left brand; the examples directory is the proof the D7 brand seam swaps, and direction is the one thing the other two examples cannot show"
+    },
+    "discovery/templates/outcome.md": {
+      "base": null,
+      "bundle": "sha256:daaf7669f28a5b095a766871f146726dea040fb0304347e25603130c8a9cb50a",
+      "upstream": null,
+      "state": "bundle-only",
+      "note": "added here 2026-09-13"
     }
   }
 }

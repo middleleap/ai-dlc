@@ -1,0 +1,60 @@
+{
+  "_comment": "ADOPTER EXAMPLE (2.1.0 · hardening plan row 2.8 · PRD loom-kosli F8) — the risk-class record: the policy compiler's decision leaving the tree. Tier, plan hash, the exact profile content the plan was compiled from, the flags that fired the conditionals, and the classifier. Written by `node scripts/risk-class-attest.mjs <change-dir>`; verified with --verify against the stored plan, a fresh compile and the envelope. This copy is an UNSIGNED DRAFT: the signing key lives where the CI runner is, never in the tree, and a draft is refused as evidence by design. Regenerate when the plan is recompiled — a stale record fails verification, which is the point.",
+  "schema": "loom.risk-class/v1",
+  "change_id": "CHG-2026-0042",
+  "product_id": "PRD-017",
+  "change_type": "material-product-change",
+  "change_class": "normal",
+  "risk_tier": "high",
+  "plan_hash": "6f96e27c0a5b4fc3120ba4bf4ebc992b07f144d5474fa7c9a5d03d0a3ded32a8",
+  "profiles": [
+    {
+      "profile": "lending",
+      "kind": "product",
+      "version": null,
+      "digest": "sha256:d44ff6b5021ed04df82333a6b1d8ef8beda67fb659f09de410326142bba82985"
+    },
+    {
+      "profile": "regulated-bank",
+      "kind": "base",
+      "version": null,
+      "digest": "sha256:b5fb7148360237c3a1c96ad60772ea5e931ea1d79dc831906cfd04250a77c496"
+    },
+    {
+      "profile": "uae-bank",
+      "kind": "jurisdiction",
+      "version": null,
+      "digest": "sha256:802a87a9397b90cffd86dfbd2c7c94dd65facab4d055c395536f86ce21b0974e"
+    }
+  ],
+  "flags": {
+    "model_involved": true,
+    "personal_data": true,
+    "third_party": true
+  },
+  "required_gates": [
+    "A",
+    "D",
+    "PA1",
+    "PA2",
+    "Q",
+    "assurance-cadence",
+    "decision-log",
+    "product-eval"
+  ],
+  "required_capabilities": [
+    "data_risk_register",
+    "dpia",
+    "evidence_retention",
+    "exposure_control",
+    "hardened_runtime",
+    "model_risk",
+    "real_data_controls",
+    "sca",
+    "threat_model"
+  ],
+  "classified_by": "po-fatima",
+  "classified_at": "2026-07-18",
+  "compiled_at": "2026-09-13T02:56:40.765Z",
+  "attestation": null
+}
