@@ -4,6 +4,10 @@ This kit makes the remaining CPO validation runnable. It contains synthetic inpu
 empty observation file. It does not contain completed browser checks, participant results or
 institutional approvals. Keep actual observations and evidence in a private pilot directory.
 
+Michael is coordinating the current pilot. See [coordinator handoff](coordinator.md) for recruitment,
+access, disposable team workspaces and the facilitator reference sequence. The generated kit
+includes the same guide as COORDINATOR.md.
+
 ## Run the pilot
 
 From the candidate checkout, build a new kit:
@@ -33,7 +37,9 @@ or implied. A failed task is useful evidence, not a reason to coach the result i
 ## Browser acceptance checklist
 
 Record browser/version, viewport, keyboard or pointer, candidate digest, scenario outcome and a
-reference to notes or recording. All scenarios currently have status **not run**.
+reference to notes or recording. Start each participant round with **not run** entries. Prior
+engineering smoke results are recorded separately in docs/plans/loom-onboarding-browser-acceptance.md;
+they must not be imported as participant observations.
 
 | Scenario | Expected observable behavior |
 |---|---|

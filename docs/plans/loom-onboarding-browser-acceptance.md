@@ -79,6 +79,17 @@ questionnaire digest `sha256:a08e20ee3ae74ad6e53afe348278fd5699600f876b909ab5a90
 Version 3 browser results above describe their exact tested candidate; the version 4 refresh
 adds the second-pass record-validation and export-notice corrections.
 
+## Coordinator preparation follow-up
+
+On the combined version 4 preview, accepting the incoming Brand Guide v2 conflict changed A1's
+answer and reference while preserving C1 and its architecture respondent. Save/resume retained
+that result. A separately named Other Institution started with all answers unknown, retained its
+own distinct A1 claim after reload, and did not change Meridian's sourced Brand Guide v2 answer.
+A direct export-field read timed out and an immediate clipboard read returned prior contents;
+these were not counted as proof. The persisted visible record after save/resume established the
+incoming-choice result. Download receipt and clipboard completion timing still need manual checks
+in the participant browser.
+
 ## Acceptance still open
 
 - Actual downloaded-file receipt/content: browser cancellation before receiving bytes is confirmed; its cause and successful delivery remain unresolved. Copied JSON passed.

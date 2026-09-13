@@ -26,7 +26,7 @@ export function buildKit(destination){
  for(const record of Object.values(fixtures)){const r=validateRecord(record,bank,questions_digest);if(r.findings.length)throw new Error(r.findings.join('\n'));}
  mkdirSync(join(dir,'fixtures'),{recursive:true});
  const page=render()+'\n';
- const files={'README.md':readFileSync(join(ROOT,'docs/pilots/loom-onboarding/README.md'),'utf8'),'questionnaire.html':page,'tasks.json':JSON.stringify(protocol,null,2),'observations.json':JSON.stringify({schema:'loom.pilot-observations/v1',mode:'observed',protocol_digest:protocolDigest,candidate_questionnaire_digest:digest(page),round:'round-1',sessions:[]},null,2),'.gitignore':'observations.json\nevidence/\nresults*.json\n'};
+ const files={'COORDINATOR.md':readFileSync(join(ROOT,'docs/pilots/loom-onboarding/coordinator.md'),'utf8'),'README.md':readFileSync(join(ROOT,'docs/pilots/loom-onboarding/README.md'),'utf8').replace('(coordinator.md)','(COORDINATOR.md)'),'questionnaire.html':page,'tasks.json':JSON.stringify(protocol,null,2),'observations.json':JSON.stringify({schema:'loom.pilot-observations/v1',mode:'observed',protocol_digest:protocolDigest,candidate_questionnaire_digest:digest(page),round:'round-1',sessions:[]},null,2),'.gitignore':'observations.json\nevidence/\nresults*.json\n'};
  for(const [name,record] of Object.entries(fixtures))files['fixtures/'+name]=JSON.stringify(record,null,2);
  files['fixtures/malformed.json']='{ deliberate malformed synthetic import';
  files['fixtures/wrong-bank.json']=JSON.stringify({...fixtures['brand.json'],questions_digest:'sha256:'+'0'.repeat(64)},null,2);

@@ -273,3 +273,20 @@ or independent model-risk evaluator has been supplied; no write-capable mode was
 Pilot tooling validation: full Node 22 suite passed 2,492 tests; seven focused pilot cases passed
 after adding protocol-digest binding. A ready-to-run synthetic kit was generated; its empty
 observation report remains needs-evidence-or-iteration with null user metrics.
+
+## Coordinator handoff and disposable workspace rehearsal
+
+Michael will coordinate the unfamiliar-user pilot. The coordinator guide now includes the role/task
+matrix, private access preparation, scheduling allowances, manual browser checks and measurement
+rules. The questionnaire kit includes that guide. Participant identities and sessions remain open.
+
+Added a builder for the full committed candidate plugin, fictional publisher and two independent
+Git team repositories. It refuses an existing destination, records baseline commits and preserved
+file hashes, creates no remotes, and preflights the fictional snapshot. The integration rehearsal
+runs the installed commands for both teams: dry-run without mutation, core adoption into separate
+CI, project verification, preview/apply and idempotent snapshot reuse. Both team workflows and
+project settings remain identical to their initial hashes. No institutional approval is inferred.
+
+Mounting an existing release uses core without draft BrainKit templates; preinstalling drafts
+would correctly conflict with the create-only reuse command. This distinction is explained in
+the facilitator sequence. The CI now exercises this exact rehearsal.
