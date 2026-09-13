@@ -45,6 +45,7 @@ import { CACHE_DIR, cacheability, computeKey, read as cacheRead, write as cacheW
 import { pathToFileURL } from 'node:url';
 import { actorFor, post as recordPost, runnerFromEnv, signerFromArgs, status as recordStatus } from './external-record.mjs';
 import { buildEnvelope, signEnvelope } from './provenance.mjs';
+import { controlsForRecord, loadObligations } from './record-controls.mjs';
 
 // rc.11 (WS1.4): the lane model extends from pr|release|scheduled to cover the artifact's life —
 // `build` produces the immutable artifact + provenance, `deploy` verifies the deployed digest is
@@ -357,12 +358,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const runner = runnerFromEnv(process.env, head);
     const trails = requirements.changes.map((c) => c.change_id).filter(Boolean).sort();
     if (!trails.length) xr.notes.push('no implicated change envelope — nothing to record against (a record binds to a change)');
+    const obligations = loadObligations(cwd); // row 3.5 — which obligations each record answers
     const recDir = emitDir ? join(emitDir, 'records') : null;
     if (recDir) mkdirSync(recDir, { recursive: true });
     for (const trail of trails) {
       for (const e of executed) {
         const name = `gate.${e.mechanism.replace(/\.mjs$/, '').replace(/[\\/]/g, '-')}`;
-        let envl = buildEnvelope({ kind: 'gate', name, subject: { flow: 'delivery', trail }, commit: head, actor, runner, compliant: e.status === 'pass' || e.status === 'pass-cached',
+        let envl = buildEnvelope({ kind: 'gate', name, subject: { flow: 'delivery', trail }, commit: head, actor, runner, compliant: e.status === 'pass' || e.status === 'pass-cached', controls: controlsForRecord(obligations, e.controls),
           payload: { gate: e.mechanism, result: e.status, controls: e.controls, ms: e.ms, wave: e.wave, lane, cache_key: e.cache_key ?? null } });
         if (signer) envl = signEnvelope(envl, signer);
         // eslint-disable-next-line no-await-in-loop -- one record at a time, in catalog order

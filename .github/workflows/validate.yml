@@ -1163,6 +1163,11 @@ jobs:
           cp /tmp/ops-pristine.json docs/governance/operations-signal.json
           echo "all negative bypass tests rejected, as required"
 
+      - name: Loom — the external-record seam end to end against the fake (2.1.0, hardening plan row 2.13)
+        # Fifteen steps from adoption to the audit package, two of them deliberate refusals, with no
+        # Kosli org (decision K8). Proves the harness; the real-org half is docs/integration-run.md.
+        run: node plugins/middleleap-loom/skills/loom-adopt/harness/demo/run-demo.mjs
+
       - name: Loom — evidence is derived, not authored (rc.35, flow-plan Phase 2)
         run: |
           # The collector must reproduce the hand-built worked example FROM THE ARTIFACTS ALONE —

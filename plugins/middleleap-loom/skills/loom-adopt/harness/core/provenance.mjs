@@ -62,7 +62,7 @@ export const payloadDigest = (env) => 'sha256:' + createHash('sha256').update(ca
  * `runner` is the CI runner identity (PR6). `payload` is the artifact the harness already has —
  * a gate-runner row, a compiled plan's tier and hash, a reviewer verdict — never a paraphrase.
  */
-export function buildEnvelope({ kind, name, subject, commit, actor, runner = null, payload = {}, attachments = [], compliant = true, origin = 'tool', producedAt = new Date().toISOString() }) {
+export function buildEnvelope({ kind, name, subject, commit, actor, runner = null, payload = {}, attachments = [], compliant = true, origin = 'tool', producedAt = new Date().toISOString(), controls = null }) {
   const env = {
     schema: SCHEMA_ID,
     kind, name, subject, commit, produced_at: producedAt, origin,
@@ -70,6 +70,8 @@ export function buildEnvelope({ kind, name, subject, commit, actor, runner = nul
     runner,
     compliant: compliant !== false,
     attachments: Array.isArray(attachments) ? attachments : [],
+    // row 3.5 — which obligations this record answers (core/record-controls.mjs); null when the caller had no register
+    controls: controls && typeof controls === 'object' ? controls : null,
     payload,
     attestation: null,
   };

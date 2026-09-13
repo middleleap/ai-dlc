@@ -186,3 +186,33 @@ test('the shipped deployment example binds to the shipped subject and the shippe
   const findings = evaluate(JSON.parse(readFileSync(EX, 'utf8')), { subject, environments, service, registry });
   assert.deepEqual(findings, [], findings.join('\n'));
 });
+
+/* ---- 2.1.0 row 2.10: the provider snapshot on the deploy lane ---- */
+import { snapshotFindings } from './deployed-digest-check.mjs';
+
+const DEP = { deployment_id: 'DEP-1', environment: 'production', deployed_digest: 'sha256:' + 'ab'.repeat(32) };
+const MOUNTED = { mounted: true, provider: 'kosli' };
+const snap = (fps) => async () => ({ status: 'ok', provider: 'kosli', environment: 'prod-k8s', artifacts: fps.map((f) => ({ fingerprint: f })) });
+
+test('unmounted or unsupported: the repo record is read and the note says so; nothing fails', async () => {
+  const notes = [];
+  assert.deepEqual(await snapshotFindings([DEP], { status: { mounted: false, reason: 'none' }, snapshotFn: async () => { throw new Error('no'); }, notes }), []);
+  assert.ok(notes.some((n) => /read the REPO RECORD/.test(n)));
+  const n2 = [];
+  assert.deepEqual(await snapshotFindings([DEP], { status: MOUNTED, snapshotFn: async () => ({ status: 'unsupported', reason: 'no snapshots' }), notes: n2 }), []);
+  assert.ok(n2.some((n) => /REPO RECORD/.test(n)));
+});
+
+test('mounted: the deployed digest must be RUNNING per the provider, mapped through external_record_environment; an outage is a finding', async () => {
+  const notes = [];
+  const envs = [{ id: 'production', external_record_environment: 'prod-k8s' }];
+  assert.deepEqual(await snapshotFindings([DEP], { status: MOUNTED, snapshotFn: snap(['ab'.repeat(32)]), environments: envs, notes }), []);
+  assert.ok(notes.some((n) => /confirmed RUNNING in prod-k8s/.test(n)));
+  const drift = await snapshotFindings([DEP], { status: MOUNTED, snapshotFn: snap(['cd'.repeat(32)]), environments: envs });
+  assert.ok(drift.some((f) => /does NOT see digest .* running in prod-k8s/.test(f)));
+  const n3 = [];
+  await snapshotFindings([DEP], { status: MOUNTED, snapshotFn: snap(['ab'.repeat(32)]), environments: [{ id: 'production', external_record_environment: 'ADOPT: name it' }], notes: n3 });
+  assert.ok(n3.some((n) => /RUNNING in production by/.test(n)), 'an ADOPT placeholder mapping falls back to the environment id');
+  const out = await snapshotFindings([DEP], { status: MOUNTED, snapshotFn: async () => ({ status: 'unavailable', provider: 'kosli', reason: 'binary missing' }) });
+  assert.ok(out.some((f) => /could not say what is running in production/.test(f)));
+});

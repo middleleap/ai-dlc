@@ -781,6 +781,42 @@
       "note": "Mandatory-when-present: inert with no envelopes (the honest state of an adopter with no provider mounted), and every envelope is checked the moment one exists"
     },
     {
+      "control_id": "RECORD-POLICY",
+      "objective": "The external record's route policy and record types are COMPILED from the control catalog and never hand-written: when docs/governance/record-policy.json or record-types.json exists it must be what the current catalog compiles to (catalog sha256 + body), so the provider's policy can never be a second gate list (decision K3)",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/record-policy-compile.mjs",
+      "mechanism_args": [
+        "--verify"
+      ],
+      "test_ref": "scripts/record-policy-compile.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/control-catalog.json",
+        "docs/governance/record-policy.json"
+      ],
+      "note": "Inert until a policy is compiled"
+    },
+    {
+      "control_id": "RECORD-TYPES",
+      "objective": "The external record's record types (one per gate family, schema and pass condition as data) are COMPILED from the control catalog: when docs/governance/record-types.json exists it must be what the current catalog compiles to (decision K3)",
+      "owner_role": "platform-admin",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/record-types-compile.mjs",
+      "mechanism_args": [
+        "--verify"
+      ],
+      "test_ref": "scripts/record-policy-compile.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/control-catalog.json",
+        "docs/governance/record-types.json"
+      ],
+      "note": "Inert until types are compiled; tested beside the policy compiler"
+    },
+    {
       "control_id": "HG-0013",
       "objective": "Graduated autonomy: a routine change auto-merges only inside a second-line-owned, expiring envelope; an absolute floor keeps the control plane, contract, auth and migrations out of the lane; anything else re-evaluates to human merge",
       "owner_role": "risk-second-line",

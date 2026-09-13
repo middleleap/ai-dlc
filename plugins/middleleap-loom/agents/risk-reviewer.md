@@ -15,6 +15,26 @@ You do **not** invent risk. You assess a *specific change or horizon item* again
 that is mounted, and you are honest when something falls outside it (that is itself a finding —
 an unregistered risk needs a human, not a guess).
 
+## Read the external record first (2.1.0, hardening plan row 5.3)
+
+Before you assess, read what the record outside the tree already says about the change, through
+the read-only `loom-record` MCP server (`core/record-mcp.mjs`; decision K5 — you can read the
+record, nothing you run can write it):
+
+1. `record_trail_gaps { trail: <CHG id> }` — what the change still owes: the gate records the
+   control catalog expects on its trail that are not there yet.
+2. `record_last_failures { trail: <CHG id> }` — the records that came back non-compliant, newest
+   first, and the controls each evidences.
+3. `obligation_lookup { control_id }` for any control a failure names — which obligations it
+   answers, and their FINOS ids.
+
+What you read is an INPUT to the assessment, and it is cited: a finding that rests on a record
+carries an `evidence_refs` entry of the form
+`{ "file": "external-record", "locator": "<provider>:<trail>:<record name>#<record id>" }`
+beside the register records it cites. When every tool answers `not-mounted`, say so in the
+`notes` and set `confidence` no higher than `medium` — an unmounted record is a fact about the
+repository, never a clean bill.
+
 ## What to assess (for the change/item in scope)
 
 1. **Which registered risks does it touch?** Map the change to `DR-*` risk categories and the

@@ -105,3 +105,18 @@ test('beginTrail carries description and commit, and nothing else it was not giv
   assert.deepEqual(a, ['begin', 'trail', 't', '--flow', 'f']);
   assert.deepEqual(b, ['begin', 'trail', 't', '--flow', 'f', '--description', 'd', '--commit', 'c'.repeat(40), '--org', 'o']);
 }));
+
+/* ---- 2.1.0 rows 2.9/2.10: renderings and the snapshot ---- */
+import { environmentSnapshot } from './providers/kosli.mjs';
+
+test('environmentSnapshot reads `get snapshot ENV --output json` as a list or an {artifacts} object; failures are told apart', () => withFake(async ({ dir, env }) => {
+  respond(dir, ['get', 'snapshot', 'prod'], { stdout: [{ artifact: 'app:1', fingerprint: 'ab'.repeat(32), flow: 'f', git_commit: 'c', replicas: 1, running_since: 's' }] });
+  respond(dir, ['get', 'snapshot', 'stage'], { stdout: { artifacts: [{ artifact: 'app:2', fingerprint: 'cd'.repeat(32) }] } });
+  respond(dir, ['get', 'snapshot', 'gone'], { exit: 1, stderr: 'Error: environment not found' });
+  const p = environmentSnapshot('prod', { env, config: { org: 'o' } });
+  assert.equal(p.ok, true); assert.equal(p.artifacts[0].fingerprint, 'ab'.repeat(32));
+  assert.deepEqual(calls(dir)[0].argv, ['get', 'snapshot', 'prod', '--output', 'json', '--org', 'o']);
+  assert.equal(environmentSnapshot('stage', { env }).artifacts[0].artifact, 'app:2');
+  assert.match(environmentSnapshot('gone', { env }).error, /not found/);
+  assert.equal(environmentSnapshot('x', { env: { ...process.env, KOSLI_BIN: '/nowhere' } }).unavailable, true);
+}));

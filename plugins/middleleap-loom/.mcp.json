@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "loom-record": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/skills/loom-adopt/harness/core/record-mcp.mjs"]
+    }
+  }
+}

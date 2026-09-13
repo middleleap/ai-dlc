@@ -32,6 +32,14 @@ an integration run and a tamper probe, and graded in `bank-grade-gap.md` like ev
 record is not a control — Kosli holding a gate result proves the gate ran and what it said, not
 that the gate was right.
 
+## Reading the record, and the demo
+
+Agents read the record through `core/record-mcp.mjs`, a read-only MCP server the plugin mounts as
+`loom-record` (adopters add `{"command":"node","args":["core/record-mcp.mjs"]}` to their
+`.mcp.json`). `scripts/record-audit.mjs <CHG>` renders one audit page per change from the record
+joined to the sealed bundle. `node demo/run-demo.mjs` walks the whole seam against the fake in
+fifteen steps; `--real` runs it against an org and writes `docs/integration-run.md`.
+
 ## Providers here
 
 | | `kosli` |

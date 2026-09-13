@@ -1,8 +1,8 @@
 # The Kosli seam — where the Loom stops and the record begins
 
 > Appendix. **Decisions K1–K9 and hardening-plan rows 0.6–0.10 were ratified on 13 September
-> 2026.** Rows 2.1–2.6, 2.8 and 2.14 are shipped (§4b, §4c); the rest of phase 2 lands after
-> the seven questions in §5 are answered on the 18 September call. Where a sentence below says
+> 2026.** Rows 2.1–2.6, 2.8–2.14, 3.5 and 5.3 are shipped (§4b–§4d); rows 2.7, 4.3 and 3.7
+> land after the seven questions in §5 are answered on the 18 September call. Where a sentence below says
 > "posts" or "reads" about a row not yet shipped, it describes a contract, not code, and
 > `bank-grade-gap.md` grades the corresponding rows accordingly.
 
@@ -107,9 +107,41 @@ Each record is signed with the one attestation stack and refused as evidence whi
   capability and a provider is mounted, `scripts/evidence-seal-check.mjs` resolves that id at
   the provider and fails a fabricated one, a mismatched provider, or a different anchor.
 
-Still ahead: the type and policy compilers (2.9), environments (2.10), the read-only server
-(2.11), the audit package (2.12), and the refusal half of question 2 (2.7), which waits on the
-18 September call.
+## 4d. What phase 2b shipped (rows 2.9–2.13, 3.5, 5.3)
+
+- **The compilers** (row 2.9): `scripts/record-policy-compile.mjs` compiles the route policy
+  from the control catalog — one required record per runnable pr- and release-lane mechanism
+  plus the fixed stages — and `scripts/record-types-compile.mjs` one record type per gate
+  family, schema and pass condition as data. Both are provider-neutral JSON stamped with the
+  catalog's sha256; `--render` asks the mounted provider for its form (Kosli: a Rego policy for
+  `kosli evaluate trail` and one `create attestation-type` per type); `--verify` (catalog
+  control `RECORD-POLICY`, pr lane) fails when the catalog moved or the file was edited by hand.
+- **Control ids on every record** (row 3.5): `core/record-controls.mjs` fills
+  `controls { institution, finos, catalog, controls_source }` from the obligations register
+  for the catalog controls a record evidences; absent register, `controls_source: none`.
+- **Environments** (row 2.10): `scripts/deployed-digest-check.mjs` reads what is RUNNING from
+  the provider snapshot when one is mounted (`external_record_environment` in
+  `environments.json` maps the rung to the provider's name) and the repo record otherwise,
+  and says which. A deployed digest the platform does not see running is a finding; an outage
+  on the deploy lane is a finding, not a pass.
+- **The read-only server** (row 2.11): `core/record-mcp.mjs`, a zero-dependency stdio MCP
+  server the plugin mounts as `loom-record` — `record_get_trail`, `record_trail_gaps`,
+  `record_last_failures`, `record_environment_snapshot`, `record_answers` (not-mounted until a
+  provider offers a query surface, question 7) and `obligation_lookup`. Nothing in it writes
+  (decision K5); every tool answers `not-mounted` with the reason when nothing is chosen.
+- **Reviewers cite the record** (row 5.3): `risk-reviewer` and `change-watch` read gaps and
+  last failures before they assess, and cite what they read as
+  `{ file: "external-record", locator: "<provider>:<trail>:<name>#<id>" }`.
+- **The audit package** (row 2.12): `scripts/record-audit.mjs <CHG>` joins the provider's
+  trail to the kept envelopes and the sealed bundle, re-verifies every signature, and renders
+  one page per change with the discovery renderer under the mounted brand; every row is
+  VERIFIED or FLAGGED, and exit 6 says a flag exists.
+- **The demo** (row 2.13): `demo/run-demo.mjs` walks the whole seam against the fake in
+  fifteen steps, two of them deliberate refusals; `--real` runs it against an org and writes
+  `docs/integration-run.md`, which is owed until someone has.
+
+Still ahead: the refusal half of question 2 (2.7), the change ticket (4.3) and the FINOS
+contribution (3.7), all of which wait on the 18 September call, and the real-org integration run.
 
 ## 5. Open questions — answered before phase 2 builds
 
