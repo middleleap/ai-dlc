@@ -629,16 +629,22 @@ jobs:
           # touches it. Selecting it here is exactly what the adopter does; leaving it out would
           # assert that the seam is optional, which is the silence the capability exists to refuse.
           cp docs/governance/adapters/providers/real-data-controls/kms-field-encryption.json docs/governance/adapters/
+          # 2.1.0 (hardening plan 2.2, decision K9): a FOURTH role. regulated-bank requires
+          # `external_record` at high tier — the record of the gates' findings must live outside
+          # the tree the agent edits. Kosli is the first provider, never a dependency; the seam
+          # (core/external-record.mjs) is exercised below against the record-and-replay fake.
+          cp docs/governance/adapters/providers/external-record/kosli.json docs/governance/adapters/
           node -e '
             const fs=require("fs"), sel=(role,provider,adapter_id)=>({role,provider,adapter_id,
               decided_by:"infosec-noor",decided_at:new Date().toISOString().slice(0,10),source:"mt-tech-2026"});
             fs.writeFileSync("/tmp/provider-selection.json",JSON.stringify({selections:[
               sel("sca","snyk","snyk-sca"), sel("hardened-runtime","chainguard","chainguard-runtime"),
-              sel("real-data-controls","kms-field-encryption","kms-field-encryption")]},null,2));
+              sel("real-data-controls","kms-field-encryption","kms-field-encryption"),
+              sel("external-record","kosli","kosli-external-record")]},null,2));
           '
           cp /tmp/provider-selection.json docs/governance/provider-selection.json
           node scripts/provider-selection-check.mjs | tee /tmp/ps1.txt
-          grep -q '3 roles selected' /tmp/ps1.txt || {
+          grep -q '4 roles selected' /tmp/ps1.txt || {
             echo "::error::the provider-selection gate is not counting the real selections"; exit 1; }
           grep -q 'selected, not active' /tmp/ps1.txt || {
             echo "::error::a mounted-but-unactivated provider must be reported as selected, not active"; exit 1; }
@@ -662,6 +668,58 @@ jobs:
           # every later gate run in this job must see a repo that has made one.
           cp /tmp/provider-selection.json docs/governance/provider-selection.json
           node scripts/provider-selection-check.mjs
+          # ── 2.1.0 · the external record (K9) — the anchor must be held OUTSIDE the tree ─────
+          # With a provider mounted, the seal gate requires manifest.external_record and resolves
+          # it at the provider. Five properties, against the fake (decision K8, no org in CI):
+          #   ① mounted + no record id           → the seal gate FAILS (the anchor is only in the tree)
+          #   ② seal-evidence --record-only      → posts the signed seal-anchor envelope, writes the id
+          #   ③ the id resolves                  → the seal gate is OK again; release-attestation untouched
+          #   ④ a fabricated id                  → FAILS, for being unknown to the provider
+          #   ⑤ an unsigned envelope             → REFUSED (exit 3), nothing posted, manifest untouched
+          # The fake stays mounted for the rest of the job (KOSLI_BIN via GITHUB_ENV) so every later
+          # seal-gate run resolves the recorded anchor; the signing key is fresh, never written to
+          # the tree, and deleted at the end of this block.
+          FK="$RUNNER_TEMP/kosli-fake"
+          node --input-type=module -e '
+            const { createFakeKosli, respond } = await import("./core/kosli-fake.mjs");
+            const f = createFakeKosli(process.argv[1]);
+            respond(f.dir, ["get","trail"], { stdout: { name: "CHG-2026-0042", compliance_status: { attestations_statuses: [
+              { attestation_name: "seal-anchor", attestation_type: "generic", attestation_id: "att-anchor-1", status: "COMPLETE", is_compliant: true, unexpected: false } ] } } });
+            respond(f.dir, ["get","attestation","--attestation-id","att-anchor-1"], { stdout: { attestation_name: "seal-anchor", attestation_type: "generic", is_compliant: true, created_at: 1, html_url: "https://app.kosli.com/fake" } });
+            respond(f.dir, ["get","attestation","--attestation-id","forged"], { exit: 1, stderr: "Error: attestation not found" });
+          ' "$FK"
+          export KOSLI_BIN="$FK/kosli"
+          echo "KOSLI_BIN=$FK/kosli" >> "$GITHUB_ENV"
+          node -e '
+            const { generateKeyPairSync } = require("node:crypto"), fs = require("node:fs");
+            const k = generateKeyPairSync("ed25519");
+            fs.writeFileSync(process.argv[1], k.privateKey.export({ type: "pkcs8", format: "pem" }));
+            const p = "docs/governance/attestation-issuers.json", r = JSON.parse(fs.readFileSync(p));
+            r.issuers.push({ id: "ci-record-signer", mechanism: "ed25519", description: "per-run record signer (CI dry-run)", verify: { public_key: k.publicKey.export({ type: "spki", format: "pem" }) } });
+            fs.writeFileSync(p, JSON.stringify(r, null, 2));
+          ' "$RUNNER_TEMP/record-key.pem"
+          export LOOM_RUNNER_REPOSITORY="$GITHUB_REPOSITORY" LOOM_RUNNER_REF="$GITHUB_REF"
+          export LOOM_RUNNER_SHA=$(node -e 'console.log(require("./docs/governance/evidence/manifest.json").release_commit)')
+          if node scripts/evidence-seal-check.mjs 2>/tmp/xr1.txt; then
+            echo "::error::a mounted external-record provider with NO record id on the manifest passed the seal gate"; exit 1; fi
+          grep -q 'carries no external_record id' /tmp/xr1.txt || { echo "::error::the seal gate failed, but not for the missing record id"; cat /tmp/xr1.txt; exit 1; }
+          node scripts/seal-evidence.mjs --record-only --actor agent-loom-delivery --record-issuer ci-record-signer --record-key "$RUNNER_TEMP/record-key.pem" | tee /tmp/xr2.txt
+          grep -q 'anchor recorded as att-anchor-1' /tmp/xr2.txt || { echo "::error::seal-evidence --record-only did not record the anchor"; exit 1; }
+          node scripts/evidence-seal-check.mjs
+          node scripts/release-attestation-check.mjs
+          sed -i 's/att-anchor-1/forged/' docs/governance/evidence/manifest.json
+          if node scripts/evidence-seal-check.mjs 2>/tmp/xr3.txt; then
+            echo "::error::the seal gate accepted a record id the provider does not hold — a recomputed chain with a fabricated id is back"; exit 1; fi
+          grep -q 'does NOT hold anchor id forged' /tmp/xr3.txt || { echo "::error::the fabricated id was refused, but not for being unknown"; cat /tmp/xr3.txt; exit 1; }
+          sed -i 's/forged/att-anchor-1/' docs/governance/evidence/manifest.json
+          BEFORE=$(sha256sum docs/governance/evidence/manifest.json)
+          if node scripts/seal-evidence.mjs --record-only --actor agent-loom-delivery 2>/tmp/xr4.txt; then
+            echo "::error::an UNSIGNED seal-anchor envelope was accepted for posting"; exit 1; fi
+          grep -q 'unsigned' /tmp/xr4.txt || { echo "::error::the unsigned envelope was refused, but not for being unsigned"; cat /tmp/xr4.txt; exit 1; }
+          [ "$BEFORE" = "$(sha256sum docs/governance/evidence/manifest.json)" ] || { echo "::error::a refused record still rewrote the manifest"; exit 1; }
+          node scripts/provenance-check.mjs
+          rm -f "$RUNNER_TEMP/record-key.pem"
+          git add -A && git commit -qm "record the seal anchor in the external record (2.1.0, K9)"
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
           node scripts/brainkit-registry-check.mjs     # rc.15 WS7 — estate registry consistent; no repo runs a revoked release
           node scripts/comprehension-check.mjs         # rc.15 WS8 — the high-tier change carries a human understanding record

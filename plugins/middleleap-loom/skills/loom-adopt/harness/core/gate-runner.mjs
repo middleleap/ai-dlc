@@ -25,7 +25,15 @@
 //              so a parallel run's log reads exactly like the serial one's.
 //
 // Run: `node core/gate-runner.mjs --lane pr [--base <ref>] [--out record.json] [--emit-dir <dir>]
-//       [--jobs N] [--timeout-ms N] [--no-cache]`.
+//       [--jobs N] [--timeout-ms N] [--no-cache]
+//       [--record [--actor <registry-id>] [--record-issuer <id>] [--record-key <pem-path>]]`.
+//
+// 2.1.0 (hardening plan row 2.4, decision K9): with --record, every executed mechanism's result is
+// posted through core/external-record.mjs as a signed `gate` envelope on the trail of each
+// implicated change — the record outside the tree that HG-0003 needs. The envelope is the runner's
+// own emitted row (PR1), signed with the key the runner holds (never the tree), carrying the actor
+// and the CI runner identity (PR6). Unmounted, the run record says `external_record: not mounted`
+// and nothing else changes; a rejected envelope is recorded as rejected, never posted.
 import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { availableParallelism, cpus } from 'node:os';
@@ -35,6 +43,8 @@ import { aggregateRequirements, requiredBy } from './compiled-requirements.mjs';
 import { TIERS } from './policy-compiler.mjs';
 import { CACHE_DIR, cacheability, computeKey, read as cacheRead, write as cacheWrite } from './gate-cache.mjs';
 import { pathToFileURL } from 'node:url';
+import { actorFor, post as recordPost, runnerFromEnv, signerFromArgs, status as recordStatus } from './external-record.mjs';
+import { buildEnvelope, signEnvelope } from './provenance.mjs';
 
 // rc.11 (WS1.4): the lane model extends from pr|release|scheduled to cover the artifact's life —
 // `build` produces the immutable artifact + provenance, `deploy` verifies the deployed digest is
@@ -335,6 +345,39 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     result: failed === 0 ? 'pass' : 'fail',
     produced_at: new Date().toISOString(), // rc.35 — when this record was emitted
   };
+  // 2.1.0 row 2.4 — post each result to the external record (a named no-op when unmounted).
+  if (argv.includes('--record')) {
+    const st = recordStatus(cwd);
+    const xr = { provider: st.mounted ? st.provider : null, mounted: st.mounted, posted: [], queued: [], rejected: [], notes: [] };
+    if (!st.mounted) xr.notes.push(`not mounted — ${st.reason}`);
+    const signer = signerFromArgs({ issuer: arg('--record-issuer'), keyPath: arg('--record-key') });
+    if (!signer) xr.notes.push('no signing material (--record-issuer/--record-key or LOOM_RECORD_ISSUER/LOOM_RECORD_KEY) — envelopes are unsigned and the provenance rules refuse them');
+    const actorId = arg('--actor') || process.env.LOOM_ACTOR_ID || null;
+    const actor = actorFor(cwd, actorId);
+    const runner = runnerFromEnv(process.env, head);
+    const trails = requirements.changes.map((c) => c.change_id).filter(Boolean).sort();
+    if (!trails.length) xr.notes.push('no implicated change envelope — nothing to record against (a record binds to a change)');
+    const recDir = emitDir ? join(emitDir, 'records') : null;
+    if (recDir) mkdirSync(recDir, { recursive: true });
+    for (const trail of trails) {
+      for (const e of executed) {
+        const name = `gate.${e.mechanism.replace(/\.mjs$/, '').replace(/[\\/]/g, '-')}`;
+        let envl = buildEnvelope({ kind: 'gate', name, subject: { flow: 'delivery', trail }, commit: head, actor, runner, compliant: e.status === 'pass' || e.status === 'pass-cached',
+          payload: { gate: e.mechanism, result: e.status, controls: e.controls, ms: e.ms, wave: e.wave, lane, cache_key: e.cache_key ?? null } });
+        if (signer) envl = signEnvelope(envl, signer);
+        // eslint-disable-next-line no-await-in-loop -- one record at a time, in catalog order
+        const r = await recordPost(envl, { cwd });
+        const row = { trail, name, status: r.status };
+        if (r.status === 'recorded') { row.id = r.id; xr.posted.push(row); }
+        else if (r.status === 'queued') { row.file = r.file; xr.queued.push(row); }
+        else if (r.status === 'rejected') { row.findings = r.findings; xr.rejected.push(row); }
+        if (recDir) writeFileSync(join(recDir, `${trail}-${name}.json`), JSON.stringify({ ...envl, record: r }, null, 2) + '\n');
+        if (r.status === 'unmounted') break;
+      }
+      if (!st.mounted) break;
+    }
+    record.external_record = xr;
+  }
   const out = arg('--out');
   if (out) writeFileSync(out, JSON.stringify(record, null, 2) + '\n');
   // The run record itself is evidence: emitted beside the per-mechanism records under the name
@@ -347,5 +390,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (e.status === 'timeout') process.stdout.write(`  · TIMEOUT ${e.mechanism} after ${e.ms}ms — recorded as a failure\n`);
   }
   for (const s of skipped) process.stdout.write(`  · skipped ${s.id} — ${s.reason}\n`);
+  if (record.external_record) {
+    const xr = record.external_record;
+    process.stdout.write(`  · external record: ${xr.mounted ? xr.provider : 'not mounted'} — ${xr.posted.length} recorded, ${xr.queued.length} queued, ${xr.rejected.length} rejected\n`);
+    for (const n of xr.notes) process.stdout.write(`      ${n}\n`);
+    for (const r of xr.rejected) process.stdout.write(`      REJECTED ${r.name} (${r.trail}): ${r.findings[0]}\n`);
+  }
   process.exit(failed === 0 ? 0 : 1);
 }

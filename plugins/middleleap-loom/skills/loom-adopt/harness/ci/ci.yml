@@ -87,6 +87,7 @@ jobs:
         run: |
           node scripts/control-catalog-check.mjs
           node scripts/ci-catalog-check.mjs
+          node scripts/provenance-check.mjs        # 2.1.0 — PR1–PR6 over every record envelope still in the tree
           if [ ! -f .loom/adoption.json ]; then
             node scripts/self-claims-check.mjs      # bundle-only; inert in an adopted tree
             node scripts/discovery-sync-check.mjs   # bundle-only; the ofbo back-port debt, counted

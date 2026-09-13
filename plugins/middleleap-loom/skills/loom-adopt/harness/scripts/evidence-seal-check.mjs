@@ -34,6 +34,8 @@ import { CHANGES_DIR, aggregateRequirements } from '../core/compiled-requirement
 import { TRAINS_DIR, evaluateTrains, trainForCommit } from '../core/release-trains.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { pathToFileURL } from 'node:url';
+import { CAPABILITY as EXTERNAL_RECORD, resolve as resolveRecord, status as recordStatus } from '../core/external-record.mjs';
+import { capabilityRequired } from '../core/compiled-requirements.mjs';
 
 // Exported (rc.33): release-attestation-check reads the SAME list, so the two gates can never
 // again resolve DIFFERENT manifests in one repo — the lists had quietly diverged.
@@ -319,8 +321,9 @@ export function governedChangeIds(cwd = process.cwd()) {
   return ids;
 }
 
+const firstManifest = (cwd) => MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync) || null;
 function run(cwd = process.cwd()) {
-  const path = MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
+  const path = firstManifest(cwd);
   if (!path) return { findings: [`no evidence manifest found (looked in ${MANIFEST_LOCATIONS.join(', ')}) — the release is unsealed`], notes: [] };
   let manifest;
   try { manifest = JSON.parse(readFileSync(path, 'utf8')); }
@@ -350,9 +353,51 @@ function run(cwd = process.cwd()) {
   return { findings, notes };
 }
 
+/**
+ * 2.1.0 (hardening plan row 2.5, decision K9): the anchor must be held OUTSIDE the tree when a
+ * compiled plan requires `external_record`. Pure over injected state so it is testable without a
+ * provider: `required` (does a plan require the capability), `status` (core/external-record
+ * status()), `resolveFn(ref)` (core/external-record resolve()). Findings ([] ⇒ nothing owed here).
+ *   not required                          → nothing (the field is optional below the tier)
+ *   required, unmounted                   → a NOTE only: PS-R06 owns the missing decision
+ *   required, mounted, no field           → finding
+ *   field names another provider          → finding (evidence from a record nobody chose)
+ *   id unresolved / provider unavailable  → finding, told apart in the text
+ *   resolved, record anchor ≠ manifest    → finding (the platform holds a different seal)
+ */
+export async function externalRecordFindings(manifest, { required, status, resolveFn, notes = null }) {
+  if (!required) return [];
+  if (!status?.mounted) { notes?.push(`a compiled plan requires ${EXTERNAL_RECORD} but no provider is mounted — the provider-selection gate (PS-R06) owns that finding; the anchor is unrecorded, not wrong`); return []; }
+  const xr = manifest?.external_record;
+  if (!xr || typeof xr !== 'object' || !xr.id) return [`a compiled plan requires ${EXTERNAL_RECORD} and provider ${status.provider} is mounted, but the manifest carries no external_record id — the anchor exists only in the tree the agent edits (scripts/seal-evidence.mjs --record writes it)`];
+  if (xr.provider && xr.provider !== status.provider) return [`manifest external_record names provider ${JSON.stringify(xr.provider)} but the institution selected ${status.provider} — evidence from a record nobody chose`];
+  const r = await resolveFn({ ...(xr.ref || {}), provider: xr.provider || status.provider, id: xr.id, name: xr.ref?.name || 'seal-anchor' });
+  if (r.status === 'resolved') {
+    const held = r.record?.user_data?.payload?.anchor ?? r.record?.payload?.anchor ?? null;
+    if (held && manifest.anchor && held !== manifest.anchor) return [`external record ${xr.id} holds anchor ${String(held).slice(0, 12)}… but the manifest is anchored at ${String(manifest.anchor).slice(0, 12)}… — the platform holds a different seal from the one in the tree`];
+    if (!status.active) notes?.push(`external record (${status.provider}): anchor ${xr.id} resolves — the provider is selected, not active (activation_evidence still placeholders); the integration run is owed`);
+    return [];
+  }
+  if (r.status === 'unavailable') return [`external record (${status.provider}) could not be reached to resolve anchor ${xr.id} — ${r.reason}. An anchor that cannot be checked is not checked; this is an outage, not a forged id, and the release waits on it`];
+  if (r.status === 'mismatch') return [`external record: ${r.reason}`];
+  return [`external record (${status.provider}) does NOT hold anchor id ${xr.id} — ${r.reason}. A recomputed chain with a fabricated id is exactly what this check exists to catch`];
+}
+
+/** run() plus the external-record resolution — the CLI path. */
+export async function runWithRecord(cwd = process.cwd()) {
+  const r = run(cwd);
+  const path = firstManifest(cwd);
+  if (!path) return r;
+  let manifest = null;
+  try { manifest = JSON.parse(readFileSync(path, 'utf8')); } catch { return r; }
+  const required = capabilityRequired(aggregateRequirements(cwd), EXTERNAL_RECORD);
+  r.findings.push(...await externalRecordFindings(manifest, { required, status: recordStatus(cwd), resolveFn: (ref) => resolveRecord(ref, { cwd }), notes: r.notes }));
+  return r;
+}
+
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { findings, notes } = run();
+  const { findings, notes } = await runWithRecord();
   if (findings.length) {
     process.stderr.write('\nEvidence-seal gate (HG-0003) — FAIL\n\n');
     for (const f of findings) process.stderr.write(`  - ${f}\n`);
