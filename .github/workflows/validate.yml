@@ -226,6 +226,17 @@ jobs:
           fi
           # The ADOPT step: replace the placeholder with a real team, as an adopter would.
           sed -i 's|@your-org/|@dryrun-bank/|g' CODEOWNERS
+          # 2.1.0 — the obligations register ships ILLUSTRATIVE and, by design, FAILS its gate under a
+          # regulated profile (the change-example compiles one). Like the owner substitution above,
+          # this stands in for the compliance function on the dry-run: entries marked verified with a
+          # fixture citation. An unadopted register must never read as a green control in a real repo.
+          node -e '
+            const fs=require("fs"),p="docs/governance/obligations.json",o=JSON.parse(fs.readFileSync(p));
+            for (const x of o.obligations){ x.illustrative=false; x.article="dry-run fixture — stands in for the compliance function\u0027s verified citation"; }
+            fs.writeFileSync(p,JSON.stringify(o,null,2));
+          '
+          if node scripts/obligations-check.mjs > /dev/null 2>&1; then :; else
+            echo "::error::the obligations gate failed on the dry-run register after the fixture substitution"; exit 1; fi
           node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
           # rc.12 WS2: model `loom activate` — generate a today-dated, independently-signed
           # observation that the live platform refused a bypass, and register the observer key. Done

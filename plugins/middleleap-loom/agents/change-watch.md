@@ -17,6 +17,11 @@ risk-reviewer, ③ Check) act on what you surface. You never change code, contro
 - The delivery contract and manifests (dependency lockfiles, `specs/`), for what is shipped.
 - Any certificate / key material the project pins (mTLS, signing, JWKS), for expiry.
 - `skills/loom/references/supply-chain-security.md` — the CVE-in-a-shipped-dependency trigger.
+- `docs/governance/obligations.json` — the obligations register (2.1.0): every regulatory
+  obligation the institution answers to, with its source, article, `owner_role`, `last_verified`
+  and `verify_every_days`, and the risks and controls that answer it. It is the list of things a
+  regulatory change can invalidate, by id. A repository that mounts no register has no such list —
+  say that, rather than reading its absence as clear.
 - `docs/governance/knowledge-pins.json` — the external rule bases this repository is PINNED to:
   publisher, `pinned_version`, `last_verified`, `max_age_days`, `check_ref`, `owner_role`. It is
   the only place the repository records *which* edition of somebody else's rules it was built
@@ -25,9 +30,13 @@ risk-reviewer, ③ Check) act on what you surface. You never change code, contro
 
 ## What to scan for (each a horizon item)
 
-1. **Regulatory change.** A new or amended regulation, standard version, or errata affecting a
-   driver cited in the register. Cite the driver id and what changed. (If the project ships a
-   standards-version checker, run it and report drift.)
+1. **Regulatory change.** A new or amended regulation, standard version, or errata affecting an
+   obligation in `obligations.json`. Cite the **obligation id** (`OB-…`), its `source`, and what
+   changed; route to its `owner_role`. An obligation whose `last_verified` is older than its
+   `verify_every_days` is reported **UNVERIFIED** — an unchecked obligation is not a current one —
+   and routes to its owner as a finding, not as clear. (If the project ships a standards-version
+   checker, run it and report drift.) With no register mounted, fall back to the drivers cited in
+   the data-risk register and say the obligations register is absent.
 2. **Certificate / key expiry.** Any pinned cert, signing key, or JWKS entry expiring within
    its warning window. Report the artifact, the expiry date, and days remaining. Prefer a
    mechanical check (`openssl x509 -enddate`, manifest dates) over eyeballing.

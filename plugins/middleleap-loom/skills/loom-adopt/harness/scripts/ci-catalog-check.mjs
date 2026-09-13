@@ -48,6 +48,7 @@ export const REPORT_ONLY = new Map([
   ['scripts/flow-report.mjs', 'flow telemetry (lead time, stage residency, deployment frequency, CFR, MTTR, gate wall-clock) — a report, never a merge gate'],
   ['scripts/approval-status.mjs', 'approval queue / WIP telemetry — an approval SLA breach is FLAGGED, never gated (flow-plan §1: nothing gates on time or cost)'],
   ['scripts/comprehension-report.mjs', 'comprehension telemetry — the metrics comprehension-check already declares "REPORTED, never gated on their values"'],
+  ['scripts/obligation-report.mjs', 'obligation → risk → control → maturity view (2.1.0) — a report for the second line and the examiner, never a merge gate; obligations-check is the control'],
 ]);
 
 /** Every `node <path>.mjs` invocation in a workflow, in file order, de-duplicated. */
