@@ -256,9 +256,10 @@ First/second-team repeated-entry comparisons remain descriptive and explicitly c
 learning. No participant records or browser outcomes have been fabricated.
 
 The kit can be built with `node scripts/onboarding-pilot.mjs build <new-directory>`.
-See [pilot protocol](../pilots/loom-onboarding/README.md). The user acknowledged the request for
-a preview and participants but has not supplied their URL or identities. Actual browser and
-unfamiliar-user validation remain pending those arrangements; no outreach or hosting occurred.
+See [pilot protocol](../pilots/loom-onboarding/README.md). A private pilot preview is now deployed.
+Browser smoke checks and a mobile overflow correction are recorded in
+[browser acceptance](loom-onboarding-browser-acceptance.md). Full browser acceptance remains
+partial, and unfamiliar-user validation still requires participants; no outreach has occurred.
 
 Codex containment, complete automatic action evidence and independent model-role evaluation
 remain open. Do not infer completion of phase 5 from the phase 6 research tooling.
