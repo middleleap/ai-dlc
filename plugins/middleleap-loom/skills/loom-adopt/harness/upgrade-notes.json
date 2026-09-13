@@ -528,6 +528,20 @@
         "Regenerate floor forms after the template changes: node scripts/template-parity-check.mjs --fix (business-case, handoff and problem-statement changed).",
         "If your decision rights fund change by decision, add the business-case step to your discovery runs; if they do not, skip it — no gate requires the artifact."
       ]
+    },
+    {
+      "version": "2.3.0",
+      "headline": "2.3.0 — the intake questionnaire: each role answers its own block, the record is imported",
+      "notes": [
+        "intake/questionnaire.html is a self-contained form generated from intake/questions.json: nine blocks, one per role, every question with 'where is this written down?'. It computes SOURCED / CLAIMED / UNKNOWN the way the skill does, saves in the browser, and exports institution/intake/intake-record.json with authority: none.",
+        "Pre-fill packs (intake/prefill/*.json; uae-bank ships) suggest answers from the bundle's profiles. A confirmed suggestion is still CLAIMED until the respondent names the document, and the form says so.",
+        "scripts/intake-check.mjs keeps the HTML in step with the bank (parity, --fix rebuilds) and checks a present record's SHAPE only: schema, authority, dispositions agreeing with content, roles not names. It is not a control and judges nothing about the institution.",
+        "institution-intake starts from the record and interviews only the gaps; brainkit-init reads the record's SOURCED answers as source-register candidates."
+      ],
+      "action_required": [
+        "Full tier: the intake/ directory lands on upgrade. Send each accountable role intake/questionnaire.html and their block letter; place the merged export at institution/intake/intake-record.json. Nothing fails if you do not — the skill falls back to interviewing every block.",
+        "If you add a pre-fill pack for your market, rebuild: node intake/build-questionnaire.mjs (or scripts/intake-check.mjs --fix)."
+      ]
     }
   ]
 }

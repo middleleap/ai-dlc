@@ -101,6 +101,7 @@ are repo-root-relative.
 | `floor/templates` | `floor/templates` | full | Guided collaboration-surface forms, GENERATED from the git templates (parity-gated) |
 | `floor/catalog-b` | `floor/catalog-b` | full | Decision-routed floor forms (WS5 · Decision D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed |
 | `floor/catalog-c` | `floor/catalog-c` | full | Floor-only forms (WS3 · D3.3) — write class `lives-on-the-floor`, NEVER frozen. The catalog where personal data actually turns up, because it is where people write prose about people: each form carries its write-class banner and asks for roles rather than names, and scripts/floor-only-check.mjs refuses one that has crossed into discovery/runs/ |
+| `intake` | `intake` | full | The institutional intake (2.3.0): the question bank, the pre-fill packs, the builder and the GENERATED questionnaire.html each role opens locally and answers; exports institution/intake/intake-record.json (authority: none). scripts/intake-check.mjs keeps the HTML in step with the bank |
 | `scripts/*.mjs` | `scripts/` | core | Every gate + its tests (globbed — a per-file list silently drops new gates) |
 | `core` | `core` | core | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
 | `profiles` | `profiles` | core | Profiles as data: base + jurisdiction + product-type |

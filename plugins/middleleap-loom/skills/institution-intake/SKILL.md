@@ -49,6 +49,32 @@ institution-intake ──► source-register skeleton + gap register + intake re
    sentence in the whole interview. If it is not written down, you have found a gap, which is the
    second most useful outcome.
 
+## 0. Start from the questionnaire, interview only the gaps
+
+Most of the intake does not need you in the room. `intake/questionnaire.html` (installed at the
+full tier; in the bundle, `loom-adopt/harness/intake/`) is the same nine blocks as a form each
+role opens **locally in a browser** and answers on their own time. Every question carries the
+second field — *where is this written down?* — so the form computes the disposition the way you
+would: an answer with a reference is SOURCED, without one CLAIMED, blank is UNKNOWN. A pre-fill
+pack (`intake/prefill/<pack>.json`, e.g. `uae-bank`) suggests answers from the bundle's profiles;
+the form says beside every suggestion that confirming it does **not** make it sourced. Answers
+save in the respondent's browser and export as `intake-record.json`.
+
+1. Send each role the file and the block letter that is theirs. Roles, never names, in the
+   "answering as" field.
+2. Collect the exports. Place the merged record at `institution/intake/intake-record.json`
+   (the form's **Import** button merges a second person's export into the first).
+3. `node scripts/intake-check.mjs` — shape only: the schema id, `authority: none`, dispositions
+   that agree with their content, roles not names, and whether the record answers the current
+   question bank. **It judges nothing about the institution.**
+4. Read the record. Every CLAIMED and UNKNOWN answer is your interview agenda; every SOURCED
+   answer is a source-register entry waiting for a human to confirm `approved_by`. Interview only
+   the gaps, in the blocks below.
+
+The question bank is `intake/questions.json`; the HTML is generated from it
+(`node intake/build-questionnaire.mjs`) and `intake-check` fails when they disagree. Add or reword
+a question there, never in the HTML, and rebuild.
+
 ## Who to interview
 
 One person per role is enough for a first pass; a role nobody holds is itself a finding.
@@ -169,7 +195,10 @@ intent is prose the decision authority reads, not a mechanical check.
 
 ## Outputs
 
-Write all three; hand the first two to `brainkit-init`.
+Write all three; hand the first two to `brainkit-init`. Where a questionnaire record exists, the
+first two are largely derived from it — the record's SOURCED answers become source-register rows,
+its CLAIMED and UNKNOWN answers become gap-register rows — and you add only what the gap interviews
+surfaced.
 
 1. **`institution/brainkit/source-register.json` skeleton.** One entry per SOURCED answer: `id`,
    `title`, `kind` (`policy` · `standard` · `decision` · `brand` · `register-pointer`),
