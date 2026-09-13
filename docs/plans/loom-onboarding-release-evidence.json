@@ -1,0 +1,44 @@
+{
+  "scope": "Synthetic engineering exercise, not an institutional approval or production rollback. Existing CI remains preserved and its sidecar still requires team reconciliation.",
+  "runtime": "v22.23.2",
+  "baseline": "3e5564d",
+  "fixture_repository": "loom-release-exercise-byngx7mu/consumer",
+  "baseline_commit": "aed674c2e2f2ac58b6e471beccddad58bd859ab7",
+  "candidate_commit": "fa8ad9232d23e0431f47bba2266175a84b4a6240",
+  "rollback_commit": "083ef19df029ac97004486979f958230092e13bf",
+  "reapplied_commit": "b811d499da6550f8d8479c533f118ea6c37e475f",
+  "baseline_tree": "c0f88b892dd751008b04636b10bd87fd135a997a",
+  "candidate_tree": "2eec84dc5c6d6230e043cc039ad64298382aaef8",
+  "protected_paths": [
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    ".loom/project.json"
+  ],
+  "review_sidecars": [
+    ".loom/project.json.loom-new",
+    ".github/workflows/ci.yml.loom-new"
+  ],
+  "checks": [
+    "dry-run no writes",
+    "team settings preserved",
+    "candidate version and supervisor installed",
+    "project verification command executed",
+    "intake checker passed",
+    "rollback tree exactly equals baseline",
+    "reapplied tree exactly equals candidate",
+    "clean fixture working tree"
+  ],
+  "test_runtime": "Node v22.23.2, macOS arm64; not remote Linux CI",
+  "full_suite": {
+    "tests": 2482,
+    "pass": 2482,
+    "fail": 0,
+    "log": "loom-node22-release-final-tests.txt"
+  },
+  "checksums": {
+    "loom-release-exercise-byngx7mu/commands.json": "0cf50a5fbf52f80e6649be5e6076ceff8cc853aa470b6d0a63a113ce74f85fe9",
+    "loom-node22-release-final-tests.txt": "c4bdff0e690d43eed85587f0a5365781d28dee7c43394abc94e293f56f04cc6e",
+    "loom-node22-SHASUMS256.txt": "778ac5b2fcdbd68d9c0ae9f4310674faa3af0910bd0d18e7f6597787c40a3e39"
+  },
+  "artifact_location_note": "Paths identify temporary local artifacts, not repository files or downloadable hosted evidence. Original absolute indexes remain on the qualification host."
+}

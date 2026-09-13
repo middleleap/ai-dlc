@@ -1,3 +1,4 @@
+import { loadProject } from '../core/project-config.mjs';
 // HG-0013 — the routine-change lane. The Loom's dark boundary is the PR: the loop runs
 // autonomous up to proposal, and a human disposes. That rule is deliberately absolute for
 // changes that matter — but applying it identically to a lint fix and an auth rewrite taxes
@@ -66,7 +67,7 @@ export const ROUTINE_CLASSES = ['dependency-patch', 'lint-fix', 'doc-fix', 'form
 // never remove a control-plane entry.
 export const FLOOR_DENY = [
   '.github/', 'scripts/', 'core/', 'profiles/', 'discovery/gates/',
-  'docs/governance/', 'CODEOWNERS', '.claude/hooks/', '.claude/settings.json',
+  '.loom/project.json', 'docs/governance/', 'CODEOWNERS', '.claude/hooks/', '.claude/settings.json',
   'institution/', // rc.8: the Institutional BrainKit is never a routine change
   'specs/', 'spec/', // the API contract
   'migrations/', 'auth/', // ADOPT: your auth + schema-migration roots
@@ -330,7 +331,9 @@ export function check(cwd = process.cwd(), base = 'origin/main', { gateRecords }
   let head = null;
   try { head = execSync('git rev-parse HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { /* recorded below as no evidence */ }
   claim._green_recorded = gatesGreenFromRecords(loadGateRecords(cwd, gateRecords), head);
-  return { claimed: true, findings: evaluate(envelope, claim, registry, new Date()) };
+  let config;try{config=loadProject(cwd).config;}catch(e){return {claimed:true,findings:[e.message]};}
+  const extra=(claim.changed_paths || claim.paths || []).filter(path=>config.spec_paths.some(spec=>pathMatch(spec,path))).map(path=>`${path} is a configured API contract — never routine`);
+  return { claimed: true, findings: [...evaluate(envelope, claim, registry, new Date()),...extra] };
 }
 
 // CLI (skipped when imported by the test suite).

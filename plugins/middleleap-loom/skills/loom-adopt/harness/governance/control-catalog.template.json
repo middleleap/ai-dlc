@@ -91,7 +91,8 @@
       "lane": "pr",
       "paths": [
         "docs/backlog.yaml",
-        "discovery/"
+        "discovery/",
+        ".loom/project.json"
       ]
     },
     {

@@ -27,8 +27,9 @@ it prints on every run including the most flattering. Branch protection, whether
 teams are real people who review, whether your tests assert anything: none of that is visible from
 a checkout, and a report that listed only what it could see would read as if that were everything.
 
-The cost figures come from a real `--dry-run` install per tier, so "12 files land, 2 preserved" is
-measured rather than estimated. Files you already have are **preserved**, never overwritten.
+The cost figures count individual destination files from a real `--dry-run` install per tier,
+including pending templates. New, updated, current and preserved files are separated; the stamp
+and merge sidecars are additional metadata. Files you already have are **preserved**, never overwritten.
 
 Nothing it prints says a control is operating. A file is not a control; a gate that has never run
 is not evidence. It recommends a starting tier — usually `core`, because raising one later is a
@@ -39,6 +40,14 @@ single flag and the deferred gates are already installed and silent.
 - A git repository. Node ≥ 18 available (`node --test` is used by the bundled test suites).
 - Ask the user before overwriting anything that already exists — an existing `discovery/` or
   `.claude/skills/` means a partial or prior adoption; reconcile, don't clobber.
+
+### Check local prerequisites first
+
+From the target repository, run `node <bundle>/scripts/loom.mjs preflight --runtime claude-code`.
+This checks Git, Node, Bash and jq without changing settings. It reports unsupported runtimes
+explicitly; it does not prove hooks, platform controls or institutional approvals are active.
+A fresh `.claude/settings.json` is written directly by adoption. An existing, differing file is
+preserved with a sidecar for review and merging.
 
 ## 1. Copy the machinery
 
@@ -101,7 +110,7 @@ are repo-root-relative.
 | `floor/templates` | `floor/templates` | full | Guided collaboration-surface forms, GENERATED from the git templates (parity-gated) |
 | `floor/catalog-b` | `floor/catalog-b` | full | Decision-routed floor forms (WS5 · Decision D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed |
 | `floor/catalog-c` | `floor/catalog-c` | full | Floor-only forms (WS3 · D3.3) — write class `lives-on-the-floor`, NEVER frozen. The catalog where personal data actually turns up, because it is where people write prose about people: each form carries its write-class banner and asks for roles rather than names, and scripts/floor-only-check.mjs refuses one that has crossed into discovery/runs/ |
-| `intake` | `intake` | full | The institutional intake (2.3.0): the question bank, the pre-fill packs, the builder and the GENERATED questionnaire.html each role opens locally and answers; exports institution/intake/intake-record.json (authority: none). scripts/intake-check.mjs keeps the HTML in step with the bank |
+| `intake` | `intake` | core | Institutional intake machinery: question bank, pre-fill packs, shared record operations, builder and generated questionnaire. Available at every tier; installs no institutional answers or approvals. |
 | `scripts/*.mjs` | `scripts/` | core | Every gate + its tests (globbed — a per-file list silently drops new gates) |
 | `core` | `core` | core | Policy compiler, gate runner, attestations, compiled-requirements (control plane) |
 | `profiles` | `profiles` | core | Profiles as data: base + jurisdiction + product-type |
@@ -149,16 +158,19 @@ are repo-root-relative.
 | `adapters/providers` | `docs/governance/adapters/providers` | full | The provider catalog — roles and the alternatives that fill them. A catalog is an offer: nothing here is mounted until the institution selects it |
 | `governance/provider-selection.template.json` | `docs/governance/provider-selection.json` | full | Which provider this institution chose per role (the choice is recorded, never defaulted) |
 | `guardrails` | `guardrails` | governed | Runtime-neutral guardrail policy + generated capability matrix (rc.13 WS4 — the Loom never implies coverage a runtime lacks) |
-| `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | full | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
-| `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | full | BrainKit institutional identity + design language (the D7 projection source) |
-| `brainkit/terminology.md` | `institution/brainkit/terminology.md` | full | BrainKit binding vocabulary |
-| `brainkit/architecture.md` | `institution/brainkit/architecture.md` | full | BrainKit architecture principles and constraints |
-| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | full | BrainKit technology policy (allowed / consult / forbidden) + the radar lifecycle (assess / trial / adopt / hold) |
-| `brainkit/governance.md` | `institution/brainkit/governance.md` | full | BrainKit decision rights |
-| `brainkit/strategy.md` | `institution/brainkit/strategy.md` | full | BrainKit strategic intents (SI-*) — schema 1.1; a discovery run cites the intent its problem serves |
-| `brainkit/source-register.json` | `institution/brainkit/source-register.json` | full | BrainKit approved source register (every section grounds in it) |
-| `brainkit/repository-instructions.md` | `institution/brainkit/repository-instructions.md` | full | Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them |
+| `brainkit/manifest.template.json` | `institution/brainkit/manifest.json` | full or --with brainkit | BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve) |
+| `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | full or --with brainkit | BrainKit institutional identity + design language (the D7 projection source) |
+| `brainkit/terminology.md` | `institution/brainkit/terminology.md` | full or --with brainkit | BrainKit binding vocabulary |
+| `brainkit/architecture.md` | `institution/brainkit/architecture.md` | full or --with brainkit | BrainKit architecture principles and constraints |
+| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | full or --with brainkit | BrainKit technology policy (allowed / consult / forbidden) + the radar lifecycle (assess / trial / adopt / hold) |
+| `brainkit/governance.md` | `institution/brainkit/governance.md` | full or --with brainkit | BrainKit decision rights |
+| `brainkit/strategy.md` | `institution/brainkit/strategy.md` | full or --with brainkit | BrainKit strategic intents (SI-*) — schema 1.1; a discovery run cites the intent its problem serves |
+| `brainkit/source-register.json` | `institution/brainkit/source-register.json` | full or --with brainkit | BrainKit approved source register (every section grounds in it) |
+| `brainkit/repository-instructions.md` | `institution/brainkit/repository-instructions.md` | full or --with brainkit | Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them |
 | `ci/ci.yml` | `.github/workflows/ci.yml` | core | The reference CI workflow that runs every gate |
+| `project.template.json` | `.loom/project.json` | core | Project-owned contract paths, feature ID pattern and verification command arguments |
+| `project-configuration.md` | `docs/governance/project-configuration.md` | core | Project settings and CI migration guide |
+| `runtime-contract.md` | `docs/governance/runtime-contract.md` | core | Runtime adapter contract, bounded Codex reviewer pilot and qualification gaps |
 <!-- LOOM:COPY-TABLE:END -->
 
 Plus, still copied by hand (project-specific templates, see step 3): `harness/skills/*/SKILL.md`
@@ -171,8 +183,7 @@ Also create if missing: `discovery/runs/`, `docs/develop/`, `docs/adrs/`, `docs/
 
 **The backlog is the one file you write from scratch, so its shape is installed beside it.** Copy
 `docs/backlog.example.yaml` — it shows both milestone nesting styles, a feature item, an infra
-item, an exemption and the inline flow form. And **set `FEATURE` in
-`scripts/discovery-link-check.mjs`** (the `ADOPT:` line) to your own feature-item id convention:
+item, an exemption and the inline flow form. Set **`feature_pattern` in `.loom/project.json`** to your own feature-item id convention:
 the shipped default is `^STORY-\d+$`, and if your ids look like `FEAT-102` the waist gate reads
 every item and gates none of them. It fails rather than lets that pass quietly.
 
@@ -215,16 +226,35 @@ and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (
   matches a structure the committee already approved — scholars decide permissibility, and no
   agent here may author, alter or approve a ruling.
 
-## 3. Fill the ADOPT markers
+## Reuse institutional context without adopting unrelated full-tier inputs
 
-Every bundled file that needs project-specific content carries an `ADOPT:` marker. Find them
-all: `grep -rn "ADOPT" .claude/ discovery/ scripts/`. As of this bundle:
+For an institution authoring its first BrainKit, `--tier core --with brainkit` adds only the
+BrainKit component on top of core. Preview with `--dry-run` first. The installer records the
+component and retains it on subsequent upgrades. Configuration tasks include its draft inputs.
+
+For a second team consuming an existing release, adopt core without that draft component and
+use `node scripts/loom.mjs brainkit --from <trusted-publisher-repository> --profile <id> --digest
+sha256:<expected-release-digest>` to preview the snapshot and profile. Add `--apply` only after
+reviewing the preview. It creates missing files, skips identical files and blocks on conflicts.
+It never substitutes institutional identities, grants approvals or reseals the release. Follow
+`docs/governance/runbooks/brainkit-distribution-runbook.md` for source trust, project-specific
+identity projection, profile selection, recompilation and estate acknowledgement.
+
+## 3. Complete the setup checklist
+
+Run `node scripts/loom.mjs configure` for pending inputs, accountable roles and next actions.
+Use `--all` to include supplied inputs, `--json` for the full inventory and `--run` to execute
+available checks for supplied inputs. The registry covers templates and project seams, including
+missing files. Input presence is not approval or production readiness; compiled controls still
+apply regardless of the installation tier. `loom status` retains additional legacy marker findings.
+
+The project-specific seams include:
 
 - `.claude/agents/hard-stop-reviewer.md` — replace the checklist with THIS project's
   non-negotiables (keep the FAIL/VERDICT protocol and file:line citation rule).
 - `.claude/agents/contract-conformance-reviewer.md` — replace with THIS project's binding API
   conventions.
-- `.claude/hooks/spec-tripwire.sh` — set `SPEC_PATHS` to the project's contract file(s). Since
+- `.loom/project.json` — set `spec_paths` to the project's contract file(s). The spec hook reads this data. Since
   2.1.0 the tripwire also reads the Bash tool's command string (a `sed -i` or a heredoc naming
   the contract on a working branch is denied), and `claude/*` branches are covered like `feature/*`.
 - `.claude/hooks/pii-patterns.json` — swap the UAE PII shapes for the project's jurisdiction. The
@@ -233,7 +263,7 @@ all: `grep -rn "ADOPT" .claude/ discovery/ scripts/`. As of this bundle:
   beside the hook. Since 2.1.0 the guard is also bound to the Bash tool (the command string is
   scanned, so a heredoc is no longer a bypass) and every non-alphanumeric separator is stripped
   before matching; the UAE instance ships an Emirates ID, IBAN and mobile shape.
-- `scripts/discovery-link-check.mjs` — set `FEATURE` to the project's story-id convention.
+- `.loom/project.json` — set `feature_pattern` to the project's story-id convention and `verification_commands` to executable/argument arrays. Run `node scripts/loom.mjs verify-project`; keep these settings out of managed scripts.
 - `.claude/skills/next-story/SKILL.md` and `implement-story/SKILL.md` — name the project's
   verify commands and binding test cases.
 - `.claude/skills/release/SKILL.md` — name the pre-production promotion command and
@@ -349,7 +379,8 @@ node scripts/loom.mjs version     # version, upgrade history, and which managed 
 **Upgrading is re-running the installer from the newer bundle.** There is no separate command:
 
 ```bash
-node <plugin>/skills/loom-adopt/harness/adopt.mjs --dest .
+node scripts/loom.mjs adopt --bundle <plugin>/skills/loom-adopt/harness --dry-run
+# Review the report, then run the same command without --dry-run.
 ```
 
 It reports `UPGRADE <from> → <to>`, then prints the migration notes for every version in between

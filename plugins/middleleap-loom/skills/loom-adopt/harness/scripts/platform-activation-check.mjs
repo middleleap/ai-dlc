@@ -21,8 +21,8 @@
 // platform-enforced claim without a verified record fails the build.
 //
 // Honesty (rc.2 invariant): the bundle ships the verifier, the schema, the observer-separation rule
-// and a signed reference observation. The LIVE query — `loom activate --platform github` — runs
-// adopter-side with the adopter's read-only platform credentials. A public bundle cannot observe a
+// and a signed reference observation. Live queries are performed by the platform administrator
+// using the activation runbook. `loom activate` only checks the resulting baseline receipts. A public bundle cannot observe a
 // bank's GitHub org; it can prove the observation, once made, is authentic, separated and fresh.
 //
 // Run from the repo root: `node scripts/platform-activation-check.mjs` (exit 1 on any finding).

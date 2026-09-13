@@ -24,17 +24,17 @@ see `adapters/providers/runtime-guardrails/README.md`.
 ## Capability matrix
 
 <!-- LOOM:GUARDRAIL-MATRIX:START -->
-| Guardrail | Event | claude-code | github-actions | local-git | production-agents |
-|---|---|---|---|---|---|
-| `pii-literal` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
-| `test-integrity` | before-test-modification | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
-| `contract-freeze` | before-contract-modification | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
-| `control-plane-freeze` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered | ○ uncovered |
-| `brainkit-immutability` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered | ○ uncovered |
-| `network-egress` ⚠︎ | before-network-egress | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
-| `parser-fail-closed` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
-| `shariah-terminology` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered |
-| `agent-customer-decision` ⚠︎ | before-customer-decision | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
+| Guardrail | Event | claude-code | github-actions | local-git | production-agents | codex |
+|---|---|---|---|---|---|---|
+| `pii-literal` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered | ○ uncovered |
+| `test-integrity` | before-test-modification | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered | ○ uncovered |
+| `contract-freeze` | before-contract-modification | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered | ○ uncovered |
+| `control-plane-freeze` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered | ○ uncovered | ○ uncovered |
+| `brainkit-immutability` | before-file-write | ○ uncovered | ◐ CI backstop | ○ uncovered | ○ uncovered | ○ uncovered |
+| `network-egress` ⚠︎ | before-network-egress | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
+| `parser-fail-closed` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered | ○ uncovered |
+| `shariah-terminology` | before-file-write | ● enforced | ◐ CI backstop | ○ uncovered | ○ uncovered | ○ uncovered |
+| `agent-customer-decision` ⚠︎ | before-customer-decision | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered | ○ uncovered |
 
 _● enforced at the point of action · ◐ no local block but a CI gate catches it before merge (the enforcement of record) · ○ uncovered — no mechanism · ⚠︎ acknowledged gap (blocking, enforced nowhere). Generated from `guardrails/guardrail-policy.json` by `scripts/guardrail-policy-check.mjs`; do not edit by hand — run `node scripts/doc-integrity-check.mjs --fix`._
 <!-- LOOM:GUARDRAIL-MATRIX:END -->
@@ -53,7 +53,7 @@ compiled plan requires human oversight (`profiles/products/ai-decision-system.js
 read that the requirement was **chosen and approved**; it cannot read whether the deployed agent
 took the human step on any given request. Marking that as a CI backstop would sell a plan declaration
 as a request-time control — the exact substitution this policy exists to prevent — so it is
-`uncovered` on all four runtimes and flagged as an acknowledged gap. Coverage the harness cannot see
+`uncovered` on all declared runtimes and flagged as an acknowledged gap. Coverage the harness cannot see
 is declared, never implied.
 
 **`shariah-terminology` is the one row whose `● enforced` is conditional, and the matrix has no cell
@@ -86,3 +86,10 @@ once a plan requires `shariah_governance`, an absent or empty surfaces declarati
   make any of them evidence rather than assertion: the decision log is asserted by the serving
   platform, not by the agent being constrained, and a negative probe shows a violating action
   actually denied. Between probes, coverage is `uncovered` — not assumed clean.
+
+## Codex reviewer pilot
+
+The `codex` column is explicitly uncovered for Loom pre-action controls. The bounded reviewer
+adapter requests a native read-only sandbox and captures events; it does not port the Claude
+hooks or attest native tool behaviour. Contract fixtures do not constitute live runtime
+qualification. See `docs/governance/runtime-contract.md` in an adopted repository.

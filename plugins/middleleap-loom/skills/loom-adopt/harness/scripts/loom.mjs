@@ -2,24 +2,30 @@
 // machine. Adoption is five stages; each subcommand advances or reports one:
 //
 //   loom version                   which Loom this repository is running, and what it has customised
-//   loom adopt                     install the machinery (adopt.mjs, idempotent)
-//   loom configure                 list what is still adopt-pending (unresolved markers to fill)
+//   loom adopt --bundle <harness>  install from an explicit complete bundle (safe upgrades)
+//   loom preflight                 check local runtime prerequisites without changing settings
+//   loom configure                 list setup tasks, owners, inputs and checks
 //   loom verify                    run the bundled gates → mechanically-validated
 //   loom gates                     the pr-lane gate run CI would do, locally, against the merge
 //                                  base (rc.34) — same runner, same catalog, same recorded skips
 //   loom compile <envelope-path>   the policy compiler, forwarded (rc.34)
 //   loom seal                      derive + verify the evidence manifest (rc.35, seal-evidence.mjs)
-//   loom activate --platform …     observe the live platform → platform-activated (WS2)
+//   loom activate --platform github --repository org/repo  verify baseline activation evidence
 //   loom attest-adoption           sign the adoption report (fails while anything is adopt-pending)
 //   loom status                    the five-stage matrix + unresolved inventory (machine or human)
 //
 // Run from the adopted repo root: `node scripts/loom.mjs <command> [args]`.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, realpathSync } from 'node:fs';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { preflightCommand } from './onboarding-preflight.mjs';
+import { verifyProject } from './project-config-check.mjs';
+import { brainkitCommand } from './brainkit-reuse.mjs';
+import { configureCommand } from './configuration-tasks.mjs';
+import { activationReadiness } from './activation-readiness.mjs';
 import { STAMP_PATH } from '../core/adoption-stamp.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -78,15 +84,30 @@ export function versionReport(cwd = process.cwd(), out = process.stdout) {
   return 0;
 }
 
+export function adoptCommand(args) {
+  const i = args.indexOf('--bundle');
+  if (i >= 0 && (!args[i + 1] || args[i + 1].startsWith('--'))) {
+    process.stderr.write('--bundle requires the path to a complete Loom harness directory.\n'); return 2;
+  }
+  const bundle = i >= 0 ? resolve(args[i + 1]) : resolve(HERE, '..');
+  if (!existsSync(resolve(bundle, 'adopt.mjs')) || !existsSync(resolve(bundle, 'copy-manifest.json'))) {
+    process.stderr.write('Installation requires the complete plugin bundle. From this repository run:\n  node scripts/loom.mjs adopt --bundle /path/to/plugin/skills/loom-adopt/harness --dry-run\nThen review the report and re-run without --dry-run. Your current repository is the default destination.\n');
+    return 2;
+  }
+  const forwarded = args.filter((_, index) => i < 0 || (index !== i && index !== i + 1));
+  return node(resolve(bundle, 'adopt.mjs'), forwarded);
+}
+
 export const COMMANDS = {
+  'verify-project': (args) => verifyProject(args),
+  runtime: async (args) => (await import('./codex-runtime.mjs')).runtimeCommand(args),
+  brainkit: (args) => brainkitCommand(args),
+  preflight: (args) => preflightCommand(args),
   version: () => versionReport(),
-  adopt: (args) => node('adopt.mjs', args),
+  adopt: (args) => adoptCommand(args),
   status: (args) => node('adoption-status.mjs', args),
   'attest-adoption': (args) => node('adoption-attest.mjs', args),
-  configure: () => {
-    process.stdout.write('Configuration — resolve every adopt-pending item below, then re-run `loom verify`.\n');
-    return node('adoption-status.mjs', []);
-  },
+  configure: (args) => configureCommand(args),
   verify: () => {
     // The mechanically-validated stage: the state-of-record gates must be green.
     let rc = 0;
@@ -112,17 +133,16 @@ export const COMMANDS = {
   // verified by the seal gate's own evaluate() before anything is written. Never hand-chain.
   seal: (args) => node('seal-evidence.mjs', args),
   activate: (args) => {
-    process.stdout.write('Activation — observe the live platform and record signed evidence, then verify it:\n');
-    return node('platform-activation-check.mjs', args.filter((a) => a !== '--platform' && !a.startsWith('github')));
+    return activationReadiness(args);
   },
 };
 
 // CLI (skipped when imported by the test suite).
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && existsSync(process.argv[1]) && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const [cmd, ...args] = process.argv.slice(2);
   if (!cmd || !COMMANDS[cmd]) {
     process.stderr.write(`usage: loom <${Object.keys(COMMANDS).join('|')}> [args]\n`);
     process.exit(cmd ? 2 : 0);
   }
-  process.exit(COMMANDS[cmd](args));
+  process.exit(await COMMANDS[cmd](args));
 }

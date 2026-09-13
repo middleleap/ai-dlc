@@ -57,3 +57,6 @@
 /profiles/institutions/                 @your-org/institutional-context-owners
 
 /CODEOWNERS                             @your-org/platform-admins
+
+/.loom/project.json           @your-org/platform-admins
+/.github/workflows/loom.yml    @your-org/platform-admins

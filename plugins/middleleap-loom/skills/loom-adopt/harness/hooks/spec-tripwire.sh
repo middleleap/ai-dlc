@@ -10,7 +10,7 @@
 # reached this hook at all. On the Bash tool the command string is inspected: a command that names
 # a contract path AND carries a write signal is denied; a read (`cat`, `git diff`, `grep`) is not.
 #
-# ADOPT: set SPEC_PATHS to your project's contract file(s), space-separated.
+# Configure spec_paths in .loom/project.json; the literal below is a legacy fallback.
 set -euo pipefail
 
 SPEC_PATHS="specs/openapi.yaml specs/openapi.yml specs/openapi.json"
@@ -32,6 +32,23 @@ deny() {
     '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$reason}}'
   exit 0
 }
+
+project_config="${CLAUDE_PROJECT_DIR:-.}/.loom/project.json"
+if [ -f "$project_config" ]; then
+  if ! SPEC_PATHS=$(jq -er '
+    select(.schema == "loom.project/v1") | .spec_paths |
+    select(type == "array" and length > 0) |
+    select(all(.[]; type == "string" and test("^[A-Za-z0-9_./-]+$") and (startswith("/") | not) and (split("/") | all(.[]; . != "" and . != "." and . != "..")))) | join(" ")' "$project_config" 2>/dev/null); then
+    deny "Spec tripwire: .loom/project.json has invalid spec_paths. Restore valid project configuration."
+  fi
+elif [ -f "${CLAUDE_PROJECT_DIR:-.}/.loom/adoption.json" ]; then
+  if ! jq -e '(.files | type) == "object"' "${CLAUDE_PROJECT_DIR:-.}/.loom/adoption.json" >/dev/null 2>&1; then
+    deny "Spec tripwire: cannot read the adoption stamp to resolve project configuration."
+  fi
+  if jq -e '.files | has(".loom/project.json")' "${CLAUDE_PROJECT_DIR:-.}/.loom/adoption.json" >/dev/null; then
+    deny "Spec tripwire: .loom/project.json is missing from this adoption. Restore it before continuing."
+  fi
+fi
 
 branch=$(git -C "${CLAUDE_PROJECT_DIR:-.}" branch --show-current 2>/dev/null || true)
 # Only the loop's working branches are tripwired; a dedicated spec branch is the sanctioned lane.

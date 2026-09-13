@@ -51,7 +51,7 @@ drafting an ADR is not deciding it, and a `proposed` ADR unblocks nothing.
 ## 3. Verify — every gate, evidence in the log
 
 1. The project's full verify suite green (build, lint, typecheck, unit, integration against real
-   local stores), coverage at or above the project's floor. <!-- ADOPT: name your commands -->
+   local stores), coverage at or above the project's floor. Run `node scripts/loom.mjs verify-project`; the command arrays live in `.loom/project.json`.
 2. Dispatch BOTH reviewer subagents on the diff **in ONE message** (so they run concurrently and
    blind to each other — a reviewer that has read the other's verdict is not a second pair of
    eyes, and serialising them doubles the wall-clock for nothing): `hard-stop-reviewer` must

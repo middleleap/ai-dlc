@@ -21,6 +21,9 @@ jobs:
       - name: Validator self-test
         run: node --test scripts/validate-marketplace.test.mjs
 
+      - name: Onboarding handoff, configuration and all-tier installation contracts
+        run: node --test plugins/middleleap-loom/skills/loom-adopt/harness/scripts/intake-*.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/onboarding-commands.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/configuration-tasks.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/brainkit-reuse.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/project-integration.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/codex-runtime.test.mjs
+
       - name: Brand contrast gate (WCAG AA)
         run: node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs
 

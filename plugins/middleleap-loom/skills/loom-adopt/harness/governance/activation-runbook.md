@@ -111,3 +111,17 @@ the result as an ADR per `../loom/references/governance.md` and keep the status 
 - [ ] The mounted snapshot matches the profile's pinned `release_digest`; version bumps go through a
       reviewed PR (see `runbooks/brainkit-distribution-runbook.md`). No bundled gate makes a BrainKit
       *platform-* or *organisationally-enforced* — that is the institution's control to operate.
+
+## Check the recorded baseline
+
+After the administrator has collected and independently signed the observations, run:
+
+```bash
+node scripts/loom.mjs activate --platform github --repository owner/repository
+```
+
+This reads evidence for HG-0001, HG-0002 and HG-0004 in the named repository. Missing, invalid,
+stale or future-dated receipts leave the baseline incomplete. It neither collects observations
+nor changes platform settings. Additional applicable controls, organisational approvals and
+production readiness remain separate assessments. Use `platform-activation-check.mjs` for CI
+consistency checking; success with no claims there is not activation readiness.

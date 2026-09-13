@@ -97,12 +97,16 @@ export function observe(root) {
  */
 export function costOfTier(root, tier, { manifest = loadManifest() } = {}) {
   const report = install(root, { dryRun: true, manifest, tier });
-  const collisions = report.filter((r) => r.status === 'unverifiable-preserved' || r.status === 'merge-required' || r.status === 'local-edit-preserved');
   return {
     tier,
-    entries: entriesForTier(manifest, tier).length,
-    lands: report.filter((r) => r.status === 'installed' || String(r.status).startsWith('installed ')).length,
-    collisions: collisions.map((r) => r.dest),
+    entries: report.length,
+    components: report.components,
+    lands: report.files.filter(f => f.classification === 'new').length,
+    updates: report.files.filter(f => f.classification === 'update').length,
+    current: report.files.filter(f => f.classification === 'already-current').length,
+    managedFiles: report.files.length,
+    pendingTemplates: report.filter(r => r.status === 'adopt-pending').length,
+    collisions: report.files.filter(f => f.preserved).map(f => f.path),
   };
 }
 
@@ -202,8 +206,9 @@ export function main(argv = process.argv.slice(2)) {
   process.stdout.write('\nWHAT ADOPTING WOULD COST\n');
   for (const c of costs) {
     const clash = c.collisions.length ? `, ${c.collisions.length} existing file(s) PRESERVED (never overwritten)` : '';
-    process.stdout.write(`  ${c.tier.padEnd(9)} ${String(c.lands).padStart(3)} file(s) land${clash}\n`);
+    process.stdout.write(`  ${c.tier.padEnd(9)} ${String(c.lands).padStart(3)} new file(s), ${c.updates} update(s), ${c.current} current${clash}; ${c.pendingTemplates} pending template(s)\n`);
   }
+  process.stdout.write('  Counts are managed destination files; adoption stamp and merge sidecars are additional metadata.\n');
   const clashes = costs.find((c) => c.tier === result.recommendation.tier)?.collisions ?? [];
   if (clashes.length) {
     process.stdout.write('\n  Files you already have, at the recommended tier:\n');

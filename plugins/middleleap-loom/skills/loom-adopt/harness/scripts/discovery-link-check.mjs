@@ -28,13 +28,14 @@ import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { validateRun, registerMandatory } from '../discovery/gates/validate.mjs';
 import { frontMatter } from '../discovery/gates/lib.mjs';
+import { loadProject } from '../core/project-config.mjs';
 import { pathToFileURL } from 'node:url';
 
 const BACKLOG = 'docs/backlog.yaml';
 // The shipped default, recorded separately so the gate can tell "never adopted" from "customised
-// and currently matching nothing". Do NOT edit this line — edit FEATURE below.
+// and currently matching nothing". Do not edit either default; configure .loom/project.json instead.
 const SHIPPED_DEFAULT = '^STORY-\\d+$';
-// ADOPT: set this to your feature-item id convention (infra items should NOT match).
+// Legacy fallback only. New adoptions read feature_pattern from .loom/project.json.
 export const FEATURE = /^STORY-\d+$/;
 // Status classes (2.1.0). TERMINAL never re-enters delivery; PARKED is not being built; everything
 // else with an explicit status is ACTIVE and waist-gated. An un-statused stub is a someday-maybe
@@ -150,8 +151,8 @@ export function coverage(text, feature = FEATURE) {
   } else if (!matched.length && unedited) {
     findings.push(
       `${BACKLOG} has ${items.length} item(s) and none carries an id matching ${feature} — which is ` +
-      `still this bundle's shipped default. Set FEATURE in scripts/discovery-link-check.mjs (the ` +
-      `'ADOPT:' line) to your own feature-item id convention. Until you do, HG-0007 reads every item ` +
+      `still this bundle's shipped default. Set feature_pattern in .loom/project.json ` +
+      `to your own feature-item id convention. Until you do, HG-0007 reads every item ` +
       `and gates none of them.`,
     );
   } else if (!matched.length) {
@@ -276,6 +277,9 @@ function fsResolveRun(slug) {
 }
 
 export function check() {
+  let feature;
+  try {const {config,legacy}=loadProject();feature=legacy?FEATURE:new RegExp(config.feature_pattern);}
+  catch(e){return {findings:[e.message],notices:[],stats:null};}
   // The installer deliberately does not ship a backlog — it is the adopter's own content, not a
   // template — so a freshly adopted repo meets this gate before the file exists. That is still a
   // failure and not a no-op: an absent backlog means the waist is unwired, and passing here would
@@ -293,8 +297,8 @@ export function check() {
     };
   }
   const text = readFileSync(BACKLOG, 'utf8');
-  const { findings, notices, stats } = coverage(text);
-  return { findings: [...findings, ...checkItems(text, fsResolveRun)], notices, stats };
+  const { findings, notices, stats } = coverage(text, feature);
+  return { findings: [...findings, ...checkItems(text, fsResolveRun, feature)], notices, stats };
 }
 
 // CLI (skipped when imported by the test suite).

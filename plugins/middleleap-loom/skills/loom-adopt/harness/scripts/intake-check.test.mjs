@@ -107,3 +107,15 @@ test('run() reads institution/intake/intake-record.json from the cwd', () => {
     const r = run(dir); assert.deepEqual(r.findings, []); assert.ok(r.record.endsWith('intake-record.json'));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+
+test('run reports derived totals, not an imported summary claim', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'loom-intake-summary-'));
+  try {
+    const rec = goodRecord(); rec.summary.SOURCED = 999;
+    const p = join(dir, 'record.json'); writeFileSync(p, JSON.stringify(rec));
+    const result = run(dir, { recordPath: p });
+    assert.equal(result.summary.SOURCED, 14);
+    assert.ok(result.notices.some(n => /recomputed/.test(n)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

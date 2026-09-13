@@ -152,6 +152,17 @@ test('test-tripwire: the evasions of the plain it.skip regex are caught', { skip
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
 
+test('test-tripwire: multiline comments are portable and do not consume subsequent live assertions', { skip: SKIP }, () => {
+  const repo = repoOn('feature/STORY-9-x');
+  try {
+    for (const new_string of ['/* disabled\nexpect(total).toBe(3);\n*/', '/** disabled\n * assert.equal(total, 3);\n */', '/* first */\n/* disabled\nassert(total);\n*/']) {
+      assert.ok(denied(run('test-tripwire.sh', {file_path:'src/x.test.ts',new_string},repo)));
+    }
+    const new_string='/* setup explanation */\nexpect(total).toBe(3);\n/* cleanup explanation */\nassert.equal(total, 3);';
+    assert.ok(!denied(run('test-tripwire.sh', {file_path:'src/x.test.ts',new_string},repo)));
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
 test('test-tripwire: legitimate test authorship is allowed, and the testfix branch is the escape hatch', { skip: SKIP }, () => {
   const repo = repoOn('feature/STORY-9-x');
   try {

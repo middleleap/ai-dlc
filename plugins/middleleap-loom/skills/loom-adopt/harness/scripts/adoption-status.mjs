@@ -33,6 +33,7 @@ import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { configurationTasks, REGISTRY } from './configuration-tasks.mjs';
 
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
 const ACTIVATION_DIR = ['docs/governance/platform-activation', 'platform-activation'];
@@ -92,9 +93,19 @@ export function runMechanism(control, cwd, spawn = spawnSync) {
 export function computeStatus(cwd = process.cwd(), { run = false, spawn = spawnSync } = {}) {
   const catalogPath = find(cwd, CATALOG_LOCATIONS);
   const catalog = catalogPath ? readJson(catalogPath) : null;
-  if (!catalog) return { capabilities: [], unresolved: [], adoptPending: false, error: 'no control catalog' };
+  if (!catalog || !Array.isArray(catalog.controls)) return { capabilities: [], unresolved: ['docs/governance/control-catalog.json'], adoptPending: true, error: 'missing or invalid control catalog' };
 
-  const pending = unresolvedMarkers(cwd);
+  const configuration = configurationTasks(cwd);
+  const legacyMarkers = unresolvedMarkers(cwd);
+  const declared = new Set(configuration.tasks.map(t => t.path));
+  // Declared inputs use structured checks; retain extra legacy findings conservatively.
+  // Unstamped/pre-registry adopters keep the old inventory with an explicit assessment gap.
+  const stamp = readJson(join(cwd, '.loom/adoption.json'));
+  const registryExpected = existsSync(join(cwd, REGISTRY)) || Boolean(stamp?.files?.[REGISTRY]);
+  const pending = [...new Set([
+    ...legacyMarkers.filter(p => !declared.has(p)),
+    ...(configuration.available || registryExpected ? configuration.pending : []),
+  ])].sort();
   const pendingSet = new Set(pending);
 
   // Which controls a signed platform-activation names, and which an adoption attestation covers.
@@ -116,7 +127,7 @@ export function computeStatus(cwd = process.cwd(), { run = false, spawn = spawnS
     return { control_id: c.control_id, adopter_side: Boolean(c.adopter_side), installed, configured, validated, platform, organisation, passing };
   });
   const failing = capabilities.filter((c) => c.passing === false).map((c) => c.control_id);
-  return { capabilities, unresolved: pending, adoptPending: pending.length > 0, ran: run, failing };
+  return { capabilities, configuration, unresolved: pending, adoptPending: pending.length > 0, ran: run, failing };
 }
 
 const yn = (b) => (b ? 'yes' : '—');
@@ -128,7 +139,7 @@ const tri = (b) => (b === true ? 'yes' : b === false ? '**NO**' : b === null ? '
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const run = process.argv.includes('--run');
   const status = computeStatus(process.cwd(), { run });
-  if (process.argv.includes('--json')) { process.stdout.write(JSON.stringify(status, null, 2) + '\n'); process.exit(0); }
+  if (process.argv.includes('--json')) { process.stdout.write(JSON.stringify(status, null, 2) + '\n'); process.exit(status.error ? 2 : 0); }
   if (status.error) { process.stderr.write(`loom status — ${status.error}\n`); process.exit(2); }
   process.stdout.write('\nLoom adoption status\n\n');
   process.stdout.write('| Capability | Installed | Configured | Mechanism | Passing | Platform | Organisation |\n');
@@ -151,11 +162,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else {
     process.stdout.write('Passing = not asked. Re-run with --run to execute each mechanism and see what this repo actually does.\n');
   }
+  if (status.configuration.error) process.stdout.write(`\n${status.configuration.error}\n`);
+  else process.stdout.write('\nRun loom configure for setup owners, inputs and validation commands.\n');
   if (status.unresolved.length) {
-    process.stdout.write(`\n${status.unresolved.length} file(s) ADOPT-PENDING (unresolved markers):\n`);
+    process.stdout.write(`\n${status.unresolved.length} file(s) ADOPT-PENDING (setup inputs and additional legacy markers):\n`);
     for (const f of status.unresolved) process.stdout.write(`  · ${f}\n`);
     process.stdout.write('\nFill these before `attest-adoption` — a signed adoption report cannot be produced while any mandatory item is adopt-pending.\n');
   } else {
-    process.stdout.write('\nNo unresolved ADOPT markers — configuration is complete.\n');
+    process.stdout.write('\nNo pending inputs detected in the assessed inventory. This does not establish approval or production readiness.\n');
   }
 }

@@ -61,7 +61,7 @@ export function loadManifest() { return JSON.parse(readFileSync(MANIFEST, 'utf8'
 export const TIERS = ['core', 'governed', 'full'];
 export const tierIncludes = (adopted, entryTier) =>
   TIERS.indexOf(entryTier ?? 'core') <= TIERS.indexOf(adopted);
-export const entriesForTier = (manifest, tier) => manifest.entries.filter((e) => tierIncludes(tier, e.tier));
+export const entriesForTier = (manifest, tier, components = []) => manifest.entries.filter((e) => tierIncludes(tier, e.tier) || components.includes(e.component));
 
 /** This bundle's version, from the plugin manifest — never hard-coded, so it cannot drift. */
 export function bundleVersion() { return readJson(PLUGIN_JSON)?.version ?? null; }
@@ -75,18 +75,22 @@ export function readStamp(destRoot) { return readJson(resolve(destRoot, STAMP_PA
  * preserved file keeps reading as the adopter's on every future run.
  */
 function placeFile(src, dst, key, ctx) {
-  const sourceDigest = sha(src);
+  const rendered = key === '.github/workflows/loom.yml' && src.endsWith('/ci/ci.yml')
+    ? readFileSync(src, 'utf8').replace('  gates:\n', '  loom-governance:\n    name: Loom governance\n') : null;
+  const copySource = target => rendered === null ? cpSync(src,target) : writeFileSync(target,rendered);
+  const sourceDigest = rendered === null ? sha(src) : createHash('sha256').update(rendered).digest('hex');
   const currentDigest = shaOrNull(dst);
   const cls = classifyFile({ stampDigest: ctx.stamp.files?.[key], currentDigest, sourceDigest });
   const write = ctx.force || isSafeToWrite(cls);
+  ctx.files.push({ path: key, classification: cls, preserved: !write });
 
   if (write) {
-    if (!ctx.dryRun) { mkdirSync(dirname(dst), { recursive: true }); cpSync(src, dst); }
+    if (!ctx.dryRun) { mkdirSync(dirname(dst), { recursive: true }); copySource(dst); }
     return { cls, stampDigest: sourceDigest, wrote: true };
   }
   // Preserved. Drop the upstream version beside it so the adopter can diff without hunting for
   // the bundle — the same courtesy the `merge` entries already extended to settings.json.
-  if (!ctx.dryRun) { mkdirSync(dirname(dst), { recursive: true }); cpSync(src, `${dst}.loom-new`); }
+  if (!ctx.dryRun) { mkdirSync(dirname(dst), { recursive: true }); copySource(`${dst}.loom-new`); }
   return { cls, stampDigest: ctx.stamp.files?.[key], wrote: false };
 }
 
@@ -95,7 +99,7 @@ export function copyTable(manifest = loadManifest()) {
   const rows = manifest.entries.map((e) => {
     const src = e.kind === 'glob' ? `${e.source}/${e.glob}` : e.source;
     const dst = e.kind === 'glob' ? `${e.dest}/` : e.dest;
-    return `| \`${src}\` | \`${dst}\` | ${e.tier ?? 'core'} | ${e.seam} |`;
+    return `| \`${src}\` | \`${dst}\` | ${e.tier ?? 'core'}${e.component ? ' or --with ' + e.component : ''} | ${e.seam} |`;
   });
   return ['| Bundle source | Destination | Tier | What it is |', '|---|---|---|---|', ...rows].join('\n');
 }
@@ -134,12 +138,14 @@ function copyEntry(e, destRoot, ctx) {
     // — which is also when the hooks activate (that consent is the point, per SKILL.md). This
     // predates the stamp and stays as it is: consent, not provenance, is what it protects.
     if (existsSync(dst)) {
-      if (sha(src) === sha(dst)) return { source: e.source, dest: e.dest, seam: e.seam, status: 'already-current', stamped: { [e.dest]: sha(src) } };
+      if (sha(src) === sha(dst)) { ctx.files.push({ path: e.dest, classification: CLASS.CURRENT, preserved: false }); return { source: e.source, dest: e.dest, seam: e.seam, status: 'already-current', stamped: { [e.dest]: sha(src) } }; }
+      ctx.files.push({ path: e.dest, classification: 'merge-required', preserved: true });
       const sidecar = dst.replace(/\.json$/, '') + '.loom.json';
       if (!ctx.dryRun) { mkdirSync(dirname(sidecar), { recursive: true }); cpSync(src, sidecar); }
       return { source: e.source, dest: `${e.dest} (sidecar: ${e.dest.replace(/\.json$/, '')}.loom.json)`, seam: e.seam, status: 'merge-required', stamped: {} };
     }
-    if (!ctx.dryRun) { mkdirSync(dirname(dst), { recursive: true }); cpSync(src, dst); }
+    if (!ctx.dryRun) { mkdirSync(dirname(dst), { recursive: true }); cpSync(src,dst); }
+    ctx.files.push({ path: e.dest, classification: CLASS.NEW, preserved: false });
     return { source: e.source, dest: e.dest, seam: e.seam, status: 'installed', stamped: { [e.dest]: sha(src) } };
   }
 
@@ -182,7 +188,7 @@ function matchGlob(glob, name) {
  * `force` overwrites files the adopter has edited — destructive by definition, so it is never
  * the default and the report says what it stepped on.
  */
-export function install(destRoot, { dryRun = false, manifest = loadManifest(), force = false, stamp = null, version = undefined, tier = undefined, now = new Date().toISOString() } = {}) {
+export function install(destRoot, { dryRun = false, manifest = loadManifest(), force = false, stamp = null, version = undefined, tier = undefined, components = undefined, ciMode = undefined, now = new Date().toISOString() } = {}) {
   const previous = stamp ?? readStamp(destRoot) ?? emptyStamp();
   // A re-run keeps the tier already adopted unless one is named — an upgrade must never silently
   // demote a repository to core and start reporting its governed templates as missing.
@@ -192,8 +198,13 @@ export function install(destRoot, { dryRun = false, manifest = loadManifest(), f
   // is one flag away and assess.mjs prints the cost of each tier before you choose.
   const adoptedTier = tier ?? previous.tier ?? 'core';
   if (!TIERS.includes(adoptedTier)) throw new Error(`unknown tier ${adoptedTier} — expected ${TIERS.join('|')}`);
-  const ctx = { stamp: previous, force, dryRun };
-  const report = entriesForTier(manifest, adoptedTier).map((e) => copyEntry(e, destRoot, ctx));
+  const selected = [...new Set([...(previous.components || []), ...(components || [])])];
+  if (selected.some(c => c !== 'brainkit')) throw new Error('unknown component — expected brainkit');
+  const ci = ciMode ?? previous.ci_mode ?? 'reference';
+  if (!['reference','separate'].includes(ci)) throw new Error('unknown CI mode — expected reference|separate');
+  if ((previous.ci_mode && previous.ci_mode !== ci) || (ci === 'separate' && !previous.ci_mode && previous.files?.['.github/workflows/ci.yml'])) throw new Error('CI mode change requires an explicit workflow migration; preserve the existing workflow and reconcile duplicate Loom jobs before changing the stamp.');
+  const ctx = { stamp: previous, force, dryRun, files: [] };
+  const report = entriesForTier(manifest, adoptedTier, selected).map((e) => copyEntry(ci === 'separate' && e.dest === '.github/workflows/ci.yml' ? {...e,dest:'.github/workflows/loom.yml'} : e, destRoot, ctx));
 
   const installedDigests = Object.assign({}, ...report.map((r) => r.stamped || {}));
   const resolvedVersion = version === undefined ? bundleVersion() : version;
@@ -206,13 +217,15 @@ export function install(destRoot, { dryRun = false, manifest = loadManifest(), f
       now,
     }),
     tier: adoptedTier,
+    components: selected,
+    ci_mode: ci,
   };
   if (!dryRun) {
     const stampPath = resolve(destRoot, STAMP_PATH);
     mkdirSync(dirname(stampPath), { recursive: true });
     writeFileSync(stampPath, JSON.stringify(written, null, 2) + '\n');
   }
-  return Object.assign(report, { stamp: written, previousVersion: previous.bundle_version, tier: adoptedTier });
+  return Object.assign(report, { stamp: written, previousVersion: previous.bundle_version, tier: adoptedTier, components: selected, ciMode: ci, files: ctx.files });
 }
 
 // CLI.
@@ -231,13 +244,17 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.stderr.write(`unknown --tier ${tier} — expected ${TIERS.join(' | ')}\n`);
     process.exit(2);
   }
-  const report = install(destRoot, { dryRun, force, tier });
+  const component = arg('--with');
+  if (argv.includes('--with') && component !== 'brainkit') { process.stderr.write('--with requires brainkit\n'); process.exit(2); }
+  const ciMode = arg('--ci');
+  if (argv.includes('--ci') && !['reference','separate'].includes(ciMode)) {process.stderr.write('--ci requires reference|separate\n');process.exit(2);}
+  const report = install(destRoot, { dryRun, force, tier, ciMode, components: component ? [component] : undefined });
   const missing = report.filter((r) => r.status === 'source-missing');
-  if (arg('--report') === 'json') { process.stdout.write(JSON.stringify({ report: [...report], stamp: report.stamp, from, to, tier: report.tier }, null, 2) + '\n'); }
+  if (arg('--report') === 'json') { process.stdout.write(JSON.stringify({ report: [...report], stamp: report.stamp, from, to, tier: report.tier, components: report.components, ciMode: report.ciMode }, null, 2) + '\n'); }
   else {
     const move = from === null ? `first adoption of ${to}` : from === to ? `re-run of ${to}` : `UPGRADE ${from} → ${to}`;
     const tierMove = previousStamp?.tier && previousStamp.tier !== report.tier ? `tier ${previousStamp.tier} → ${report.tier}` : `tier ${report.tier}`;
-    process.stdout.write(`\nLoom adoption report — ${dryRun ? 'DRY RUN, ' : ''}${move}, ${tierMove}, ${report.length} entries → ${destRoot}\n\n`);
+    process.stdout.write(`\nLoom adoption report — ${dryRun ? 'DRY RUN, ' : ''}${move}, ${tierMove}${report.components.length ? ', with ' + report.components.join(', ') : ''}, ${report.length} entries → ${destRoot}\n\n`);
     for (const r of report) process.stdout.write(`  ${r.status.padEnd(24)} ${r.dest}  · ${r.seam}\n`);
 
     const pending = report.filter((r) => r.status === 'adopt-pending');
@@ -270,7 +287,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const nextTier = TIERS[TIERS.indexOf(report.tier) + 1];
     if (nextTier) {
       const manifest = loadManifest();
-      const pending = entriesForTier(manifest, nextTier).length - entriesForTier(manifest, report.tier).length;
+      const pending = entriesForTier(manifest, nextTier, report.components).length - entriesForTier(manifest, report.tier, report.components).length;
       process.stdout.write(
         `\nYou are on tier ${report.tier}. \`--tier ${nextTier}\` adds ${pending} more entr(ies) to fill in.\n` +
         'Every gate is already installed and running; the deferred ones are silent until their file exists.\n',

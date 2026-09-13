@@ -1,0 +1,7 @@
+{
+  "_comment": "Project-owned configuration. Review contract paths and feature IDs; supply actual verification commands as executable/argument arrays. No shell expansion. Editing this file requires control-plane review.",
+  "schema": "loom.project/v1",
+  "spec_paths": ["specs/openapi.yaml", "specs/openapi.yml", "specs/openapi.json"],
+  "feature_pattern": "^STORY-\\d+$",
+  "verification_commands": []
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "loom.runtime-adapters/v1",
+  "scope": "Coverage labels describe bundled implementations and evidence, not institutional permission or universal runtime protection.",
+  "adapters": [
+    {
+      "id": "claude-code",
+      "mode": "reference-delivery",
+      "instructions": "CLAUDE.md and installed skills",
+      "launch": "Existing plugin/runtime workflow",
+      "pre_action_controls": "See guardrails/guardrail-policy.json for each named mechanism and its gaps",
+      "qualification": "Existing reference tests; live installed activation remains institution-specific"
+    },
+    {
+      "id": "codex",
+      "mode": "read-only-review",
+      "instructions": "AGENTS.md or AGENTS.override.md; explicit pinned reviewer definition in the request",
+      "launch": "scripts/codex-runtime.mjs via loom runtime codex",
+      "pre_action_controls": "uncovered",
+      "file_and_shell_actions": "Live synthetic shell/file reads observed on codex-cli 0.154.0-alpha.6.2; canary remained unchanged with native sandbox violation, but denied command omitted from JSONL",
+      "reviewer_output": "Existing loom.agent-output/v1 schema and invariants; model/role/prompt claims must match request",
+      "approvals": "No authority; no approval, merge or deployment integration",
+      "evidence": "Local JSONL capture and authority-none transport report; no automatic evidence sealing",
+      "recovery": "Public capture supervisor stops Codex on parent disconnect and saves an incomplete result; POSIX group termination escalates after five seconds. Detached descendants can survive; cleanup remains unverified. No automatic resume.",
+      "qualification": "Partial macOS live qualification with requested gpt-6-astra on 0.154.0-alpha.6.2: root/override/nested markers, missing-register output, SIGTERM and abrupt public CLI death. Native denial recovered manually from session record. Global precedence, automatic complete action capture, detached subprocess cleanup and write delivery remain unqualified."
+    }
+  ]
+}

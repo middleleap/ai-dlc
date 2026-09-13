@@ -542,6 +542,35 @@
         "Full tier: the intake/ directory lands on upgrade. Send each accountable role intake/questionnaire.html and their block letter; place the merged export at institution/intake/intake-record.json. Nothing fails if you do not — the skill falls back to interviewing every block.",
         "If you add a pre-fill pack for your market, rebuild: node intake/build-questionnaire.mjs (or scripts/intake-check.mjs --fix)."
       ]
+    },
+    {
+      "version": "2.3.1",
+      "headline": "Reliable institutional intake across roles and adoption tiers",
+      "notes": [
+        "Intake machinery now installs at every tier; core and governed no longer import an absent questionnaire module. No institutional answers or approvals are installed.",
+        "Questionnaire imports preview additions and require explicit choices for conflicting answers. Blank entries preserve existing answers; different institutions and question banks are rejected.",
+        "Respondent roles are captured when entering answers. Answered entries require attribution; summary totals are derived, and malformed imports produce findings.",
+        "The adopted loom adopt command accepts an explicit --bundle path; without a complete bundle it prints an actionable instruction instead of failing module loading.",
+        "loom activate now requires --platform github and --repository owner/repository and checks baseline receipts. Missing evidence exits incomplete; no platform settings are observed or changed.",
+        "Assessment counts individual new/current/updated/preserved files. loom preflight checks local Git, Node, Bash, jq and runtime support.",
+        "loom configure now reads declared setup tasks with owners, required inputs, tier applicability and optional checks. status includes missing declared files; JSON instructional metadata is not treated as an unanswered value. Legacy marker findings remain visible. No approval ledger is created.",
+        "The questionnaire now starts with example, institution and team routes, separate named browser sessions and role-focused views. Resume is explicit; storage failures and stale saves are visible. References are labelled as supplied, never retrieved or approved by the form.",
+        "--with brainkit independently adds draft institutional context to core or governed adoption and persists on upgrades. loom brainkit previews and optionally mounts an explicitly pinned publisher snapshot, preserving existing consumer files and approvals.",
+        "Project-owned .loom/project.json now supplies contract paths, feature pattern and verification command arrays. loom verify-project executes declared commands without shell expansion. --ci separate adds a Loom workflow without replacing team CI; its mode persists across upgrades.",
+        "loom runtime codex adds a bounded read-only reviewer adapter: pinned model-role request preview, native CLI invocation, raw event capture and reviewer output validation. Codex pre-action guardrails remain explicitly uncovered; live qualification and write-capable delivery are not claimed.",
+        "The test tripwire now detects multiline block-commented assertions using the existing jq dependency instead of platform-dependent multiline grep behavior; live assertions after a closed comment remain allowed."
+      ],
+      "action_required": [
+        "Replace the standalone questionnaire with the current generated version. If an earlier import erased answers, re-import the original role exports; lost content cannot be reconstructed automatically.",
+        "Correct missing Answered by roles on legacy answers before exporting. Do not infer who supplied them from the currently selected role.",
+        "Update calls to loom activate to include the repository. CI consistency checks remain available through platform-activation-check.mjs; do not treat an empty consistency check as activation.",
+        "Run loom configure after upgrading; use --run to execute available input checks and --all to inspect supplied inputs. Older installations without core/configuration-tasks.json report an assessment gap. Input presence is not approval or production readiness.",
+        "Export intake backups before replacing or moving the questionnaire. Use Recover previous questionnaire answers for the legacy browser slot; it remains intact. Session resume depends on the same browser storage and question bank.",
+        "Choose authoring (--with brainkit) or consuming (loom brainkit) before installing drafts. Consumers resolve institutional owners, review the exact snapshot, project identity, compile affected plans and acknowledge the release through the existing governance process.",
+        "Migrate customised SPEC_PATHS, FEATURE and verification commands into .loom/project.json; review preserved script replacements before using them. Update CODEOWNERS and the HG-0007 catalog path scope for .loom/project.json. Existing reference CI requires explicit migration before switching modes; see project-configuration.md.",
+        "Before the Codex pilot, review runtime-contract.md, configure AGENTS.md and the reviewer/model role, and complete independent model and runtime qualification. Preview by default; --run uses existing CLI authentication and records local untrusted output, never human approval.",
+        "If .claude/hooks/test-tripwire.sh was customized, review its .loom-new proposal and merge the portable multiline assertion check; the installer preserves your edits."
+      ]
     }
   ]
 }

@@ -666,20 +666,30 @@ h2:hover .h-anchor,.h-anchor:focus-visible{opacity:.7}
     <h2>The Loom ships as a <em>plugin.</em></h2>
     <p class="lede">The method canon, the gate validator, the branded renderer, the artifact
     templates, the build-loop skills, the reviewer agents, and the guardrail hooks — packaged for
-    Claude Code, adopted into a repository in one guided pass.</p>
+    Claude Code. Begin with institutional preparation or a team repository, then follow the setup checklist.</p>
     <div class="codeblock">
 <span class="c">// in Claude Code</span><br>
 /plugin marketplace add middleleap/ai-dlc<br>
 /plugin install middleleap-loom@middleleap-ai-dlc<br>
 <br>
-<span class="c">// then, in the repository that adopts the method</span><br>
+<span class="c">// prepare institutional inputs and sources</span><br>
+/middleleap-loom:institution-intake<br>
+<br>
+<span class="c">// prepare a team repository</span><br>
 /middleleap-loom:loom-adopt
     </div>
-    <p class="caption">Installing adds two skills and two reviewer agents — nothing always-on.
+    <p class="caption">Installing adds four skills and five agents — nothing always-on.
     The hooks and the build loop activate only when a repository adopts them explicitly. The
     machinery is verified in CI by a full adoption dry-run: the bundled test suites must pass in
     the adopted layout on every push.</p>
+    <p>After adoption, run <code>node scripts/loom.mjs configure</code> for pending inputs,
+    accountable roles and validation commands. Use <code>--run</code> to execute available checks.
+    Supplied inputs and passing checks do not establish institutional approval or production readiness.</p>
+    <p>Claude Code is the reference runtime. The method does not require a particular model;
+    other runtimes need tested adapters before equivalent runtime enforcement can be claimed.</p>
     <div class="btnrow" style="margin-top:24px">
+      <a class="btn btn-primary" href="../plugins/middleleap-loom/skills/loom-adopt/harness/intake/questionnaire.html">Start or resume an intake</a>
+      <a class="btn btn-secondary" href="../plugins/middleleap-loom/skills/loom/assets/loom-atlas.html">Explore the Loom Atlas</a>
       <a class="btn btn-primary" href="https://github.com/middleleap/ai-dlc"><span class="m" aria-hidden="true"></span>Browse the marketplace</a>
       <a class="btn btn-secondary" href="https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-loom">Plugin documentation</a>
     </div>

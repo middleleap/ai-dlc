@@ -6,7 +6,8 @@
     "claude-code",
     "github-actions",
     "local-git",
-    "production-agents"
+    "production-agents",
+    "codex"
   ],
   "events": [
     "before-file-write",
@@ -42,6 +43,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "pii-guard is a build-time PreToolUse hook and does not execute in the serving path; a deployed agent that emits a real Emirates ID or IBAN to a customer is stopped by nothing in this bundle. Adopter-side: an output filter / PII screen at the model gateway, whose denials the platform logs"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -67,6 +72,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "build-time only; a serving agent edits no test file, so there is nothing here to block. What is genuinely uncovered is the join: nothing proves the deployed agent was built by the pipeline whose tests ran. Adopter-side: signed-image provenance checked at the deploy gate"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -93,6 +102,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "spec-tripwire is a build-time PreToolUse hook and does not execute in the serving path; a deployed agent calling outside the frozen contract, or a tool schema that drifted from it, is unstopped here. Adopter-side: a tool-use allowlist at the model gateway pinned to the approved contract"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -117,6 +130,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "control-plane-check runs on a pull request and does not execute in the serving path; a serving identity that can reach the repo or the deploy pipeline routes around it entirely. Adopter-side: least-privilege serving credentials plus an egress allowlist at the model gateway, so the request-time identity cannot reach the control plane at all"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -141,6 +158,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "brainkit-check reads the repo tree in CI and does not execute in the serving path; an agent that retrieves institution/ content into a prompt can restate it wrongly at request time and nothing here reads what it said. Adopter-side: retrieval from a read-only store plus a terminology/output screen at the model gateway"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -166,6 +187,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "the same gap one runtime further out: nothing in the bundle constrains what a deployed agent calls at request time. Adopter-side: an egress allowlist at the model gateway (or a sidecar policy-enforcement point) whose denials are recorded by the platform, never by the agent being constrained — see adapters/providers/runtime-guardrails/"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -192,6 +217,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "fail-closed is a property of the shipped hooks and CI gates and says nothing about a serving-path filter. Adopter-side: a gateway that DENIES when its policy engine is unreachable — an output filter that fails open is exactly the defect this row exists to name"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -219,6 +248,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "both mechanisms are build-time and read files in the repository; neither executes in the serving path. An agent that GENERATES customer copy at request time — a chat answer describing an Islamic product's return as interest — is stopped by nothing in this bundle, and that is the likeliest place this defect now reaches a customer. Adopter-side: a terminology screen at the model gateway, whose denials the platform logs (see adapters/providers/runtime-guardrails/). The harness reads JSON records; it never watches production, so this cell cannot become enforced on the harness's own evidence"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     },
@@ -245,6 +278,10 @@
         "production-agents": {
           "state": "uncovered",
           "note": "no mechanism ships. Adopter-side: a serving-path enforcement point that refuses to finalise a customer-affecting action without the human step the compiled plan required, and records the refusal in a log the PLATFORM asserts — an agent that writes its own 'I was not permitted to do that' record is the defect, not the control"
+        },
+        "codex": {
+          "state": "uncovered",
+          "note": "The bounded Codex adapter supports read-only reviewer invocation and output capture. No Loom pre-action hook or serving-path enforcement has been qualified for Codex. Independently configured CI remains a separate backstop."
         }
       }
     }
