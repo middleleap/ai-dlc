@@ -67,7 +67,7 @@ import process from 'node:process';
 import { compile, loadProfiles, resolveBindings, planHash } from '../core/policy-compiler.mjs';
 import { TERMINAL_STATES } from '../core/compiled-requirements.mjs';
 import { collectPatterns, evaluateClaim } from '../core/change-patterns.mjs';
-import { loadRegistry, identityOf } from './identity-registry-check.mjs';
+import { loadRegistry, identityOf, resolveAcceptor } from './identity-registry-check.mjs';
 import { evaluate as evaluateReadiness, SERVICES_DIR } from './operational-readiness-check.mjs';
 import { loadIssuers, verifyAnchorAttestation } from '../core/attestations.mjs';
 import { pathToFileURL } from 'node:url';
@@ -82,9 +82,9 @@ export const STATES = ['classified', 'permission-to-develop', 'in-delivery', 'de
 // uat-accepted onward the receipt below is owed, so the skip changes nothing about what must exist.
 export const UAT_STATE = 'uat-accepted';
 export const UAT_SIGNOFF_FILE = 'uat-signoff.json';
-// The roles that may accept on the business's behalf. Neither is a builder role by construction,
-// and the check below refuses a builders-group holder regardless.
-export const UAT_ROLES = ['product-owner', 'business-owner'];
+// The roles that may accept on the business's behalf live in the identity registry gate
+// (ACCEPTOR_ROLES) since 2.1.0 row 2.1; re-exported here for the envelope's callers.
+export { ACCEPTOR_ROLES as UAT_ROLES } from './identity-registry-check.mjs';
 // 2.1.0 (hardening plan 4.5) — the ceiling on a post-implementation review date, days after the
 // change went live. The same reasoning as the emergency retrospective: a review date far enough
 // out is a review that never happens, spelled as a date.
@@ -286,15 +286,9 @@ export function checkUatSignoff(envelope, uat, { registry = null, releaseSubject
   if (isStr(uat.release_commit) && !COMMIT_SHA.test(uat.release_commit)) {
     findings.push(`${label} — release_commit ${JSON.stringify(uat.release_commit)} is not a 40-hex commit sha; acceptance binds to the exact commit the business exercised, never a branch or a tag`);
   }
-  if (registry && isStr(uat.by)) {
-    const who = identityOf(registry, uat.by);
-    if (!who) findings.push(`${label} — by ${JSON.stringify(uat.by)} is not in the identity registry`);
-    else {
-      if (who.kind === 'agent') findings.push(`${label} — by ${uat.by} is an AGENT; agents prepare evidence, they never accept`);
-      if ((who.groups || []).includes('builders')) findings.push(`${label} — by ${uat.by} is in the builders group; the business accepts the work, the builders do not accept their own`);
-      if (!(who.roles || []).some((r) => UAT_ROLES.includes(r))) findings.push(`${label} — by ${uat.by} holds none of the business roles (${UAT_ROLES.join(', ')})`);
-    }
-  }
+  // 2.1.0 (row 2.1) — the acceptor resolves through the registry's own rule (human, outside
+  // builders, a business role), so acceptance and approval share one definition of "who may".
+  if (registry && isStr(uat.by)) findings.push(...resolveAcceptor(registry, uat.by, `${label} — by`));
   const released = releaseSubject?.source?.commit;
   if (at(state) >= at('production-authorized') && isStr(released) && isStr(uat.release_commit) && released !== uat.release_commit) {
     findings.push(`${id}: UAT accepted commit ${uat.release_commit.slice(0, 12)}… is not the release subject's commit ${released.slice(0, 12)}… — what the business accepted is not what is being released`);

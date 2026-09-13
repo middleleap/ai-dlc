@@ -4,12 +4,12 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate, isPlaceholder, resolveApprover } from './identity-registry-check.mjs';
+import { ACCEPTOR_ROLES, agentActorFindings, evaluate, isPlaceholder, resolveAcceptor, resolveApprover } from './identity-registry-check.mjs';
 
 const REG = {
   groups: { builders: '', 'second-line': '' },
   identities: [
-    { id: 'agent-1', kind: 'agent', roles: [], groups: ['builders'] },
+    { id: 'agent-1', kind: 'agent', roles: [], groups: ['builders'], model: { provider: 'p', model_id: 'm@2026-01', prompt_version: 'h@1.0.0' }, harness_role: 'delivery-loop', tool_permissions: ['Read', 'Edit'] },
     { id: 'eng-1', kind: 'human', roles: ['engineering'], groups: ['builders'] },
     { id: 'risk-1', kind: 'human', roles: ['risk-second-line'], groups: ['second-line'] },
   ],
@@ -60,7 +60,7 @@ const NOW = Date.parse('2026-07-28T00:00:00Z');
 const DREG = (delegates, extra = {}) => ({
   groups: { builders: '', 'second-line': '', 'platform-admins': '' },
   identities: [
-    { id: 'agent-1', kind: 'agent', roles: [], groups: ['builders'] },
+    { id: 'agent-1', kind: 'agent', roles: [], groups: ['builders'], runs_model: false },
     { id: 'eng-1', kind: 'human', roles: ['engineering'], groups: ['builders'] },
     { id: 'risk-1', kind: 'human', roles: ['risk-second-line'], groups: ['second-line'], delegates },
     { id: 'risk-2', kind: 'human', roles: ['risk-second-line'], groups: ['second-line'] },
@@ -206,4 +206,50 @@ test('the shipped identities template satisfies its own gate', { skip: !IDENTITI
   assert.equal(auditor.kind, 'human');
   assert.ok(!auditor.external, 'internal Shari\'ah audit may not be outsourced — it cannot be an external identity');
   assert.ok(!('shariah-board' in (template.quorum || {})), 'shariah-board is retired vocabulary');
+});
+
+/* ---- 2.1.0 (hardening plan row 2.1): the agent as an actor ---- */
+
+const AGENT = REG.identities[0];
+const MANIFEST = { models: [{ role: 'delivery-loop', model_id: 'm@2026-01', prompt_version: 'h@1.0.0' }] };
+
+test('ACTOR — an agent declares its model, its harness role and its tool permissions; silence on any is a finding', () => {
+  assert.deepEqual(agentActorFindings(AGENT, { manifest: MANIFEST }), []);
+  const { model: _m, ...noModel } = AGENT;
+  assert.ok(agentActorFindings(noModel).some((f) => /carries no model block/.test(f)));
+  assert.ok(agentActorFindings({ ...AGENT, model: { ...AGENT.model, model_id: 'latest' } }).some((f) => /floating tag, not a pin/.test(f)));
+  assert.ok(agentActorFindings({ ...AGENT, model: { provider: 'p' } }).some((f) => /model.model_id is missing/.test(f)));
+  const { harness_role: _r, ...noRole } = AGENT;
+  assert.ok(agentActorFindings(noRole).some((f) => /no harness_role/.test(f)));
+  const { tool_permissions: _t, ...noTools } = AGENT;
+  assert.ok(agentActorFindings(noTools).some((f) => /tool_permissions must be an array/.test(f)));
+  assert.deepEqual(agentActorFindings({ ...AGENT, tool_permissions: [] }, { manifest: MANIFEST }), [], 'an empty array means none, and is a declaration');
+  assert.deepEqual(agentActorFindings({ id: 'h', kind: 'human', roles: ['engineering'] }), [], 'humans carry no actor block');
+});
+
+test('ACTOR — a service identity says runs_model: false, and then carries no model', () => {
+  assert.deepEqual(agentActorFindings({ id: 'svc', kind: 'agent', runs_model: false }), []);
+  assert.ok(agentActorFindings({ id: 'svc', kind: 'agent', runs_model: false, model: AGENT.model }).some((f) => /one or the other/.test(f)));
+  assert.ok(agentActorFindings({ id: 'svc', kind: 'agent', runs_model: 'no' }).some((f) => /runs_model must be true or false/.test(f)));
+});
+
+test('ACTOR — the pins are cross-checked against the model manifest; no manifest is NOT VERIFIED, never a pass by silence', () => {
+  assert.ok(agentActorFindings(AGENT, { manifest: { models: [] } }).some((f) => /not a role in the model manifest/.test(f)));
+  assert.ok(agentActorFindings(AGENT, { manifest: { models: [{ role: 'delivery-loop', model_id: 'other@1', prompt_version: 'h@1.0.0' }] } }).some((f) => /the registry and the inventory disagree/.test(f)));
+  assert.ok(agentActorFindings(AGENT, { manifest: { models: [{ role: 'delivery-loop', model_id: 'm@2026-01', prompt_version: 'h@9' }] } }).some((f) => /prompt_version .* is not the manifest's pin/.test(f)));
+  const notices = [];
+  assert.deepEqual(agentActorFindings(AGENT, { manifest: null, notices }), []);
+  assert.ok(notices.some((n) => /NOT VERIFIED against the model manifest/.test(n)));
+  assert.deepEqual(evaluate(REG, { manifest: MANIFEST }), []);
+});
+
+test('ACCEPTOR — a human outside builders holding a business role; agents, builders and role-less humans cannot accept', () => {
+  const reg = { ...REG, identities: [...REG.identities, { id: 'po-1', kind: 'human', roles: ['product-owner'], groups: [] }] };
+  assert.deepEqual(ACCEPTOR_ROLES, ['product-owner', 'business-owner']);
+  assert.deepEqual(resolveAcceptor(reg, 'po-1', 'uat'), []);
+  assert.ok(resolveAcceptor(reg, 'agent-1', 'uat').some((f) => /is an AGENT/.test(f)));
+  assert.ok(resolveAcceptor(reg, 'eng-1', 'uat').some((f) => /in the builders group/.test(f)));
+  assert.ok(resolveAcceptor(reg, 'risk-1', 'uat').some((f) => /holds none of the business roles/.test(f)));
+  assert.ok(resolveAcceptor(reg, 'ghost', 'uat').some((f) => /not in the identity registry/.test(f)));
+  assert.ok(resolveAcceptor(reg, '', 'uat').some((f) => /no identity given/.test(f)));
 });

@@ -1,6 +1,7 @@
 # The Kosli seam — where the Loom stops and the record begins
 
-> Appendix. The decisions here are settled; the machinery (`core/kosli-*.mjs`,
+> Appendix. **Decisions K1–K8 and hardening-plan rows 0.6–0.10 were ratified on 13 September
+> 2026.** The decisions here are settled; the machinery (`core/kosli-*.mjs`,
 > `scripts/kosli-*.mjs`, `docs/governance/kosli.json`) lands with hardening-plan phase 2, after
 > the seven questions in §5 are answered. Until it lands, every sentence below that says
 > "posts" or "reads" describes a contract, not shipped code, and `bank-grade-gap.md` grades the
@@ -60,6 +61,28 @@ carries the verdict, the confidence and the evidence refs, not a paraphrase.
 - The **decision log**: the agent's reasoning, replayable. Kosli holds the outcome.
 - The **discovery run**: the left diamond's artifacts stay in `discovery/runs/`; the trail
   carries the run's slug and its gate verdicts.
+
+## 4b. What is already built ahead of the call (phase 2 prep)
+
+Four pieces of the seam never touch the Kosli CLI, so they exist before the seven questions
+are answered:
+
+- **The actor record** (row 2.1): an agent identity in `identities.json` declares its model
+  pins, its harness role and its tool permissions; the registry gate cross-checks the pins
+  against the model manifest, and a service identity that runs no model says so. An acceptor
+  resolves through the same registry rule as an approver.
+- **The risk-class record** (row 2.8): `core/risk-class-attestation.mjs` builds, signs and
+  verifies the compiler's decision as it leaves the tree — tier, plan hash, profile inputs,
+  flags, classifier. `scripts/risk-class-attest.mjs` writes it beside the envelope.
+- **The two loop attestation types** (row 2.14): `discovery-stopped` from a run's `outcome.md`
+  and `reopened-discovery` from an operations signal routed `discovery`, in
+  `core/loop-attestations.mjs`.
+- **The seam and its double**: `core/kosli-cli.mjs` is the only module that will ever invoke
+  the binary, and `core/kosli-fake.mjs` records every invocation and replays canned answers,
+  so the rest of phase 2 has a CI harness waiting (decision K8).
+
+Each record is signed with the one attestation stack and refused as evidence while unsigned.
+Posting them is `kosli-attest`'s job, and that waits on question 1.
 
 ## 5. Open questions — answered before phase 2 builds
 

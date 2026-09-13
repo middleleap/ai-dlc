@@ -55,6 +55,7 @@ diamond's job, and crossing the line is a gate failure (D4 — No-solutioning bo
 | 5 | **Define** | *make tangible* | **Prototype** — a disposable low-fidelity wireframe that visualises how the solution *could* look, to test the framing before committing to delivery. Drafted with `/design`, committed through the renderer (§4) | `prototype.md` + wireframe asset |
 | 5b | **Define** | *validate* | **Stakeholder reaction** — show the prototype to the named roles; record their reaction per framing hypothesis as fresh signals. This *closes* the make-tangible loop (D9) | `stakeholder-reaction.md` |
 | 6 | **Hand-off** | converge | Package the validated problem + prototype as a delivery-ready brief | `handoff.md` |
+| 6′ | **Stop** | — | A run that ends **without** a hand-off records why: who decided (a human), which hypotheses were refuted or left uncertain, what would reopen it. Never coexists with `handoff.md` | `outcome.md` |
 
 The **Prototype** stage (5) is deliberate relative to a textbook Define: it satisfies the
 *visualise & make-it-tangible* guardrail (§3) explicitly, by producing an artifact a

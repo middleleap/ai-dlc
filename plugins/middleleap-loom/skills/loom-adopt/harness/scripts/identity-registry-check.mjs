@@ -41,6 +41,17 @@
 // reconciliation, which is the hole this field would otherwise open. A still-unreplaced `ADOPT:`
 // marker is not a register.
 //
+// THE AGENT AS AN ACTOR (2.1.0 · hardening plan row 2.1; PRD loom-kosli F3). An agent identity is
+// the actor an attestation names, and "agent-loom-delivery" on its own says nothing an examiner can
+// check. So an agent identity declares what it IS: `model { provider, model_id, prompt_version }`
+// (pinned — a floating tag is not an identity), `harness_role` (the model-manifest role it runs as,
+// cross-checked against the manifest's pins when one is mounted), and `tool_permissions[]` (what it
+// may touch; an empty array means none, and the absent key means unbounded, which is a finding). A
+// deterministic service identity that runs no model — the floor projector, freezer, bridge, keeper —
+// says so with `runs_model: false`; silence is not that declaration. And an ACCEPTOR (the business
+// signature a UAT sign-off carries) resolves through `resolveAcceptor`: a human, outside builders,
+// holding a business role — the same shape as an approver, applied to acceptance.
+//
 // Run from the repo root: `node scripts/identity-registry-check.mjs`.
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
@@ -48,6 +59,73 @@ import { pathToFileURL } from 'node:url';
 
 export const REGISTRY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
 export const KINDS = ['human', 'agent'];
+// 2.1.0 (row 2.1) — what an agent identity must declare, and what a floating pin looks like.
+export const AGENT_MODEL_FIELDS = ['provider', 'model_id', 'prompt_version'];
+export const FLOATING = new Set(['', 'latest', 'main', 'head', 'stable', 'edge', '*']);
+// The roles that may ACCEPT on the business's behalf (UAT sign-off, hardening plan 4.1).
+export const ACCEPTOR_ROLES = ['product-owner', 'business-owner'];
+export const MANIFEST_LOCATIONS = ['docs/governance/model-manifest.json', 'model-manifest.json'];
+const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
+
+/** The model manifest, when mounted — the agent identities' pins are cross-checked against it. */
+export function loadModelManifest(cwd = process.cwd()) {
+  const path = MANIFEST_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
+  if (!path) return null;
+  try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
+}
+
+/**
+ * 2.1.0 (row 2.1) — findings for ONE agent identity's actor declaration. `manifest` null ⇒ the pins
+ * are reported NOT VERIFIED rather than assumed to match.
+ */
+export function agentActorFindings(i, { manifest = null, notices = null } = {}) {
+  const f = [];
+  if (i?.kind !== 'agent') return f;
+  if (i.runs_model === false) {
+    if (i.model !== undefined) f.push(`${i.id}: declares runs_model: false and carries a model block — one or the other`);
+    return f;
+  }
+  if (i.runs_model !== undefined && i.runs_model !== true) f.push(`${i.id}: runs_model must be true or false (got ${JSON.stringify(i.runs_model)})`);
+  const m = i.model;
+  if (!m || typeof m !== 'object' || Array.isArray(m)) {
+    f.push(`${i.id}: an agent identity carries no model block { ${AGENT_MODEL_FIELDS.join(', ')} } — an agent that runs a model IS a model (HG-0006), and one that runs none says runs_model: false`);
+  } else {
+    for (const k of AGENT_MODEL_FIELDS) {
+      if (!nonEmpty(m[k])) f.push(`${i.id}: model.${k} is missing`);
+      else if (k !== 'provider' && FLOATING.has(m[k].trim().toLowerCase())) f.push(`${i.id}: model.${k} ${JSON.stringify(m[k])} is a floating tag, not a pin — an actor whose model can move under it is not an identity`);
+    }
+  }
+  if (!nonEmpty(i.harness_role)) f.push(`${i.id}: no harness_role — say which model-manifest role this agent runs as`);
+  if (!Array.isArray(i.tool_permissions)) f.push(`${i.id}: tool_permissions must be an array (empty means none) — an agent whose tools are undeclared is unbounded`);
+  else for (const t of i.tool_permissions) if (!nonEmpty(t)) f.push(`${i.id}: tool_permissions carries a non-string entry`);
+  if (m && typeof m === 'object' && nonEmpty(i.harness_role)) {
+    if (!manifest) notices?.push(`${i.id}: model pins NOT VERIFIED against the model manifest — none mounted here`);
+    else {
+      const role = (manifest.models || []).find((r) => r?.role === i.harness_role);
+      if (!role) f.push(`${i.id}: harness_role ${JSON.stringify(i.harness_role)} is not a role in the model manifest — an actor running as an uninventoried role`);
+      else {
+        if (nonEmpty(m.model_id) && role.model_id !== m.model_id) f.push(`${i.id}: model.model_id ${m.model_id} is not the manifest's pin for ${i.harness_role} (${role.model_id}) — the registry and the inventory disagree about what this agent runs`);
+        if (nonEmpty(m.prompt_version) && role.prompt_version !== m.prompt_version) f.push(`${i.id}: model.prompt_version ${m.prompt_version} is not the manifest's pin for ${i.harness_role} (${role.prompt_version})`);
+      }
+    }
+  }
+  return f;
+}
+
+/**
+ * 2.1.0 — an ACCEPTOR resolves like an approver: a registered HUMAN, outside the builders group,
+ * holding a business role. Findings ([] ⇒ this identity may accept on the business's behalf).
+ */
+export function resolveAcceptor(registry, id, label) {
+  if (!nonEmpty(id)) return [`${label}: no identity given — an acceptance names who accepted`];
+  const who = identityOf(registry, id);
+  if (!who) return [`${label}: identity ${JSON.stringify(id)} is not in the identity registry`];
+  const f = [];
+  if (who.kind === 'agent') f.push(`${label}: ${id} is an AGENT — agents prepare evidence, they never accept`);
+  if ((who.groups || []).includes('builders')) f.push(`${label}: ${id} is in the builders group — the business accepts the work, the builders do not accept their own`);
+  if (!(who.roles || []).some((r) => ACCEPTOR_ROLES.includes(r))) f.push(`${label}: ${id} holds none of the business roles (${ACCEPTOR_ROLES.join(', ')})`);
+  return f;
+}
 export const DELEGATION_FIELDS = ['to', 'from', 'until', 'granted_by'];
 
 /** An unreplaced adoption marker. A template value is not a register, a name, or a reference. */
@@ -126,7 +204,7 @@ export function resolveApprover(registry, id, role, label, opts = {}) {
  * `notices` (optional) collects lapsed delegations — inert, so not a failure, but a delegation
  * nobody removed is a grant nobody is tracking, and silence about it is how one comes back to life.
  */
-export function evaluate(registry, { notices = null, now = Date.now() } = {}) {
+export function evaluate(registry, { notices = null, now = Date.now(), manifest = null } = {}) {
   const findings = [];
   const ids = new Set();
   const identities = registry?.identities;
@@ -143,6 +221,7 @@ export function evaluate(registry, { notices = null, now = Date.now() } = {}) {
     if (i.kind === 'agent' && (i.roles || []).length > 0) {
       findings.push(`${i.id}: an agent identity holds approver roles (${i.roles.join(', ')}) — agents build, they never approve`);
     }
+    findings.push(...agentActorFindings(i, { manifest, notices }));
     const groups = new Set(i.groups || []);
     if (groups.has('second-line') && groups.has('builders')) {
       findings.push(`${i.id}: is in BOTH builders and second-line — independence requires disjoint membership`);
@@ -271,7 +350,7 @@ export function evaluateQuorum(registry) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const registry = loadRegistry();
   const notices = [];
-  const findings = registry ? evaluate(registry, { notices })
+  const findings = registry ? evaluate(registry, { notices, manifest: loadModelManifest() })
     : [`no identity registry found (looked in ${REGISTRY_LOCATIONS.join(', ')}) — approvals cannot resolve`];
   for (const n of notices) process.stdout.write(`NOTICE: ${n}\n`);
   if (findings.length) {
