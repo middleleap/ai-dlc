@@ -1,0 +1,36 @@
+{
+  "schema": "loom.activation-plan/v1",
+  "status": "activating",
+  "activation_id": "ACT-SYNTHETIC-2026-01",
+  "target": {
+    "institution": "Meridian Trust (synthetic)",
+    "repository": "example/credit-origination",
+    "default_branch": "main",
+    "production_environment": "bounded-pilot",
+    "reference_change_id": "CHG-2026-0042"
+  },
+  "owners": {
+    "accountable_executive": "exec-rashid",
+    "platform_admin": "padmin-zoe",
+    "second_line": "risk-lena",
+    "internal_audit": "audit-nadia"
+  },
+  "required_platform_controls": ["HG-0001", "HG-0004", "HG-0005", "HG-0011"],
+  "external_record": {
+    "role": "external-record",
+    "provider": "kosli",
+    "adapter_id": "kosli-external-record",
+    "integration_run_ref": "SYNTHETIC: replace with the bank integration run",
+    "tamper_probe_ref": "SYNTHETIC: replace with the rejected probe",
+    "audit_access_ref": "SYNTHETIC: replace with the read-only audit grant",
+    "retention_assessment_ref": "SYNTHETIC: replace with the approved retention assessment"
+  },
+  "consumer_ai_pilot": true,
+  "governed_records": {
+    "operating_model": "docs/governance/operating-model.json",
+    "ai_governance": "docs/governance/ai-governance.json",
+    "fairness": "docs/governance/fairness-evaluations.json",
+    "contestability": "docs/governance/decision-contestability.json",
+    "pilot": "docs/governance/pilot-record.json"
+  }
+}

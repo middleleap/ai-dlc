@@ -2,7 +2,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
-import { evaluate, activationHash, checkGraduation } from './platform-activation-check.mjs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { evaluate, activationHash, checkGraduation, run } from './platform-activation-check.mjs';
 
 const { publicKey, privateKey } = generateKeyPairSync('ed25519');
 const ISSUERS = { issuers: [{ id: 'obs', mechanism: 'ed25519', verify: { public_key: publicKey.export({ type: 'spki', format: 'pem' }).toString() } }] };
@@ -44,6 +47,10 @@ test('an unresolved observer identity fails', () => {
   assert.ok(ev(record({ observer_identity: 'ghost' })).some((f) => /does not resolve/.test(f)));
 });
 
+test('a missing identity registry fails closed — observer independence is not optional', () => {
+  assert.ok(evaluate(record(), { issuers: ISSUERS, registry: null, now: NOW }).some((f) => /no readable identity registry/.test(f)));
+});
+
 test('a bypass test that was NOT rejected fails — the platform did not refuse', () => {
   const r = record({ bypass_test: { attempted: 'direct push', result: 'allowed', tested_at: iso(1) } });
   assert.ok(ev(r).some((f) => /did not refuse the bypass/.test(f)));
@@ -81,6 +88,15 @@ test('an unknown mechanism fails', () => {
   assert.ok(ev(record({ mechanism: 'vibes' })).some((f) => /mechanism must be one of/.test(f)));
 });
 
+test('an empty observation fails — a signed empty object is not platform evidence', () => {
+  assert.ok(ev(record({ observation: {} })).some((f) => /no non-empty observation object/.test(f)));
+});
+
+test('a valid mechanism cannot be used to activate an unrelated baseline control', () => {
+  assert.ok(ev(record({ satisfies_control: 'HG-0005', mechanism: 'branch_protection' }))
+    .some((f) => /cannot activate this control/.test(f)));
+});
+
 // Graduation cross-check (WS2.2).
 test('a catalog control claiming platform-enforced with NO verified record fails graduation', () => {
   const catalog = { controls: [{ control_id: 'HG-0001', state: 'platform-enforced' }] };
@@ -95,4 +111,19 @@ test('a platform-enforced control WITH a verified record passes graduation', () 
 test('mechanically-validated controls need no activation record', () => {
   const catalog = { controls: [{ control_id: 'X', state: 'mechanically-validated' }] };
   assert.deepEqual(checkGraduation(catalog, new Set()), []);
+});
+
+test('run reports malformed records and returns only independently verified control ids', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'platform-activation-'));
+  try {
+    mkdirSync(join(dir, 'docs/governance/platform-activation'), { recursive: true });
+    writeFileSync(join(dir, 'docs/governance/platform-activation/good.json'), JSON.stringify(record({ observed_at: new Date().toISOString(), bypass_test: { attempted: 'direct push', result: 'rejected', tested_at: new Date().toISOString() } })));
+    writeFileSync(join(dir, 'docs/governance/platform-activation/broken.json'), '{');
+    mkdirSync(join(dir, 'docs/governance'), { recursive: true });
+    writeFileSync(join(dir, 'docs/governance/identities.json'), JSON.stringify(REGISTRY));
+    writeFileSync(join(dir, 'docs/governance/attestation-issuers.json'), JSON.stringify(ISSUERS));
+    const result = run(dir);
+    assert.deepEqual(result.verifiedControls, ['HG-0001']);
+    assert.ok(result.findings.some((f) => /broken.json.*not valid JSON/.test(f)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

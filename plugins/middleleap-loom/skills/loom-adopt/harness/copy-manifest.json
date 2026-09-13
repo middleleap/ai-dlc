@@ -424,6 +424,14 @@
       "tier": "governed"
     },
     {
+      "source": "governance/activation-plan.template.json",
+      "dest": "docs/governance/activation-plan.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The adopter activation campaign: four independent owners, one reference AI change, verified platform bypass observations, an active external-record provider (Kosli is the worked option), governed AI joins and a pilot state that cannot outrun its evidence. activating is a non-blocking work list; ready-for-pilot and later states fail closed. The gate coordinates records and observes no live system itself",
+      "tier": "full"
+    },
+    {
       "source": "governance/decision-contestability.template.json",
       "dest": "docs/governance/decision-contestability.json",
       "kind": "file",

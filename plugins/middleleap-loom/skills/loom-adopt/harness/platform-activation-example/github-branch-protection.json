@@ -1,5 +1,5 @@
 {
-  "_comment": "REFERENCE SHAPE (rc.12 · WS2) — a platform-activation observation. attestation.signature is an ADOPT placeholder; a real record is produced by `loom activate --platform github` querying the live platform and signed by your observer's registered ed25519 key (an identity OUTSIDE the coding agent's write authority). observed_at / tested_at must be fresh. See README.md.",
+  "_comment": "REFERENCE SHAPE (rc.12 · WS2) — a platform-activation observation. attestation.signature is an ADOPT placeholder; a real record is produced by your institution's independent live-platform observer, signed by its registered ed25519 key, then verified with `loom activate --platform github`. observed_at / tested_at must be fresh. See README.md.",
   "platform": "github",
   "repository": "your-org/your-service",
   "satisfies_control": "HG-0001",

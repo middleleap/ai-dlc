@@ -23,6 +23,9 @@ disclosure, monitoring and stress evidence to the exact model role and pin that 
 `skills/loom/references/uae-ai-governance.md`. High-tier regulated-bank changes also compile a
 structural operating-model record covering executive accountability, oversight, change control,
 RACI, IAM joins and independent re-performance through Kosli or another external-record provider.
+The Adopter Activation Pack then joins those records to independently signed platform bypass
+observations, a fully activated external-record adapter and the supervised-pilot state machine;
+an unsigned activation file no longer advances the adoption status projection.
 
 ## What's in it
 

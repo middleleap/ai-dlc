@@ -9,8 +9,8 @@
 //                                  base (rc.34) — same runner, same catalog, same recorded skips
 //   loom compile <envelope-path>   the policy compiler, forwarded (rc.34)
 //   loom seal                      derive + verify the evidence manifest (rc.35, seal-evidence.mjs)
-//   loom activate --platform …     observe the live platform → platform-activated (WS2)
-//   loom attest-adoption           sign the adoption report (fails while anything is adopt-pending)
+//   loom activate --platform …     verify signed live-platform observations (WS2)
+//   loom attest-adoption           verify the signed adoption report (fails while adopt-pending)
 //   loom status                    the five-stage matrix + unresolved inventory (machine or human)
 //
 // Run from the adopted repo root: `node scripts/loom.mjs <command> [args]`.
@@ -112,7 +112,7 @@ export const COMMANDS = {
   // verified by the seal gate's own evaluate() before anything is written. Never hand-chain.
   seal: (args) => node('seal-evidence.mjs', args),
   activate: (args) => {
-    process.stdout.write('Activation — observe the live platform and record signed evidence, then verify it:\n');
+    process.stdout.write('Activation — verify institution-produced signed live-platform observations:\n');
     return node('platform-activation-check.mjs', args.filter((a) => a !== '--platform' && !a.startsWith('github')));
   },
 };

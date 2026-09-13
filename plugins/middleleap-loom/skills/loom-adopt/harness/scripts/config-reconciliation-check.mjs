@@ -13,9 +13,10 @@
 // Drift detected → the gate fails AND requires the routine envelope to be `suspended` (belt and
 // braces: the controller gates on this gate; the envelope flag lets a human suspend directly).
 //
-// Honesty (rc.2 invariant): the CURRENT observation is produced adopter-side by `loom activate`
-// (live platform read). This gate reconciles the records; the freshness/authenticity of the
-// observation is platform-activation-check's. A public bundle cannot watch a bank's org live.
+// Honesty (rc.2 invariant): the CURRENT observation is produced by the adopter's independently
+// controlled live-platform read, then verified by `loom activate`. This gate reconciles the
+// records; the freshness/authenticity of the observation is platform-activation-check's. A public
+// bundle cannot watch a bank's org live.
 //
 // Run from the repo root: `node scripts/config-reconciliation-check.mjs` (exit 1 on any finding).
 import { existsSync, readFileSync, readdirSync } from 'node:fs';

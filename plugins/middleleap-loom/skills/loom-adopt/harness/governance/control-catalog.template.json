@@ -713,7 +713,32 @@
         "docs/governance/platform-activation/",
         "docs/governance/control-catalog.json"
       ],
-      "note": "The gate VERIFIES observations (mechanically-validated): the observation is signed, independent, bypass-tested and fresh. Producing the observation — `loom activate --platform github` querying the live platform with read-only credentials — is the adopter's; the bundle ships ZERO platform-enforced controls, so graduation passes trivially here and the negative test proves an overstated claim fails"
+      "note": "The gate VERIFIES observations (mechanically-validated): the observation is signed, independent, bypass-tested and fresh. Producing and signing the observation through an institution-controlled, read-only live-platform workflow is the adopter's; `loom activate` verifies the resulting record. The bundle ships ZERO platform-enforced controls, so graduation passes trivially here and the negative test proves an overstated claim fails"
+    },
+    {
+      "control_id": "ACTIVATION-READINESS",
+      "objective": "A bank adoption cannot claim readiness for a supervised AI pilot until one reference change joins four independent owners, the platform baseline's verified bypass observations, an active external-record provider, the operating model, AI governance, fairness, contestability and the pilot state machine",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/activation-readiness-check.mjs",
+      "test_ref": "scripts/activation-readiness-check.test.mjs",
+      "doc_ref": "docs/governance/runbooks/adopter-activation-pack.md",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/activation-plan.json",
+        "docs/governance/platform-activation/",
+        "docs/governance/provider-selection.json",
+        "docs/governance/adapters/",
+        "docs/governance/operating-model.json",
+        "docs/governance/ai-governance.json",
+        "docs/governance/fairness-evaluations.json",
+        "docs/governance/decision-contestability.json",
+        "docs/governance/pilot-record.json",
+        "docs/governance/identities.json"
+      ],
+      "adopter_side": true,
+      "note": "The gate coordinates existing evidence and adds no substitute ledger. activating is a non-blocking work list; ready-for-pilot and later states fail closed. Platform status is derived only from fresh, independently signed observations whose bypass tests were rejected. The external-record join requires the selected adapter to have every activation field completed and explicitly carries its integration, tamper, audit-access and retention assessments. A green result still observes no platform, customer, transaction, appointment or audit itself."
     },
     {
       "control_id": "CONFIG-RECONCILIATION",
@@ -729,7 +754,7 @@
         "docs/governance/platform-activation/",
         "docs/governance/identities.json"
       ],
-      "note": "The gate reconciles records (mechanically-validated): baseline vs observed vs registry. The CURRENT observation is produced adopter-side by `loom activate` (live platform read). On drift, the routine-change gate fails closed via routine-envelope.suspended, and the WS2.3 controller — gating auto-merge on this gate — does not merge"
+      "note": "The gate reconciles records (mechanically-validated): baseline vs observed vs registry. The CURRENT observation is produced and signed by the adopter's independent live-platform workflow, then verified by `loom activate`. On drift, the routine-change gate fails closed via routine-envelope.suspended, and the WS2.3 controller — gating auto-merge on this gate — does not merge"
     },
     {
       "control_id": "ROUTINE-CONTROLLER",
@@ -908,7 +933,7 @@
       "lane": "pr",
       "execute": false,
       "execute_note": "adopter tool (loom status / attest-adoption), run on demand — not a per-PR merge gate (a reference repo is intentionally adopt-pending). The gate ships mechanically-validated; producing the signed report is the adopter's",
-      "note": "loom status projects the stage matrix + the unresolved-marker inventory; attest-adoption refuses to sign while adopt-pending (closes F7). The signature is adopter-side"
+      "note": "loom status projects the stage matrix + the unresolved-marker inventory; attest-adoption refuses to accept a signed report while adopt-pending (closes F7). Report creation and signature are adopter-side"
     },
     {
       "control_id": "BRAINKIT-REGISTRY",

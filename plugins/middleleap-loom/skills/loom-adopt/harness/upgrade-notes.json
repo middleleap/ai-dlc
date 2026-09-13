@@ -59,7 +59,7 @@
         "Live control-plane config is reconciled against an approved baseline; drift suspends routine auto-merge."
       ],
       "action_required": [
-        "Fill docs/governance/config-baseline.json with your approved control-plane configuration, and produce the live observation with `loom activate`.",
+        "Fill docs/governance/config-baseline.json with your approved control-plane configuration; have an independent institution observer produce and sign the live-platform record, then verify it with `loom activate`.",
         "docs/governance/routine-controller.yml is a reference auto-merge controller — it needs a bot identity separated from the coding agent before it means anything."
       ]
     },
@@ -560,6 +560,21 @@
         "Select and mount an external-record provider for high-tier bank changes. Kosli remains the first reference provider, not a dependency; a bank WORM store or transparency log may satisfy the same contract. Do not claim WORM retention until the selected platform has been observed and re-performed.",
         "Validate your model-role inventory and automatic applicability with Legal, Compliance and Model Risk. Broaden the shipped rule where your institution treats more AI uses as consumer-impacting; do not narrow it while claiming the shipped UAE profile unchanged.",
         "Keep AI-GOVERNANCE mechanically validated until production disclosure, intervention, alternative routes, monitoring and incident handling have been observed, bypass-tested, independently signed and retained in the institution's external record."
+      ]
+    },
+    {
+      "version": "2.4.1",
+      "headline": "2.4.1 — the Adopter Activation Pack turns platform and pilot readiness into a fail-closed joined claim",
+      "notes": [
+        "ACTIVATION-READINESS is a new mechanically validated control. Its plan coordinates one bank AI reference change, four distinct institution owners, the verified platform baseline, an active external-record provider, AI/operating-model assurance and the supervised-pilot state machine.",
+        "Platform and Organisation columns in adoption-status now advance only on cryptographically verified activation and adoption attestations. An unsigned JSON file naming a control no longer produces a green projection.",
+        "Adapter activation is now all-or-nothing: every non-comment activation-evidence field must be completed. One real timestamp beside an ADOPT placeholder remains selected, not active.",
+        "Platform activation fails closed when the identity registry is unavailable and reports malformed observation files rather than silently dropping them."
+      ],
+      "action_required": [
+        "Full-tier adopters receive docs/governance/activation-plan.json. Leave it not-started until a campaign is authorised; use activating as the non-blocking work list, then move to ready-for-pilot only when every joined verifier passes.",
+        "Re-run loom status and inspect any platform-activation or adoption-attestation findings. Remove, replace and re-sign incomplete or previously unsigned records; they no longer advance the projection.",
+        "If an adapter previously appeared active with only one completed activation field, complete its integration, negative/tamper and observer evidence. The stricter shared activation rule will now report it selected, not active."
       ]
     }
   ]

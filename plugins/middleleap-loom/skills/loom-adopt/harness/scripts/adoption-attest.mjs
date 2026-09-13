@@ -1,7 +1,7 @@
-// The adoption-attestation gate (Loom 2.0-rc.14 · WS5). `loom attest-adoption` produces a SIGNED
+// The adoption-attestation gate (Loom 2.0-rc.14 · WS5). `loom attest-adoption` verifies a SIGNED
 // adoption report — the machine-checkable claim "this repository has adopted the Loom to stage N".
-// This gate verifies it, and its central rule closes F7's gap: a signed adoption report cannot be
-// produced while ANY mandatory item is adopt-pending. Installation being automated is not adoption;
+// Its central rule closes F7's gap: a signed adoption report cannot be accepted while ANY mandatory
+// item is adopt-pending. Installation being automated is not adoption;
 // an attestation over a half-configured repo would be a false green.
 //
 //   · the live status (adoption-status.mjs) must have NO adopt-pending mandatory items,
@@ -14,58 +14,24 @@
 // the days left. The block is unmoved. What is removed is the overnight green-to-blocked surprise
 // on a control whose remedy (re-run the adoption status, re-sign) takes a human and a key.
 //
-// Honesty (rc.2 invariant): the bundle ships the verifier; the signature is produced adopter-side by
-// the adopter's key when they run `attest-adoption` on a fully-configured repo.
+// Honesty (rc.2 invariant): the bundle ships the verifier; the report and signature are produced
+// adopter-side with the adopter's key, then checked by `attest-adoption`.
 //
 // Run from the adopted repo root: `node scripts/adoption-attest.mjs`.
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
-import { loadIssuers, verifySignatureOver } from '../core/attestations.mjs';
+import { loadIssuers } from '../core/attestations.mjs';
+import { attestationHash, evaluateAdoptionAttestation, WARN_AT } from '../core/adoption-attestation.mjs';
 import { computeStatus } from './adoption-status.mjs';
 import { pathToFileURL } from 'node:url';
 
 const ATTEST_LOCATIONS = ['docs/governance/adoption-attestation.json', 'adoption-attestation.json'];
 const IDENTITY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
-const DAY = 86_400_000;
-// The fraction of a freshness window at which a NOTICE is printed (never a finding).
-export const WARN_AT = 0.8;
-
-function canonical(v) {
-  if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
-  if (v && typeof v === 'object') return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical(v[k])}`).join(',')}}`;
-  return JSON.stringify(v);
-}
-export function attestationHash(record) {
-  const { attestation, ...rest } = record;
-  return createHash('sha256').update(canonical(rest)).digest('hex');
-}
+export { attestationHash, WARN_AT };
 
 /** Findings ([] ⇒ the adoption is fully configured and authentically attested). */
 export function evaluate(status, attestation, { issuers, registry, now = Date.now(), maxAgeDays = 365, notices = null } = {}) {
-  const findings = [];
-  // The gate's reason for being: no signature over an adopt-pending repo.
-  if (status?.adoptPending) {
-    findings.push(`adoption is not complete — ${status.unresolved.length} item(s) still adopt-pending; a signed adoption report cannot be produced until they are resolved`);
-    for (const f of status.unresolved.slice(0, 10)) findings.push(`  adopt-pending: ${f}`);
-  }
-  if (!attestation) { findings.push('no adoption-attestation.json — run `attest-adoption` on a fully-configured repo to produce one'); return findings; }
-
-  if (!attestation.attested_at || Number.isNaN(Date.parse(attestation.attested_at))) findings.push('attestation has no ISO-8601 attested_at');
-  else {
-    const ageDays = Math.floor((now - Date.parse(attestation.attested_at)) / DAY);
-    if (ageDays > maxAgeDays) findings.push('adoption attestation is stale — re-attest');
-    else if (ageDays >= Math.floor(maxAgeDays * WARN_AT)) {
-      notices?.push(`adoption attestation is ${ageDays}d old of a ${maxAgeDays}d window — ${maxAgeDays - ageDays}d left. Re-run \`adoption-status --run\` and re-attest before it BLOCKS`);
-    }
-  }
-
-  const who = (registry?.identities || []).find((i) => i.id === attestation.attested_by);
-  if (!attestation.attested_by) findings.push('attestation names no attested_by');
-  else if (registry && (!who || who.kind === 'agent')) findings.push(`attested_by ${JSON.stringify(attestation.attested_by)} does not resolve to a human identity — an agent cannot certify its own adoption`);
-
-  findings.push(...verifySignatureOver(attestationHash(attestation), attestation.attestation, issuers, 'adoption attestation'));
-  return findings;
+  return evaluateAdoptionAttestation(status, attestation, { issuers, registry, now, maxAgeDays, notices });
 }
 
 export function run(cwd = process.cwd()) {
