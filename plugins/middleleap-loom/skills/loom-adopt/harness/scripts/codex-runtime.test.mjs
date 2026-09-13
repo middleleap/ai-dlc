@@ -52,6 +52,17 @@ test('runner captures events and interrupted status without automatic resume or 
  for(const [code,signal] of [[0,null],[null,'SIGTERM']]){const {dir,result}=await runCodex(request,{spawnProcess:fakeProcess(events(),code,signal),versionProbe:()=>({status:0,stdout:'codex-cli fixture'})});assert.equal(readFileSync(join(dir,'events.jsonl'),'utf8'),events());assert.equal(result.status,signal?'incomplete-or-invalid':'completed-unverified');assert.equal(JSON.parse(readFileSync(join(dir,'request.json'))).authority,'none');}
  assert.equal(readdirSync(join(cwd,'.loom')).length,2);
 });
+test('a multi-byte character split across stdout chunks reaches the result intact',async t=>{
+ const cwd=fixture(t),request=prepareCodex(cwd,{task:'task.md',role:'hard-stop-reviewer'});
+ const reason='Register absent — الشريعة review not started';
+ const bytes=Buffer.from(events({...output,reason}),'utf8');
+ const cut=bytes.indexOf(Buffer.from('—','utf8'))+1; // one byte into the three-byte em dash
+ const split=(_cmd,_args,opts)=>{assert.equal(opts.shell,false);const child=new EventEmitter();child.stdout=new PassThrough();child.stderr=new PassThrough();child.stdin=new PassThrough();child.kill=()=>{};child.stdin.once('finish',()=>{child.stdout.write(bytes.subarray(0,cut));child.stdout.write(bytes.subarray(cut));child.emit('close',0,null);});return child;};
+ const {dir,result}=await runCodex(request,{spawnProcess:split,versionProbe:()=>({status:0,stdout:'codex-cli fixture'})});
+ assert.equal(result.status,'completed-unverified');
+ assert.equal(result.output.reason,reason);
+ assert.equal(readFileSync(join(dir,'events.jsonl'),'utf8'),bytes.toString('utf8'));
+});
 test('public preview creates no run artifacts and rejects unsupported runtimes or flags',async t=>{
  const cwd=fixture(t),out={write(){}};assert.equal(await runtimeCommand(['codex','--task','task.md','--role','hard-stop-reviewer'],cwd,out),0);assert.ok(!readdirSync(cwd).includes('.loom'));assert.equal(await runtimeCommand(['other'],cwd,out),2);assert.equal(await runtimeCommand(['codex','--sandbox','workspace-write'],cwd,out),2);
 });

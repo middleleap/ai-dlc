@@ -3,10 +3,10 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkProject } from './project-config-check.mjs';
 import { spawnSync } from 'node:child_process';
+import { isRepoRelative as safePath } from '../core/repo-path.mjs';
 const TIERS = ['core', 'governed', 'full'];
 export const REGISTRY = 'core/configuration-tasks.json';
 const marker = /@your-org\/|\bADOPT[:\-]/;
-const safePath = p => typeof p === 'string' && p.length > 0 && !p.startsWith('/') && !p.split(/[\\/]/).includes('..');
 function unresolved(value, path = '') {
   if (typeof value === 'string') return marker.test(value) || (path.endsWith('.status') && value === 'draft');
   if (Array.isArray(value)) return value.some((v, i) => unresolved(v, `${path}.${i}`));

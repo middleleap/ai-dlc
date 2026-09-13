@@ -82,9 +82,18 @@ test('an answer to a question not in the bank is refused', () => {
   assert.ok(checkRecord(rec, SOURCES).findings.some((f) => /not a question in the bank/.test(f)));
 });
 
-test('a respondent that looks like a person\'s name is refused — roles only', () => {
+test('a respondent that looks like a person\'s name is a notice, not a refusal — roles only', () => {
   const rec = goodRecord(); rec.answers[0].respondent_role = 'Mariam Haddad';
-  assert.ok(checkRecord(rec, SOURCES).findings.some((f) => /looks like a person's name/.test(f)));
+  const r = checkRecord(rec, SOURCES);
+  assert.ok(r.notices.some((n) => /looks like a person's name/.test(n)));
+  assert.ok(!r.findings.some((f) => /looks like a person's name/.test(f)));
+});
+
+test('a role the bank itself names is never mistaken for a person\'s name', () => {
+  const titled = SOURCES.bank.blocks.map((b) => b.role.replace(/\b[a-z]/g, (c) => c.toUpperCase())).find((r) => /^[A-Z][a-z]+(?:\s+[A-Z][a-z'’-]+){1,2}$/.test(r));
+  assert.ok(titled, 'a bank role must have name shape once title-cased for this test to mean anything');
+  const rec = goodRecord(); rec.answers[0].respondent_role = titled;
+  assert.ok(!checkRecord(rec, SOURCES).notices.some((n) => /looks like a person's name/.test(n)));
 });
 
 test('an older question bank is a notice, not a failure', () => {

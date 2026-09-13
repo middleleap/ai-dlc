@@ -359,8 +359,9 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-si
   function record(){ return Intake.exportRecord(state,BANK,DIGEST); }
   function validExport(){
     var rec=record(), checked=Intake.validateRecord(rec,BANK,DIGEST);
-    document.getElementById('export-error').textContent=checked.findings.length?'Before exporting: '+checked.findings.join(' '):'';
-    if(checked.findings.length){document.getElementById('export-error').scrollIntoView({block:'center'});return null;}
+    var exportError=document.getElementById('export-error');
+    exportError.textContent=checked.findings.length?'Before exporting: '+checked.findings.join(' '):checked.notices.length?'Check before sending: '+checked.notices.join(' '):'';
+    if(checked.findings.length){exportError.scrollIntoView({block:'center'});return null;}
     return JSON.stringify(rec,null,2);
   }
   function toast(m){ var t=document.getElementById('toast'); t.textContent=m; setTimeout(function(){ t.textContent=''; },3000); }
