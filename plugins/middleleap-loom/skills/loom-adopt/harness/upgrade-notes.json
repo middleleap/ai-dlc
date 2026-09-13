@@ -558,7 +558,10 @@
         "--with brainkit independently adds draft institutional context to core or governed adoption and persists on upgrades. loom brainkit previews and optionally mounts an explicitly pinned publisher snapshot, preserving existing consumer files and approvals.",
         "Project-owned .loom/project.json now supplies contract paths, feature pattern and verification command arrays. loom verify-project executes declared commands without shell expansion. --ci separate adds a Loom workflow without replacing team CI; its mode persists across upgrades.",
         "loom runtime codex adds a bounded read-only reviewer adapter: pinned model-role request preview, native CLI invocation, raw event capture and reviewer output validation. Codex pre-action guardrails remain explicitly uncovered; live qualification and write-capable delivery are not claimed.",
-        "The test tripwire now detects multiline block-commented assertions using the existing jq dependency instead of platform-dependent multiline grep behavior; live assertions after a closed comment remain allowed."
+        "The test tripwire now detects multiline block-commented assertions using the existing jq dependency instead of platform-dependent multiline grep behavior; live assertions after a closed comment remain allowed.",
+        "Separate CI mode rewrites the governance job dependency and required-check guidance; CI validates the rendered workflow with pinned Actionlint.",
+        "Malformed project configuration can be repaired directly on a working branch, and does not block spec or main branches. Ordinary TODO/TBD prose is not an adoption placeholder.",
+        "New Codex capture directories ignore all their contents before writing raw events, protecting ordinary git add -A."
       ],
       "action_required": [
         "Replace the standalone questionnaire with the current generated version. If an earlier import erased answers, re-import the original role exports; lost content cannot be reconstructed automatically.",
@@ -569,7 +572,8 @@
         "Choose authoring (--with brainkit) or consuming (loom brainkit) before installing drafts. Consumers resolve institutional owners, review the exact snapshot, project identity, compile affected plans and acknowledge the release through the existing governance process.",
         "Migrate customised SPEC_PATHS, FEATURE and verification commands into .loom/project.json; review preserved script replacements before using them. Update CODEOWNERS and the HG-0007 catalog path scope for .loom/project.json. Existing reference CI requires explicit migration before switching modes; see project-configuration.md.",
         "Before the Codex pilot, review runtime-contract.md, configure AGENTS.md and the reviewer/model role, and complete independent model and runtime qualification. Preview by default; --run uses existing CLI authentication and records local untrusted output, never human approval.",
-        "If .claude/hooks/test-tripwire.sh was customized, review its .loom-new proposal and merge the portable multiline assertion check; the installer preserves your edits."
+        "If .claude/hooks/test-tripwire.sh was customized, review its .loom-new proposal and merge the portable multiline assertion check; the installer preserves your edits.",
+        "Review previously tracked .loom/runtime-run-* captures separately; ignoring new captures does not remove already committed data."
       ]
     }
   ]

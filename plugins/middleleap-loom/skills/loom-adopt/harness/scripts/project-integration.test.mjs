@@ -39,10 +39,32 @@ test('hook protects configured contracts and denies malformed or deleted config'
  rmSync(join(cwd,'.loom/project.json'));writeFileSync(join(cwd,'.loom/adoption.json'),JSON.stringify({files:{'.loom/project.json':'digest'}}));assert.match(run().stdout,/missing from this adoption/);
 });
 test('project settings are protected and never routine',()=>{assert.ok(FLOOR_DENY.includes('.loom/project.json'));assert.ok(CONTROL_TARGETS.includes('.loom/project.json'));assert.ok(CONTROL_TARGETS.includes('.github/workflows/loom.yml'));});
+test('invalid configuration can be repaired without disarming working-branch protection', {skip:spawnSync('jq',['--version']).status!==0},t=>{
+ const cwd=repo(t);execFileSync('git',['init','-q','-b','feature/FEAT-7'],{cwd});configured(cwd);
+ const source=['hooks/spec-tripwire.sh','.claude/hooks/spec-tripwire.sh'].map(p=>new URL(p,harness)).find(existsSync);
+ const run=input=>spawnSync('bash',[source.pathname],{cwd,env:{...process.env,CLAUDE_PROJECT_DIR:cwd},input:JSON.stringify({tool_input:input}),encoding:'utf8'});
+ for(const missing of [false,true]){
+  writeFileSync(join(cwd,'.loom/project.json'),'{');
+  if(missing){rmSync(join(cwd,'.loom/project.json'));writeFileSync(join(cwd,'.loom/adoption.json'),JSON.stringify({files:{'.loom/project.json':'digest'}}));}
+  for(const file_path of ['.loom/project.json',join(cwd,'.loom/project.json')])assert.doesNotMatch(run({file_path,new_string:'{}'}).stdout,/"deny"/);
+  assert.match(run({file_path:'api/contract.yaml'}).stdout,/"deny"/);
+  assert.match(run({command:'echo repair > .loom/project.json; echo change > api/contract.yaml'}).stdout,/"deny"/);
+  for(const branch of ['main','feature/FEAT-7-spec-repair']){
+   execFileSync('git',['symbolic-ref','HEAD',`refs/heads/${branch}`],{cwd});
+   assert.doesNotMatch(run({file_path:'api/contract.yaml'}).stdout,/"deny"/);
+   assert.doesNotMatch(run({command:'git status'}).stdout,/"deny"/);
+  }
+  execFileSync('git',['symbolic-ref','HEAD','refs/heads/feature/FEAT-7'],{cwd});
+ }
+});
 test('separate CI preserves a team workflow and project settings across upgrades', {skip:!existsSync(installer)},async t=>{
  const {install}=await import(installer.href),cwd=repo(t);mkdirSync(join(cwd,'.github/workflows'),{recursive:true});const team='name: Team CI\non: push\njobs: {}\n';writeFileSync(join(cwd,'.github/workflows/ci.yml'),team);
  const dry=install(cwd,{ciMode:'separate',dryRun:true});assert.ok(dry.files.some(f=>f.path==='.github/workflows/loom.yml'));assert.equal(existsSync(join(cwd,'.github/workflows/loom.yml')),false);
  install(cwd,{ciMode:'separate'});assert.equal(readFileSync(join(cwd,'.github/workflows/ci.yml'),'utf8'),team);assert.match(readFileSync(join(cwd,'.github/workflows/loom.yml'),'utf8'),/loom-governance:\n    name: Loom governance/);
+ const workflow=readFileSync(join(cwd,'.github/workflows/loom.yml'),'utf8');
+ const jobs=new Set([...workflow.matchAll(/^  ([\w-]+):$/gm)].map(m=>m[1]));
+ for(const dependency of workflow.matchAll(/^    needs: ([\w-]+)$/gm))assert.ok(jobs.has(dependency[1]),`missing dependency ${dependency[1]}`);
+ assert.match(workflow,/needs: loom-governance/);assert.match(workflow,/mark `Loom governance` required/);assert.doesNotMatch(workflow,/from the gates job|`gates`/);
  const custom=configured(cwd);const report=install(cwd);assert.equal(report.ciMode,'separate');assert.deepEqual(JSON.parse(readFileSync(join(cwd,'.loom/project.json'))),custom);assert.equal(readFileSync(join(cwd,'.github/workflows/ci.yml'),'utf8'),team);
  assert.ok(configurationTasks(cwd).tasks.some(t=>t.path==='.github/workflows/loom.yml'));
  assert.ok(configurationTasks(cwd).tasks.some(t=>t.path==='.loom/project.json'));

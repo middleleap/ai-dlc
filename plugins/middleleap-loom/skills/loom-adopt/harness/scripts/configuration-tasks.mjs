@@ -5,7 +5,7 @@ import { checkProject } from './project-config-check.mjs';
 import { spawnSync } from 'node:child_process';
 const TIERS = ['core', 'governed', 'full'];
 export const REGISTRY = 'core/configuration-tasks.json';
-const marker = /@your-org\/|\bADOPT[:\-]|\bTODO\b|\bTBD\b/;
+const marker = /@your-org\/|\bADOPT[:\-]/;
 const safePath = p => typeof p === 'string' && p.length > 0 && !p.startsWith('/') && !p.split(/[\\/]/).includes('..');
 function unresolved(value, path = '') {
   if (typeof value === 'string') return marker.test(value) || (path.endsWith('.status') && value === 'draft');
@@ -25,12 +25,6 @@ export function inspectInput(cwd, task) {
     let data;try { data = JSON.parse(text); } catch { return { state: 'invalid', reason: 'Input is not valid JSON.' }; }
     if (!data || typeof data !== 'object' || !Object.keys(data).filter(k => !k.startsWith('_')).length) return { state: 'needs-input', reason: 'No configuration values are present.' };
     if (unresolved(data)) return { state: 'needs-input', reason: 'Configuration values contain unresolved placeholders or draft status.' };
-  } else if (task.validator === 'spec-paths') {
-    const paths = text.match(/^SPEC_PATHS="([^"$`]+)"/m)?.[1]?.split(/\s+/).filter(Boolean);
-    if (!paths?.length || !paths.every(safePath)) return { state: 'needs-input', reason: 'Declare literal repository-relative contract paths in SPEC_PATHS.' };
-    if (!paths.some(p => existsSync(join(cwd, p)))) return { state: 'needs-input', reason: 'None of the declared contract files exists.' };
-  } else if (task.validator === 'feature-pattern') {
-    if (!/^export const FEATURE\s*=\s*\/.+\/[a-z]*;/m.test(text)) return { state: 'needs-input', reason: 'Declare the feature ID pattern and validate it against your backlog.' };
   } else if (task.validator === 'brand-inputs') {
     if (/^status:\s*demo\s*$/m.test(text)) return { state: 'needs-input', reason: 'Demo brand is still mounted. Supply approved institutional identity for real adoption.' };
     if (marker.test(text)) return { state: 'needs-input', reason: 'Brand inputs contain placeholders.' };
@@ -47,7 +41,7 @@ export function configurationTasks(cwd = process.cwd(), { run = false, spawn = s
     const sp = join(cwd, '.loom/adoption.json'); stamp = existsSync(sp) ? JSON.parse(readFileSync(sp, 'utf8')) : null;
   } catch (error) { return { available: false, tasks: [], pending: [REGISTRY], error: `Cannot read configuration inputs: ${error.message}` }; }
   const tier = stamp ? (stamp.tier || 'full') : 'core';
-  const validators = ['json-inputs','text-inputs','spec-paths','feature-pattern','brand-inputs','project-inputs'];
+  const validators = ['json-inputs','text-inputs','brand-inputs','project-inputs'];
   const ids = new Set();
   if (registry.schema !== 'loom.configuration-tasks/v1' || !Array.isArray(registry.tasks) || !TIERS.includes(tier) || !registry.tasks.length || registry.tasks.some(t => {
     if (!t || typeof t.id !== 'string' || !t.id || ids.has(t.id) || !safePath(t.path) || ![t.title, t.owner, t.action, t.completion].every(v => typeof v === 'string' && v.trim()) || !TIERS.includes(t.tier) || !validators.includes(t.validator) || (t.component && t.component !== 'brainkit') || (t.check && (!/^scripts\/[\w-]+\.mjs$/.test(t.check)))) return true;

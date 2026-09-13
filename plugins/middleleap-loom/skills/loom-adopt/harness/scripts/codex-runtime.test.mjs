@@ -55,6 +55,17 @@ test('runner captures events and interrupted status without automatic resume or 
 test('public preview creates no run artifacts and rejects unsupported runtimes or flags',async t=>{
  const cwd=fixture(t),out={write(){}};assert.equal(await runtimeCommand(['codex','--task','task.md','--role','hard-stop-reviewer'],cwd,out),0);assert.ok(!readdirSync(cwd).includes('.loom'));assert.equal(await runtimeCommand(['other'],cwd,out),2);assert.equal(await runtimeCommand(['codex','--sandbox','workspace-write'],cwd,out),2);
 });
+test('git add -A excludes runtime captures while project configuration remains trackable',async t=>{
+ const cwd=fixture(t),{spawnSync}=await import('node:child_process');
+ const git=(...args)=>{const r=spawnSync('git',args,{cwd,encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+ git('init','-q');put(cwd,'.loom/project.json','{}');
+ const request=prepareCodex(cwd,{task:'task.md',role:'hard-stop-reviewer'});
+ const {dir}=await runCodex(request,{spawnProcess:fakeProcess(events()),versionProbe:()=>({status:0,stdout:'codex-cli fixture'})});
+ assert.ok(existsSync(join(dir,'events.jsonl')));
+ git('add','-A');const tracked=git('ls-files');
+ assert.match(tracked,/\.loom\/project.json/);assert.doesNotMatch(tracked,/runtime-run-/);
+ assert.match(git('check-ignore',join(dir,'events.jsonl')),/events.jsonl/);
+});
 test('CLI entry points invoked through a symlink still execute the request',async t=>{
  const cwd=fixture(t),{spawnSync}=await import('node:child_process');
  for(const [file,args] of [['loom.mjs',['runtime','codex']],['codex-runtime.mjs',['codex']]]){

@@ -33,6 +33,22 @@ deny() {
   exit 0
 }
 
+branch=$(git -C "${CLAUDE_PROJECT_DIR:-.}" branch --show-current 2>/dev/null || true)
+# Only the loop's working branches are tripwired; a dedicated spec branch is the sanctioned lane.
+case "$branch" in
+  feature/* | claude/*) ;;
+  *) exit 0 ;;
+esac
+case "$branch" in
+  *-spec-*) exit 0 ;;
+esac
+
+# Allow a direct repair of this one configuration file, even when it is malformed or
+# missing. Do not exempt arbitrary Bash text that mentions it: that could bundle contract writes.
+case "$file_path" in
+  .loom/project.json | "${CLAUDE_PROJECT_DIR:-.}/.loom/project.json") exit 0 ;;
+esac
+
 project_config="${CLAUDE_PROJECT_DIR:-.}/.loom/project.json"
 if [ -f "$project_config" ]; then
   if ! SPEC_PATHS=$(jq -er '
@@ -49,16 +65,6 @@ elif [ -f "${CLAUDE_PROJECT_DIR:-.}/.loom/adoption.json" ]; then
     deny "Spec tripwire: .loom/project.json is missing from this adoption. Restore it before continuing."
   fi
 fi
-
-branch=$(git -C "${CLAUDE_PROJECT_DIR:-.}" branch --show-current 2>/dev/null || true)
-# Only the loop's working branches are tripwired; a dedicated spec branch is the sanctioned lane.
-case "$branch" in
-  feature/* | claude/*) ;;
-  *) exit 0 ;;
-esac
-case "$branch" in
-  *-spec-*) exit 0 ;;
-esac
 
 # ── file tools: the path names the contract ──────────────────────────────────────────────────
 if [ -n "$file_path" ]; then

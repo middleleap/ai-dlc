@@ -66,11 +66,18 @@ test('unsafe paths and unknown validators fail closed', t => {
     assert.equal(computeStatus(cwd).adoptPending, true);
   }
 });
-test('a declared contract needs an existing file, and demo brand remains pending', t => {
-  const cwd = fixture(t, [task('hook.sh', {validator:'spec-paths'}), task('brand.md', {validator:'brand-inputs'})], { 'hook.sh': 'SPEC_PATHS="specs/openapi.yaml"', 'brand.md': '---\nstatus: demo\n---' });
-  assert.equal(configurationTasks(cwd).pending.length, 2);
-  put(cwd, 'specs/openapi.yaml', 'openapi: 3.0.0');
-  assert.equal(configurationTasks(cwd).tasks[0].state, 'input-present');
+test('demo brand remains pending', t => {
+  const cwd = fixture(t, [task('brand.md', {validator:'brand-inputs'})], {'brand.md':'---\nstatus: demo\n---'});
+  assert.equal(configurationTasks(cwd).tasks[0].state, 'needs-input');
+});
+test('ordinary TODO and TBD prose does not block configuration or adoption status', t => {
+  const paths=['docs/backlog.yaml','CLAUDE.md','.claude/agents/reviewer.md','CODEOWNERS'];
+  const cwd=fixture(t,paths.map(path=>task(path,{validator:'text-inputs'})));
+  for(const path of paths)put(cwd,path,'Conventions: TODO comments are allowed. Backlog title: TBD.');
+  assert.deepEqual(configurationTasks(cwd).pending,[]);
+  assert.equal(computeStatus(cwd).adoptPending,false);
+  put(cwd,'CLAUDE.md','ADOPT: supply project guidance');
+  assert.ok(configurationTasks(cwd).pending.includes('CLAUDE.md'));
 });
 test('checks remain not-run until requested and failures or timeouts never pass', t => {
   const cwd = fixture(t, [task('a.json', {check:'scripts/validate.mjs'}), task('b.json', {check:'scripts/validate.mjs'})], {'a.json':'{"owner":"alice"}', 'b.json':'{"owner":"bob"}', 'scripts/validate.mjs':'// fixture'});

@@ -15,7 +15,12 @@ function safePath(root, rel) {
 }
 function filesBelow(root, rel) {
   const path = safePath(root, rel);
-  return readdirSync(path, { withFileTypes: true }).flatMap(e => e.isDirectory() ? filesBelow(root, `${rel}/${e.name}`) : [safePath(root, `${rel}/${e.name}`) && `${rel}/${e.name}`]);
+  return readdirSync(path, { withFileTypes: true }).flatMap(e => {
+    const child = `${rel}/${e.name}`;
+    if (e.isDirectory()) return filesBelow(root, child);
+    safePath(root, child);
+    return [child];
+  });
 }
 const json = path => JSON.parse(readFileSync(path, 'utf8'));
 export function reuseBrainkit({ from, dest = process.cwd(), profile, digest, apply = false, now = Date.now() }) {

@@ -24,6 +24,22 @@ jobs:
       - name: Onboarding handoff, configuration and all-tier installation contracts
         run: node --test plugins/middleleap-loom/skills/loom-adopt/harness/scripts/intake-*.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/onboarding-commands.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/configuration-tasks.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/brainkit-reuse.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/project-integration.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/codex-runtime.test.mjs
 
+      - name: Rendered separate workflow is valid and rejects dangling dependencies
+        run: |
+          curl --fail --location --retry 3 https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz -o "$RUNNER_TEMP/actionlint.tar.gz"
+          printf '%s  %s\n' '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' "$RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/actionlint"
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP/actionlint"
+          node plugins/middleleap-loom/skills/loom-adopt/harness/adopt.mjs --dest "$RUNNER_TEMP/loom-separate" --ci separate
+          workflow="$RUNNER_TEMP/loom-separate/.github/workflows/loom.yml"
+          "$RUNNER_TEMP/actionlint/actionlint" -shellcheck= -pyflakes= "$workflow"
+          sed -i 's/needs: loom-governance/needs: gates/' "$workflow"
+          if "$RUNNER_TEMP/actionlint/actionlint" -shellcheck= -pyflakes= "$workflow" > "$RUNNER_TEMP/workflow-negative.log" 2>&1; then
+            echo '::error::Dangling governance dependency passed workflow validation'
+            exit 1
+          fi
+          grep -q 'job "gates"' "$RUNNER_TEMP/workflow-negative.log"
+
       - name: Brand contrast gate (WCAG AA)
         run: node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs
 

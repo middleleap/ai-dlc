@@ -60,8 +60,10 @@ export function inspectEvents(text,request,{exitCode=null,signal=null}={}){
 export async function runCodex(request,{spawnProcess=spawn,versionProbe=spawnSync}={}){
  const parent=join(request.cwd,'.loom');if(existsSync(parent)&&lstatSync(parent).isSymbolicLink())throw new Error('Runtime output directory cannot be a symlink.');mkdirSync(parent,{recursive:true});
  const dir=mkdtempSync(join(parent,'runtime-run-'));
+ // Install protection before writing any captured data; keep other .loom files trackable.
+ writeFileSync(join(dir,'.gitignore'),'*\n',{mode:0o600});
  const version=versionProbe('codex',['--version'],{encoding:'utf8'});
- if(version.error||version.status!==0)throw new Error(`Codex CLI is unavailable. Empty run directory: ${dir}`);
+ if(version.error||version.status!==0)throw new Error(`Codex CLI is unavailable. Ignored run directory: ${dir}`);
  const metadata={...request,prompt:undefined,outputSchema:undefined,cli_version:version.stdout.trim(),status:'running',authority:'none'};
  writeFileSync(join(dir,'request.json'),JSON.stringify(metadata,null,2));writeFileSync(join(dir,'events.jsonl'),'');writeFileSync(join(dir,'stderr.log'),'');
  const grouped=process.platform!=='win32';

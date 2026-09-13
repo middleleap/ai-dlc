@@ -76,7 +76,11 @@ export function readStamp(destRoot) { return readJson(resolve(destRoot, STAMP_PA
  */
 function placeFile(src, dst, key, ctx) {
   const rendered = key === '.github/workflows/loom.yml' && src.endsWith('/ci/ci.yml')
-    ? readFileSync(src, 'utf8').replace('  gates:\n', '  loom-governance:\n    name: Loom governance\n') : null;
+    ? readFileSync(src, 'utf8').replace('  gates:\n', '  loom-governance:\n    name: Loom governance\n')
+      .replace(/^(\s*needs:) gates$/m, '$1 loom-governance')
+      .replaceAll('`gates`', '`loom-governance`')
+      .replace('mark `loom-governance` required', 'mark `Loom governance` required')
+      .replace('Gate-run records from the gates job', 'Gate-run records from the Loom governance job') : null;
   const copySource = target => rendered === null ? cpSync(src,target) : writeFileSync(target,rendered);
   const sourceDigest = rendered === null ? sha(src) : createHash('sha256').update(rendered).digest('hex');
   const currentDigest = shaOrNull(dst);

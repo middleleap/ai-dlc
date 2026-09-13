@@ -46,7 +46,11 @@ The default prints a preview without invoking a model. Add `--run` to invoke the
 CLI using its existing authentication. Task content and repository context can reach the configured
 provider; the adapter does not load or copy credentials. Results stay under a unique
 `.loom/runtime-run-*` directory: request metadata, raw events, stderr and a result report. These
-may contain sensitive model output. Retain and share them under institutional policy.
+may contain sensitive model output. Each new run directory gets a self-ignoring `.gitignore`
+before capture starts, so ordinary `git add -A` excludes its contents while project configuration
+remains trackable. This does not untrack captures committed by an older version or prevent
+explicit force-add. Review existing tracked captures separately. Retain and share logs under
+institutional policy.
 
 `completed-unverified` means a successful process/terminal event and a valid output contract.
 It does not mean that the review passed, cited files were read, the requested model actually ran,
