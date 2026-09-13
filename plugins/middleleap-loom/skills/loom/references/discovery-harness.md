@@ -52,7 +52,7 @@ diamond's job, and crossing the line is a gate failure (D4 — No-solutioning bo
 | 2 | **Discover** | converge | Synthesise signals into themes; size and prioritise | `synthesis.md` |
 | 3 | **Define** | converge | Frame the single problem worth solving, with success measures and constraints | `problem-statement.md` |
 | 4 | **Define** | converge | **Data-governance feasibility** — classify the data the direction would touch, map to the register, assert acceptable residual risk | `data-governance.md` |
-| 5 | **Define** | *make tangible* | **Prototype** — a disposable low-fidelity wireframe that visualises how the solution *could* look, to test the framing before committing to delivery | `prototype.md` + wireframe asset |
+| 5 | **Define** | *make tangible* | **Prototype** — a disposable low-fidelity wireframe that visualises how the solution *could* look, to test the framing before committing to delivery. Drafted with `/design`, committed through the renderer (§4) | `prototype.md` + wireframe asset |
 | 5b | **Define** | *validate* | **Stakeholder reaction** — show the prototype to the named roles; record their reaction per framing hypothesis as fresh signals. This *closes* the make-tangible loop (D9) | `stakeholder-reaction.md` |
 | 6 | **Hand-off** | converge | Package the validated problem + prototype as a delivery-ready brief | `handoff.md` |
 
@@ -129,6 +129,22 @@ answer?"* — a stakeholder reacts to it, and that reaction is evidence (D2). It
 (so reactions aren't distorted by ugliness) but behaviour-hollow (no real data, no API).
 When delivery picks it up, it re-builds against the API contract from scratch; the
 wireframe informs, it does not bind.
+
+**How the wireframe is made — draft on the design canvas, commit through the renderer.** The
+prototype is *drafted* with Claude Code's `/design` command: the brief in `prototype.md` (the
+hypotheses, the screens, the fidelity guardrails, the `design.md` tokens) goes in, a few
+editable artboard options come out, and the facilitator and the named stakeholders react to
+them on the canvas — that is where the reaction happens fastest. Then the chosen option is
+transcribed into `specs/wireframe.prototype.json` and rendered by `discovery/render/` into
+`wireframe.html`, because the *committed* asset is what the gates read and what the reaction
+binds to (D9's digest): it carries the D7 marker and tokens by construction, it lives in the
+tree with the run, and it is disposable. A canvas is a drafting surface, not a record — its
+URL goes in `prototype.md` front-matter (`design_canvas:`) as provenance, and a canvas
+export committed directly as the asset fails D7 (raw values, no marker). `/design-sync` is
+**not** used at this stage: pulling the institution's real component library into a discovery
+prototype is exactly the drift into delivery fidelity §4 forbids. Where the canvas is
+unavailable (an Agent SDK run, an environment without artifacts), author the specs JSON
+directly; the renderer path is the floor, the canvas is the default.
 
 **The boundary is enforced across the whole prototype, not just its brief.** A prototype is
 three artifacts — `prototype.md`, the wireframe asset, and the `specs/*.json` the renderer

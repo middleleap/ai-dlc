@@ -140,6 +140,20 @@
       "tier": "core"
     },
     {
+      "source": "agents/agent-output.schema.json",
+      "dest": ".claude/agents/agent-output.schema.json",
+      "kind": "file",
+      "seam": "The one output shape every Loom reviewer and assurance agent emits (loom.agent-output/v1); scripts/agent-output-check.mjs holds the agent definitions and the eval fixtures to it. The agent definitions themselves stay hand-copied — they are project-specific templates",
+      "tier": "core"
+    },
+    {
+      "source": "agents/evals",
+      "dest": ".claude/agents/evals",
+      "kind": "dir",
+      "seam": "Eval fixtures for the reviewer agents (case.json + expected.json + input/): the specification of register-absent, residual-moved and horizon behaviour that an adopter's eval rig runs the model against",
+      "tier": "core"
+    },
+    {
       "source": "governance/runbooks",
       "dest": "docs/governance/runbooks",
       "kind": "glob",

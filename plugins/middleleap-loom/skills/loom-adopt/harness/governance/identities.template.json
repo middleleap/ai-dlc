@@ -11,6 +11,7 @@
   },
   "identities": [
     { "id": "agent-loom-delivery", "kind": "agent", "display": "Loom delivery loop (service identity)", "roles": [], "groups": ["builders"] },
+    { "id": "agent-loom-reviewers", "kind": "agent", "display": "Loom reviewer and assurance agents (service identity) — the assurance-reviewers role in the model manifest. Reviews, routes and reports; approves nothing", "roles": [], "groups": ["builders"] },
     { "id": "svc-floor-projector", "kind": "agent", "display": "Floor projector — git read → collaboration-surface write (delete if you run no external surface)", "roles": [], "groups": ["builders"] },
     { "id": "svc-floor-freezer", "kind": "agent", "display": "Floor freezer — exports a collaborative draft into a branch and opens the PR; never merges", "roles": [], "groups": ["builders"] },
     { "id": "svc-floor-bridge", "kind": "agent", "display": "Floor bridge — TRANSCRIBES an external decision into an approval attestation. Proves custody, never authority: it may not issue the human's assertion", "roles": [], "groups": ["builders"] },

@@ -1,0 +1,15 @@
+{
+  "suite": "agents/evals",
+  "dataset_version": "loom-agent-evals@2.1.0",
+  "runner_version": "ADOPT-your-eval-rig@0.0.0",
+  "ran_at": "2026-09-12",
+  "evaluated_model_id": "example-model@2026-01",
+  "evaluated_prompt_version": "loom-agents@2.1.0",
+  "cases": 5,
+  "passed": 5,
+  "failed": 0,
+  "threshold": 1,
+  "score": 1,
+  "result": "pass",
+  "_comment": "EXAMPLE, not a measurement. The bundle ships five fixture cases under agents/evals/ and no rig that runs a model over them; scripts/agent-output-check.mjs validates the fixtures structurally and exits 2 on --run until an adopter wires a rig. Replace this file with your rig's real report (the manifest re-hashes it) before the assurance-reviewers role is anything but a declaration."
+}

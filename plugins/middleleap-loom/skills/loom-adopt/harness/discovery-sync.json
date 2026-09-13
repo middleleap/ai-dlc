@@ -143,10 +143,10 @@
     },
     "discovery/templates/prototype.md": {
       "base": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
-      "bundle": "sha256:2718acde1e83025e8bfca6a8c27f4b5d11ea0e7fea0541810cc8f3d458a59a25",
+      "bundle": "sha256:c98021e273042353924e63d8cb15c042178f3755e3f0f1f4f377f4696a82afc6",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "changed here 2026-09-12; see `git log -- discovery/templates/prototype.md`"
     },
     "discovery/templates/research-log.md": {
       "base": "sha256:1ea23880b53d113105f76074433e9248e0a753cb58583d20c0f4da9ab3ac2e46",

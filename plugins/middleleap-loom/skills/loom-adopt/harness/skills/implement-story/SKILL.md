@@ -19,6 +19,16 @@ exactly.
    scope (name the neighbouring story IDs you are NOT building). Surface any genuine decision for
    the user; otherwise proceed.
 3. **Branch:** `feature/<ID>-<short-slug>` off `main`.
+3b. **If the story has a user-facing surface, design it before you test it.** Run
+   `/design-sync` once so the canvas uses the project's real component library (the BrainKit
+   design tokens are the source of truth; nothing invented), then `/design <the story's
+   screens>` — the acceptance criteria and the API contract's response shapes in, artboards
+   out. Iterate on the canvas until the product owner has reacted, put the canvas URL in the
+   story's spec, and only then let Claude Design convert it to code on the feature branch.
+   The converted code is a starting point, not a done story: the tests in step 4 are still
+   written first against the interface, the hard-stops still apply, and the SDR's discovery
+   sketch is re-drawn here, never reused. Where `/design` is unavailable, build from the design
+   tokens directly and say so in the PR.
 4. **Failing tests first — show them red.** Contract + acceptance tests from the API contract and
    the acceptance criteria, written against the **interface** the story exposes. Minimum cases —
    <!-- ADOPT: replace with your project's binding conventions; these are the shape of the list,

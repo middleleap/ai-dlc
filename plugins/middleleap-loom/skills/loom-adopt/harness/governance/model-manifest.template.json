@@ -1,6 +1,6 @@
 {
-  "_comment": "ADOPT: the model inventory the harness runs on (HG-0006). One entry per model ROLE. model_id and prompt_version MUST be pinned (no 'latest'/floating tags). Per the model-risk-operating-model-runbook \u00a72.2 matrix, medium AND high tiers need a passing eval run against THIS pin plus an independent validation sign-off (low is optional). Each eval must identify its dataset, runner and timestamp, and cite its REPORT artifact by ref + sha256 (1.10: a declared pass is not evidence). Verified by scripts/model-provenance-check.mjs, which also re-hashes the report. Replace these demo values with your real models; keep the shape.",
-  "_domains_comment": "ADOPT (optional, 2.1): `domains` and `domain_validations` cover a model whose OUTPUT carries significance in a specialist domain \u2014 shariah, medical, privacy. Model risk asks whether the model is accurate, stable and monitored; it never asks whether the thing the model produced is admissible in that domain, and a statistically excellent model can be confidently wrong in a way only a domain authority sees. So a model may declare `domains: [\"<domain>\"]` plus one signature per domain in `domain_validations: {\"<domain>\": \"<identity id>\"}`. The identity must resolve in docs/governance/identities.json, be a human (an agent validates nothing), sit outside `builders`, and hold the role `<domain>-model-validator` \u2014 the role name is DERIVED from the domain, so a new domain needs a new registry identity and no code change. This is an ADDITIONAL signature, never a role swap: `validated_by` still has to be a second-line model-validator, and one person covers both only by holding BOTH roles. Omit both fields entirely and nothing here applies \u2014 the check is strictly additive and silent for a manifest that declares no domain. Note what the gate proves: WHO signed, and that they signed against the pin that ships. Whether the determination is SOUND is not a property of a JSON record and is not claimed \u2014 that belongs to the accountable body (for Shari'ah, the ISSC; scholars decide permissibility, not this harness). Where a compiled control plan requires a domain capability (e.g. `shariah_model_validation` from profiles/products/shariah-model.json) and no model here names that domain, the gate fails and names the change.",
+  "_comment": "ADOPT: the model inventory the harness runs on (HG-0006). One entry per model ROLE. model_id and prompt_version MUST be pinned (no 'latest'/floating tags). Per the model-risk-operating-model-runbook §2.2 matrix, medium AND high tiers need a passing eval run against THIS pin plus an independent validation sign-off (low is optional). Each eval must identify its dataset, runner and timestamp, and cite its REPORT artifact by ref + sha256 (1.10: a declared pass is not evidence). Verified by scripts/model-provenance-check.mjs, which also re-hashes the report. Replace these demo values with your real models; keep the shape.",
+  "_domains_comment": "ADOPT (optional, 2.1): `domains` and `domain_validations` cover a model whose OUTPUT carries significance in a specialist domain — shariah, medical, privacy. Model risk asks whether the model is accurate, stable and monitored; it never asks whether the thing the model produced is admissible in that domain, and a statistically excellent model can be confidently wrong in a way only a domain authority sees. So a model may declare `domains: [\"<domain>\"]` plus one signature per domain in `domain_validations: {\"<domain>\": \"<identity id>\"}`. The identity must resolve in docs/governance/identities.json, be a human (an agent validates nothing), sit outside `builders`, and hold the role `<domain>-model-validator` — the role name is DERIVED from the domain, so a new domain needs a new registry identity and no code change. This is an ADDITIONAL signature, never a role swap: `validated_by` still has to be a second-line model-validator, and one person covers both only by holding BOTH roles. Omit both fields entirely and nothing here applies — the check is strictly additive and silent for a manifest that declares no domain. Note what the gate proves: WHO signed, and that they signed against the pin that ships. Whether the determination is SOUND is not a property of a JSON record and is not claimed — that belongs to the accountable body (for Shari'ah, the ISSC; scholars decide permissibility, not this harness). Where a compiled control plan requires a domain capability (e.g. `shariah_model_validation` from profiles/products/shariah-model.json) and no model here names that domain, the gate fails and names the change.",
   "models": [
     {
       "role": "delivery-loop",
@@ -59,6 +59,39 @@
         "report": {
           "ref": "docs/governance/evidence/eval-report-discovery-facilitator.json",
           "sha256": "36f150eb2f8c9f8d5166b0b366eab5e7c0c1ee72ef2a73fc8b26f6e5215524b7"
+        }
+      },
+      "validated_by": "mrm-aisha"
+    },
+    {
+      "role": "assurance-reviewers",
+      "_comment": "2.1.0 (HG-0006 applied to the reviewers): the eight Loom reviewer and assurance agents run as ONE role — one model pin, one prompt bundle (the agent definitions at their plugin version), one eval suite (agents/evals/, held structurally by scripts/agent-output-check.mjs), one independent validation. `agents` lists which agent definitions this role covers; agent-output-check fails an agent that emits loom.agent-output/v1 and is covered by no role. Split the role if your reviewers run on different pins — a change-watch on a cheaper model than the risk-reviewer is a second entry, not a footnote. Medium tier: a reviewer that says PASS wrongly is an approval path with a blind spot, which is why eval and validation are required and why the eval report here is marked EXAMPLE until your rig has actually run.",
+      "agents": [
+        "change-watch",
+        "risk-reviewer",
+        "model-risk-reviewer",
+        "data-governance-reviewer",
+        "discovery-boundary-reviewer",
+        "hard-stop-reviewer",
+        "contract-conformance-reviewer",
+        "shariah-conformance-reviewer"
+      ],
+      "provider": "example-provider",
+      "model_id": "example-model@2026-01",
+      "prompt_version": "loom-agents@2.1.0",
+      "risk_tier": "medium",
+      "eval": {
+        "suite": "agents/evals",
+        "ran_at": "2026-09-12",
+        "result": "pass",
+        "threshold_met": true,
+        "evaluated_model_id": "example-model@2026-01",
+        "evaluated_prompt_version": "loom-agents@2.1.0",
+        "dataset_version": "loom-agent-evals@2.1.0",
+        "runner_version": "ADOPT-your-eval-rig@0.0.0",
+        "report": {
+          "ref": "docs/governance/evidence/eval-report-assurance-reviewers.json",
+          "sha256": "87e60ceb500cd1108be5c2302bc03396fb33bf86a10f77bf0aad26fa13b3b485"
         }
       },
       "validated_by": "mrm-aisha"

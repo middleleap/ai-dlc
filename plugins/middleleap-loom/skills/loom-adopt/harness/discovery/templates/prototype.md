@@ -5,6 +5,7 @@ design_profile: discovery/brand/design.md
 run: "<slug>"
 fidelity: low
 wireframe: "wireframe.html"
+design_canvas: "<the /design canvas URL the wireframe was drafted on, or none>"
 ---
 
 # Prototype brief — <slug>
@@ -45,4 +46,7 @@ Record reactions as new signals back in `research-log.md`.
 
 ## Wireframe
 
-Generated asset: `wireframe.html` (must carry `<!-- brand-profile: discovery/brand/design.md@v1 -->`).
+Drafted with `/design` (options, canvas edits, stakeholder walkthrough — URL in `design_canvas:`
+above), then transcribed into `specs/wireframe.prototype.json` and rendered. Generated asset:
+`wireframe.html` (must carry `<!-- brand-profile: discovery/brand/design.md@v1 -->`). The
+committed asset is the record; the canvas is the draft.

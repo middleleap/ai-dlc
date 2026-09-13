@@ -110,6 +110,21 @@
       "note": "2.1.0 — HG-0009 was a decision with no mechanism since 1.11; a record naming one direction dressed as a choice passed everything. Structural like the D gates: it checks that the shape of a decision exists, never that the decision was right"
     },
     {
+      "control_id": "AGENT-OUTPUT",
+      "objective": "Every reviewer and assurance agent emits one schema (loom.agent-output/v1), says INSUFFICIENT_EVIDENCE when its register is absent, carries confidence and evidence refs on every finding, and is a role in the model manifest; the eval fixtures beside the schema validate as a specification of that behaviour",
+      "owner_role": "model-validator",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/agent-output-check.mjs",
+      "test_ref": "scripts/agent-output-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        ".claude/agents/",
+        "docs/governance/model-manifest.json"
+      ],
+      "note": "2.1.0 (plan phase 5) — holds the CONTRACT around the prompt, not the prompt: definitions declare the schema, fixtures validate, emitting agents are inventoried. Structural in CI; --run is the seam for an adopter's eval rig and exits 2 until one is wired, because an unrun eval is not a pass"
+    },
+    {
       "control_id": "OBLIGATIONS",
       "objective": "Every regulatory obligation the institution answers to is registered with a source, an owner, a verification date, and the risks and controls that answer it; D6 cites obligations, not regulations from memory",
       "owner_role": "compliance",

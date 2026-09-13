@@ -23,11 +23,11 @@ handoff: "discovery/runs/<slug>/handoff.md"
 > At least three. A single direction dressed as a choice defeats the diamond — the point is
 > that a real alternative was live at the moment of the decision.
 
-| # | Direction | Shape in one line | Killed by / survived because |
-|---|---|---|---|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
+| # | Direction | Shape in one line | Sketch (`/design` canvas, if it has a surface) | Killed by / survived because |
+|---|---|---|---|---|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
 
 ## The judgment
 

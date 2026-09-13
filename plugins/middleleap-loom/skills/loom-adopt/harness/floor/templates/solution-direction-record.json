@@ -6,7 +6,7 @@
   "stage": "develop",
   "write_class": "decision-routed",
   "source": "delivery/templates/solution-direction-record.md",
-  "source_digest": "sha256:a3c520a5fd222b04af1a41dc180d59431aa5d89f2410a935df3407e7d6506d2f",
+  "source_digest": "sha256:1e30e4e88183da7fd99799b335555c65c1ead2f34d86c107af0a4cd2f13a196d",
   "gates": [
     "D1",
     "D6",
@@ -41,6 +41,7 @@
         "#",
         "Direction",
         "Shape in one line",
+        "Sketch (`/design` canvas, if it has a surface)",
         "Killed by / survived because"
       ]
     },

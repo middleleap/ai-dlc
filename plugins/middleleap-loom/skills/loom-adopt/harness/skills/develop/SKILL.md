@@ -57,6 +57,13 @@ binding rules in `CLAUDE.md`). Require each to return, as structured text: appro
 hard-stop; what it **reuses vs introduces** (composition over invention — a new platform
 primitive is a flag, not a free choice); rough delivery cost; and the top risk.
 
+**A direction with a user-facing surface is sketched, not described.** For each such direction
+run `/design <direction brief>` once — one low-fidelity artboard per direction, same brand
+tokens, no `/design-sync` yet (the component library binds at implementation, not at the
+choice) — and put the canvas URL in the SDR's "Sketch" column. The judge and the human
+converge on things they can see; three prose paragraphs are three opinions. The sketches are
+disposable: the chosen one is re-drawn against the real component library in `implement-story`.
+
 ## 2. Judge — score the directions
 
 Spawn a judge subagent (or a small panel) that scores each direction, NOT on elegance, on:

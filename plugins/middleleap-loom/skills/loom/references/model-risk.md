@@ -44,6 +44,36 @@ The anti-stale-eval check is the model-risk analogue of Q1b (the anti-reward-hac
 green recorded against a *different* model or prompt than the one shipping is not evidence, and
 the gate treats it as a failure rather than a pass.
 
+## The reviewers are models too (2.1.0)
+
+HG-0006 used to be applied to the delivery loop and the discovery facilitator and to nothing
+else, while the agents that *review* the loop's work — `hard-stop-reviewer`,
+`contract-conformance-reviewer`, `risk-reviewer`, `data-governance-reviewer`,
+`model-risk-reviewer`, `discovery-boundary-reviewer`, `change-watch`,
+`shariah-conformance-reviewer` — sat outside the manifest. A reviewer that says PASS wrongly is
+an approval path with a blind spot, so the same four rules now apply to them, held by
+`scripts/agent-output-check.mjs` (control `AGENT-OUTPUT`):
+
+- **One output shape.** Every reviewer emits `loom.agent-output/v1`
+  (`.claude/agents/agent-output.schema.json`) after its human-readable lines: agent, the pins
+  it ran under, the inputs it read, the state of its register, a verdict, a confidence, and
+  findings that each carry at least one evidence ref into a file it read.
+- **Register absent ⇒ `INSUFFICIENT_EVIDENCE`.** A reviewer whose register (data-risk, model
+  manifest, obligations, Shari'ah structures, knowledge pins) is not mounted says it cannot
+  judge. It never falls back to prose or memory. This is the one behaviour the fixtures pin
+  hardest, because it is the one a model most readily gets wrong.
+- **Inventoried.** Every emitting agent is a role in the model manifest, by name or through a
+  role's `agents` list; the shipped template carries one `assurance-reviewers` role for all
+  eight on one pin. Split it when the pins differ.
+- **Evaluated — honestly.** `agents/evals/<agent>/<case>/` ships the specification: a case, its
+  inputs, the expected output. The gate validates the fixtures structurally in CI and exits 2
+  on `--run` until an adopter wires an eval rig, because a fixture set nobody has run against the
+  model is a specification of behaviour, not a measurement of it. The shipped eval report for
+  the role says EXAMPLE on its face for the same reason.
+
+What this does not change: a prompt is still not a gate. The reviewer's step stays graded
+Defined in `bank-grade-gap.md`; what moved to mechanically validated is the contract around it.
+
 ## Honest limits
 
 - **The gate enforces provenance, not competence.** It proves an eval was run against the
