@@ -17,9 +17,10 @@ import { CAPABILITY, COVERED_TIERS, evaluate, isPlaceholder, requiringChanges, r
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// Resolved across the BUNDLE and ADOPTED layouts: scripts/ is copied into an adopted tree, so this
-// suite runs there too, where the template is installed as docs/governance/decision-contestability.json.
-const TEMPLATE_PATH = [join(H, 'governance/decision-contestability.template.json'), join(H, 'docs/governance/decision-contestability.json')].find(existsSync);
+// Only inspect the immutable bundle template. Adopted-layout CI intentionally replaces the
+// installed destination with the worked record before this suite runs.
+const TEMPLATE_CANDIDATE = join(H, 'governance/decision-contestability.template.json');
+const TEMPLATE_PATH = existsSync(TEMPLATE_CANDIDATE) ? TEMPLATE_CANDIDATE : null;
 const SKIP_NO_TEMPLATE = !TEMPLATE_PATH && 'decision-contestability template not present in this layout';
 const clean = (d) => rmSync(d, { recursive: true, force: true });
 

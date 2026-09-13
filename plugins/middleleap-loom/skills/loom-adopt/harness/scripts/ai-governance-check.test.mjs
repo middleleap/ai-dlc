@@ -8,7 +8,11 @@ import { fileURLToPath } from 'node:url';
 import { CAPABILITY, SCHEMA, evaluate, isPlaceholder, run } from './ai-governance-check.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TEMPLATE = [join(H, 'governance/ai-governance.template.json'), join(H, 'docs/governance/ai-governance.json')].find(existsSync);
+// Only inspect the immutable bundle template. In the adopted-layout CI exercise the destination
+// is deliberately replaced with the worked governance record before tests run; treating that live
+// adopter file as the template would make this unit test depend on test ordering.
+const TEMPLATE_CANDIDATE = join(H, 'governance/ai-governance.template.json');
+const TEMPLATE = existsSync(TEMPLATE_CANDIDATE) ? TEMPLATE_CANDIDATE : null;
 const clean = (dir) => rmSync(dir, { recursive: true, force: true });
 const MODEL = {
   role: 'credit-decision', model_id: 'credit@7', prompt_version: 'affordability@4', risk_tier: 'high',
