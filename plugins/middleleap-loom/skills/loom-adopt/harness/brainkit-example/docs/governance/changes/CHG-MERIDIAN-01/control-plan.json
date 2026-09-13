@@ -15,6 +15,7 @@
     "institutional-context-owner",
     "product-owner"
   ],
+  "pa1_approver_roles": [],
   "required_evidence": [
     "brainkit-provenance",
     "reviews",
@@ -22,15 +23,16 @@
   ],
   "pa1_sections": [],
   "pa2_sections": [],
+  "required_capabilities": {},
   "profile_bindings": [
     {
       "profile": "meridian-trust",
       "kind": "institution",
       "version": "1.0.0",
-      "digest": "sha256:99e677063e8042c4e1e6080424e07108d409a9fc759bd6ccd55b9e1ed088a379",
+      "digest": "sha256:4f6e0c2f4d0197c9ddeda346e5cc45d497d2ed6c28c3a28667d09694d389deb1",
       "brainkit_id": "meridian-trust-brainkit",
       "brainkit_version": "1.0.0",
-      "brainkit_digest": "sha256:7d72a0968c928ec70c65786998be376061e5cbd3e3baf9a068071918619bc5bc"
+      "brainkit_digest": "sha256:229b58a17cdfb58f7585e816c93a1613d1cb0e3ee3daa24f30e789d8dfc6047d"
     },
     {
       "profile": "regulated-bank",
@@ -39,5 +41,5 @@
       "digest": "sha256:da0f15e4da2f45425c04e370e26d81b6409f0cbd4041db2778f68a6ee34d3b80"
     }
   ],
-  "plan_hash": "fe5462aae575683b85a5878bb49e83787e5abc2d494084a94850f065aee931c5"
+  "plan_hash": "ff0eb92ee50f3cf8007244d4b33dc9ae8e4c8e67ec666e83eccb502eac782a19"
 }

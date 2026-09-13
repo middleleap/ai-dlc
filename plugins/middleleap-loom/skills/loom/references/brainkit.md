@@ -34,7 +34,8 @@ Two boundaries are load-bearing:
 
 ## The package
 
-A BrainKit is a directory (`institution/brainkit/`) of six sections plus a manifest:
+A BrainKit is a directory (`institution/brainkit/`) of seven sections plus a manifest
+(schema 1.1, since 2.2.0; schema 1.0 was the six-section package without `strategy.md`):
 
 ```text
 institution/brainkit/
@@ -42,14 +43,31 @@ institution/brainkit/
 ├── identity/design.md       # institutional identity + design language (the D7 projection source)
 ├── terminology.md           # the institution's binding vocabulary
 ├── architecture.md          # architectural principles and constraints
-├── technology-policy.json   # allowed/consult/forbidden technologies and standards
+├── technology-policy.json   # allowed/consult/forbidden technologies, standards + the radar lifecycle
 ├── governance.md            # decision rights: who decides what
+├── strategy.md              # approved strategic intents (SI-*) a discovery run can cite
 └── source-register.json     # the approved sources every section is grounded in
 ```
 
+Two of those deserve a sentence each, because they answer the two questions a discovery run could
+not previously ask its institution:
+
+- **`strategy.md`** holds the institution's *approved* strategic intents for the planning horizon,
+  each with a stable id (`SI-01`) and the intents explicitly parked (`SI-P01`). `problem-statement.md`
+  and `business-case.md` cite the intent a problem serves, or say plainly that it serves none. It
+  records strategy; it never sets it — an intent without an approved source is a gap. **No gate reads
+  `SI-*` yet**; the citation is prose the decision authority reads.
+- **`technology-policy.json` → `radar`** is the lifecycle the three lists lack: `assess` → `trial` →
+  `adopt` → `hold`, each entry owned, dated and grounded, with a `review_by` (or `exit_by` for a hold).
+  The `develop` skill reads it when judging directions: a direction on a `forbidden` or `hold`
+  technology is disqualified, one on `trial` needs the named authority's sign-off (read as `consult`),
+  one on `assess` is not available to a governed change. A radar is a record of decisions, not a
+  wishlist.
+
 The **manifest** is the spine. It carries:
 
-- `schema_version`, `brainkit_id`, `institution_id`, semantic `version` (MAJOR.MINOR.PATCH — enforced)
+- `schema_version` (`1.0` or `1.1` — it selects the canonical section set; an unknown value is a
+  finding), `brainkit_id`, `institution_id`, semantic `version` (MAJOR.MINOR.PATCH — enforced)
 - lifecycle `status` — `draft` · `approved` · `retired` — with `effective_at` and optional `expires_at`
 - **accountable owners by section** (each resolving to a Loom identity-registry human; the complete,
   unique canonical section set must be declared — a package cannot silently omit one)
@@ -63,7 +81,10 @@ The **manifest** is the spine. It carries:
 
 ## Lifecycle
 
-A BrainKit is born `draft`. `brainkit-init` generates a draft from the repository and the
+A BrainKit is born `draft`. Before it, `institution-intake` interviews the accountable roles and
+sorts what they say into sourced answers (the source-register skeleton), claims and unknowns (the
+gap register) — an answer without a document behind it never becomes a section. `brainkit-init`
+then generates a draft from the repository and the
 institution's *approved* sources, records provenance for every generated section, and lists a gap
 register of decisions it could not make. It never invents policy, regulatory interpretation,
 approval authority or brand rules — a draft is a starting point for humans, not a fait accompli.

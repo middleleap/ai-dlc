@@ -75,6 +75,12 @@ the full canon for one part of that page, or an appendix.
 - `assets/loom-stream.html` — a standalone, brand-styled visualization of the whole stream: the
   double diamond closed into a loop, the security / governance / business checkpoints, where
   Chainguard & Snyk attach, and the bank-grade maturity traffic-light. Open it in a browser.
+- `assets/loom-atlas.html` — the Loom **drawn**: the loom metaphor made exact, how the institution
+  prepares its BrainKit (intake → sourced / claimed / unknown → sealed), the double diamond closed
+  into a loop with a clickable stage panel (who acts, what is written, which gate reads it), the
+  Factory Floor's four planes and the freeze round trip, the register chain a gate actually reads,
+  and an honest-state strip. Meridian Trust is the fictional worked example throughout. Open it in
+  a browser; show it to someone before they read the canon.
 
 **Appendix** — one part each, read when that part is yours:
 - `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
@@ -96,6 +102,12 @@ the full canon for one part of that page, or an appendix.
   open a repository: the four planes and the one path that must bypass the seam, the three write
   classes, the freeze round trip, the four non-approving seam identities, and the ten gates that
   keep enforcement identical whether the floor is there or not.
+- `references/floor-discovery-runbook.md` — the **day-one runbook** for running discovery on
+  the floor: two roles (a facilitator at the machine, an author on the floor), what each does at
+  every stage 1–6 with the write class and gates per artifact, what the author sees at a freeze
+  versus what actually happens, the cards a projection must never show, and the six things that
+  must be true before a floor exists. Read this when someone asks how a non-technical stakeholder
+  takes part in discovery.
 - `references/enterprise-rings.md` — the fractal framing: the Loom as the micro ring (one
   change) plus the shipped half of the meso ring (one product), and an honest naming of the
   macro ring (the enterprise operating model) as adopter- and advisory-side, not bundled.
@@ -120,11 +132,13 @@ dimensions:
 3. **Institutional DNA** — how the entity itself works: approval routes, architectural patterns,
    approved technologies, design tokens, terminology, tone of voice. Its institution-owned **seed**
    is the **Institutional BrainKit** (`institution/brainkit/`, 2.0-rc.10) — a versioned, approved,
-   digest-pinned package of identity, terminology, architecture principles, technology policy and
-   decision rights that every repository inherits before it writes code, PRDs, ADRs, interfaces or
+   digest-pinned package of identity, terminology, architecture principles, technology policy (with
+   its radar), decision rights and strategic intents that every repository inherits before it writes code, PRDs, ADRs, interfaces or
    reports. The BrainKit projects to the **brand profile** seam (gate D7) and composes through the
    policy compiler as the `brainkit-conformance` gate; `brainkit-check` enforces its integrity, and
-   `brainkit-init` drafts one from an institution's approved sources. See `references/brainkit.md`.
+   `brainkit-init` drafts one from an institution's approved sources, and `institution-intake` is
+   the guided Q&A that gathers those sources (and the gaps) from the accountable roles before it.
+   See `references/brainkit.md`.
 
 The moat test: if a competitor copied the entire codebase tomorrow, what would they still lack?
 The accumulated, governed context. It cannot be copied — only built, cycle after cycle. And the

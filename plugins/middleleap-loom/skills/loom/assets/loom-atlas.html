@@ -1,0 +1,552 @@
+<title>The Loom Atlas</title>
+<meta name="description" content="What the Loom does and how it does it — the institution's preparation, the double diamond closed into a loop, the Factory Floor, the register chain, and what is honestly not yet enforced. Meridian Trust is the fictional worked example.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#FAF9F5; --surface:#FFFFFF; --surface-2:#F3F1EA;
+  --head:#14130F; --ink:#2A2925; --muted:#6E6A60; --faint:#9B978D;
+  --line:#E7E4DC; --line-strong:#D6D2C8;
+  --ember:#CE451B; --ember-fill:#E65C2D; --ember-dim:rgba(206,69,27,.10); --on-ember:#110D0A;
+  --pos:#2F7048; --pos-dim:rgba(47,112,72,.12);
+  --caution:#8F6614; --caution-dim:rgba(143,102,20,.12);
+  --crit:#B23434; --crit-dim:rgba(178,52,52,.12);
+  --info:#3A6E86; --info-dim:rgba(58,110,134,.12);
+  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --sans:'DM Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --shadow:0 1px 2px rgba(20,19,15,.05),0 8px 24px rgba(20,19,15,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#080808; --surface:#181817; --surface-2:#101010;
+    --head:#ECE9E1; --ink:#DEDBD4; --muted:#A8A59E; --faint:#87847D;
+    --line:#1E1E1C; --line-strong:#33322F;
+    --ember:#F58F55; --ember-fill:#E65C2D; --ember-dim:rgba(230,92,45,.14); --on-ember:#110D0A;
+    --pos:#7DBE93; --pos-dim:rgba(125,190,147,.14);
+    --caution:#D9A03C; --caution-dim:rgba(217,160,60,.14);
+    --crit:#E0706A; --crit-dim:rgba(224,112,106,.14);
+    --info:#7FB2C9; --info-dim:rgba(127,178,201,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#080808; --surface:#181817; --surface-2:#101010;
+  --head:#ECE9E1; --ink:#DEDBD4; --muted:#A8A59E; --faint:#87847D;
+  --line:#1E1E1C; --line-strong:#33322F;
+  --ember:#F58F55; --ember-fill:#E65C2D; --ember-dim:rgba(230,92,45,.14); --on-ember:#110D0A;
+  --pos:#7DBE93; --pos-dim:rgba(125,190,147,.14);
+  --caution:#D9A03C; --caution-dim:rgba(217,160,60,.14);
+  --crit:#E0706A; --crit-dim:rgba(224,112,106,.14);
+  --info:#7FB2C9; --info-dim:rgba(127,178,201,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 72px;padding-inline:clamp(16px,4vw,40px)}
+a{color:var(--ember)}
+.eyebrow{font:500 12.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--ember)}
+.eyebrow::before{content:'// '}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--head);margin:0;text-wrap:balance;letter-spacing:0}
+h1{font-size:clamp(40px,6vw,68px);line-height:1.02}
+h2{font-size:clamp(28px,3.4vw,40px);line-height:1.1}
+h3{font-size:22px;line-height:1.2}
+h1 em,h2 em{font-style:italic;color:var(--ember)}
+p{margin:0}
+.lede{font-size:19px;line-height:1.5;color:var(--ink);max-width:62ch}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12.5px}
+code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1px 5px;border:1px solid var(--line)}
+/* header */
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:56px}
+.mark{display:inline-flex;align-items:center;gap:4px}
+.mark .sq{width:14px;height:14px;background:var(--ink);border-radius:16%}
+.mark .di{width:14px;height:14px;background:linear-gradient(135deg,#F0722E,#CE451B);border-radius:16%;transform:rotate(45deg) scale(.86)}
+.wordmark{font:600 15px/1 var(--sans);letter-spacing:-.02em;color:var(--ink)}
+.wordmark b{font-weight:600;color:var(--ember)}
+.brand .right{margin-left:auto;font:400 12.5px/1 var(--mono);color:var(--faint)}
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:end;margin-bottom:72px}
+.hero .txt{display:grid;gap:22px}
+@media (max-width:860px){.hero{grid-template-columns:1fr}}
+/* sections */
+section{padding-block:56px;border-top:1px solid var(--line)}
+.sec-h{display:grid;gap:12px;margin-bottom:28px;max-width:60ch}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:36px;align-items:start}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+figure{margin:0}
+figure svg{display:block;width:100%;height:auto;max-width:100%;color:var(--ink)}
+figcaption{margin-top:12px;font-size:14px;line-height:1.5;color:var(--muted);max-width:70ch}
+.side{display:grid;gap:18px;font-size:15px;line-height:1.55}
+.side h3{margin-bottom:4px}
+.side ul{margin:0;padding-left:18px;display:grid;gap:8px}
+.side li::marker{color:var(--ember)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.kv dt{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.04em;padding-top:2px}
+.kv dd{margin:0}
+/* SVG palette via CSS vars */
+.f-surf{fill:var(--surface)} .f-surf2{fill:var(--surface-2)} .f-bg{fill:var(--bg)}
+.s-line{stroke:var(--line-strong)} .s-ink{stroke:currentColor}
+.t{fill:var(--ink);font-family:var(--sans);font-size:12.5px}
+.t-h{fill:var(--head);font-family:var(--serif);font-size:16px}
+.t-m{fill:var(--muted);font-family:var(--mono);font-size:10.5px;letter-spacing:.06em}
+.t-mi{fill:var(--ink);font-family:var(--mono);font-size:11px}
+.t-e{fill:var(--ember);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em}
+.t-w{fill:var(--on-ember);font-family:var(--mono);font-size:10.5px;letter-spacing:.06em}
+.ember-f{fill:var(--ember-fill)} .ember-s{stroke:var(--ember)} .ember-dim{fill:var(--ember-dim)}
+.pos-f{fill:var(--pos)} .pos-dim{fill:var(--pos-dim)} .pos-s{stroke:var(--pos)}
+.cau-f{fill:var(--caution)} .cau-dim{fill:var(--caution-dim)} .cau-s{stroke:var(--caution)}
+.crit-dim{fill:var(--crit-dim)} .crit-s{stroke:var(--crit)}
+.info-dim{fill:var(--info-dim)} .info-s{stroke:var(--info)}
+.dash{stroke-dasharray:4 4}
+/* loop interactivity */
+.stage{cursor:pointer}
+.stage rect,.stage path.shape{transition:fill .2s,stroke .2s}
+.stage:hover rect.box,.stage:focus-visible rect.box{stroke:var(--ember)}
+.stage.active rect.box{stroke:var(--ember);stroke-width:2}
+.stage.active .t-h{fill:var(--ember)}
+.stage:focus{outline:none}
+.panel{border:1px solid var(--line);background:var(--surface);padding:22px;display:grid;gap:14px;min-height:280px}
+.panel .who{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 8px;border:1px solid var(--line-strong);color:var(--muted)}
+.chip.h{border-color:var(--ember);color:var(--ember)}
+.chip.a{border-color:var(--info);color:var(--info)}
+.panel .arts{display:grid;gap:6px}
+.panel .arts span{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.panel .arts span::before{content:'▸ ';color:var(--ember)}
+/* strips */
+.legend{display:flex;flex-wrap:wrap;gap:14px 22px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:14px;height:14px;display:inline-block;border:1px solid var(--line-strong)}
+.honest{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.honest > div{background:var(--surface);padding:18px 20px;display:grid;gap:8px;font-size:14px;line-height:1.5}
+.honest .st{font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;display:inline-flex;align-items:center;gap:8px}
+.honest .st i{width:9px;height:9px;display:inline-block}
+.honest .st.enf{color:var(--pos)} .honest .st.enf i{background:var(--pos)}
+.honest .st.def{color:var(--caution)} .honest .st.def i{background:var(--caution)}
+.honest .st.adp{color:var(--muted)} .honest .st.adp i{border:1px solid var(--muted)}
+.honest .st.no{color:var(--crit)} .honest .st.no i{background:var(--crit)}
+footer{padding-top:40px;border-top:1px solid var(--line);font-size:13px;color:var(--faint);display:flex;flex-wrap:wrap;gap:8px 24px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="brand">
+    <span class="mark" aria-hidden="true"><span class="sq"></span><span class="di"></span></span>
+    <span class="wordmark">Middle<b>Leap</b></span>
+    <span class="right">THE LOOM · 2.2.0 · worked example: Meridian Trust (fictional)</span>
+  </header>
+
+  <div class="hero">
+    <div class="txt">
+      <span class="eyebrow">The Loom, drawn</span>
+      <h1>An ambiguous idea goes in. Audit-ready software comes out, <em>the same way every time.</em></h1>
+      <p class="lede">The Loom is a reusable way for a regulated institution to build with AI. Set it up once, then weave any solution on it. This page draws the machine: what the institution prepares, how a problem travels the loop, where the people stand, and what a gate actually reads.</p>
+      <p class="muted" style="font-size:14px">Every diagram below is a mechanism from the canon, not a metaphor. The one metaphor the method keeps is exact, and it is drawn first.</p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 520 360" role="img" aria-label="A loom: five vertical warp threads labelled with the always-on controls; two harnesses named discovery and delivery; the shuttle labelled AI agents moving across; the pattern labelled the institution's context; the cloth at the bottom labelled shipped software; and a floor under it labelled the Factory Floor.">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+        <!-- warp -->
+        <g class="s-ink" stroke-width="1.5">
+          <line x1="110" y1="30" x2="110" y2="250"/><line x1="185" y1="30" x2="185" y2="250"/><line x1="260" y1="30" x2="260" y2="250"/><line x1="335" y1="30" x2="335" y2="250"/><line x1="410" y1="30" x2="410" y2="250"/>
+        </g>
+        <g class="t-m" text-anchor="middle" style="font-size:9.5px">
+          <text x="110" y="14">FOUR</text><text x="110" y="25">EYES</text>
+          <text x="185" y="14">INSERT-ONLY</text><text x="185" y="25">AUDIT</text>
+          <text x="260" y="14">LINEAGE</text>
+          <text x="335" y="14">QUALITY</text><text x="335" y="25">GATES</text>
+          <text x="410" y="14">RESIDENCY</text>
+        </g>
+        <text x="60" y="140" class="t-e" text-anchor="end" transform="rotate(-90 60 140)">WARP · THE CONTROLS</text>
+        <!-- harnesses -->
+        <rect x="80" y="70" width="360" height="26" class="f-surf s-line" stroke-width="1.5"/>
+        <text x="260" y="87" class="t" text-anchor="middle">Harness 1 · discovery — find the right problem</text>
+        <rect x="80" y="150" width="360" height="26" class="f-surf s-line" stroke-width="1.5"/>
+        <text x="260" y="167" class="t" text-anchor="middle">Harness 2 · delivery — build it under control</text>
+        <!-- shuttle -->
+        <g>
+          <path d="M120 122 L150 112 L300 112 L330 122 L300 132 L150 132 Z" class="ember-f"/>
+          <text x="225" y="126" class="t-w" text-anchor="middle">SHUTTLE · THE AI AGENTS</text>
+          <line x1="336" y1="122" x2="400" y2="122" class="s-ink" stroke-width="1.5" marker-end="url(#ah)"/>
+        </g>
+        <!-- pattern -->
+        <rect x="80" y="196" width="360" height="22" class="ember-dim ember-s" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="260" y="211" class="t-e" text-anchor="middle" style="font-size:9px">PATTERN · THE INSTITUTION'S CONTEXT · THE BRAINKIT</text>
+        <!-- cloth -->
+        <rect x="80" y="252" width="360" height="40" class="f-surf2 s-line"/>
+        <g class="s-line" stroke-width="1"><line x1="80" y1="262" x2="440" y2="262"/><line x1="80" y1="272" x2="440" y2="272"/><line x1="80" y1="282" x2="440" y2="282"/></g>
+        <text x="260" y="316" class="t" text-anchor="middle">Cloth · shipped, audit-ready software</text>
+        <!-- floor -->
+        <line x1="20" y1="342" x2="500" y2="342" class="s-ink" stroke-width="2"/>
+        <text x="20" y="356" class="t-m">FACTORY FLOOR · where the people stand · authority: none</text>
+      </svg>
+      <figcaption>The metaphor is exact. Threads under tension are the always-on controls; the harnesses lift them into two patterns; the shuttle is the agent the harness pulls through; the pattern is the institution's own context; the cloth is software. A loom sits on a floor, and the floor holds no authority.</figcaption>
+    </figure>
+  </div>
+
+  <!-- 1 · preparation -->
+  <section id="prepare">
+    <div class="sec-h">
+      <span class="eyebrow">Before the first problem</span>
+      <h2>The institution prepares its <em>pattern</em></h2>
+      <p class="lede" style="font-size:17px">A harness alone is generic. What makes the Loom produce Meridian Trust's software is Meridian Trust's context, gathered by interview, drafted only from approved sources, approved by named owners, and sealed by digest.</p>
+    </div>
+    <div class="grid2">
+      <figure>
+        <svg viewBox="0 0 760 400" role="img" aria-label="Intake interviews nine roles; each answer is sorted into sourced, claimed or unknown. Sourced answers feed brainkit-init, which drafts the seven BrainKit sections; claimed and unknown answers feed a gap register the owners work through. Owners approve and seal; the sealed BrainKit is digest-pinned and read by every discovery run and every compiled change.">
+          <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <!-- roles -->
+          <g class="t-m">
+            <text x="20" y="40">HEAD OF BRAND</text><text x="20" y="64">ARCHITECTURE</text><text x="20" y="88">CTO OFFICE</text><text x="20" y="112">RISK, 2ND LINE</text><text x="20" y="136">DATA PROTECTION</text><text x="20" y="160">STRATEGY / PRODUCT</text><text x="20" y="184">FINANCE</text><text x="20" y="208">OPERATIONS</text><text x="20" y="232">THE FACILITATOR</text>
+          </g>
+          <g class="s-line" stroke-width="1"><line x1="150" y1="36" x2="200" y2="120"/><line x1="150" y1="60" x2="200" y2="122"/><line x1="150" y1="84" x2="200" y2="124"/><line x1="150" y1="108" x2="200" y2="126"/><line x1="150" y1="132" x2="200" y2="128"/><line x1="150" y1="156" x2="200" y2="130"/><line x1="150" y1="180" x2="200" y2="132"/><line x1="150" y1="204" x2="200" y2="134"/><line x1="150" y1="228" x2="200" y2="136"/></g>
+          <!-- intake -->
+          <rect x="200" y="96" width="120" height="64" class="f-surf s-ink" stroke-width="1.5"/>
+          <text x="260" y="122" class="t-h" text-anchor="middle">Intake</text>
+          <text x="260" y="140" class="t-m" text-anchor="middle">"WHERE IS THAT WRITTEN?"</text>
+          <!-- three dispositions -->
+          <line x1="320" y1="112" x2="370" y2="60" class="s-ink" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <line x1="320" y1="128" x2="370" y2="128" class="s-ink" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <line x1="320" y1="144" x2="370" y2="196" class="s-ink" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <rect x="372" y="44" width="96" height="30" class="pos-dim pos-s" stroke-width="1"/><text x="420" y="63" class="t-mi" text-anchor="middle">SOURCED</text>
+          <rect x="372" y="113" width="96" height="30" class="cau-dim cau-s" stroke-width="1"/><text x="420" y="132" class="t-mi" text-anchor="middle">CLAIMED</text>
+          <rect x="372" y="182" width="96" height="30" class="crit-dim crit-s" stroke-width="1"/><text x="420" y="201" class="t-mi" text-anchor="middle">UNKNOWN</text>
+          <text x="420" y="88" class="t-m" text-anchor="middle">a document backs it</text>
+          <text x="420" y="157" class="t-m" text-anchor="middle">a person said it</text>
+          <text x="420" y="226" class="t-m" text-anchor="middle">nobody could say</text>
+          <!-- to brainkit-init / gap register -->
+          <line x1="468" y1="59" x2="530" y2="59" class="s-ink" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <text x="499" y="50" class="t-m" text-anchor="middle" style="font-size:9px">only these</text>
+          <path d="M468 128 L500 128 L500 250 L530 250" fill="none" class="s-ink" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <path d="M468 197 L500 197 L500 250" fill="none" class="s-ink" stroke-width="1.5"/>
+          <rect x="532" y="30" width="200" height="58" class="f-surf s-ink" stroke-width="1.5"/>
+          <text x="632" y="53" class="t-h" text-anchor="middle">brainkit-init</text>
+          <text x="632" y="72" class="t-m" text-anchor="middle">DRAFTS · NEVER INVENTS · NEVER APPROVES</text>
+          <rect x="532" y="228" width="200" height="44" class="f-surf s-ink" stroke-width="1.5"/>
+          <text x="632" y="248" class="t-h" text-anchor="middle">Gap register</text>
+          <text x="632" y="264" class="t-m" text-anchor="middle">THE OWNERS' REVIEW AGENDA</text>
+          <!-- brainkit package -->
+          <line x1="632" y1="88" x2="632" y2="108" class="s-ink" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <rect x="522" y="110" width="230" height="104" class="ember-dim ember-s" stroke-width="1.5"/>
+          <text x="637" y="128" class="t-e" text-anchor="middle">BRAINKIT · SCHEMA 1.1</text>
+          <g class="t-mi" style="font-size:9px">
+            <text x="532" y="146">identity/design.md</text><text x="532" y="160">terminology.md</text><text x="532" y="174">architecture.md</text><text x="532" y="188">technology-policy + radar</text>
+            <text x="652" y="146">governance.md</text><text x="652" y="160">strategy.md · SI-*</text><text x="652" y="174">source-register.json</text><text x="652" y="188">manifest.json</text>
+          </g>
+          <text x="637" y="206" class="t-m" text-anchor="middle" style="font-size:9.5px">7 SECTIONS · EACH OWNED · EACH GROUNDED</text>
+          <!-- approve & seal -->
+          <line x1="632" y1="272" x2="632" y2="300" class="s-ink" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <text x="660" y="290" class="t-m">owners resolve gaps, approve</text>
+          <rect x="532" y="302" width="200" height="40" class="f-surf s-ink" stroke-width="1.5"/>
+          <text x="632" y="320" class="t-h" text-anchor="middle">Sealed · approved</text>
+          <text x="632" y="335" class="t-m" text-anchor="middle">package_digest sha256:229b58…</text>
+          <!-- outputs -->
+          <line x1="632" y1="342" x2="632" y2="372" class="ember-s" stroke-width="1.5" marker-end="url(#ah2)"/>
+          <text x="632" y="388" class="t-e" text-anchor="middle">READ BY EVERY DISCOVERY RUN AND FOLDED INTO EVERY COMPILED PLAN</text>
+          <!-- D7 projection -->
+          <path d="M532 130 L480 130 L480 300 L520 300" fill="none" class="s-line" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#ah2)"/>
+          <text x="470" y="318" class="t-m" text-anchor="end">projects to the D7 brand seam →</text>
+          <text x="470" y="332" class="t-m" text-anchor="end">every doc · deck · sheet · wireframe</text>
+        </svg>
+        <figcaption>An interview answer is never a source. Only what a document backs reaches a section; the rest becomes the owners' agenda. The sealed package is what a gate reads: change one byte and the digest moves, the plan hash moves, and a stored plan goes stale.</figcaption>
+      </figure>
+      <div class="side">
+        <div>
+          <h3>What Meridian Trust brought</h3>
+          <dl class="kv">
+            <dt>SI-01</dt><dd>Cut the wait for a retail credit decision without raising affordability risk</dd>
+            <dt>SI-P01</dt><dd>Second jurisdiction: parked through FY2028</dd>
+            <dt>forbidden</dt><dd>Unpinned dependency ranges in production</dd>
+            <dt>radar</dt><dd>Feature store on <em>trial</em> to 30 Sep; legacy broker on <em>hold</em>, exit Jun 2027</dd>
+            <dt>owner</dt><dd>One institutional-context owner, a human in the identity registry</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>Why this is the moat</h3>
+          <p>If a competitor copied the whole codebase tomorrow, this is what they would still lack. Context compounds cycle after cycle, and bad context compounds as readily as good. Curation is a control, which is why nothing here is generated from memory.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · the loop -->
+  <section id="loop">
+    <div class="sec-h">
+      <span class="eyebrow">The double diamond, closed into a loop</span>
+      <h2>Find the right problem. Build it right. <em>Let the run feed back.</em></h2>
+      <p class="lede" style="font-size:17px">Select a stage to see who acts, what is produced, and which gate reads it. The waist between the diamonds is enforced: no feature enters delivery without a green hand-off.</p>
+    </div>
+    <div class="grid2">
+      <figure>
+        <svg id="loopsvg" viewBox="0 0 900 430" role="img" aria-label="The discovery diamond on the left with stages discover, define, prototype and react, then business case and hand-off at the waist; the delivery diamond on the right with develop, the build loop and release; a return arrow from run and operations back into discovery as signals.">
+          <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <path d="M40 200 L220 75 L400 200 L220 325 Z" fill="none" class="s-line" stroke-width="1.5"/>
+          <path d="M500 200 L680 75 L860 200 L680 325 Z" fill="none" class="s-line" stroke-width="1.5"/>
+          <text x="220" y="60" class="t-m" text-anchor="middle">DISCOVERY HARNESS · THE PROBLEM</text>
+          <text x="680" y="60" class="t-m" text-anchor="middle">DELIVERY HARNESS · THE SOLUTION</text>
+          <text x="130" y="345" class="t-m" text-anchor="middle">diverge</text><text x="310" y="345" class="t-m" text-anchor="middle">converge</text>
+          <text x="590" y="345" class="t-m" text-anchor="middle">diverge</text><text x="770" y="345" class="t-m" text-anchor="middle">converge</text>
+          <line x1="400" y1="200" x2="500" y2="200" class="ember-s" stroke-width="2.5"/>
+          <text x="450" y="190" class="t-e" text-anchor="middle">WAIST</text>
+          <g class="stage" data-k="discover" tabindex="0" role="button" aria-label="Stage: Discover">
+            <rect class="box f-surf s-ink" x="60" y="182" width="100" height="36" stroke-width="1.5"/>
+            <text x="110" y="198" class="t-h" text-anchor="middle" style="font-size:14px">Discover</text>
+            <text x="110" y="211" class="t-m" text-anchor="middle">D2 · D5</text>
+          </g>
+          <g class="stage" data-k="define" tabindex="0" role="button" aria-label="Stage: Define">
+            <rect class="box f-surf s-ink" x="170" y="92" width="110" height="36" stroke-width="1.5"/>
+            <text x="225" y="108" class="t-h" text-anchor="middle" style="font-size:14px">Define</text>
+            <text x="225" y="121" class="t-m" text-anchor="middle">D1 · D3 · D4 · D6</text>
+          </g>
+          <g class="stage" data-k="prototype" tabindex="0" role="button" aria-label="Stage: Prototype and react">
+            <rect class="box f-surf s-ink" x="170" y="272" width="110" height="36" stroke-width="1.5"/>
+            <text x="225" y="288" class="t-h" text-anchor="middle" style="font-size:14px">Prototype · react</text>
+            <text x="225" y="301" class="t-m" text-anchor="middle">D7 · D8 · D9</text>
+          </g>
+          <g class="stage" data-k="case" tabindex="0" role="button" aria-label="Stage: Business case">
+            <rect class="box f-surf s-ink" x="285" y="150" width="105" height="36" stroke-width="1.5"/>
+            <text x="337" y="166" class="t-h" text-anchor="middle" style="font-size:14px">Business case</text>
+            <text x="337" y="179" class="t-m" text-anchor="middle">5c · decision-routed</text>
+          </g>
+          <g class="stage" data-k="handoff" tabindex="0" role="button" aria-label="Stage: Hand-off">
+            <rect class="box ember-dim ember-s" x="395" y="213" width="110" height="36" stroke-width="1.5"/>
+            <text x="450" y="229" class="t-h" text-anchor="middle" style="font-size:14px">Hand-off</text>
+            <text x="450" y="242" class="t-m" text-anchor="middle">D1–D9 green</text>
+          </g>
+          <g class="stage" data-k="develop" tabindex="0" role="button" aria-label="Stage: Develop">
+            <rect class="box f-surf s-ink" x="520" y="182" width="100" height="36" stroke-width="1.5"/>
+            <text x="570" y="198" class="t-h" text-anchor="middle" style="font-size:14px">Develop</text>
+            <text x="570" y="211" class="t-m" text-anchor="middle">SDR · HG-0009</text>
+          </g>
+          <g class="stage" data-k="build" tabindex="0" role="button" aria-label="Stage: Build loop">
+            <rect class="box f-surf s-ink" x="625" y="92" width="110" height="36" stroke-width="1.5"/>
+            <text x="680" y="108" class="t-h" text-anchor="middle" style="font-size:14px">Build loop</text>
+            <text x="680" y="121" class="t-m" text-anchor="middle">Q1–Q4 · four-eyes</text>
+          </g>
+          <g class="stage" data-k="release" tabindex="0" role="button" aria-label="Stage: Release">
+            <rect class="box f-surf s-ink" x="740" y="182" width="100" height="36" stroke-width="1.5"/>
+            <text x="790" y="198" class="t-h" text-anchor="middle" style="font-size:14px">Release</text>
+            <text x="790" y="211" class="t-m" text-anchor="middle">Q5 · PA2 · sealed</text>
+          </g>
+          <g class="stage" data-k="run" tabindex="0" role="button" aria-label="Stage: Run and operations">
+            <rect class="box f-surf s-ink" x="625" y="272" width="110" height="36" stroke-width="1.5"/>
+            <text x="680" y="288" class="t-h" text-anchor="middle" style="font-size:14px">Run</text>
+            <text x="680" y="301" class="t-m" text-anchor="middle">signals · assurance</text>
+          </g>
+          <g class="s-ink" stroke-width="1.5" fill="none">
+            <path d="M160 192 L172 128" marker-end="url(#ah3)"/>
+            <path d="M160 208 L172 274" marker-end="url(#ah3)"/>
+            <path d="M280 116 L300 150" marker-end="url(#ah3)"/>
+            <path d="M280 284 L330 188" marker-end="url(#ah3)"/>
+            <path d="M390 172 L412 213" marker-end="url(#ah3)"/>
+            <path d="M505 228 L526 218" marker-end="url(#ah3)"/>
+            <path d="M620 192 L632 128" marker-end="url(#ah3)"/>
+            <path d="M735 120 L745 182" marker-end="url(#ah3)"/>
+            <path d="M745 216 L735 272" marker-end="url(#ah3)"/>
+          </g>
+          <path d="M680 308 L680 372 L110 372 L110 220" fill="none" class="ember-s" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ah3)"/>
+          <text x="400" y="390" class="t-e" text-anchor="middle">RUN → DISCOVERY · OPERATIONS SIGNALS BECOME EVIDENCE (THE THIRD ARC)</text>
+          <path d="M337 186 L337 240 L358 240" fill="none" class="s-line" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#ah3)"/>
+          <text x="364" y="244" class="t-m" style="font-size:9.5px">stop · outcome.md</text>
+          <path d="M570 182 L570 135 L337 135 L337 148" fill="none" class="s-line" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#ah3)"/>
+          <text x="453" y="129" class="t-m" text-anchor="middle" style="font-size:9.5px">outside the cost band → re-decide</text>
+          <text x="20" y="418" class="t-m">A DISCOVERY IS ALLOWED TO FAIL. STOPPING THE WRONG PROBLEM EARLY IS A WIN.</text>
+        </svg>
+        <figcaption>Left diamond: the problem. Right diamond: the solution. They meet at one artifact, the hand-off, and nothing crosses the waist without it. Run feeds signals back as evidence, so the loop closes. The dashed exits are real: a run may stop, and a chosen direction outside the case's cost band goes back to its decision authority.</figcaption>
+      </figure>
+      <div class="panel" id="panel" aria-live="polite">
+        <span class="eyebrow" id="p-eyebrow">Stage</span>
+        <h3 id="p-title">Select a stage</h3>
+        <p id="p-body" style="font-size:15px;line-height:1.55">Click any box in the loop. The panel shows who acts, what gets written, and the gate that reads it.</p>
+        <div class="who" id="p-who"></div>
+        <div class="arts" id="p-arts"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · the floor -->
+  <section id="floor">
+    <div class="sec-h">
+      <span class="eyebrow">Where the people stand</span>
+      <h2>The Factory Floor proposes. <em>Git disposes.</em></h2>
+      <p class="lede" style="font-size:17px">Most of the people a regulated build depends on never open a repository and should not have to. The floor is their guided surface. Nothing a gate trusts lives there, and enforcement is identical with the floor present or absent.</p>
+    </div>
+    <div class="grid2">
+      <figure>
+        <svg viewBox="0 0 760 330" role="img" aria-label="Four planes stacked: the engagement plane where the author fills guided forms and floor-only notes; the seam with four service identities that propose and never merge; the record in git where a second human merges the freeze PR and the gates read; and protected CI where gates run. The freeze round trip is drawn from the floor to a PR to the gates, and a projection returns with authority none.">
+          <defs><marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <!-- planes -->
+          <rect x="20" y="20" width="720" height="70" class="f-surf s-line" stroke-width="1"/>
+          <rect x="20" y="106" width="720" height="56" class="f-surf2 s-line" stroke-width="1"/>
+          <rect x="20" y="178" width="720" height="70" class="f-surf s-ink" stroke-width="1.5"/>
+          <rect x="20" y="264" width="720" height="48" class="f-surf2 s-line" stroke-width="1"/>
+          <text x="32" y="38" class="t-m">ENGAGEMENT · THE FLOOR</text><text x="728" y="38" class="t-e" text-anchor="end">AUTHORITY: NONE</text>
+          <text x="32" y="124" class="t-m">SEAM · THE SYNC SERVICE</text><text x="728" y="124" class="t-m" text-anchor="end">PROPOSES, NEVER DISPOSES</text>
+          <text x="32" y="196" class="t-m">RECORD · GIT</text><text x="728" y="196" class="t-e" text-anchor="end">THE SYSTEM OF RECORD</text>
+          <text x="32" y="282" class="t-m">EXECUTION · PROTECTED CI</text><text x="728" y="282" class="t-m" text-anchor="end">NO PATH TO THE FLOOR</text>
+          <!-- floor contents -->
+          <rect x="60" y="48" width="150" height="30" class="f-bg s-line"/><text x="135" y="67" class="t" text-anchor="middle" style="font-size:12px">Guided forms (A · B)</text>
+          <rect x="230" y="48" width="150" height="30" class="f-bg s-line"/><text x="305" y="67" class="t" text-anchor="middle" style="font-size:12px">Notes · briefs (C, never frozen)</text>
+          <rect x="400" y="48" width="130" height="30" class="f-bg s-line"/><text x="465" y="67" class="t" text-anchor="middle" style="font-size:12px">Projected gate board</text>
+          <text x="560" y="67" class="t" style="font-size:12px">the author · the reactors</text>
+          <!-- seam identities -->
+          <g class="t-mi" style="font-size:10px">
+            <text x="60" y="146">svc-floor-projector</text><text x="230" y="146">svc-floor-freezer</text><text x="400" y="146">svc-floor-bridge</text><text x="570" y="146">svc-floor-keeper</text>
+          </g>
+          <g class="t-m" style="font-size:9px"><text x="60" y="157">may never write git</text><text x="230" y="157">may never merge its own PR</text><text x="400" y="157">may never sign an approval</text><text x="570" y="157">no grant where approvals live</text></g>
+          <!-- record -->
+          <rect x="230" y="204" width="170" height="34" class="f-bg s-ink" stroke-width="1.5"/><text x="315" y="219" class="t" text-anchor="middle" style="font-size:12px">discovery/runs/&lt;slug&gt;/</text><text x="315" y="232" class="t-m" text-anchor="middle">+ .freeze/ stamp · digest</text>
+          <rect x="430" y="204" width="130" height="34" class="f-bg s-ink" stroke-width="1.5"/><text x="495" y="219" class="t" text-anchor="middle" style="font-size:12px">A second human</text><text x="495" y="232" class="t-m" text-anchor="middle">merges the PR</text>
+          <text x="575" y="224" class="t" style="font-size:11.5px">facilitator, at the machine</text>
+          <!-- CI -->
+          <text x="380" y="302" class="t" text-anchor="middle" style="font-size:12px">D1–D9 re-run on the exported files · freeze-stamp-check · drift-check · floor-only-check</text>
+          <!-- freeze path -->
+          <path d="M135 78 L135 100" fill="none" class="ember-s" stroke-width="1.5" marker-end="url(#ah4)"/>
+          <text x="145" y="98" class="t-e" style="font-size:9.5px">1 · a human freezes</text>
+          <path d="M290 132 L290 170 L315 170 L315 202" fill="none" class="ember-s" stroke-width="1.5" marker-end="url(#ah4)"/>
+          <text x="200" y="168" class="t-e" style="font-size:9.5px">2 · export → PR</text>
+          <path d="M400 221 L428 221" fill="none" class="ember-s" stroke-width="1.5" marker-end="url(#ah4)"/>
+          <path d="M315 238 L315 262" fill="none" class="ember-s" stroke-width="1.5" marker-end="url(#ah4)"/>
+          <text x="325" y="258" class="t-e" style="font-size:9.5px">3 · gates read the copy</text>
+          <!-- projection back -->
+          <path d="M660 248 L660 132 L660 100 L520 100 L520 80" fill="none" class="s-line" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ah4)"/>
+          <text x="670" y="176" class="t-m" style="font-size:9.5px">projection ← a mirror,</text>
+          <text x="670" y="188" class="t-m" style="font-size:9.5px">never a decision</text>
+        </svg>
+        <figcaption>The freeze round trip is the moment a draft becomes a record: a human freezes, the exporter writes deterministic Markdown, a PR opens with a stamp naming the digest, the gates re-run, a second human merges. A page edited afterwards blocks new claims and never reaches back to change what was merged.</figcaption>
+      </figure>
+      <div class="side">
+        <div>
+          <h3>Two roles, deliberately unequal</h3>
+          <ul>
+            <li><strong>The author</strong> owns the content of the problem. A product manager, on the floor, in guided forms whose banner says what becomes of what they type.</li>
+            <li><strong>The facilitator</strong> owns the record. One engineer with Claude Code and the plugin, at the machine.</li>
+            <li>Neither approves anything. Approval, where discovery has any, is a second human merging a PR.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Three write classes on every page</h3>
+          <dl class="kv">
+            <dt>A</dt><dd><code>born-on-the-floor</code>: frozen into the run at a gate</dd>
+            <dt>B</dt><dd><code>decision-routed</code>: real only as a signed record a second human merges</dd>
+            <dt>C</dt><dd><code>lives-on-the-floor</code>: never frozen; roles, not names; the PII rule is the banner</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · register chain -->
+  <section id="chain">
+    <div class="sec-h">
+      <span class="eyebrow">What a gate actually reads</span>
+      <h2>Every link is a file. <em>Nothing is remembered.</em></h2>
+      <p class="lede" style="font-size:17px">The regulated context is one chain from obligation to evidence, and the institutional context binds into the plan by digest. A control that exists as prose nobody reads is not on this drawing.</p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 900 250" role="img" aria-label="A chain of five boxes: obligation, data risk, control, gate, evidence, each a named file, linked by arrows labelled cites, mitigated by, enforced by, and records. Above, the change envelope compiles a control plan whose plan hash folds in the BrainKit digest; below, the data-governance artifact of a discovery run cites risk and control ids through gate D6.">
+        <defs><marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+        <g class="f-surf s-ink" stroke-width="1.5">
+          <rect x="20" y="100" width="150" height="56"/><rect x="205" y="100" width="150" height="56"/><rect x="390" y="100" width="150" height="56"/><rect x="575" y="100" width="150" height="56"/><rect x="760" y="100" width="120" height="56"/>
+        </g>
+        <g class="t-h" text-anchor="middle" style="font-size:15px">
+          <text x="95" y="122">Obligation</text><text x="280" y="122">Data risk</text><text x="465" y="122">Control</text><text x="650" y="122">Gate</text><text x="820" y="122">Evidence</text>
+        </g>
+        <g class="t-m" text-anchor="middle">
+          <text x="95" y="140">OB-* · obligations.json</text><text x="280" y="140">DR-* · data-risk-register/</text><text x="465" y="140">CTRL-* · control-catalog.json</text><text x="650" y="140">D1–D9 · Q1–Q5 · risk-scoped runner</text><text x="820" y="140">sealed bundle · anchored</text>
+        </g>
+        <g class="s-ink" stroke-width="1.5" fill="none">
+          <line x1="170" y1="128" x2="203" y2="128" marker-end="url(#ah5)"/><line x1="355" y1="128" x2="388" y2="128" marker-end="url(#ah5)"/><line x1="540" y1="128" x2="573" y2="128" marker-end="url(#ah5)"/><line x1="725" y1="128" x2="758" y2="128" marker-end="url(#ah5)"/>
+        </g>
+        <g class="t-m" text-anchor="middle" style="font-size:9.5px"><text x="187" y="118">names</text><text x="372" y="118">mitigated by</text><text x="557" y="118">enforced by</text><text x="742" y="118">records</text></g>
+        <!-- above: compiler -->
+        <rect x="390" y="18" width="150" height="40" class="ember-dim ember-s" stroke-width="1.5"/>
+        <text x="465" y="35" class="t-h" text-anchor="middle" style="font-size:14px">Compiled control plan</text>
+        <text x="465" y="50" class="t-m" text-anchor="middle">plan_hash ⟵ profiles + BrainKit digest</text>
+        <line x1="465" y1="58" x2="465" y2="98" class="ember-s" stroke-width="1.5" marker-end="url(#ah5)"/>
+        <text x="475" y="82" class="t-e" style="font-size:9.5px">mandatory-when-compiled</text>
+        <rect x="205" y="18" width="150" height="40" class="f-surf s-line"/>
+        <text x="280" y="35" class="t" text-anchor="middle" style="font-size:12px">Change envelope</text>
+        <text x="280" y="50" class="t-m" text-anchor="middle">risk tier · profiles · flags</text>
+        <line x1="355" y1="38" x2="388" y2="38" class="s-ink" stroke-width="1.5" marker-end="url(#ah5)"/>
+        <rect x="575" y="18" width="150" height="40" class="f-surf s-line"/>
+        <text x="650" y="35" class="t" text-anchor="middle" style="font-size:12px">Any BrainKit edit</text>
+        <text x="650" y="50" class="t-m" text-anchor="middle">digest moves → plan stale → recompile</text>
+        <line x1="573" y1="38" x2="542" y2="38" class="s-line" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#ah5)"/>
+        <!-- below: discovery D6 -->
+        <rect x="205" y="196" width="335" height="40" class="f-surf s-line"/>
+        <text x="372" y="213" class="t" text-anchor="middle" style="font-size:12px">discovery/runs/&lt;slug&gt;/data-governance.md</text>
+        <text x="372" y="228" class="t-m" text-anchor="middle">cites ≥1 DR-* and ≥1 driver · every id must resolve · a residual-risk verdict</text>
+        <line x1="280" y1="196" x2="280" y2="158" class="s-ink" stroke-width="1.5" marker-end="url(#ah5)"/>
+        <line x1="465" y1="196" x2="465" y2="158" class="s-ink" stroke-width="1.5" marker-end="url(#ah5)"/>
+        <text x="580" y="220" class="t-e" style="font-size:9.5px">gate D6 · feasibility asked in discovery, not retrofitted</text>
+        <!-- four eyes -->
+        <text x="650" y="176" class="t-m" text-anchor="middle">the agent proposes · a human disposes (HG-0001)</text>
+      </svg>
+      <figcaption>Five decisions carry most of the method: four-eyes merge, an immutable control plane, sealed evidence, the agent treated as a governed model, and graduated autonomy inside an expiring envelope. This drawing is the wire they run on.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 5 · honest state -->
+  <section id="honest">
+    <div class="sec-h">
+      <span class="eyebrow">Honest state</span>
+      <h2>Nothing here reads as more controlled <em>than it is.</em></h2>
+      <p class="lede" style="font-size:17px">The method grades itself on five states, from absent to organisationally enforced. This strip is the grade for what this page draws. Green is a gate that fails the build. Gold is defined and read by humans. Grey is the adopter's to wire.</p>
+    </div>
+    <div class="honest">
+      <div><span class="st enf"><i></i>Mechanically validated</span><strong>D1–D9, Q1–Q5, the BrainKit gate</strong><p>Pure-Node validators; a missing register, a stale digest or an omitted canonical section fails the build. Schema 1.0 packages keep passing.</p></div>
+      <div><span class="st enf"><i></i>Mechanically validated</span><strong>The waist and the floor's ten gates</strong><p>No feature item enters delivery without a green hand-off that names it. Freeze stamps, drift, parity and floor-only crossings are checked in CI.</p></div>
+      <div><span class="st def"><i></i>Defined, read by humans</span><strong>Strategic intents (SI-*)</strong><p>A problem statement and a business case cite the intent they serve. No gate reads the citation yet; the decision authority does.</p></div>
+      <div><span class="st def"><i></i>Defined, read by humans</span><strong>The business case and its cost band</strong><p>The develop skill checks the chosen direction lands inside the band. It is an instruction to the facilitator, not a script.</p></div>
+      <div><span class="st adp"><i></i>Adopter-side wiring</span><strong>The floor itself</strong><p>The bundle ships the exporter, fetcher, gates and forms. The workspace, the projector, the freezer and the hosting carry no vendor client or token by design.</p></div>
+      <div><span class="st no"><i></i>Blocked</span><strong>Decision routing (WS5)</strong><p>Catalog B ships declared, not active, until an independent second-line review of the design. The funding decision is recorded at the machine.</p></div>
+      <div><span class="st no"><i></i>Unsigned</span><strong>MiddleLeap's own residency record</strong><p>Drafted, not signed. A floor cannot exist on an unsigned record, and the gate that enforces that is live.</p></div>
+      <div><span class="st def"><i></i>The standing risk</span><strong>Comprehension debt</strong><p>The review gate is the one resource that does not scale. The decision log makes the agent's reasoning replayable; whether the human at the gate is still reading is named, not measured.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>The Loom · MiddleLeap AI DLC · plugin <code>middleleap-loom</code> 2.2.0</span>
+    <span>Canon: <code>skills/loom/references/core.md</code> · this page: <code>assets/loom-atlas.html</code> · the stream: <code>assets/loom-stream.html</code></span>
+    <span>Meridian Trust is fictional. Every name, figure and rating is synthetic. Nothing here is anyone's approval.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var STAGES = {
+    discover:{eb:'Stage 1–2 · Discover', t:'Signals, then themes', b:'Interview notes stay on the floor as roles and pseudonyms; every observation becomes a numbered signal with a source and a confidence. Synthesis clusters signals into themes and names one candidate problem, by a stated method.', who:[['h','author'],['h','facilitator']], arts:['research-log.md · S-001…','evidence/','synthesis.md · T-1…','D2 · every claim traces to a signal from two sources','D5 · every theme cites a signal']},
+    define:{eb:'Stage 3–4 · Define', t:'One falsifiable problem, and can we hold the data', b:'The problem statement names the target user, the success measures from baseline to target, the constraints and the explicit out-of-scope. The strategic intent it serves is cited or declared none. Data-governance feasibility is asked here, against the register, not retrofitted in delivery.', who:[['h','author'],['h','facilitator'],['a','data-governance-reviewer']], arts:['problem-statement.md · SI-nn','data-governance.md · DR-* · CTRL-* · verdict','D1 · D3 · D4 no-solutioning','D6 · ids resolve, verdict present']},
+    prototype:{eb:'Stage 5 · 5b · Make tangible', t:'A disposable wireframe, and a recorded reaction', b:'Drafted on the design canvas, committed through the brand renderer so the asset is token-only by construction. The named roles react to the committed wireframe, one verdict per framing hypothesis, each reaction logged as a new signal and bound to the prototype digest.', who:[['h','author'],['h','reactors'],['h','facilitator'],['a','discovery-boundary-reviewer']], arts:['prototype.md · H1… · design_canvas:','specs/wireframe.prototype.json → wireframe.html','stakeholder-reaction.md · prototype_digest:','D7 brand · D8 tangibility · D9 validation loop']},
+    case:{eb:'Stage 5c · Decide to fund', t:'The case for solving this problem', b:'"Do nothing" is the mandatory baseline. Benefits are only the D1 measures, valued, so they are measured after launch. Costs are the total cost of change as a band: organisational change, legal, control functions, run, not just the build. It names no mechanism.', who:[['h','author'],['h','facilitator'],['h','decision authority']], arts:['business-case.md · decision-routed','decision_record: ADR or envelope, merged by a second human','re-decision trigger if Develop lands outside the band','no gate reads the case (2.2.0)']},
+    handoff:{eb:'Stage 6 · The waist', t:'The boundary object', b:'Delivery-ready only when D1–D9 are green and it contains no delivery design. It quotes the problem, the governance position, the direction as direction not specification, and the funding position. Its licenses: line names the backlog items it admits, so one run never licenses the whole backlog.', who:[['h','facilitator'],['h','second human merges']], arts:['handoff.md · licenses: [STORY-…]','discovery-link-check · HG-0007','or: outcome.md · a human decided to stop']},
+    develop:{eb:'Right diamond · diverge', t:'Three or more directions, judged', b:'Independent agents propose directions under distinct lenses; a judge scores them on success-measure fit, inherited conditions, composition, delivery cost and institutional fit. Forbidden or held technology disqualifies; trial needs the named authority; the chosen direction must land inside the case\'s cost band.', who:[['a','fan-out agents'],['a','judge'],['h','solution architect']], arts:['docs/develop/<slug>.md · Solution Direction Record','develop-direction-check · HG-0009','backlog item · discovery: <slug> · sdr:','ADR for any new primitive, human-approved']},
+    build:{eb:'Right diamond · converge', t:'The autonomous build loop', b:'Spec first, then story by story under quality gates: unit, spec conformance, integration, security and dependencies, lineage. The agent proposes a merge; a human in a CODEOWNERS group the agent is not in disposes. Guardrail hooks refuse PII and spec tampering before the file is written.', who:[['a','next-story · implement-story'],['h','four-eyes reviewer']], arts:['Q1 · Q2 · Q3 · Q4 · Q4.5','HG-0001 four-eyes · HG-0002 immutable control plane','HG-0013 routine lane inside an expiring envelope','decision log · replayable reasoning']},
+    release:{eb:'Release', t:'A human, at release time, evidenced', b:'The release subject binds source, artifact, evals and evidence by one digest. Product approval PA2 resolves to human identities holding the role. The evidence bundle is hash-chained and anchored outside the tree.', who:[['h','product owner'],['h','risk second line'],['h','accountable executive']], arts:['Q5 production approval','product-passport.json · PA1 · PA2','product-evals.json · every D1 measure scored','sealed evidence · external record']},
+    run:{eb:'Run · the third arc', t:'Operations feeds discovery', b:'Shipped software runs. Incidents, complaints, SLO breaches and regulatory change arrive as operations signals, are triaged and routed, and become evidence in the next discovery. Continuous assurance walks watch, assess, check, test, evidence, confirm on every trigger.', who:[['a','change-watch'],['a','risk-reviewer'],['h','operations']], arts:['operations-signal.json · routed to discovery','assurance-cycle · six steps','the loop closes']}
+  };
+  var svg=document.getElementById('loopsvg'); if(!svg) return;
+  var nodes=svg.querySelectorAll('.stage');
+  function show(k){
+    var s=STAGES[k]; if(!s) return;
+    nodes.forEach(function(n){n.classList.toggle('active',n.dataset.k===k);});
+    document.getElementById('p-eyebrow').textContent=s.eb;
+    document.getElementById('p-title').textContent=s.t;
+    document.getElementById('p-body').textContent=s.b;
+    var who=document.getElementById('p-who'); who.innerHTML='';
+    s.who.forEach(function(w){var c=document.createElement('span');c.className='chip '+w[0];c.textContent=(w[0]==='a'?'agent · ':'human · ')+w[1];who.appendChild(c);});
+    var arts=document.getElementById('p-arts'); arts.innerHTML='';
+    s.arts.forEach(function(a){var e=document.createElement('span');e.textContent=a;arts.appendChild(e);});
+  }
+  nodes.forEach(function(n){
+    n.addEventListener('click',function(){show(n.dataset.k);});
+    n.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();show(n.dataset.k);}});
+  });
+  show('handoff');
+})();
+</script>

@@ -86,7 +86,16 @@ Pick a slug. Create `discovery/runs/<slug>/` and copy each `discovery/templates/
    each other — one reviewer reading the other's verdict is not a second pair of eyes):
    `data-governance-reviewer` (control coverage / residual soundness) and
    `discovery-boundary-reviewer` (no-solutioning / prototype fidelity). Resolve any FAIL.
-3. `handoff.md`: the boundary object — problem, success measures, out-of-scope, the
+3. `business-case.md` — **where the institution funds change by decision** (its decision rights
+   in `institution/brainkit/governance.md` say so; otherwise skip). From
+   `discovery/templates/business-case.md`: the case for solving *this problem*, with "do
+   nothing" as the mandatory baseline, benefits that are **only** the D1 success measures valued,
+   and the **total cost of change** as a band (organisational change, legal, control functions,
+   run — not just the build). It names no mechanism, technology or vendor: D4 holds. Write class
+   `decision-routed` — the funding decision is an ADR or decision envelope a human other than the
+   proposer merges, and `handoff.md` cites it. A stage-1 pre-screen may be written from the
+   problem statement alone, before the prototype; the stage-2 case needs the reaction (D9).
+4. `handoff.md`: the boundary object — problem, success measures, out-of-scope, the
    data-governance verdict + inherited conditions, and the prototype as *direction, not
    specification*. No delivery design in it. Its front-matter `licenses:` names the backlog
    item ids this hand-off admits to delivery (`licenses: [STORY-12, STORY-13]`): the waist gate
@@ -102,7 +111,8 @@ Pick a slug. Create `discovery/runs/<slug>/` and copy each `discovery/templates/
 - All applicable D1–D9 gates green; both reviewers PASS.
 - Every artifact carries the `design_profile`; the wireframe is brand-conformant.
 - The prototype's framing hypotheses each have a recorded stakeholder reaction (D9), logged as signals.
-- `handoff.md` contains no endpoints, schemas, stories, or tech choices.
+- `handoff.md` contains no endpoints, schemas, stories, or tech choices; where a `business-case.md`
+  exists it names no mechanism either, and its decision record is cited in the hand-off.
 - Synthetic data only; zero PII; DEMO banner on the wireframe.
 
 The **Develop** phase (the `develop` skill) consumes `handoff.md` next — it explores solution

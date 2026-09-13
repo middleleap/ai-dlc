@@ -38,7 +38,7 @@ handoff: "discovery/runs/<slug>/handoff.md"
 |---|---|---|---|
 | <measure from D1> | | | |
 | <condition from D6> | | | |
-| Institutional fit (BrainKit `architecture.md` · `technology-policy.json`) | | | |
+| Institutional fit (BrainKit `architecture.md` · `technology-policy.json` incl. the `radar` ring each new technology sits in) | | | |
 
 ## The chosen direction
 

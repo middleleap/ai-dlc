@@ -35,8 +35,11 @@ The BrainKit is the **institution-owned seed of the Loom's context brain**. This
    - `identity/design.md` — institutional identity + design language (the D7 projection source).
    - `terminology.md` — the binding vocabulary.
    - `architecture.md` — principles, constraints, material-change triggers.
-   - `technology-policy.json` — allowed / consult / forbidden + standards.
+   - `technology-policy.json` — allowed / consult / forbidden + standards, and the `radar`
+     lifecycle (assess / trial / adopt / hold — every entry owned, dated, grounded).
    - `governance.md` — decision rights (who decides what).
+   - `strategy.md` — the approved strategic intents (`SI-*`) and the ones explicitly parked, from
+     the strategy source only. An intent nobody approved is a gap, not a row.
    - `source-register.json` — every approved source, each with a human `approved_by`.
 4. **Record provenance** for every generated section: which approved source(s) it came from, and
    what (if anything) you inferred versus quoted. Inferences that lack a source are gaps.
@@ -44,7 +47,7 @@ The BrainKit is the **institution-owned seed of the Loom's context brain**. This
    `institution`, a semantic `version`, a `brainkit` pointer). It contributes the
    `brainkit-conformance` gate, `brainkit-provenance` evidence, and the `institutional-context-owner`
    approver role. A governed change in this repo must then name this profile in `required_profiles`.
-6. **Fill the manifest** (`manifest.json`): `schema_version`, `brainkit_id`, `institution_id`,
+6. **Fill the manifest** (`manifest.json`): `schema_version` (`1.1` — seven canonical sections), `brainkit_id`, `institution_id`,
    semantic `version`, `status: draft`, `effective_at`, accountable `owners` by section (each an
    identity in `docs/governance/identities.json`), and `approved_sources`. Leave `approvals` empty.
 7. **Seal the digests**: `node scripts/brainkit-check.mjs --seal` (an adopted repo installs the gate
@@ -72,3 +75,10 @@ The BrainKit is the **institution-owned seed of the Loom's context brain**. This
 absent, or present only as an adopt-pending template, adoption routes the user through this skill
 before a governed change can name an institution profile. `brainkit-check` enforces the result:
 until the BrainKit is approved, sealed, owned and grounded, a compiled change that pins it is blocked.
+
+If the institution has **no approved sources gathered yet** — the usual first-day state — run the
+`institution-intake` skill first. It interviews the accountable roles block by block and sorts
+every answer into SOURCED (→ a `source-register.json` skeleton this skill drafts from), CLAIMED or
+UNKNOWN (→ a gap register the owners work through). An interview answer never becomes a section
+here without a source behind it; that boundary is the intake's job to keep, and this skill's to
+respect.

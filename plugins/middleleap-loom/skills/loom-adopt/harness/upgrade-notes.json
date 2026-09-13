@@ -511,6 +511,23 @@
         "To post records: put KOSLI_API_TOKEN (and, if you pin the binary, KOSLI_BIN) in the CI runner's secrets — never in the tree — and give the runner the signing key path via --record-key/--record-issuer or LOOM_RECORD_KEY/LOOM_RECORD_ISSUER. Unsigned envelopes are refused, not posted.",
         "If you keep a compiled record policy (docs/governance/record-policy.json / record-types.json), recompile whenever the control catalog changes — RECORD-POLICY fails a stale one. Mount `loom-record` in your .mcp.json (`node core/record-mcp.mjs`) so the reviewer agents can read the record."
       ]
+    },
+    {
+      "version": "2.2.0",
+      "headline": "2.2.0 — the institution prepares: intake, the business case in discovery, strategic intents and the technology radar",
+      "notes": [
+        "institution-intake (new skill) is the guided Q&A that sets an institution's scene before the first discovery run; every answer is SOURCED, CLAIMED or UNKNOWN, and only SOURCED answers reach a BrainKit section via brainkit-init.",
+        "discovery/templates/business-case.md is a stage-5c discovery artifact (decision-routed): the case for solving THIS problem against the total cost of change, 'do nothing' as the baseline, benefits restricted to the D1 measures. handoff.md carries a Funding position; the develop skill checks the SDR lands inside the case's cost band. Both have generated floor forms.",
+        "BrainKit schema 1.1: strategy.md (approved strategic intents, SI-*) is a canonical section. The canonical set is selected by manifest.schema_version — a 1.0 package keeps its six sections and keeps passing; an unknown schema_version is a finding. No gate reads SI-* yet.",
+        "technology-policy.json gains a `radar` block (assess / trial / adopt / hold, each owned, dated, grounded). The develop skill's judgment disqualifies a direction on forbidden or hold, treats trial as consult, and excludes assess.",
+        "problem-statement.md has a Strategic intent line; the floor form regenerated.",
+        "references/floor-discovery-runbook.md: the day-one runbook for a facilitator and a non-technical author on the Factory Floor."
+      ],
+      "action_required": [
+        "To move an approved BrainKit to schema 1.1: draft institution/brainkit/strategy.md from the approved strategy source (brainkit-init does this), add owners.strategy and a `strategy` entry to manifest.sections, set schema_version to \"1.1\", reseal (brainkit-check --seal), have the owners re-approve, then update the profile's release_digest, regenerate the D7 projection and recompile every stored plan (plan_hash moves). Until you do, schema 1.0 keeps passing.",
+        "Regenerate floor forms after the template changes: node scripts/template-parity-check.mjs --fix (business-case, handoff and problem-statement changed).",
+        "If your decision rights fund change by decision, add the business-case step to your discovery runs; if they do not, skip it — no gate requires the artifact."
+      ]
     }
   ]
 }

@@ -17,7 +17,7 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import process from 'node:process';
-import { loadBrainkit, computeDigests, livePackageDigest, LIFECYCLE, SECTION_KEYS } from '../core/brainkit.mjs';
+import { loadBrainkit, computeDigests, livePackageDigest, LIFECYCLE, SCHEMA_SECTIONS, sectionKeysFor } from '../core/brainkit.mjs';
 import { aggregateRequirements, CHANGES_DIR } from '../core/compiled-requirements.mjs';
 import { loadRegistry, identityOf } from './identity-registry-check.mjs';
 import { pathToFileURL } from 'node:url';
@@ -95,6 +95,12 @@ export function evaluate(brainkit, { required = false, registry = null, institut
   // the declared sections let an approved package silently omit one — remove `architecture` from
   // manifest.sections, reseal, and the old gate was blind. Every canonical section must be
   // declared exactly once; extra institution-specific sections are allowed (and digest-checked).
+  // 2.2.0: the canonical set is the one the manifest's schema_version names (1.0 = six sections,
+  // 1.1 adds `strategy`). An unknown schema is a finding — the gate never guesses a section set.
+  if (typeof m.schema_version === 'string' && !isPlaceholder(m.schema_version) && !SCHEMA_SECTIONS[m.schema_version]) {
+    findings.push(`manifest.schema_version ${JSON.stringify(m.schema_version)} is not a known BrainKit schema (${Object.keys(SCHEMA_SECTIONS).join(', ')}) — the canonical section set cannot be determined`);
+  }
+  const SECTION_KEYS = sectionKeysFor(m);
   const declared = (m.sections || []).map((s) => s.section);
   for (const key of SECTION_KEYS) {
     if (!declared.includes(key)) findings.push(`canonical section ${key} is not declared in manifest.sections — a BrainKit cannot silently omit a canonical section`);

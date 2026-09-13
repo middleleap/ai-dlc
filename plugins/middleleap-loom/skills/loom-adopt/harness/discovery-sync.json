@@ -68,10 +68,10 @@
     },
     "discovery/render/brainkit-provenance.test.mjs": {
       "base": null,
-      "bundle": "sha256:4aa5fed254adf0f97e380c3de19af359a2ce79fcbbaec8eb8631b231b8d4cfa1",
+      "bundle": "sha256:cabb247a6c63573630a7bc637942ec939c35eee804b9d9db072d827f275bd5d4",
       "upstream": null,
-      "state": "bundle-only",
-      "note": "added here 2026-07-23 (rc.8 WS8) — never existed upstream"
+      "state": "owed",
+      "note": "changed here 2026-09-13; see `git log -- discovery/render/brainkit-provenance.test.mjs`"
     },
     "discovery/render/office.test.mjs": {
       "base": "sha256:08bcd73de99fe59753ca0dae25c337129bbe53980e34039eeb001cbb2b90137d",
@@ -129,17 +129,17 @@
     },
     "discovery/templates/handoff.md": {
       "base": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
-      "bundle": "sha256:83101d21064c4fbf82287b09610c52fcb42c4e865e8184d1c7edae7b68942a2f",
+      "bundle": "sha256:b78ce530246466452456a92fe45c4fab0d2135f4db2b975d1095c8246cfb9976",
       "upstream": null,
       "state": "owed",
-      "note": "changed here 2026-09-12; see `git log -- discovery/templates/handoff.md`"
+      "note": "changed here 2026-09-13; see `git log -- discovery/templates/handoff.md`"
     },
     "discovery/templates/problem-statement.md": {
       "base": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
-      "bundle": "sha256:2fda98a745bee184954dadfc218f761a0a7e1ee4938474c8133a0d78416cd73c",
+      "bundle": "sha256:b92c5a517186779c0d9ce82e4f89921add46fda10a1b43bfa113fec8ae9918c9",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: identifiers expanded on first use so a newcomer is never shown a bare gate id (rc.32 legibility)"
+      "note": "changed here 2026-09-13; see `git log -- discovery/templates/problem-statement.md`"
     },
     "discovery/templates/prototype.md": {
       "base": "sha256:1ea35b3a2ac61009903d91c5da2952b46011403e311b0dc8bf37a818bdea1c25",
@@ -179,6 +179,13 @@
     "discovery/templates/outcome.md": {
       "base": null,
       "bundle": "sha256:daaf7669f28a5b095a766871f146726dea040fb0304347e25603130c8a9cb50a",
+      "upstream": null,
+      "state": "bundle-only",
+      "note": "added here 2026-09-13"
+    },
+    "discovery/templates/business-case.md": {
+      "base": null,
+      "bundle": "sha256:25c1ec77ac2d3affe9539980dba6101aac54d233cb53094df43666dba0f9da5c",
       "upstream": null,
       "state": "bundle-only",
       "note": "added here 2026-09-13"

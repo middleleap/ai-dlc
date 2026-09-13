@@ -33,7 +33,7 @@
       "source": "discovery/templates",
       "dest": "discovery/templates",
       "kind": "dir",
-      "seam": "One template per discovery artifact",
+      "seam": "One template per discovery artifact (incl. the optional, decision-routed business-case.md)",
       "tier": "core"
     },
     {
@@ -490,7 +490,7 @@
       "dest": "institution/brainkit/technology-policy.json",
       "kind": "file",
       "adopt": "template",
-      "seam": "BrainKit technology policy (allowed / consult / forbidden)",
+      "seam": "BrainKit technology policy (allowed / consult / forbidden) + the radar lifecycle (assess / trial / adopt / hold)",
       "tier": "full"
     },
     {
@@ -499,6 +499,14 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit decision rights",
+      "tier": "full"
+    },
+    {
+      "source": "brainkit/strategy.md",
+      "dest": "institution/brainkit/strategy.md",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "BrainKit strategic intents (SI-*) — schema 1.1; a discovery run cites the intent its problem serves",
       "tier": "full"
     },
     {

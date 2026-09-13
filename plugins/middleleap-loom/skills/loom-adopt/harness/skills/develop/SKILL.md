@@ -74,6 +74,12 @@ Spawn a judge subagent (or a small panel) that scores each direction, NOT on ele
 3. **Composition** — reuses primitives vs invents them. New primitives require an ADR (and so are
    costlier and riskier).
 4. **Delivery cost / story count** — fewer, smaller, independently-shippable stories win.
+5. **Institutional fit** — read `institution/brainkit/technology-policy.json` where a BrainKit is
+   mounted. A direction resting on a `forbidden` technology, or on a `radar` entry in the `hold`
+   ring, is **disqualified**; one resting on a `trial` entry needs the named `authority`'s sign-off
+   before it can be chosen (treat as `consult`); one resting on an `assess` entry is not available
+   to a governed change. `architecture.md`'s constraints apply the same way. Fit is a filter before
+   it is a score.
 
 The judge returns a ranking with one-line rationale per direction and a recommended winner.
 
@@ -90,6 +96,16 @@ traceable record of *why this approach*, for the audit.
 in. Write the ADR (`docs/adrs/`) and/or run the `spec-change` skill for the spec-only PR — both are
 **human-approved, never self-merged**. The backlog item then `depends_on` that decision (or is
 `blocked` with the ADR/spec-PR reference) until a human ratifies it.
+
+## 3b. The business case is inherited, not written here
+
+Where the institution funds change by decision, the case was written **in discovery**
+(`discovery/runs/<slug>/business-case.md`, from `discovery/templates/business-case.md`) and
+decided before the hand-off — it belongs to the problem, not to a build. Develop's job with it
+is one check: the SDR's chosen direction must land inside the case's **total-cost-of-change
+band** (§4). If it does not, the case's re-decision trigger fires — it returns to its decision
+authority before §4 below, and the backlog item(s) `depends_on` that re-decision. Never absorb
+the overrun silently, and never rewrite the case here to fit the direction.
 
 ## 4. Emit — the discovery-linked backlog item(s)
 
