@@ -30,7 +30,11 @@ failure:
   (control plane, `specs/`/`spec/`, auth, migrations — the floor is code and beats the envelope);
 - a class the envelope does not list, or one outside the known routine set;
 - a diff over `max_diff_lines`;
-- a `required_green_gates` entry not recorded green;
+- a `required_green_gates` entry the gate runner did not record green at this commit
+  (`gate-run-*.json`; the claim's own `gates_green` is not read — 2.1.0);
+- a class the diff's content contradicts: a `dependency-patch` that introduces a package name or
+  crosses a major, a `doc-fix` touching a source file, a `formatting` change that moves a
+  non-whitespace character, a `lint-fix` that imports something new (2.1.0);
 - an expired envelope, or an owner who is not a second-line human.
 
 The adversarial checklist in `governance/runbooks/pilot-playbook.md` maps the out-of-envelope

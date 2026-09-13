@@ -1,7 +1,7 @@
 // Tests for the HG-0013 routine-change lane. Node built-in runner: `node --test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate, pathMatch, FLOOR_DENY, ROUTINE_CLASSES } from './routine-change-check.mjs';
+import { evaluate, pathMatch, verifyClass, gatesGreenFromRecords, gitDiffDetail, FLOOR_DENY, ROUTINE_CLASSES } from './routine-change-check.mjs';
 
 const REGISTRY = {
   groups: { 'second-line': {}, builders: {} },
@@ -20,9 +20,14 @@ const ENVELOPE = {
   max_diff_lines: 40,
   required_green_gates: ['Q1', 'Q1b'],
 };
+// 2.1.0: `gates_green` on the claim is decorative — what evaluate() reads is `_green_recorded`,
+// the set check() derives from the gate runner's records; `_files` is the diff content check()
+// derives from git. Both are supplied here the way check() would.
 const CLAIM = {
   envelope: 'RTE-T', class: 'doc-fix',
   changed_paths: ['docs/guide.md'], diff_lines: 8, gates_green: ['Q1', 'Q1b', 'Q2'],
+  _green_recorded: new Set(['q1', 'q1b', 'q2']),
+  _files: [{ path: 'docs/guide.md', added: ['fixed typo'], removed: ['fixed tpyo'], base: 'fixed tpyo\n', head: 'fixed typo\n' }],
 };
 const ASOF = '2026-07-22';
 
@@ -109,8 +114,56 @@ test('NEGATIVE — a diff over the cap is rejected', () => {
   assert.ok(f.some((m) => /over the envelope cap/.test(m)));
 });
 
+test('NEGATIVE — gates_green typed into the claim is NOT evidence (2.1.0)', () => {
+  const f = evaluate(ENVELOPE, { ...CLAIM, gates_green: ['Q1', 'Q1b'], _green_recorded: new Set() }, REGISTRY, ASOF);
+  assert.ok(f.some((m) => /required gate Q1 is not recorded green by the gate runner/.test(m)), f.join('; '));
+});
+
+test('gatesGreenFromRecords — only pass/pass-cached rows, only at this commit, case-insensitive', () => {
+  const rec = (commit, rows) => ({ commit, executed: rows });
+  const g = gatesGreenFromRecords([
+    rec('abc', [{ controls: ['Q1B'], status: 'pass' }, { controls: ['Q2-SAST'], status: 'pass-cached' }, { controls: ['Q4-SECRETS'], status: 'fail' }]),
+    rec('old', [{ controls: ['Q9'], status: 'pass' }]),
+  ], 'abc');
+  assert.ok(g.has('q1b') && g.has('q2-sast'));
+  assert.ok(!g.has('q4-secrets'), 'a failed gate is not green');
+  assert.ok(!g.has('q9'), 'a record for another commit is not evidence for this one');
+});
+
+test('verifyClass — dependency-patch refuses a new package name (the typosquat) and a major bump', () => {
+  const base = JSON.stringify({ dependencies: { lodash: '^4.17.20', express: '^4.18.0' } }, null, 2);
+  const swap = JSON.stringify({ dependencies: { lodahs: '^4.17.21', express: '^4.18.0' } }, null, 2);
+  let f = verifyClass('dependency-patch', [{ path: 'package.json', added: [], removed: [], base, head: swap }]);
+  assert.ok(f.some((m) => /introduces 1 package\(s\) not present before \(lodahs\)/.test(m)), f.join('; '));
+  const major = JSON.stringify({ dependencies: { lodash: '^4.17.20', express: '^5.0.0' } }, null, 2);
+  f = verifyClass('dependency-patch', [{ path: 'package.json', added: [], removed: [], base, head: major }]);
+  assert.ok(f.some((m) => /moves express across a major/.test(m)), f.join('; '));
+  const patch = JSON.stringify({ dependencies: { lodash: '^4.17.21', express: '^4.18.2' } }, null, 2);
+  assert.deepEqual(verifyClass('dependency-patch', [{ path: 'package.json', added: [], removed: [], base, head: patch }]), []);
+  // a lockfile: a new node_modules entry is a new package
+  const lockA = JSON.stringify({ packages: { '': {}, 'node_modules/lodash': { version: '4.17.20' } } });
+  const lockB = JSON.stringify({ packages: { '': {}, 'node_modules/lodash': { version: '4.17.21' }, 'node_modules/evil-pkg': { version: '1.0.0' } } });
+  f = verifyClass('dependency-patch', [{ path: 'package-lock.json', added: [], removed: [], base: lockA, head: lockB }]);
+  assert.ok(f.some((m) => /evil-pkg/.test(m)));
+  // not a manifest at all
+  f = verifyClass('dependency-patch', [{ path: 'src/index.js', added: ['x'], removed: [], base: '', head: 'x' }]);
+  assert.ok(f.some((m) => /not a dependency manifest/.test(m)));
+});
+
+test('verifyClass — doc-fix, comment-fix, formatting and lint-fix are judged on content', () => {
+  assert.ok(verifyClass('doc-fix', [{ path: 'src/app.js', added: [], removed: [], base: '', head: '' }]).some((m) => /not a documentation file/.test(m)));
+  assert.deepEqual(verifyClass('doc-fix', [{ path: 'README.md', added: ['a'], removed: [], base: '', head: 'a' }]), []);
+  assert.deepEqual(verifyClass('comment-fix', [{ path: 'src/a.js', added: ['// clearer'], removed: ['// unclear'], base: '// unclear', head: '// clearer' }]), []);
+  assert.ok(verifyClass('comment-fix', [{ path: 'src/a.js', added: ['return 1;'], removed: [], base: '', head: 'return 1;' }]).some((m) => /non-comment line/.test(m)));
+  assert.deepEqual(verifyClass('formatting', [{ path: 'src/a.js', added: ['  x = 1;'], removed: ['x=1;'], base: 'x=1;\n', head: '  x = 1;\n' }]), []);
+  assert.ok(verifyClass('formatting', [{ path: 'src/a.js', added: ['x = 2;'], removed: ['x = 1;'], base: 'x = 1;\n', head: 'x = 2;\n' }]).some((m) => /other than whitespace/.test(m)));
+  assert.ok(verifyClass('formatting', [{ path: 'src/new.js', added: ['x'], removed: [], base: null, head: 'x' }]).some((m) => /was added/.test(m)));
+  assert.deepEqual(verifyClass('lint-fix', [{ path: 'src/a.js', added: ["const y = 1;"], removed: ['var y = 1;'], base: "import fs from 'fs';\nvar y = 1;", head: "import fs from 'fs';\nconst y = 1;" }]), []);
+  assert.ok(verifyClass('lint-fix', [{ path: 'src/a.js', added: ["import x from 'evil';"], removed: [], base: 'const y = 1;', head: "import x from 'evil';\nconst y = 1;" }]).some((m) => /imports evil/.test(m)));
+});
+
 test('NEGATIVE — a missing required green gate is rejected', () => {
-  const f = evaluate(ENVELOPE, { ...CLAIM, gates_green: ['Q1'] }, REGISTRY, ASOF);
+  const f = evaluate(ENVELOPE, { ...CLAIM, _green_recorded: new Set(['q1']) }, REGISTRY, ASOF);
   assert.ok(f.some((m) => /required gate Q1b is not recorded green/.test(m)));
 });
 
@@ -164,5 +217,32 @@ test('an ordinary PR (no routine claim): normal lane PASSES, routine-qualified F
     const routine = runCli(['--assert-routine', '--base', 'HEAD'], dir);
     assert.equal(routine.status, 1, 'routine-qualified FAILS an ordinary PR — it cannot enter the queue');
     assert.match(routine.stderr, /NOT routine-qualified/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ── 2.1.0 — the diff content comes from git, end to end ───────────────────────────────────────
+import { writeFileSync, mkdirSync } from 'node:fs';
+const sh = (cmd, cwd) => spawnSync('sh', ['-c', cmd], { cwd, encoding: 'utf8' });
+const HAVE_GIT = sh('git --version').status === 0;
+
+test('gitDiffDetail + verifyClass — a typosquat swap under the diff cap is refused from the real diff', { skip: !HAVE_GIT && 'git not available' }, () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rc-git-'));
+  try {
+    sh('git init -q && git config user.email t@t && git config user.name t && git checkout -q -b main', dir);
+    mkdirSync(join(dir, 'docs'), { recursive: true });
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { lodash: '^4.17.20' } }, null, 2) + '\n');
+    writeFileSync(join(dir, 'docs/guide.md'), 'hello\n');
+    sh('git add -A && git commit -q -m base', dir);
+    sh('git checkout -q -b feature', dir);
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { lodahs: '^4.17.21' } }, null, 2) + '\n');
+    sh('git add -A && git commit -q -m swap', dir);
+    const prev = process.cwd(); process.chdir(dir);
+    try {
+      const files = gitDiffDetail('main', ['package.json']);
+      assert.ok(files && files.length === 1);
+      assert.ok(files[0].base.includes('lodash') && files[0].head.includes('lodahs'));
+      const f = verifyClass('dependency-patch', files);
+      assert.ok(f.some((m) => /lodahs/.test(m)), f.join('; '));
+    } finally { process.chdir(prev); }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

@@ -462,6 +462,30 @@
         "NO ACTION for anyone not running a pilot. docs/governance/pilot-record.json installs at core and is INERT until you set `status` to `active` — an untouched copy is silent forever, and no compiled plan can arm it.",
         "IF YOU ARE ABOUT TO PILOT: fill the record before stage 2, not after. Two rules bite retroactively and cannot be satisfied backwards — stage exits need a date, evidence and an approver from outside the build team for every stage you have already left, and a rollback drill must predate production exposure. A pilot that reaches stage 4 and then writes its record will find it cannot honestly produce either."
       ]
+    },
+    {
+      "version": "2.1.0",
+      "headline": "2.1.0 — canon drift corrected, and a green gate made to mean the control is real",
+      "notes": [
+        "The method skill and README now cite the HG catalog as HG-0001…HG-0014; HG-0014 (determinations are institutional context, never agent work-product) had been in governance.md since the Shari'ah stream landed and the entry point still said 0013.",
+        "Every plugin agent cites its canon as skills/loom/references/<file>, a path that resolves from the plugin root and from an adopting repository. Two agents previously used paths that resolved from neither.",
+        "operations.md no longer implies the CVE route ships wired. change-watch reads a scanner's output once the adopter connects the post-release event; supply-chain-security.md §5 was already honest about that and now both files say the same thing.",
+        "Agent-run steps are graded DEFINED, not mechanically validated. model-risk.md graded change-watch's drift scan as mechanically validated and operations.md listed the two assurance agents under shipped machinery without a grade. Under the five-state model a prompt is not a gate; the grade now says so.",
+        "control-plane-check derives its target set from the control catalog: every mechanism_ref is a target, so a gate cannot be catalogued and unlisted at once (35 of 67 were). The gate fails closed with no catalog. pii-patterns.json, shariah-term-guard.sh and shariah-surfaces.txt join the hand-listed base.",
+        "The waist gate (HG-0007) gates every ACTIVE backlog status, not only pending; passes the register requirement through; blocks a D6 verdict of No; requires a Conditional verdict to carry its conditions into the hand-off; and requires a hand-off to name the items it licenses (front-matter licenses:). D9 binds the stakeholder reaction to a content digest of the prototype it reacted to (prototype_digest: in stakeholder-reaction.md; `validate.mjs <run> --prototype-digest` prints it).",
+        "D2 requires the signals a framing rests on to come from at least two distinct sources (the research log's Source column). One signal cited once no longer satisfies Evidence.",
+        "HG-0009 has a mechanism: scripts/develop-direction-check.mjs fails a Solution Direction Record with fewer than three explored directions, no judged criterion, or no chosen direction, and a backlog sdr: that points nowhere.",
+        "The routine lane (HG-0013) no longer reads gates_green from the claim: it reads the gate runner's gate-run-*.json records at this commit (Q1b now writes one with --out), and verifies the claimed class against the diff's content — a dependency-patch that introduces a package name or crosses a major is refused.",
+        "Hooks: pii-guard and spec-tripwire are bound to the Bash tool as well (settings.hooks.json has a second PreToolUse entry); the PII normaliser strips every non-alphanumeric character; a UAE mobile shape ships; spec-tripwire covers claude/* and the yml/json spellings; test-tripwire covers colocated *.test.* files, the Python/Go/JVM conventions, bracket access, x-/f-prefixed cases, the options object, skip decorators, block-commented and tautological assertions. scripts/hooks.test.mjs runs each hook as a process.",
+        "Q1b (test-integrity-check) counts the options object and decorators as weakeners, refuses a tautology as an offset, reports an emptied file and a surface-wide loss.",
+        "core/separation.mjs is the one separation-of-parties rule; the three floor gates that carried it inline now import it."
+      ],
+      "action_required": [
+        "Add `licenses: [<item ids>]` to every discovery hand-off front-matter and `prototype_digest:` to every stakeholder-reaction front-matter, or the waist gate and D9 fail on existing runs. Both are one line each; the digest is printed by validate.mjs --prototype-digest.",
+        "Re-merge hooks/settings.hooks.json into .claude/settings.json: the Bash matcher entry is new.",
+        "Wire the routine-qualified CI job to download the gates job's gate-run-*.json artifact and pass --gate-records (see ci/ci.yml); a claim with no records at this commit qualifies for nothing.",
+        "A Solution Direction Record with fewer than three directions now fails HG-0009; complete the table or record why only one direction existed as three rows with two killed."
+      ]
     }
   ]
 }

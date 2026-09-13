@@ -87,6 +87,7 @@ import process from 'node:process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { SCHEMA_ID as FREEZE_SCHEMA_ID, sha256 } from './floor-export.mjs';
+import { sameIdentity } from './separation.mjs'; // 2.1.0 — the one separation rule, shared
 
 export const SCHEMA_ID = 'loom.drift-observation/v1';
 /** The capability a compiled plan sets to make drift currency mandatory. */
@@ -299,7 +300,7 @@ export function driftState({ source, stamps = [], observations = [] } = {}) {
   const judging = [];
   for (const o of mine) {
     if (parseTime(o.observed_at) < tFreeze) continue; // predates the freeze — it read a different document
-    if (isStr(current.exported_by) && o.observed_by === current.exported_by) {
+    if (isStr(current.exported_by) && sameIdentity(o.observed_by, current.exported_by)) {
       findings.push(`DR-F06: ${source}: the observation at ${o.observed_at} was produced by ${o.observed_by}, the same identity that wrote the freeze — a freezer corroborating its own freeze is one party asserting twice, so it is not counted. The watcher is a separate identity`);
       continue;
     }

@@ -59,6 +59,7 @@
 import process from 'node:process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { sameIdentity } from './separation.mjs'; // 2.1.0 — the one separation rule, shared
 
 export const SCHEMA_ID = 'loom.floor-degradation/v1';
 
@@ -385,7 +386,7 @@ export function checkReconciliation(record, status, { registry = null, maxAgeDay
   const by = rec.ran_by;
   if (!isStr(by)) findings.push(`DG-R06: ${label}: the reconciliation names nobody — an unattributed run is a claim, and this one is the claim that a paused floor is still truthful`);
   else {
-    if (isStr(record?.observed_by) && by === record.observed_by) {
+    if (isStr(record?.observed_by) && sameIdentity(by, record.observed_by)) {
       findings.push(`DG-R06: ${label}: the reconciliation was run by ${JSON.stringify(by)}, the same identity that made the observation — one party asserting twice. The watcher says what it saw; somebody else establishes what was missed`);
     }
     const who = identityOf(registry, by);

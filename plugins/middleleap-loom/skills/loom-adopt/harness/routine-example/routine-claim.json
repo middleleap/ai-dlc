@@ -1,5 +1,5 @@
 {
-  "_comment": "EXAMPLE — what one routine PR asserts. In CI, changed_paths and diff_lines are RE-DERIVED from the real git diff (git diff --numstat <base>...HEAD), so these declared values are a fallback for offline inspection only, never the basis of the decision. Mounts at docs/governance/routine-claim.json.",
+  "_comment": "EXAMPLE — what one routine PR asserts. In CI, changed_paths and diff_lines are RE-DERIVED from the real git diff (git diff --numstat <base>...HEAD); since 2.1.0 gates_green is READ from the gate runner's gate-run-*.json records at this commit and the class is VERIFIED against the diff's content (a dependency-patch that adds a package name or crosses a major is refused). Every declared value here is for offline inspection only, never the basis of the decision. Mounts at docs/governance/routine-claim.json.",
   "envelope": "RTE-2026-Q3",
   "class": "doc-fix",
   "changed_paths": ["docs/adopting-notes.md"],

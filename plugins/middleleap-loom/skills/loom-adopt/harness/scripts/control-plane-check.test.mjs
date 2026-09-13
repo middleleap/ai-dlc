@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { evaluate, ownersFor, ruleMatches, parseCodeowners, CONTROL_TARGETS } from './control-plane-check.mjs';
+import { evaluate, ownersFor, ruleMatches, parseCodeowners, deriveTargets, CONTROL_TARGETS } from './control-plane-check.mjs';
 
 const TARGETS = [
   '.claude/hooks/pii-guard.sh',
@@ -130,4 +130,51 @@ test('with the dedicated lines AND the blanket /docs/governance/ rule gone, both
   assert.equal(findings.length, 2);
   assert.match(findings[0], /shariah-rulings\.json — not owned in CODEOWNERS/);
   assert.match(findings[1], /issc-register\.json — not owned in CODEOWNERS/);
+});
+
+// ── 2.1.0 — targets derived from the catalog (plan row 1.1) ─────────────────────────────────
+// Resolved across the BUNDLE (governance/control-catalog.template.json) and ADOPTED
+// (docs/governance/control-catalog.json) layouts, like TEMPLATE_PATH above.
+const CATALOG_PATH = [
+  fileURLToPath(new URL('../governance/control-catalog.template.json', import.meta.url)),
+  fileURLToPath(new URL('../docs/governance/control-catalog.json', import.meta.url)),
+].find(existsSync);
+const CATALOG = CATALOG_PATH ? JSON.parse(readFileSync(CATALOG_PATH, 'utf8')) : null;
+
+test('every catalogued mechanism is a control-plane target (a catalogued gate cannot be unlisted)', () => {
+  assert.ok(CATALOG, 'control catalog not found beside the gate');
+  const derived = new Set(deriveTargets(CATALOG));
+  const mechanisms = CATALOG.controls.map((c) => c.mechanism_ref).filter((m) => typeof m === 'string' && /\.(mjs|sh|yml)$/.test(m));
+  assert.ok(mechanisms.length > 40, `expected a real catalog, saw ${mechanisms.length} mechanisms`);
+  const missing = mechanisms.filter((m) => !derived.has(m));
+  assert.deepEqual(missing, [], `catalogued mechanisms outside the target set: ${missing.join(', ')}`);
+});
+
+test('the derived set is a superset of the hand-listed base', () => {
+  const derived = new Set(deriveTargets(CATALOG ?? { controls: [] }));
+  for (const t of CONTROL_TARGETS) assert.ok(derived.has(t), `${t} dropped from the derived set`);
+});
+
+test('the hook data files that decide what the hooks bite on are targets', () => {
+  for (const t of ['.claude/hooks/pii-patterns.json', '.claude/hooks/shariah-term-guard.sh', '.claude/hooks/shariah-surfaces.txt']) {
+    assert.ok(CONTROL_TARGETS.includes(t), `${t} missing from CONTROL_TARGETS`);
+  }
+});
+
+test('a mechanism the base list never heard of becomes a target once catalogued', () => {
+  const derived = deriveTargets({ controls: [{ control_id: 'X', mechanism_ref: 'scripts/brand-new-check.mjs' }] });
+  assert.ok(derived.includes('scripts/brand-new-check.mjs'));
+  // a non-file mechanism (runbook, url, null) is not a path and is skipped, not crashed on
+  const skipped = deriveTargets({ controls: [{ mechanism_ref: 'https://example.com/policy' }, { mechanism_ref: null }, { mechanism_ref: 'docs/governance/runbooks/x.md' }] });
+  assert.deepEqual(skipped.filter((t) => !CONTROL_TARGETS.includes(t)), []);
+});
+
+test('an unlisted catalogued gate that CODEOWNERS does not cover is reported', () => {
+  // no global default owner here: the question is whether an explicit-only CODEOWNERS misses a
+  // gate that lives outside scripts/ — the template's `*` rule would answer it for us.
+  const text = '/scripts/ @acme-bank/platform-admins\n/CODEOWNERS @acme-bank/platform-admins\n';
+  const targets = deriveTargets({ controls: [{ mechanism_ref: 'tools/hidden-gate.mjs' }] }, ['CODEOWNERS']);
+  const findings = evaluate(text, targets);
+  assert.equal(findings.length, 1);
+  assert.match(findings[0], /tools\/hidden-gate\.mjs — not owned/);
 });

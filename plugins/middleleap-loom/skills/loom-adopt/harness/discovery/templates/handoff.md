@@ -3,6 +3,7 @@ artifact: handoff
 stage: handoff
 design_profile: discovery/brand/design.md
 run: "<slug>"
+licenses: [<STORY-ids this hand-off admits to delivery — one run licenses the items it names, never the backlog>]
 ---
 
 # Delivery hand-off — <slug>

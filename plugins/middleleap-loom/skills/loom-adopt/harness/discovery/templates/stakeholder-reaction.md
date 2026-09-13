@@ -3,6 +3,7 @@ artifact: stakeholder-reaction
 stage: define
 design_profile: discovery/brand/design.md
 run: <slug>
+prototype_digest: <sha256 of the prototype shown — node discovery/gates/validate.mjs discovery/runs/<slug> --prototype-digest>
 ---
 
 # Stakeholder reaction — <slug>

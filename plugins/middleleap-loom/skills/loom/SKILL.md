@@ -55,7 +55,7 @@ Full canon for each half:
   repo mounts as `discovery/DISCOVERY.md`.
 - `references/delivery-harness.md` — the autonomous build loop, spec-first order, the quality-gate
   pattern, the guardrail hooks, and the merge policy: **the agent proposes; a human disposes.**
-- `references/governance.md` — the harness-governance catalog (HG-0001…HG-0013): the decisions
+- `references/governance.md` — the harness-governance catalog (HG-0001…HG-0014): the decisions
   that make an autonomous loop acceptable to a regulated institution.
 - `references/continuous-assurance.md` — what happens after the build: the harness pulls
   assurance agents through the six-step regulatory lifecycle (watch, assess, check, test,

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseItems, isItemStart, checkItems, coverage, hasContent, FEATURE } from './discovery-link-check.mjs';
+import { parseItems, isItemStart, checkItems, coverage, hasContent, FEATURE, parseLicenses, conditionsCarried, isActiveStatus } from './discovery-link-check.mjs';
 
 // A resolver whose behaviour is table-driven per slug.
 const resolver = (map) => (slug) => (slug in map ? map[slug] : { handoffMissing: true });
@@ -104,8 +104,55 @@ test('an un-statused stub is grandfathered (only explicit pending triggers)', ()
   assert.deepEqual(checkItems('- id: STORY-1\n  title: someday', resolver({})), []);
 });
 
-test('in-flight / shipped items are grandfathered', () => {
-  assert.deepEqual(checkItems('- id: STORY-1\n  status: done\n- id: STORY-2\n  status: in-progress', resolver({})), []);
+test('shipped and parked items are grandfathered; in-flight ones are NOT (2.1.0)', () => {
+  assert.deepEqual(checkItems('- id: STORY-1\n  status: done\n- id: STORY-2\n  status: blocked\n- id: STORY-3\n  status: deferred', resolver({})), []);
+  // flipping pending → in-progress used to walk around the waist; building is when the hand-off must exist
+  const f = checkItems('- id: STORY-2\n  status: in-progress', resolver({}));
+  assert.equal(f.length, 1);
+  assert.match(f[0], /in-progress feature with no 'discovery/);
+  assert.ok(isActiveStatus('in-review') && isActiveStatus('ready') && !isActiveStatus('done') && !isActiveStatus(undefined));
+});
+
+// ── 2.1.0 — what a green link admits (plan row 1.2) ─────────────────────────────────────────
+const LICENSED = (ids, extra = {}) => ({ verdict: 'yes', conditionsMissing: false, licenses: ids, ...extra });
+
+test('a linked green run that names the item passes', () => {
+  assert.deepEqual(checkItems('- id: STORY-1\n  status: pending\n  discovery: r', resolver({ r: LICENSED(['STORY-1']) })), []);
+});
+
+test('a D6 verdict of No blocks at the waist even though every gate is green', () => {
+  const f = checkItems('- id: STORY-1\n  status: pending\n  discovery: r', resolver({ r: LICENSED(['STORY-1'], { verdict: 'no' }) }));
+  assert.equal(f.length, 1);
+  assert.match(f[0], /verdict of No/);
+});
+
+test('a Conditional verdict must carry its conditions into the hand-off', () => {
+  const f = checkItems('- id: STORY-1\n  status: pending\n  discovery: r', resolver({ r: LICENSED(['STORY-1'], { verdict: 'conditional', conditionsMissing: true }) }));
+  assert.match(f[0], /Conditional but handoff.md carries no/);
+  assert.deepEqual(checkItems('- id: STORY-1\n  status: pending\n  discovery: r', resolver({ r: LICENSED(['STORY-1'], { verdict: 'conditional', conditionsMissing: false }) })), []);
+});
+
+test('one run cannot license the whole backlog: an item the hand-off does not name is refused', () => {
+  const runs = resolver({ r: LICENSED(['STORY-1']) });
+  const f = checkItems('- id: STORY-1\n  status: pending\n  discovery: r\n- id: STORY-2\n  status: pending\n  discovery: r', runs);
+  assert.equal(f.length, 1);
+  assert.match(f[0], /STORY-2: discovery run 'r' licenses STORY-1, not STORY-2/);
+});
+
+test('a hand-off with no licenses: list is refused (the template placeholder counts as none)', () => {
+  const f = checkItems('- id: STORY-1\n  status: pending\n  discovery: r', resolver({ r: LICENSED(undefined) }));
+  assert.match(f[0], /names no backlog items it licenses/);
+  assert.equal(parseLicenses({ licenses: '[<STORY-ids this hand-off admits>]' }), undefined);
+  assert.deepEqual(parseLicenses({ licenses: '[STORY-1, "STORY-2"]' }), ['STORY-1', 'STORY-2']);
+  assert.deepEqual(parseLicenses({ licenses: 'STORY-7' }), ['STORY-7']);
+});
+
+test('conditionsCarried reads an inline value or a bullet list, and rejects placeholders', () => {
+  assert.ok(conditionsCarried('- **Conditions delivery inherits:** monitor fee variance monthly\n'));
+  assert.ok(conditionsCarried('- **Conditions delivery inherits:**\n  - PII guard active on every write path\n'));
+  assert.ok(!conditionsCarried('- **Conditions delivery inherits:**\n\n## Direction\n'));
+  assert.ok(!conditionsCarried('- **Conditions delivery inherits:** <fill in>\n'));
+  assert.ok(!conditionsCarried('- **Conditions delivery inherits:** TBD\n'));
 });
 
 test('the FEATURE convention matches STORY-<n> only', () => {

@@ -7,10 +7,17 @@
 // Three deterministic checks over docs/backlog.yaml (pure Node, reuses the D1–D9 validator):
 //   1. Referential integrity — any feature item that carries `discovery: <slug>` must point
 //      at a discovery/runs/<slug>/ whose hand-off exists and passes ALL applicable gates.
-//   2. Mandatory link — a feature item (matching FEATURE below) that is `pending` must carry a
-//      `discovery:` link (or an explicit `discovery_exempt: true` escape hatch with a reason).
-//      Items already in flight or shipped (done/in-progress/blocked/deferred) are grandfathered:
-//      the policy binds work that enters the queue AFTER it, never rewrites history.
+//   2. Mandatory link — a feature item (matching FEATURE below) in any ACTIVE status (pending,
+//      in-progress, in-review, ready, …) must carry a `discovery:` link (or an explicit
+//      `discovery_exempt: true` escape hatch with a reason). Shipped items (done/closed/…) and
+//      parked ones (blocked/deferred) are grandfathered: the policy binds work that is being
+//      built, never rewrites history. 2.1.0: until now only `pending` was gated, so flipping an
+//      item to `in-progress` walked around the waist — the exact moment the agent starts building
+//      is the moment the hand-off must exist.
+//   2c. What the link admits — a linked run must NAME the item in its hand-off (`licenses:`), so
+//      one green run cannot license the whole backlog; its D6 verdict must not be `No`; and a
+//      `Conditional` verdict must carry its conditions into the hand-off, or delivery inherits a
+//      position nobody wrote down (2.1.0).
 //   3. Coverage — the gate must have examined something before it may print OK, and it says how
 //      much. A backlog with content but no recognised item, or an `ADOPT:` marker still on the
 //      shipped default while the real ids look nothing like it, are the two ways this gate goes
@@ -19,7 +26,8 @@
 // Run from the repo root: `node scripts/discovery-link-check.mjs` (exit 1 on any finding).
 import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
-import { validateRun } from '../discovery/gates/validate.mjs';
+import { validateRun, registerMandatory } from '../discovery/gates/validate.mjs';
+import { frontMatter } from '../discovery/gates/lib.mjs';
 import { pathToFileURL } from 'node:url';
 
 const BACKLOG = 'docs/backlog.yaml';
@@ -28,6 +36,12 @@ const BACKLOG = 'docs/backlog.yaml';
 const SHIPPED_DEFAULT = '^STORY-\\d+$';
 // ADOPT: set this to your feature-item id convention (infra items should NOT match).
 export const FEATURE = /^STORY-\d+$/;
+// Status classes (2.1.0). TERMINAL never re-enters delivery; PARKED is not being built; everything
+// else with an explicit status is ACTIVE and waist-gated. An un-statused stub is a someday-maybe
+// and stays ungated until someone gives it a status — which is exactly when the hand-off must exist.
+export const TERMINAL_STATUSES = new Set(['done', 'closed', 'superseded', 'cancelled', 'canceled', 'released', 'shipped', 'wontfix', 'dropped']);
+export const PARKED_STATUSES = new Set(['blocked', 'deferred', 'on-hold', 'icebox', 'parked']);
+export const isActiveStatus = (status) => Boolean(status) && !TERMINAL_STATUSES.has(status) && !PARKED_STATUSES.has(status);
 
 /** Indentation (leading spaces) of a line. */
 const indent = (line) => line.length - line.trimStart().length;
@@ -186,14 +200,28 @@ export function checkItems(text, resolveRun, feature = FEATURE) {
         findings.push(`${id}: discovery: ${slug} — no hand-off at discovery/runs/${slug}/handoff.md`);
       } else if (r && r.failedGates && r.failedGates.length) {
         findings.push(`${id}: discovery run '${slug}' is not gate-green (failing: ${r.failedGates.join(', ')})`);
+      } else if (r) {
+        // Check 2c — what a green link actually admits (2.1.0). `r === null` is the legacy
+        // "green, nothing more known" answer test doubles give; the filesystem resolver always
+        // returns the full record, so production never takes the null path.
+        if (r.verdict === 'no') {
+          findings.push(`${id}: discovery run '${slug}' recorded a residual-risk verdict of No — the data-governance position says this direction is not acceptable for delivery (D6); a "No" is a decision, not a gate to walk through`);
+        } else if (r.verdict === 'conditional' && r.conditionsMissing) {
+          findings.push(`${id}: discovery run '${slug}' is Conditional but handoff.md carries no "Conditions delivery inherits" — delivery would inherit a position nobody wrote down`);
+        }
+        if (!Array.isArray(r.licenses)) {
+          findings.push(`${id}: discovery run '${slug}' names no backlog items it licenses — add licenses: [${id}, …] to handoff.md front-matter (one run licenses the items it names, never the backlog)`);
+        } else if (!r.licenses.includes(id)) {
+          findings.push(`${id}: discovery run '${slug}' licenses ${r.licenses.length ? r.licenses.join(', ') : 'nothing'}, not ${id} — a hand-off admits the items it names; add ${id} to its licenses: or run discovery for it`);
+        }
       }
-    } else if (status === 'pending' && !exempt) {
+    } else if (isActiveStatus(status) && !exempt) {
       // Check 2 — a new feature may not enter delivery without an evidenced problem.
       findings.push(
-        `${id}: pending feature with no 'discovery: <slug>' hand-off (HG-0007). ` +
+        `${id}: ${status} feature with no 'discovery: <slug>' hand-off (HG-0007). ` +
         `Run the discovery harness first, or set 'discovery_exempt: true' with a reason.`,
       );
-    } else if (status === 'pending' && exempt && !hasReason(block)) {
+    } else if (isActiveStatus(status) && exempt && !hasReason(block)) {
       // Check 2b — the escape hatch may be taken, but only OUT LOUD. An exemption with no
       // reason is a silent bypass of the gate that makes discovery non-optional: one line,
       // no justification, and the gate prints OK. Three places promised a reason was
@@ -208,12 +236,43 @@ export function checkItems(text, resolveRun, feature = FEATURE) {
   return findings;
 }
 
-/** The filesystem-backed run resolver the CLI uses (reuses the D1–D9 validator). */
+/** `licenses: [STORY-1, STORY-2]` (or a bare comma list) from hand-off front-matter → array, or undefined. */
+export function parseLicenses(fm) {
+  const raw = fm?.licenses;
+  if (raw === undefined) return undefined;
+  const inner = String(raw).trim().replace(/^\[|\]$/g, '');
+  if (/<[^>]*>/.test(inner)) return undefined; // the template placeholder is not a list
+  return inner.split(',').map((x) => x.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+}
+
+/** Is the hand-off's "Conditions delivery inherits" bullet filled with something a human wrote? */
+export function conditionsCarried(handoffBody) {
+  const m = handoffBody.match(/\*\*Conditions delivery inherits:\*\*[ \t]*(.*)/i); // [ \t] not \s: a newline must not let the next heading read as the value
+  const text = (m?.[1] || '').trim();
+  if (!text) {
+    // allow the conditions on the following lines (a bullet list under the heading)
+    const after = handoffBody.split(/\*\*Conditions delivery inherits:\*\*/i)[1] || '';
+    const next = after.split('\n').slice(1).find((l) => l.trim()) || '';
+    return /^\s*[-*]\s+\S/.test(next) && !/<[^>]*>|\bTBD\b|\bTODO\b/.test(next);
+  }
+  return !/<[^>]*>|\bTBD\b|\bTODO\b|^none$|^n\/a$/i.test(text);
+}
+
+/**
+ * The filesystem-backed run resolver the CLI uses (reuses the D1–D9 validator). 2.1.0: the register
+ * requirement is passed through (it was not — under a regulated profile the CI loop failed D6 on an
+ * unmounted register while this gate's own view of the same run said green), and a green run is
+ * reported with what it admits: its D6 verdict, whether a Conditional verdict's conditions reached
+ * the hand-off, and which backlog items the hand-off licenses.
+ */
 function fsResolveRun(slug) {
   const runDir = `discovery/runs/${slug}`;
   if (!existsSync(`${runDir}/handoff.md`)) return { handoffMissing: true };
-  const res = validateRun(runDir, {});
-  return res.ok ? null : { failedGates: res.gates.filter((g) => g.status === 'fail').map((g) => g.id) };
+  const res = validateRun(runDir, { requireRegister: registerMandatory(process.cwd(), { flag: process.env.LOOM_REQUIRE_REGISTER === '1' }) });
+  if (!res.ok) return { failedGates: res.gates.filter((g) => g.status === 'fail').map((g) => g.id) };
+  const { fm, body } = frontMatter(readFileSync(`${runDir}/handoff.md`, 'utf8'));
+  const verdict = res.gates.find((g) => g.id === 'D6')?.verdict ?? null;
+  return { verdict, conditionsMissing: verdict === 'conditional' && !conditionsCarried(body), licenses: parseLicenses(fm) };
 }
 
 export function check() {

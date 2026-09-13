@@ -99,6 +99,9 @@ shippable; respect the hand-off's explicit out-of-scope.
 ## Definition of done
 
 - The hand-off was gate-green before fan-out; ≥3 directions were explored in parallel and judged.
+  `scripts/develop-direction-check.mjs` (HG-0009, pr lane) fails an SDR with fewer than three
+  directions in "The directions explored", no judged criterion, or no chosen direction — a single
+  direction dressed as a choice is a straight line, not a diamond.
 - `docs/develop/<slug>.md` (SDR) records the choice, the rationale, and how it meets every success
   measure + inherited D6 condition + hard-stop.
 - The spawned backlog item(s) carry `discovery: <slug>` and `sdr:`.
