@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CHANGE_CLASSES, EMERGENCY_RETROSPECTIVE_MAX_DAYS, EMERGENCY_STATE, checkRequiredInstitutions, checkStateHistory, corroborateFlags, evaluate, loadInstitutionProfiles, STATES, stateHistoryRequired } from './change-envelope-check.mjs';
+import { CHANGE_CLASSES, EMERGENCY_RETROSPECTIVE_MAX_DAYS, EMERGENCY_STATE, PIR_MAX_DAYS, UAT_STATE, checkPostImplementationReview, checkRequiredInstitutions, checkStateHistory, checkUatSignoff, corroborateFlags, evaluate, loadInstitutionProfiles, STATES, stateHistoryRequired } from './change-envelope-check.mjs';
 import { collectPatterns } from '../core/change-patterns.mjs';
 import { compile, resolveBindings } from '../core/policy-compiler.mjs';
 
@@ -112,8 +112,91 @@ const PA2_OK = { ...PASSPORT, pa2: { decision: 'approved' } };
 const READY = { missing: [], findings: [] };
 const HOLD_RELEASED = { change_id: 'CHG-2026-0042', status: 'released', by: 'risk-lena', at: '2026-07-21' };
 const EVIDENCE_OK = { anchor: 'abc123', attestationFindings: [] };
+// 2.1.0 (4.1) — the business accepted the exact commit the release subject names.
+const SHA = '7e3f9c2a4b6d8e0f1a2c3b4d5e6f7a8b9c0d1e2f';
+const UAT_OK = { change_id: 'CHG-2026-0042', status: 'accepted', by: 'po-fatima', at: '2026-07-28T09:00:00Z', release_commit: SHA, scope: 'limit-review journeys A–C against the PRD acceptance criteria' };
+const SUBJECT = { source: { commit: SHA } };
 const prod = (ctx = {}) => ok(advance('production-authorized'), {
-  passport: PA2_OK, readiness: READY, hold: HOLD_RELEASED, evidence: EVIDENCE_OK, ...ctx,
+  passport: PA2_OK, readiness: READY, hold: HOLD_RELEASED, evidence: EVIDENCE_OK, uat: UAT_OK, releaseSubject: SUBJECT, ...ctx,
+});
+
+/* ---- 2.1.0 (hardening plan 4.1): UAT acceptance ---- */
+
+test('UAT — the state sits between delivery-complete and permission-to-launch', () => {
+  assert.equal(STATES[STATES.indexOf('delivery-complete') + 1], UAT_STATE);
+  assert.equal(STATES[STATES.indexOf(UAT_STATE) + 1], 'permission-to-launch');
+});
+
+test('UAT — from uat-accepted onward the acceptance is a receipt: missing, pending, or unbound fails', () => {
+  assert.ok(ok(advance(UAT_STATE)).some((x) => /uat-signoff.json is missing/.test(x)));
+  assert.ok(ok(advance('permission-to-launch'), { uat: { ...UAT_OK, status: 'pending' } }).some((x) => /status is "pending", not "accepted"/.test(x)));
+  assert.ok(ok(advance(UAT_STATE), { uat: { ...UAT_OK, release_commit: 'main' } }).some((x) => /not a 40-hex commit sha/.test(x)));
+  const { scope: _s, ...noScope } = UAT_OK;
+  assert.ok(ok(advance(UAT_STATE), { uat: noScope }).some((x) => /has no scope/.test(x)));
+  // before the state it is not owed
+  assert.ok(!ok(advance('delivery-complete')).some((x) => /UAT/.test(x)));
+});
+
+test('UAT — the business accepts: not a builder, not an agent, and a holder of a business role', () => {
+  assert.ok(checkUatSignoff({ ...ENVELOPE, current_state: UAT_STATE }, { ...UAT_OK, by: 'eng-omar' }, { registry: REGISTRY }).some((x) => /in the builders group/.test(x)));
+  assert.ok(checkUatSignoff({ ...ENVELOPE, current_state: UAT_STATE }, { ...UAT_OK, by: 'agent-loom-delivery' }, { registry: REGISTRY }).some((x) => /is an AGENT/.test(x)));
+  assert.ok(checkUatSignoff({ ...ENVELOPE, current_state: UAT_STATE }, { ...UAT_OK, by: 'risk-lena' }, { registry: REGISTRY }).some((x) => /holds none of the business roles/.test(x)));
+  assert.deepEqual(checkUatSignoff({ ...ENVELOPE, current_state: UAT_STATE }, UAT_OK, { registry: REGISTRY }), []);
+});
+
+test('UAT — at production authorization the accepted commit must be the release subject\'s', () => {
+  assert.deepEqual(prod(), []);
+  const other = prod({ releaseSubject: { source: { commit: 'a'.repeat(40) } } });
+  assert.ok(other.some((x) => /what the business accepted is not what is being released/.test(x)));
+  // before production authorization the subject is not yet bound
+  assert.ok(!ok(advance(UAT_STATE), { uat: UAT_OK, releaseSubject: { source: { commit: 'a'.repeat(40) } } }).some((x) => /not what is being released/.test(x)));
+});
+
+/* ---- 2.1.0 (hardening plan 4.5): post-implementation review ---- */
+
+const LIVE_AT = '2026-08-10T08:00:00Z';
+const live = (pir, ctx = {}) => evaluate({ ...ENVELOPE, ...advance('in-production', LIVE_AT, 'ops-dana'), post_implementation_review: pir }, {
+  plan: PLAN, passport: PA2_OK, architectureExists: true, registry: REGISTRY, freshPlan: fresh(), readiness: READY, hold: HOLD_RELEASED, evidence: EVIDENCE_OK, uat: UAT_OK, releaseSubject: SUBJECT, now: Date.parse('2026-08-20T00:00:00Z'), ...ctx,
+});
+const PIR_OK = { due: '2026-09-09T08:00:00Z' };
+
+test('PIR — a change in production carries a review date; an open one is a NOTICE, a missing one a finding', () => {
+  const notices = [];
+  assert.deepEqual(live(PIR_OK, { notices }), []);
+  assert.ok(notices.some((n) => /post-implementation review due by 2026-09-09/.test(n)));
+  assert.ok(live(undefined).some((x) => /requires a post_implementation_review block/.test(x)));
+  assert.ok(live({ due: 'soon' }).some((x) => /not a parseable ISO-8601 timestamp/.test(x)));
+});
+
+test('PIR — the MOMENT the due date passes with no completed review, it is a finding', () => {
+  assert.ok(live(PIR_OK, { now: Date.parse('2026-09-10T00:00:00Z') }).some((x) => /has PASSED with no completed review/.test(x)));
+});
+
+test('PIR — a completed review names a second-line human, an outcome and evidence; late completion is noticed, not blocked', () => {
+  const done = { ...PIR_OK, completed_at: '2026-09-01T00:00:00Z', reviewed_by: 'risk-lena', outcome: 'as-expected', evidence_ref: 'reviews/CHG-2026-0042-pir.md' };
+  assert.deepEqual(live(done), []);
+  assert.ok(live({ ...done, reviewed_by: 'eng-omar' }).some((x) => /not a second-line HUMAN/.test(x)));
+  assert.ok(live({ ...done, evidence_ref: undefined }).some((x) => /has no evidence_ref/.test(x)));
+  const notices = [];
+  assert.deepEqual(live({ ...done, completed_at: '2026-09-12T00:00:00Z' }, { notices, now: Date.parse('2026-09-13T00:00:00Z') }), []);
+  assert.ok(notices.some((n) => /completed 3 day\(s\) after its due date/.test(n)));
+});
+
+test('PIR — the due date is bounded from the moment the change went live', () => {
+  const far = new Date(Date.parse(LIVE_AT) + (PIR_MAX_DAYS + 1) * 86400000).toISOString();
+  assert.ok(live({ due: far }).some((x) => `${x}`.includes(`the ceiling is ${PIR_MAX_DAYS}`)));
+  assert.ok(live({ due: '2026-08-01T00:00:00Z' }).some((x) => /does not follow the in-production transition/.test(x)));
+  assert.ok(checkPostImplementationReview({ ...ENVELOPE, current_state: 'in-production' }, { now: 0 }).some((x) => /requires a post_implementation_review block/.test(x)));
+});
+
+/* ---- 2.1.0 (hardening plan 4.6): the threat model at medium ---- */
+
+test('THREAT MODEL — a plan that compiles threat_model without the A gate still owes architecture-assurance.json in delivery', () => {
+  const medium = { ...PLAN, required_gates: PLAN.required_gates.filter((g) => g !== 'A'), required_capabilities: { ...(PLAN.required_capabilities || {}), threat_model: { required: true } } };
+  const f = evaluate(ENVELOPE, { plan: medium, freshPlan: medium, passport: PASSPORT, architectureExists: false, registry: REGISTRY });
+  assert.ok(f.some((x) => /requires a threat model \(A2\)/.test(x)), f.join('\n'));
+  const withA2 = evaluate(ENVELOPE, { plan: medium, freshPlan: medium, passport: PASSPORT, architectureExists: true, registry: REGISTRY });
+  assert.ok(!withA2.some((x) => /threat model/.test(x)));
 });
 
 test('the full compound authorization passes: PA2 + readiness + hold released + anchored evidence', () => {
@@ -338,6 +421,21 @@ test('the shipped pattern example rides its pattern, and loses coverage the mome
   const after = evaluate(env, { ...ctx, patterns: collectPatterns([expired]).patterns, notices: [] });
   assert.ok(after.some((f) => /EXPIRED/.test(f)));
   assert.ok(after.some((f) => /requires PA1 approved/.test(f)), 'a lapsed pre-approval means the change owes its approvals again');
+});
+
+test('THREAT MODEL — the shipped pattern example (medium, standard) owes no per-instance model while its claim holds, and owes one the moment it does not', { skip: PATTERN_EXAMPLE_PRESENT ? false : 'pattern example absent' }, () => {
+  const env = J('change-pattern-example/change-envelope.json', 'docs/governance/changes/CHG-2026-0055/change-envelope.json');
+  const plan = J('change-pattern-example/control-plan.json', 'docs/governance/changes/CHG-2026-0055/control-plan.json');
+  const passport = J('change-pattern-example/product-passport.json', 'docs/governance/changes/CHG-2026-0055/product-passport.json');
+  const profiles = [J('profiles/regulated-bank.json')];
+  const bindings = resolveBindings(env.required_profiles, HARNESS).bindings;
+  const freshPlan = compile(env, profiles, bindings).plan;
+  const { patterns } = collectPatterns(profiles);
+  const ctx = { plan, freshPlan, passport, architectureExists: false, registry: REGISTRY, patterns, now: Date.parse('2026-08-01T00:00:00Z'), diff: { paths: env.pattern_claim.changed_paths, lines: env.pattern_claim.diff_lines } };
+  assert.ok(plan.required_capabilities?.threat_model?.required, 'the medium plan compiles threat_model');
+  assert.ok(!evaluate(env, ctx).some((x) => /threat model/.test(x)), 'covered: the pattern carried the model');
+  const off = evaluate(env, { ...ctx, diff: { paths: ['src/auth/login.mjs'], lines: 12 } });
+  assert.ok(off.some((x) => /requires a threat model \(A2\)/.test(x)), `uncovered: the instance owes it:\n${off.join('\n')}`);
 });
 
 // --- flag corroboration (rc.38 · Phase 4.7) ---------------------------------------------------

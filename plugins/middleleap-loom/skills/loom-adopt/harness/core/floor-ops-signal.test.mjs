@@ -51,6 +51,8 @@ const ADJ = {
   severity: 'high',
   route: 'spec-fix',
   link: 'https://git.example.invalid/app/pull/1487',
+  // 2.1.0 (4.7): a high signal states its regulator-notification position at adjudication.
+  regulator_notification: { required: false, rationale: 'contained inside the reporting window; no customer data exposed' },
 };
 
 const filed = (over = {}) => ({ ...FILED, ...over });
@@ -404,7 +406,7 @@ test('filedClaim drops surface noise and keeps a canonical shape', () => {
 
 test('the log entry is exactly the gate\'s fields plus ONE named provenance block', () => {
   const { entry } = run();
-  assert.deepEqual(Object.keys(entry).sort(), ['detected', 'evidence_ref', 'id', 'intake', 'link', 'route', 'severity', 'source', 'summary', 'type']);
+  assert.deepEqual(Object.keys(entry).sort(), ['detected', 'evidence_ref', 'id', 'intake', 'link', 'regulator_notification', 'route', 'severity', 'source', 'summary', 'type']);
   assert.equal(entry.detected, '2026-07-20', 'detected is the day it was FILED — triage does not get to move it');
 });
 

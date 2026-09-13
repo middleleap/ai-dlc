@@ -35,6 +35,32 @@ repository is the worked example); the ids below are the Loom's stable names for
 | **HG-0013** | Autonomy is uncalibrated — one lighting policy governs a lint fix and an auth rewrite alike | **Graduated autonomy with a fixed dark boundary**: the loop runs fully autonomous up to *proposal*, never through *disposal* — the PR is the light switch. Per-change-class relaxation happens only through a second-line-owned, expiring **routine envelope** (`routine-change-check`), never ad hoc; the envelope moves human approval from per-change to per-envelope, it never removes it. Enforcement of record: a merge-queue/ruleset that auto-merges only with the routine gate among passing required checks |
 | **HG-0014** | Nothing distinguishes a religious or ethical determination from ordinary content the agent may propose — an agent can draft every governed artifact, so it can equally draft the ruling that says the artifact is permissible | **Determinations are institutional context, never agent work-product.** A Shari'ah determination is issued by humans (the ISSC; the Shari'ah Compliance Function and Shari'ah audit operate the second and third lines) and mounted as **control-plane data**: the rulings register is CODEOWNERS-owned by the Shari'ah secretariat, listed in `CONTROL_TARGETS`, and outside the routine lane because `docs/governance/` sits on the absolute floor. The agent may **cite** a ruling by id; it never authors, alters, or approves one, and no gate rules on Shari'ah — gates verify composition, provenance, and binding to already-approved structures. Enforcement of record: CODEOWNERS + branch protection + `control-plane-check` |
 
+## The change lifecycle — the states, and the record each one owes
+
+Every governed change is one envelope under `docs/governance/changes/<id>/`, and it advances
+through a fixed order of states. A state is not a status a team sets; it is a claim the
+change-envelope gate holds to a receipt. The order, and what each state must be able to show:
+
+| State | Owed before the change may sit here |
+|---|---|
+| `classified` | A human with classification authority, a rationale, a compiled control plan whose hash reconciles on every run |
+| `permission-to-develop` | PA1 approved on the passport by every compiled PA1 role; a **DPIA record** (`dpia.json`) where the change touches personal data; every external **model provider assessed as an outsourcing** (2.1.0) |
+| `in-delivery` | Architecture assurance A1–A5 at high tier, or the **A2 threat model** alone at medium (2.1.0) |
+| `delivery-complete` | The builders' word that the work is done |
+| `uat-accepted` | The **business's** word: `uat-signoff.json`, accepted by a non-builder human holding a business role, bound to the 40-hex commit exercised (2.1.0) |
+| `permission-to-launch` | PA2 approved, every compiled control function |
+| `operationally-ready` | Every declared service R-gate green |
+| `production-authorized` | The compound authorization: PA2, readiness, the second-line release hold released by a second-line human, externally anchored evidence at high tiers, and the UAT commit equal to the release subject's |
+| `in-production` | A **post-implementation review** on a clock: due within 90 days of going live, a notice while open, a finding the moment it passes unreviewed, reviewed by a second-line human (2.1.0) |
+| `emergency-authorized` | Production with receipts still owed — only for a declared emergency class, under a second-line authorization and a bounded retrospective deadline; every deferred receipt fires when it passes |
+| `closed` · `superseded` | Terminal. The classification survives; nothing else is re-litigated |
+
+Three rules hold across the table. The history is append-only and moves forward only. A
+pre-approved pattern (`standard` class) satisfies the PA receipts and the per-instance threat
+model while every one of its conditions holds, and brings them back the moment one fails. And
+the flags that compile the route are corroborated against the repository's own registers, so a
+box left unticked is a finding, not a lighter route.
+
 ## How to adopt the catalog
 
 1. **Start with the five that are pure repo mechanics** — HG-0001, HG-0002, HG-0007, HG-0009,

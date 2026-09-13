@@ -47,6 +47,7 @@ status with `link: <run-slug>` and the waist gate takes over from there.
 - **discovery** → `link` a discovery run slug, or `status: triaging` while it is being scoped
 - **accepted** → a `justification` (a conscious no-op is still a decision)
 - any `high`/`critical` signal → an `evidence_ref`, so a reviewer can reconstruct it
+- any `high`/`critical` signal → a `regulator_notification` determination (2.1.0): `required: true` with an authority, a deadline, and once sent a `sent_at` and the regulator's `reference`; or `required: false` with a `rationale`. A missed deadline with nothing sent fails; a late notification is noticed, not blocked
 
 ## Mounting your own
 

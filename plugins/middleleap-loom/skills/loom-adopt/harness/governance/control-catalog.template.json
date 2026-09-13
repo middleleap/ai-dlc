@@ -1091,6 +1091,95 @@
       "note": "The ITIL emergency path, built so it cannot become a waiver: the emergency class must be declared before the state is used, the authoriser is held to the release hold's own rule (second-line human), and the deadline may not exceed the shipped ceiling from the authorization"
     },
     {
+      "control_id": "UAT-ACCEPTANCE",
+      "objective": "Before permission to launch is asked for, the business has accepted what was built: a uat-signoff.json beside the envelope, status accepted, by a non-builder human holding a business role, bound to the 40-hex commit exercised — and at production authorization that commit is the release subject's",
+      "owner_role": "product-owner",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/change-envelope-check.mjs",
+      "test_ref": "scripts/change-envelope-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/changes/",
+        "docs/governance/release-subject.json"
+      ],
+      "note": "2.1.0 (plan phase 4.1) — the uat-accepted state between delivery-complete and permission-to-launch. delivery-complete was the builders' word; this is the business's, and CODEOWNERS keeps the builders from writing it"
+    },
+    {
+      "control_id": "DPIA",
+      "objective": "A change flagged personal_data carries a data-protection impact assessment as a RECORD at PA1: categories that resolve in the data-lifecycle register, purpose, lawful basis, necessity, residency, risks each with a mitigation, signed by a data-protection human outside the builders group",
+      "owner_role": "data-protection",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/product-approval-check.mjs",
+      "test_ref": "scripts/product-approval-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/changes/",
+        "docs/governance/data-lifecycle.json",
+        "profiles/"
+      ],
+      "note": "2.1.0 (plan phase 4.2) — mandatory-when-compiled through the `dpia` capability the base profile attaches to the personal_data flag. Retires the prose pdpl-and-residency passport section: a paragraph could satisfy that. What the gate proves is that the assessment exists, is complete and was signed by the right function; adequacy of the mitigations is the function's judgement"
+    },
+    {
+      "control_id": "MODEL-OUTSOURCING",
+      "objective": "Every external model provider a change relies on is an assessed outsourcing before permission to develop: the manifest role carries an outsourcing assessment, prompt-data residency terms, an exit plan and an independent assessor; a change naming a model role nobody inventoried fails; an external provider with flags.third_party unset fails",
+      "owner_role": "compliance",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/product-approval-check.mjs",
+      "test_ref": "scripts/product-approval-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/changes/",
+        "docs/governance/model-manifest.json"
+      ],
+      "note": "2.1.0 (plan phase 4.4) — an LLM provider is a third party under the outsourcing rules like any other, and the manifest's provider field was where that fact hid. Kosli, or any evidence platform, is a third party under the same rule in its own register entry"
+    },
+    {
+      "control_id": "POST-IMPL-REVIEW",
+      "objective": "A change in production owes a post-implementation review on the retrospective's clock: a due date bounded from the moment it went live, a NOTICE while open, a FINDING the moment it passes with no completed review, and a second-line human on the completed record",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/change-envelope-check.mjs",
+      "test_ref": "scripts/change-envelope-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/changes/"
+      ],
+      "note": "2.1.0 (plan phase 4.5) — the emergency retrospective mechanism, applied to every change that goes live. Runs on the pr lane like the retrospective, so a change past its review date turns the tree red rather than waiting for a scheduled run nobody reads"
+    },
+    {
+      "control_id": "THREAT-MODEL-MEDIUM",
+      "objective": "A medium-tier change owes its A2 threat model — section complete, every threat traced to a control and a test, no material finding open — without the full A1–A5 gate; the envelope gate requires the artifact from in-delivery",
+      "owner_role": "information-security",
+      "line": 1,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/architecture-assurance-check.mjs",
+      "test_ref": "scripts/architecture-assurance-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/changes/",
+        "profiles/"
+      ],
+      "note": "2.1.0 (plan phase 4.6) — compiled by the `threat_model` capability at medium in the base profile. Threat modelling used to stop at the A gate's tier, and \"medium\" was where a software change with real attackers went unmodelled"
+    },
+    {
+      "control_id": "REG-NOTIFICATION",
+      "objective": "Every high or critical operations signal states its regulator-notification position: required with an authority, a deadline, a sent_at and the regulator's reference — or not required, with a rationale. A missed deadline with nothing sent fails; a late notification is recorded, never blocked",
+      "owner_role": "compliance",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/operations-signal-check.mjs",
+      "test_ref": "scripts/operations-signal-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/operations-signal.json"
+      ],
+      "note": "2.1.0 (plan phase 4.7) — the block is a record of what was sent and when; whether the determination was right is compliance's. The floor intake carries the adjudicator's determination through verbatim"
+    },
+    {
       "control_id": "FLAG-CORROBORATION",
       "objective": "The envelope flags that decide which conditional profile rules fire are cross-checked against the repository's own governance data — the data-lifecycle register, the model manifest, the passport's third-parties analysis — and a contradicted flag is a finding, not a silent tier reduction",
       "owner_role": "risk-second-line",

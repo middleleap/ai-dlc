@@ -1,5 +1,5 @@
 {
-  "_comment": "ADOPTER EXAMPLE \u2014 the product passport (Loom 2.0 \u00a77.1). Section keys are compiled by the policy compiler from the profiles; the product-approval gate verifies every required section has substance and every approval resolves to a HUMAN registry identity holding the role. PA1 is approved (the change is in delivery); PA2 is pending until launch.",
+  "_comment": "ADOPTER EXAMPLE — the product passport (Loom 2.0 §7.1). Section keys are compiled by the policy compiler from the profiles; the product-approval gate verifies every required section has substance and every approval resolves to a HUMAN registry identity holding the role. PA1 is approved (the change is in delivery); PA2 is pending until launch.",
   "change_id": "CHG-2026-0042",
   "product_id": "PRD-017",
   "sections": {
@@ -61,6 +61,13 @@
       "within_appetite": true,
       "limit_changes": "Per-customer limit unchanged; portfolio cap unchanged",
       "assessed_by": "credit-hassan"
+    },
+    "cbuae-outsourcing-assessment": {
+      "materiality": "non-material — the credit bureau contract is existing and unchanged; the affordability model runs on example-provider under an existing enterprise agreement",
+      "cbuae_position": "no new notification required (existing outsourcing register entries OSR-014 bureau, OSR-021 example-provider)",
+      "exit_plan": "docs/governance/outsourcing/OSR-021-exit-plan.md — manual underwriting queue while a replacement model is validated",
+      "assessed_by": "comp-imran",
+      "assessed_at": "2026-07-18"
     }
   },
   "pa1": {
@@ -96,6 +103,6 @@
   },
   "pa2": {
     "decision": "pending",
-    "_comment": "PA2 (permission to launch) requires the full section set and every compiled control-function approval \u2014 completed after delivery, before launch."
+    "_comment": "PA2 (permission to launch) requires the full section set and every compiled control-function approval — completed after delivery, before launch."
   }
 }

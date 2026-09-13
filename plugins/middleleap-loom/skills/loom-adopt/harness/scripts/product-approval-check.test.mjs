@@ -30,9 +30,16 @@ if (!EXAMPLE_PRESENT) {
 const PLAN = J('change-example/control-plan.json', 'docs/governance/changes/CHG-2026-0042/control-plan.json');
 const PASSPORT = J('change-example/product-passport.json', 'docs/governance/changes/CHG-2026-0042/product-passport.json');
 const REGISTRY = J('governance/identities.template.json', 'docs/governance/identities.json');
+// 2.1.0 (4.2) — the plan compiles `dpia`, so a passing evaluation carries the record.
+const DPIA = J('change-example/dpia.json', 'docs/governance/changes/CHG-2026-0042/dpia.json');
+const LIFECYCLE = J('governance/data-lifecycle.template.json', 'docs/governance/data-lifecycle.json');
+const ENVELOPE = J('change-example/change-envelope.json', 'docs/governance/changes/CHG-2026-0042/change-envelope.json');
+const MANIFEST = J('governance/model-manifest.template.json', 'docs/governance/model-manifest.json');
+const WITH_DPIA = { dpia: DPIA, dataLifecycle: LIFECYCLE };
 
 test('the shipped worked example passes PA1', () => {
-  assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY), []);
+  assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, WITH_DPIA), []);
+  assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, { ...WITH_DPIA, envelope: ENVELOPE, modelManifest: MANIFEST }), []);
 });
 
 test('a missing passport blocks a product change', () => {
@@ -108,7 +115,7 @@ test('a PA2-only plan still checks the launch approval, ownership and sections',
 const ATTESTED_PLAN = { ...PLAN, required_capabilities: { 'approval_attestation': { required: true } } };
 
 test('without the compiled capability the gate is unchanged — no attestation is demanded', () => {
-  assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, {}), []);
+  assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, WITH_DPIA), []);
 });
 
 test('with the capability compiled, a named approver alone is no longer enough', () => {
@@ -157,6 +164,7 @@ test('run() wires the whole path end to end in a real repo layout', (t) => {
     writeFileSync(join(base, 'control-plan.json'), JSON.stringify(plan));
     writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: 'CHG-2026-0042', control_plan: 'control-plan.json' }));
     cpSync(srcs.passport, join(base, 'product-passport.json'));
+    writeFileSync(join(base, 'dpia.json'), JSON.stringify(DPIA));
     cpSync(srcs.identities, join(gov, 'identities.json'));
     cpSync(srcs.attIssuers, join(gov, 'attestation-issuers.json'));
     cpSync(srcs.asrIssuers, join(gov, 'assertion-issuers.json'));
@@ -363,7 +371,7 @@ test('the Shari’ah lane is dormant for a change whose plan compiles no Shariah
     { flags: { structure_delta: true } },
     { flags: {}, issc_decision_ref: 'ISSC-2026-014' },
   ]) {
-    assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, { envelope, notices }), []);
+    assert.deepEqual(evaluate(PASSPORT, PLAN, REGISTRY, { ...WITH_DPIA, envelope, notices }), []);
   }
   assert.deepEqual(notices, [], 'a conventional change must not even be told which lane it took');
 });

@@ -30,7 +30,9 @@ four-eyes approval.** Every mechanism in the Loom is a concrete form of that sen
   evidence). Govern is an overlay at the waist, not a fourth stage.
 - The **right diamond** builds it. Develop diverges over at least three solution directions and
   converges on one (**HG-0009**); Deliver builds it spec-first under quality gates **Q1–Q5** and
-  a human merges (**HG-0001**). The agent proposes; it never disposes.
+  a human merges (**HG-0001**). The business accepts what was built before launch is asked for,
+  and a change that goes live owes a review on a clock (`governance.md`, the lifecycle table).
+  The agent proposes; it never disposes.
 - **Run** feeds back. Operations signals route to a fix, the register, or a reopened discovery —
   and going back a diamond is a recorded return, never a failure.
 

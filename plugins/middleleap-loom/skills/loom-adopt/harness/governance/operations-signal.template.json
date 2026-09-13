@@ -1,5 +1,5 @@
 {
-  "_comment": "ADOPT: the triaged, traceable log of operational signals that feed the loop back into Discovery. Verified by scripts/operations-signal-check.mjs. Replace these demo entries with yours.",
+  "_comment": "ADOPT: the triaged, traceable log of operational signals that feed the loop back into Discovery. Verified by scripts/operations-signal-check.mjs. Replace these demo entries with yours. 2.1.0: every high/critical signal carries regulator_notification { required, authority?, deadline?, sent_at?, reference?, rationale? } — a missed deadline with nothing sent fails the gate.",
   "signals": [
     {
       "id": "OPS-2026-001",
@@ -10,7 +10,15 @@
       "summary": "Consent-token refresh returned 500s for ~12 min during the LFI cert rotation window, blocking active TPP data-sharing sessions.",
       "evidence_ref": "incidents/INC-4821-postmortem.md",
       "route": "spec-fix",
-      "link": "https://github.com/example/app/pull/1487"
+      "link": "https://github.com/example/app/pull/1487",
+      "regulator_notification": {
+        "required": true,
+        "authority": "CBUAE",
+        "deadline": "2026-07-15",
+        "sent_at": "2026-07-14T16:40:00Z",
+        "reference": "ADOPT: the regulator's acknowledgement or case reference — e.g. an incident-report submission id",
+        "_comment": "2.1.0 (hardening plan 4.7): a critical incident affecting Open Finance data-sharing sessions is a reportable operational incident; the deadline is the reporting window the applicable regulation sets, asserted here and never derived by the gate"
+      }
     },
     {
       "id": "OPS-2026-002",
@@ -21,7 +29,12 @@
       "summary": "A partial-encryption gap let account-holder names transit a log sink in cleartext — a previously-registered data risk actually fired in production.",
       "evidence_ref": "reviews/2026-07-16-data-risk.md",
       "route": "register",
-      "link": "DR-1"
+      "link": "DR-1",
+      "regulator_notification": {
+        "required": false,
+        "rationale": "contained internally within the reporting threshold: names only, no account or transaction data, sink purged, no third-party access; determination recorded by compliance on 2026-07-16",
+        "_comment": "2.1.0: 'not required' is a determination with a reason, never an absence"
+      }
     },
     {
       "id": "OPS-2026-003",

@@ -1,0 +1,29 @@
+{
+  "_comment": "ADOPTER EXAMPLE (2.1.0 · hardening plan 4.2) — the data-protection impact assessment for one change, mounted beside its envelope under docs/governance/changes/<id>/dpia.json. Required at PA1 whenever the compiled plan carries the `dpia` capability (the base profile compiles it on flags.personal_data). Every category resolves in docs/governance/data-lifecycle.json; residency is a stated fact the gate reads, not a paragraph; risks each carry a mitigation; the signature is a data-protection HUMAN outside the builders group. What the gate proves: that the assessment exists, is complete, and was signed by the right function. Whether the mitigations are adequate is the data-protection function's judgement, not a property of this file.",
+  "change_id": "CHG-2026-0042",
+  "status": "complete",
+  "categories": [
+    "customer_contact_details",
+    "transaction_audit_log"
+  ],
+  "purpose": "affordability assessment in the credit-limit decision path",
+  "lawful_basis": "contract performance and the CBUAE affordability obligation",
+  "necessity": "income, obligations and bureau score are the minimum inputs an affordability determination can be made on; no marketing or profiling use",
+  "residency": "UAE-resident stores only; the model runs onshore; no cross-border transfer of personal data",
+  "risks": [
+    {
+      "risk": "bureau and income data reaching a log sink in cleartext",
+      "mitigation": "pii-guard hook on the delivery loop; structured logging with field-level redaction; DR-1 in the data-risk register"
+    },
+    {
+      "risk": "an affordability decision the customer cannot understand or contest",
+      "mitigation": "decision reasons emitted per decision; contest route via the complaints channel (decision-contestability.json)"
+    },
+    {
+      "risk": "retention beyond the affordability purpose",
+      "mitigation": "data-lifecycle dispositions: P6Y contact details with crypto-shred; audit log under the AML statutory hold"
+    }
+  ],
+  "signed_by": "dp-yusuf",
+  "signed_at": "2026-07-18"
+}
