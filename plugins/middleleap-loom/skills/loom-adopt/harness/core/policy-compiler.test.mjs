@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { compile, loadProfiles, resolveBindings, canonical, planHash, TIERS, mergeCapabilities } from './policy-compiler.mjs';
+import { compile, loadProfiles, resolveBindings, resolveProfileContext, automaticRuleFindings, automaticRuleMatches, canonical, planHash, TIERS, mergeCapabilities } from './policy-compiler.mjs';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const profile = (p) => JSON.parse(readFileSync(`${HARNESS}/profiles/${p}.json`, 'utf8'));
@@ -78,6 +78,97 @@ test('PROPERTY — every shipped profile declares its requirements under a KNOWN
       assert.ok(TIERS.includes(key),
         `${p.dir}/${p.name}: requirements.${key} is not a tier (${TIERS.join('|')}) — nothing compiles it, so no gate can ever miss it`);
     }
+  }
+});
+
+test('2.4 — automatic profile predicates are conjunctive and tier-aware', () => {
+  const rule = {
+    profile: 'ai-decision-system',
+    when: {
+      flags_all: ['model_involved'],
+      change_types: ['new-product', 'material-product-change'],
+      minimum_tier: 'medium',
+    },
+  };
+  assert.equal(automaticRuleMatches(rule, envelope({ flags: { model_involved: true }, risk_tier: 'medium' })), true);
+  assert.equal(automaticRuleMatches(rule, envelope({ flags: {}, risk_tier: 'high' })), false);
+  assert.equal(automaticRuleMatches(rule, envelope({ flags: { model_involved: true }, change_type: 'software-change' })), false);
+  assert.equal(automaticRuleMatches(rule, envelope({ flags: { model_involved: true }, change_type: 'software-change', risk_tier: 'low' })), false);
+});
+
+test('2.4 — malformed automatic profile rules fail closed with actionable findings', () => {
+  const malformed = [
+    {},
+    { profile: 'ai-decision-system', when: { change_typse: ['new-product'] } },
+    { profile: 'ai-decision-system', when: { change_types: ['invented-change'] } },
+    { profile: 'ai-decision-system', when: { flags_all: [] } },
+    { profile: 'ai-decision-system', when: { minimum_tier: 'urgent' } },
+  ];
+  for (const rule of malformed) {
+    assert.ok(automaticRuleFindings(rule).length > 0, `expected findings for ${JSON.stringify(rule)}`);
+    assert.equal(automaticRuleMatches(rule, envelope({ flags: { model_involved: true } })), false);
+  }
+});
+
+test('2.4 — profile resolution surfaces malformed automatic policy instead of ignoring or crashing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'loom-automatic-profile-'));
+  try {
+    mkdirSync(join(dir, 'profiles'));
+    writeFileSync(join(dir, 'profiles', 'broken.json'), JSON.stringify({
+      profile: 'broken',
+      version: '1.0.0',
+      automatic_profiles: [{ profile: 'ai-decision-system', when: { change_typse: ['new-product'] } }],
+      requirements: {},
+    }));
+    const context = resolveProfileContext(envelope({ required_profiles: ['broken'] }), dir);
+    assert.ok(context.findings.some((finding) => finding.includes('automatic_profiles[0]: unknown predicate change_typse')));
+    assert.ok(!context.names.includes('ai-decision-system'));
+
+    writeFileSync(join(dir, 'profiles', 'broken.json'), JSON.stringify({
+      profile: 'broken', version: '1.0.0', automatic_profiles: {}, requirements: {},
+    }));
+    const nonArray = resolveProfileContext(envelope({ required_profiles: ['broken'] }), dir);
+    assert.ok(nonArray.findings.some((finding) => finding.includes('automatic_profiles must be an array')));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('2.4 — UAE model-involved product changes automatically compile the AI decision profile', () => {
+  const input = envelope({
+    required_profiles: ['regulated-bank', 'uae-bank', 'lending'],
+    flags: { model_involved: true },
+  });
+  const context = resolveProfileContext(input, HARNESS);
+  assert.deepEqual(context.findings, []);
+  assert.ok(context.names.includes('ai-decision-system'), 'the route must not depend on a classifier remembering this profile');
+  const { plan, findings } = compile(context.envelope, context.profiles, context.bindings);
+  assert.deepEqual(findings, []);
+  assert.ok(plan.profiles.includes('ai-decision-system'));
+  assert.equal(plan.required_capabilities.ai_governance.required, true);
+  assert.equal(plan.required_capabilities.fairness_evaluation.required, true);
+  assert.equal(plan.required_capabilities.decision_contestability.required, true);
+  assert.ok(plan.pa2_sections.includes('human-oversight'));
+  assert.ok(plan.pa2_sections.includes('ai-disclosure'));
+});
+
+test('2.4 — automatic AI applicability is scoped to consumer-bearing product change types', () => {
+  for (const change_type of ['documentation', 'software-change']) {
+    const input = envelope({ change_type, required_profiles: ['regulated-bank', 'uae-bank'], flags: { model_involved: true } });
+    const context = resolveProfileContext(input, HARNESS);
+    assert.deepEqual(context.findings, []);
+    assert.ok(!context.names.includes('ai-decision-system'), `${change_type} must not be treated as a customer decision system by inference alone`);
+  }
+});
+
+test('PROPERTY — every automatic profile rule has a resolvable target and a known predicate shape', () => {
+  for (const p of SHIPPED) for (const rule of p.data.automatic_profiles || []) {
+    assert.equal(typeof rule.profile, 'string', `${p.name}: automatic profile target must be a string`);
+    assert.ok(SHIPPED.some((candidate) => candidate.name === rule.profile), `${p.name}: automatic profile ${rule.profile} does not resolve`);
+    assert.ok(rule.when && typeof rule.when === 'object', `${p.name}: automatic profile rule has no predicate`);
+    for (const key of Object.keys(rule.when)) assert.ok(['flags_all', 'change_types', 'minimum_tier'].includes(key), `${p.name}: unknown automatic predicate ${key}`);
+    for (const t of rule.when.change_types || []) assert.ok(['documentation', 'software-change', 'new-product', 'material-product-change'].includes(t), `${p.name}: unknown automatic change type ${t}`);
+    if (rule.when.minimum_tier) assert.ok(TIERS.includes(rule.when.minimum_tier), `${p.name}: unknown automatic minimum tier ${rule.when.minimum_tier}`);
   }
 });
 

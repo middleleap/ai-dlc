@@ -2,6 +2,7 @@
   "change_id": "CHG-2026-0042",
   "risk_tier": "high",
   "profiles": [
+    "ai-decision-system",
     "lending",
     "regulated-bank",
     "uae-bank"
@@ -60,6 +61,7 @@
   ],
   "pa2_sections": [
     "affordability-assessment",
+    "ai-disclosure",
     "arabic-and-accessibility",
     "capital-and-provisioning-treatment",
     "collections-and-forbearance",
@@ -67,8 +69,10 @@
     "consumer-protection-conformance",
     "disclosures",
     "emiratisation-of-disclosures",
+    "explainability-and-contestability",
     "finance-prudential",
     "financial-crime",
+    "human-oversight",
     "key-facts-statement",
     "model-validation",
     "operational-readiness",
@@ -90,7 +94,7 @@
     },
     "model_risk": {
       "required": true,
-      "minimum_tier": "medium"
+      "minimum_tier": "high"
     },
     "sca": {
       "required": true
@@ -108,15 +112,44 @@
     "external_record": {
       "required": true
     },
+    "operating_model": {
+      "required": true,
+      "institution_owned": true
+    },
     "real_data_controls": {
       "required": true,
       "institution_owned": true
     },
     "dpia": {
       "required": true
+    },
+    "human_oversight": {
+      "required": true
+    },
+    "ai_governance": {
+      "required": true,
+      "institution_owned": true
+    },
+    "fairness_evaluation": {
+      "required": true,
+      "institution_owned": true
+    },
+    "decision_contestability": {
+      "required": true,
+      "institution_owned": true
+    },
+    "runtime_guardrails": {
+      "required": true,
+      "institution_owned": true
     }
   },
   "profile_bindings": [
+    {
+      "profile": "ai-decision-system",
+      "kind": "product",
+      "version": null,
+      "digest": "sha256:ab0573e2ea1c3bf157bb6698e9178434fccf05660550d0e26f5c73aebadf261a"
+    },
     {
       "profile": "lending",
       "kind": "product",
@@ -127,14 +160,14 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:b93d101681491c5fee296a279b1981f0446ab5d7cf42b7fc1dddfe82e55b721b"
+      "digest": "sha256:cc82394a81840b24f30dcf893d29f42193f4772ce7cf02ff6c25ca18c696e426"
     },
     {
       "profile": "uae-bank",
       "kind": "jurisdiction",
       "version": null,
-      "digest": "sha256:802a87a9397b90cffd86dfbd2c7c94dd65facab4d055c395536f86ce21b0974e"
+      "digest": "sha256:9d3b4ca1af9e4585099f445be40d3d447c28f1e4a35dcb7da74cac4e4729ef81"
     }
   ],
-  "plan_hash": "b706c669699a8b226da6f4417ad3c810b4f155ffde360bcbe270012934430ffb"
+  "plan_hash": "086a2c225cf33bdeac93dd7c88bf4086cbb450cc3d71a015db6fdf8c1b44930f"
 }

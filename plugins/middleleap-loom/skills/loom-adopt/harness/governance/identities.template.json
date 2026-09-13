@@ -328,6 +328,16 @@
       "note": "TWO COMPETENCES, ONE OR TWO SIGNATURES. products/shariah-model compiles the `shariah_model_validation` capability, and model-provenance-check DERIVES the role name from the domain (`shariah` → `shariah-model-validator`), so a model declaring domain `shariah` needs a holder of this exact role; without this seat no shipped identity holds it and the requirement is unresolvable. The review needs model-validation competence AND Shari'ah authority, which are rarely one person, so pick one of two mappings: give this seat `model-validator` as well and one signature covers both, or leave it as-is and let the manifest carry two distinct signatures — `validated_by` for whether the model is accurate, `domain_validations.shariah` for what its output means. An EMPLOYEE by default (no `external` flag): if you fill it with an outside appointee instead, add `external: true` and the register that governs them, as the ISSC seats do. It is a competence, not a fourth line — holding it neither adds to nor substitutes for the three Shari'ah lines above. And it confers no authority to rule: a passing domain validation records that a competent review happened and is bound to this model pin, never that the model is Shari'ah-compliant."
     },
     {
+      "id": "audit-nadia",
+      "kind": "human",
+      "display": "Nadia (Internal Audit)",
+      "roles": [
+        "internal-audit"
+      ],
+      "groups": [],
+      "note": "Third-line owner of independent re-performance. This reference identity is illustrative; replace it with the institution's directory-backed audit identity. It is deliberately outside builders and second-line decision making."
+    },
+    {
       "id": "exec-rashid",
       "kind": "human",
       "display": "Rashid (Accountable Executive)",

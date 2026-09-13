@@ -50,12 +50,12 @@ try {
   cpSync(join(H, 'product-eval-example/product-evals.json'), join(A, 'docs/governance/product-evals.json'));
   if (existsSync(join(A, 'CODEOWNERS'))) writeFileSync(join(A, 'CODEOWNERS'), readFileSync(join(A, 'CODEOWNERS'), 'utf8').replace(/@your-org\//g, '@demo-bank/'));
 
-  say('choose providers for the four roles the high-tier change requires (PS-R06 fires until this is done)');
+  say('choose providers for the five roles the high-tier AI change requires (PS-R06 fires until this is done)');
   const ps = node(['scripts/provider-selection-check.mjs'], { expect: 1, quiet: true });
   if (!/PS-R06: .*external_record/.test(ps.stderr)) fail('PS-R06 did not name external_record before a provider was chosen');
-  for (const f of ['sca/snyk.json', 'hardened-runtime/chainguard.json', 'real-data-controls/kms-field-encryption.json', 'external-record/kosli.json']) cpSync(join(A, 'docs/governance/adapters/providers', f), join(A, 'docs/governance/adapters', f.split('/')[1]));
+  for (const f of ['sca/snyk.json', 'hardened-runtime/chainguard.json', 'runtime-guardrails/gateway-policy-enforcement.json', 'real-data-controls/kms-field-encryption.json', 'external-record/kosli.json']) cpSync(join(A, 'docs/governance/adapters/providers', f), join(A, 'docs/governance/adapters', f.split('/')[1]));
   const sel = (role, provider, adapter_id) => ({ role, provider, adapter_id, decided_by: 'infosec-noor', decided_at: '2026-09-13', source: 'mt-tech-2026' });
-  W('docs/governance/provider-selection.json', { selections: [sel('sca', 'snyk', 'snyk-sca'), sel('hardened-runtime', 'chainguard', 'chainguard-runtime'), sel('real-data-controls', 'kms-field-encryption', 'kms-field-encryption'), sel('external-record', 'kosli', 'kosli-external-record')] });
+  W('docs/governance/provider-selection.json', { selections: [sel('sca', 'snyk', 'snyk-sca'), sel('hardened-runtime', 'chainguard', 'chainguard-runtime'), sel('runtime-guardrails', 'gateway-policy-enforcement', 'gateway-policy-enforcement'), sel('real-data-controls', 'kms-field-encryption', 'kms-field-encryption'), sel('external-record', 'kosli', 'kosli-external-record')] });
   if (real) { const k = J('docs/governance/adapters/kosli.json'); k.config.org = process.env.KOSLI_ORG || k.config.org; W('docs/governance/adapters/kosli.json', k); }
   node(['scripts/provider-selection-check.mjs']);
 

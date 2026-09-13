@@ -66,7 +66,7 @@ test('the adopt-pending inventory is capped at ten so the failure stays readable
 
 test('installation without attestation is refused, and says what to do', () => {
   const f = evaluate(CLEAN, null, opts);
-  assert.deepEqual(f, ['no adoption-attestation.json — run `attest-adoption` on a fully-configured repo to produce one']);
+  assert.deepEqual(f, ['no adoption-attestation.json — create and sign one for the fully-configured repo, then run `attest-adoption` to verify it']);
 });
 
 // --- an agent cannot certify its own adoption ---------------------------------------------------

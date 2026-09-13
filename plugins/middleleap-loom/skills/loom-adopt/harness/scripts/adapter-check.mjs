@@ -27,7 +27,9 @@ const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
  */
 export function isActive(adapter) {
   const ae = adapter?.activation_evidence;
-  return Boolean(ae && Object.keys(ae).some((k) => !k.startsWith('_') && nonEmpty(ae[k]) && !/^ADOPT:/.test(ae[k])));
+  if (!ae || typeof ae !== 'object' || Array.isArray(ae)) return false;
+  const values = Object.entries(ae).filter(([key]) => !key.startsWith('_')).map(([, value]) => value);
+  return values.length > 0 && values.every((value) => nonEmpty(value) && !/^ADOPT[\s:—-]/i.test(value.trim()));
 }
 
 /** Findings and notices for one adapter. `controlIds` is the set of real catalog control ids. */

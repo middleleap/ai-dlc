@@ -19,9 +19,10 @@ import { CAPABILITY, COVERED_TIERS, evaluate, isPlaceholder, requiringChanges, r
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// Resolved across the BUNDLE and ADOPTED layouts: scripts/ is copied into an adopted tree, so this
-// suite runs there too, where the template has been installed as docs/governance/fairness-evaluations.json.
-const TEMPLATE_PATH = [join(H, 'governance/fairness-evaluations.template.json'), join(H, 'docs/governance/fairness-evaluations.json')].find(existsSync);
+// Only inspect the immutable bundle template. Adopted-layout CI intentionally replaces the
+// installed destination with the worked record before this suite runs.
+const TEMPLATE_CANDIDATE = join(H, 'governance/fairness-evaluations.template.json');
+const TEMPLATE_PATH = existsSync(TEMPLATE_CANDIDATE) ? TEMPLATE_CANDIDATE : null;
 const SKIP_NO_TEMPLATE = !TEMPLATE_PATH && 'fairness-evaluations template not present in this layout';
 const clean = (d) => rmSync(d, { recursive: true, force: true });
 
@@ -152,6 +153,14 @@ test('FR-R06 — a covered-tier model with no evaluation is UNCOVERED, and silen
   const low = [...MODELS, { role: 'summariser', risk_tier: 'low', ...PIN }];
   assert.deepEqual(evaluate(record(), { models: low, registry: REGISTRY, enforced: true }).findings, []);
   assert.ok(COVERED_TIERS.has('high') && COVERED_TIERS.has('medium') && !COVERED_TIERS.has('low'));
+});
+
+test('2.4 — coverage follows the model roles named by the governed change', () => {
+  const models = [...MODELS, { role: 'pricing', risk_tier: 'medium', ...PIN }];
+  const scoped = evaluate(record(), { models, coveredRoles: new Set(['delivery-loop']), registry: REGISTRY, enforced: true });
+  assert.ok(!scoped.findings.some((f) => /FR-R06.*"pricing"/.test(f)), scoped.findings.join('\n'));
+  const expanded = evaluate(record(), { models, coveredRoles: null, registry: REGISTRY, enforced: true });
+  assert.ok(expanded.findings.some((f) => /FR-R06.*"pricing"/.test(f)), expanded.findings.join('\n'));
 });
 
 test('FR-R07 — an evaluation of a model this repository does not ship measures nothing', () => {

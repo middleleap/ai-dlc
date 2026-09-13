@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { computeStatus, unresolvedMarkers, runMechanism } from './adoption-status.mjs';
 import { evaluate, attestationHash } from './adoption-attest.mjs';
+import { activationHash } from './platform-activation-check.mjs';
 
 // A tiny adopted repo: a catalog + some governance files (optionally still carrying ADOPT markers).
 function repo({ controls, files = {} }) {
@@ -123,15 +124,39 @@ test('a control whose governed path still has a marker is installed but NOT conf
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('a platform-activation record advances a control to platform; an adoption attestation to organisation', () => {
+test('an unsigned platform-activation claim cannot advance the Platform column', () => {
   const dir = repo({ controls: [{ control_id: 'HG-0001', state: 'defined', doc_ref: 'runbook.md' }] });
   try {
     mkdirSync(join(dir, 'docs/governance/platform-activation'), { recursive: true });
     writeFileSync(join(dir, 'docs/governance/platform-activation/x.json'), JSON.stringify({ satisfies_control: 'HG-0001' }));
     writeFileSync(join(dir, 'docs/governance/adoption-attestation.json'), JSON.stringify({ approved_controls: ['HG-0001'] }));
-    const c = computeStatus(dir).capabilities.find((x) => x.control_id === 'HG-0001');
-    assert.equal(c.platform, true);
-    assert.equal(c.organisation, true);
+    const status = computeStatus(dir);
+    const c = status.capabilities.find((x) => x.control_id === 'HG-0001');
+    assert.equal(c.platform, false);
+    assert.equal(c.organisation, false);
+    assert.ok(status.activationFindings.length > 0);
+    assert.ok(status.organisationFindings.length > 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a fresh signed and independently observed platform record advances the Platform column', () => {
+  const dir = repo({ controls: [{ control_id: 'HG-0001', state: 'defined', doc_ref: 'runbook.md' }] });
+  const keys = generateKeyPairSync('ed25519');
+  try {
+    const now = new Date().toISOString();
+    const rec = {
+      platform: 'github', repository: 'org/repo', satisfies_control: 'HG-0001', mechanism: 'branch_protection',
+      observer_identity: 'padmin', observation: { enforce_admins: true },
+      bypass_test: { attempted: 'direct push', result: 'rejected', tested_at: now }, observed_at: now,
+    };
+    rec.attestation = { issuer: 'observer', signature: sign(null, Buffer.from(activationHash(rec), 'utf8'), keys.privateKey).toString('base64') };
+    mkdirSync(join(dir, 'docs/governance/platform-activation'), { recursive: true });
+    writeFileSync(join(dir, 'docs/governance/platform-activation/x.json'), JSON.stringify(rec));
+    writeFileSync(join(dir, 'docs/governance/identities.json'), JSON.stringify({ identities: [{ id: 'padmin', kind: 'human', groups: ['platform-admins'] }] }));
+    writeFileSync(join(dir, 'docs/governance/attestation-issuers.json'), JSON.stringify({ issuers: [{ id: 'observer', mechanism: 'ed25519', verify: { public_key: keys.publicKey.export({ type: 'spki', format: 'pem' }).toString() } }] }));
+    const status = computeStatus(dir);
+    assert.equal(status.capabilities.find((x) => x.control_id === 'HG-0001').platform, true);
+    assert.deepEqual(status.activationFindings, []);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -147,6 +172,19 @@ function attestation(over = {}) {
 }
 const NOW = Date.parse('2026-07-24T00:00:00Z');
 const ev = (status, att, over = {}) => evaluate(status, att, { issuers: ISSUERS, registry: REGISTRY, now: NOW, ...over });
+
+test('a verified adoption attestation advances only its approved controls to Organisation', () => {
+  const dir = repo({ controls: [{ control_id: 'A', state: 'mechanically-validated', mechanism_ref: 'scripts/a.mjs' }] });
+  try {
+    const signed = attestation();
+    writeFileSync(join(dir, 'docs/governance/adoption-attestation.json'), JSON.stringify(signed));
+    writeFileSync(join(dir, 'docs/governance/identities.json'), JSON.stringify(REGISTRY));
+    writeFileSync(join(dir, 'docs/governance/attestation-issuers.json'), JSON.stringify(ISSUERS));
+    const status = computeStatus(dir);
+    assert.equal(status.capabilities[0].organisation, true);
+    assert.deepEqual(status.organisationFindings, []);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
 
 test('attest — a clean, signed, human-attested adoption verifies', () => {
   assert.deepEqual(ev(clean, attestation()), []);

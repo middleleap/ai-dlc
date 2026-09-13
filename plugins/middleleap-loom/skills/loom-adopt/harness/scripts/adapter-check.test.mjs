@@ -35,6 +35,12 @@ test('a reference mapping with only ADOPT placeholders is DECLARED, not active (
   assert.ok(r.notices.some((n) => /declared, not active/.test(n)));
 });
 
+test('a partially completed activation record remains declared, not active', () => {
+  const partial = { ...GOOD, activation_evidence: { fetched_at: '2026-07-20T00:00:00Z', direct_push_probe: 'ADOPT: run the negative probe' } };
+  const r = evaluate(partial, new Set(['HG-1']));
+  assert.ok(r.notices.some((n) => /declared, not active/.test(n)));
+});
+
 test('missing core fields are findings', () => {
   const r = evaluate({ adapter_id: 'x' }, CONTROLS);
   assert.ok(r.findings.some((f) => /no system/.test(f)));

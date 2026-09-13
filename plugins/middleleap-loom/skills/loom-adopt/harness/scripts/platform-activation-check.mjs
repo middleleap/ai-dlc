@@ -2,7 +2,8 @@
 // DECLARATIONS about branch protection, identities and approvals (adapter envelopes), but nothing
 // proves the platform is configured to PREVENT bypass — which is why no control has ever graded
 // above mechanically-validated. This gate is the read-only OBSERVATION verifier: it checks a
-// signed activation record produced by querying the live platform, and it is the receipt that lets
+// signed activation record produced by an institution-controlled live-platform observation, and it
+// is the receipt that lets
 // a catalog control graduate to `platform-enforced`.
 //
 // An activation record (one per platform mechanism) must carry:
@@ -21,9 +22,10 @@
 // platform-enforced claim without a verified record fails the build.
 //
 // Honesty (rc.2 invariant): the bundle ships the verifier, the schema, the observer-separation rule
-// and a signed reference observation. The LIVE query — `loom activate --platform github` — runs
-// adopter-side with the adopter's read-only platform credentials. A public bundle cannot observe a
-// bank's GitHub org; it can prove the observation, once made, is authentic, separated and fresh.
+// and a reference observation shape. The institution must query its platform with a read-only,
+// independently controlled observer and sign the resulting record before `loom activate` verifies
+// it. A public bundle cannot observe a bank's GitHub org; it can prove the observation, once made,
+// is authentic, separated and fresh.
 //
 // Run from the repo root: `node scripts/platform-activation-check.mjs` (exit 1 on any finding).
 import { createHash } from 'node:crypto';
@@ -40,6 +42,13 @@ const IDENTITY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'
 // below made those two controls unreachable by construction: an adopter could wire the gateway
 // the runbook tells them to wire and still have no mechanism to name in the record.
 export const MECHANISMS = new Set(['branch_protection', 'rulesets', 'required_reviews', 'codeowners', 'workflow_permissions', 'environment_protection', 'oidc_subjects', 'egress_proxy']);
+const CONTROL_MECHANISMS = new Map([
+  ['HG-0001', new Set(['branch_protection', 'rulesets', 'required_reviews', 'codeowners'])],
+  ['HG-0004', new Set(['workflow_permissions', 'oidc_subjects'])],
+  ['HG-0005', new Set(['environment_protection'])],
+  ['HG-0011', new Set(['egress_proxy'])],
+  ['HG-0012', new Set(['egress_proxy'])],
+]);
 const DEFAULT_MAX_AGE_DAYS = 365;
 const DAY = 86_400_000;
 
@@ -65,11 +74,18 @@ const isOutsideWriteAuthority = (who) => who && who.kind !== 'agent' && !(who.gr
 export function evaluate(record, { issuers, registry, now = Date.now(), maxAgeDays = DEFAULT_MAX_AGE_DAYS } = {}) {
   const findings = [];
   const id = record?.satisfies_control || '(no satisfies_control)';
+  if (!registry) findings.push(`${id}: no readable identity registry — observer independence cannot be verified`);
   if (record?.platform == null || !record.platform) findings.push(`${id}: no platform named`);
   if (!record?.repository) findings.push(`${id}: no repository named`);
   if (!record?.satisfies_control) findings.push('activation record names no satisfies_control — an observation must say which control it activates');
   if (!MECHANISMS.has(record?.mechanism)) findings.push(`${id}: mechanism must be one of ${[...MECHANISMS].join('|')} (got ${JSON.stringify(record?.mechanism)})`);
-  if (!record?.observation || typeof record.observation !== 'object') findings.push(`${id}: no observation object — what did the platform actually report?`);
+  const allowedMechanisms = CONTROL_MECHANISMS.get(record?.satisfies_control);
+  if (allowedMechanisms && !allowedMechanisms.has(record?.mechanism)) {
+    findings.push(`${id}: mechanism ${JSON.stringify(record?.mechanism)} cannot activate this control; expected one of ${[...allowedMechanisms].join('|')}`);
+  }
+  if (!record?.observation || typeof record.observation !== 'object' || Array.isArray(record.observation) || Object.keys(record.observation).length === 0) {
+    findings.push(`${id}: no non-empty observation object — what did the platform actually report?`);
+  }
 
   // Observer separation — you cannot attest that your own guardrail is active.
   const observerId = record?.observer_identity;
@@ -127,17 +143,19 @@ export function run(cwd = process.cwd(), { maxAgeDays = DEFAULT_MAX_AGE_DAYS } =
   const catalog = catalogPath ? readJson(catalogPath) : null;
 
   const dir = findDir(cwd, ACTIVATION_DIR);
-  const records = dir ? readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => readJson(`${dir}/${f}`)).filter(Boolean) : [];
+  const files = dir ? readdirSync(dir).filter((f) => f.endsWith('.json')) : [];
 
   const findings = [];
   const verified = new Set();
-  for (const r of records) {
+  for (const file of files) {
+    const r = readJson(`${dir}/${file}`);
+    if (!r) { findings.push(`${file}: platform-activation record is not valid JSON`); continue; }
     const f = evaluate(r, { issuers, registry, maxAgeDays });
     if (f.length === 0 && r.satisfies_control) verified.add(r.satisfies_control);
     findings.push(...f);
   }
   if (catalog) findings.push(...checkGraduation(catalog, verified));
-  return { count: records.length, findings };
+  return { count: files.length, findings, verifiedControls: [...verified].sort() };
 }
 
 // CLI (skipped when imported by the test suite).

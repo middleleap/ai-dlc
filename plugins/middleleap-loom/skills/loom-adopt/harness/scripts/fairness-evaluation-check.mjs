@@ -60,7 +60,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { aggregateRequirements, capabilityRequired, requiredBy } from '../core/compiled-requirements.mjs';
+import { aggregateRequirements, capabilityRequired, requiredBy, modelRolesRequiredByCapability } from '../core/compiled-requirements.mjs';
 import { identityOf, loadRegistry } from './identity-registry-check.mjs';
 
 export const FAIRNESS_LOCATIONS = ['docs/governance/fairness-evaluations.json', 'fairness-evaluations.json'];
@@ -95,7 +95,7 @@ const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } ca
  * `enforced` is whether a compiled plan requires the capability, and it is the ONLY thing deciding
  * finding-vs-notice — for every rule. Mounting the template is not the declaration.
  */
-export function evaluate(doc, { models = null, registry = null, baseDir = null, enforced = false } = {}) {
+export function evaluate(doc, { models = null, coveredRoles = null, registry = null, baseDir = null, enforced = false } = {}) {
   const findings = [];
   const notices = [];
   const say = (m) => (enforced ? findings : notices).push(m);
@@ -166,7 +166,7 @@ export function evaluate(doc, { models = null, registry = null, baseDir = null, 
   if (Array.isArray(models)) {
     const manifestRoles = new Map(models.filter((m) => m && nonEmpty(m.role)).map((m) => [m.role.trim(), m]));
     for (const [role, m] of manifestRoles) {
-      if (COVERED_TIERS.has(m.risk_tier) && !byRole.has(role)) {
+      if ((!coveredRoles || coveredRoles.has(role)) && COVERED_TIERS.has(m.risk_tier) && !byRole.has(role)) {
         say(`FR-R06: model role ${JSON.stringify(role)} is ${m.risk_tier}-tier in the model manifest and has NO fairness evaluation here — a model whose output materially affects a customer outcome is measured or it is uncovered, and silence is not a pass`);
       }
     }
@@ -290,6 +290,7 @@ export function run(cwd = process.cwd()) {
   const models = Array.isArray(manifest?.models) ? manifest.models : null;
   const { findings, notices, attributes, evaluations } = evaluate(doc, {
     models,
+    coveredRoles: modelRolesRequiredByCapability(agg, CAPABILITY),
     registry: loadRegistry(cwd),
     baseDir: cwd,
     enforced: required,
