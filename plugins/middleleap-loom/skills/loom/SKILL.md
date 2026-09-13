@@ -75,6 +75,12 @@ the full canon for one part of that page, or an appendix.
 - `assets/loom-stream.html` — a standalone, brand-styled visualization of the whole stream: the
   double diamond closed into a loop, the security / governance / business checkpoints, where
   Chainguard & Snyk attach, and the bank-grade maturity traffic-light. Open it in a browser.
+- `assets/loom-atlas.html` — the Loom **drawn**: the loom metaphor made exact, how the institution
+  prepares its BrainKit (intake → sourced / claimed / unknown → sealed), the double diamond closed
+  into a loop with a clickable stage panel (who acts, what is written, which gate reads it), the
+  Factory Floor's four planes and the freeze round trip, the register chain a gate actually reads,
+  and an honest-state strip. Meridian Trust is the fictional worked example throughout. Open it in
+  a browser; show it to someone before they read the canon.
 
 **Appendix** — one part each, read when that part is yours:
 - `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,

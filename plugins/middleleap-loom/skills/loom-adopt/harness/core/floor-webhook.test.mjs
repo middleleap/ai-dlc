@@ -41,7 +41,7 @@ const event = (over = {}) => ({
   id: 'evt-0001',
   timestamp: '2026-07-26T11:59:30.000Z',
   workspace_id: 'ws-meridian',
-  workspace_name: 'Meridian Bank — Factory Floor',
+  workspace_name: 'Meridian Trust — Factory Floor',
   subscription_id: 'sub-floor-bridge',
   integration_id: 'int-floor-bridge',
   authors: [{ id: 'person-lena', type: 'person' }],
