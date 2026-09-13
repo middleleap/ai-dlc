@@ -34,11 +34,31 @@ source template and regenerated HTML. This also accommodates long command names 
 The corrected private preview was deployed and its computed wrapping and document widths verified.
 Twenty focused intake-generation and pilot tests passed on Node 22.23.2.
 
+## Follow-up: downloads and concurrent edits
+
+On the same corrected preview, browser-level download events confirmed that the page initiated
+`intake-record.json` with a 4,154-byte payload. The browser then emitted `Page.downloadProgress`
+with `state: canceled` and `receivedBytes: 0`. This narrows the failure to delivery in this browser;
+it does not establish the cause of cancellation or successful file receipt. No browser download
+policy was changed. The verified Copy JSON path remains available.
+
+A second hosted tab resumed the same synthetic intake. Editing C2 in the older tab then produced
+an explicit concurrent-change save error. The newer tab's exported C2 remained UNKNOWN, while
+Copy JSON from the older tab retained its unsaved C2 text and original answering role. Clicking
+Save and return to start did not leave the unsaved workspace. These checks demonstrate overwrite
+protection and recovery-export availability in the browser, beyond the pure-module tests.
+
+The subsequent Return without saving test blocked on the native confirmation: the click timed
+out and the browser dialog API could not resolve it. Attempted native Codex app access was denied
+by the computer-use safety policy. No alternate app-control mechanism was used. Manual dismissal
+is required before continuing this browser session; confirmation cancellation and exit have not
+been marked passed.
+
 ## Acceptance still open
 
-- Actual downloaded-file receipt/content: clicking Download did not produce an automation download event within ten seconds. No console error was captured. This is unverified, not a proven application failure; copied JSON passed.
+- Actual downloaded-file receipt/content: browser cancellation before receiving bytes is confirmed; its cause and successful delivery remain unresolved. Copied JSON passed.
 - Complete keyboard focus order, focus visibility, screen-reader behavior, text enlargement, touch/physical-device and cross-browser coverage.
-- Browser storage-denial/stale-tab recovery, legacy recovery with real old-format browser state, import in reverse order and repeated-import interaction coverage. Pure-module tests cover these separately.
+- Completion of the stale-tab leave/cancel flow after manual dialog dismissal, browser storage-denial recovery, legacy recovery with old-format browser state, reverse-order and repeated-import interaction coverage. Pure-module tests cover these separately.
 - Unfamiliar sponsor/developer/platform/risk/context participant sessions, first-to-second-team comparisons and measured completion targets.
 
 Do not mark the full browser acceptance gate or phase 6 complete from this smoke pass. The next
