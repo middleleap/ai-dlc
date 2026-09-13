@@ -130,7 +130,9 @@ dimensions:
    decision rights that every repository inherits before it writes code, PRDs, ADRs, interfaces or
    reports. The BrainKit projects to the **brand profile** seam (gate D7) and composes through the
    policy compiler as the `brainkit-conformance` gate; `brainkit-check` enforces its integrity, and
-   `brainkit-init` drafts one from an institution's approved sources. See `references/brainkit.md`.
+   `brainkit-init` drafts one from an institution's approved sources, and `institution-intake` is
+   the guided Q&A that gathers those sources (and the gaps) from the accountable roles before it.
+   See `references/brainkit.md`.
 
 The moat test: if a competitor copied the entire codebase tomorrow, what would they still lack?
 The accumulated, governed context. It cannot be copied — only built, cycle after cycle. And the

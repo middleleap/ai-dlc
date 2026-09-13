@@ -91,6 +91,18 @@ in. Write the ADR (`docs/adrs/`) and/or run the `spec-change` skill for the spec
 **human-approved, never self-merged**. The backlog item then `depends_on` that decision (or is
 `blocked` with the ADR/spec-PR reference) until a human ratifies it.
 
+## 3b. The business case — when the institution funds change by one
+
+Delivery is now the cheaper half of a change; organisational change, legal work, control-function
+time and run cost are not, and a regulated institution still funds by decision. Where the
+institution's decision rights (`institution/brainkit/governance.md`) require one, write
+`docs/develop/<slug>.business-case.md` from `delivery/templates/business-case.md` **after** the
+SDR (a case needs a chosen direction to cost) and **before** §4. Its benefits are the D1 success
+measures, valued — nothing else — so `product-eval-check` measures them after launch; its costs
+are the total cost of change, not the build. The case is `decision-routed`: the funding decision
+is an ADR or decision envelope a human other than the proposer merges, and the backlog item(s)
+`depends_on` it. No gate reads the case yet; the discipline is the template's and the roster's.
+
 ## 4. Emit — the discovery-linked backlog item(s)
 
 Append the spawned item(s) to `docs/backlog.yaml` under the right milestone, each carrying:

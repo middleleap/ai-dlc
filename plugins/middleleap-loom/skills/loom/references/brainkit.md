@@ -63,7 +63,10 @@ The **manifest** is the spine. It carries:
 
 ## Lifecycle
 
-A BrainKit is born `draft`. `brainkit-init` generates a draft from the repository and the
+A BrainKit is born `draft`. Before it, `institution-intake` interviews the accountable roles and
+sorts what they say into sourced answers (the source-register skeleton), claims and unknowns (the
+gap register) — an answer without a document behind it never becomes a section. `brainkit-init`
+then generates a draft from the repository and the
 institution's *approved* sources, records provenance for every generated section, and lists a gap
 register of decisions it could not make. It never invents policy, regulatory interpretation,
 approval authority or brand rules — a draft is a starting point for humans, not a fait accompli.

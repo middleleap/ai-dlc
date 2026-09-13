@@ -72,3 +72,10 @@ The BrainKit is the **institution-owned seed of the Loom's context brain**. This
 absent, or present only as an adopt-pending template, adoption routes the user through this skill
 before a governed change can name an institution profile. `brainkit-check` enforces the result:
 until the BrainKit is approved, sealed, owned and grounded, a compiled change that pins it is blocked.
+
+If the institution has **no approved sources gathered yet** — the usual first-day state — run the
+`institution-intake` skill first. It interviews the accountable roles block by block and sorts
+every answer into SOURCED (→ a `source-register.json` skeleton this skill drafts from), CLAIMED or
+UNKNOWN (→ a gap register the owners work through). An interview answer never becomes a section
+here without a source behind it; that boundary is the intake's job to keep, and this skill's to
+respect.
