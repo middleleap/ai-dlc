@@ -719,7 +719,12 @@ jobs:
           [ "$BEFORE" = "$(sha256sum docs/governance/evidence/manifest.json)" ] || { echo "::error::a refused record still rewrote the manifest"; exit 1; }
           node scripts/provenance-check.mjs
           rm -f "$RUNNER_TEMP/record-key.pem"
-          git add -A && git commit -qm "record the seal anchor in the external record (2.1.0, K9)"
+          # Commit ONLY what this block produced. `git add -A` here would sweep up the untracked
+          # example files earlier steps leave beside the tree (residency-review.md among them), and
+          # the legibility gate reads the git tree — a stray "D0.2" in an example nobody committed
+          # would then fail the benchmark lane for a file this block never touched.
+          git add docs/governance/evidence/manifest.json docs/governance/attestation-issuers.json
+          git commit -qm "record the seal anchor in the external record (2.1.0, K9)"
           node scripts/brainkit-check.mjs   # rc.8: no-op here (no change compiles brainkit-conformance) — proves it composes without breaking the generic path
           node scripts/brainkit-registry-check.mjs     # rc.15 WS7 — estate registry consistent; no repo runs a revoked release
           node scripts/comprehension-check.mjs         # rc.15 WS8 — the high-tier change carries a human understanding record
