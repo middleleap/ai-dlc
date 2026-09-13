@@ -64,6 +64,14 @@ test('CT-R02 — THE COVERAGE RULE: a covered-tier model with no contest route i
   assert.ok(COVERED_TIERS.has('high') && COVERED_TIERS.has('medium') && !COVERED_TIERS.has('low'));
 });
 
+test('2.4 — coverage follows the model roles named by the governed change', () => {
+  const models = [...MODELS, { role: 'pricing', risk_tier: 'medium' }];
+  const scoped = evaluate(record(), { models, coveredRoles: new Set(['delivery-loop']), registry: REGISTRY, enforced: true });
+  assert.ok(!scoped.findings.some((f) => /CT-R02.*"pricing"/.test(f)), scoped.findings.join('\n'));
+  const expanded = evaluate(record(), { models, coveredRoles: null, registry: REGISTRY, enforced: true });
+  assert.ok(expanded.findings.some((f) => /CT-R02.*"pricing"/.test(f)), expanded.findings.join('\n'));
+});
+
 test('CT-R01 and CT-R02 report together — an empty file against three deciding models says both', () => {
   const models = [MODELS[0], { role: 'pricing', risk_tier: 'high' }, { role: 'fraud', risk_tier: 'medium' }];
   const { findings } = evaluate({ surfaces: [] }, { models, registry: REGISTRY, enforced: true });

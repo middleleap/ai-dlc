@@ -13,6 +13,7 @@
       "capabilities": {
         "model_risk": { "required": true, "minimum_tier": "high" },
         "human_oversight": { "required": true },
+        "ai_governance": { "required": true, "institution_owned": true },
         "fairness_evaluation": { "required": true, "institution_owned": true },
         "decision_contestability": { "required": true, "institution_owned": true },
         "data_risk_register": { "required": true, "minimum_version": "3.1", "institution_owned": true }

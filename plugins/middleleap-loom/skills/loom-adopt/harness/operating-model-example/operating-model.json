@@ -1,0 +1,48 @@
+{
+  "schema": "loom.operating-model/v1",
+  "accountable_executive": {
+    "identity_id": "exec-rashid",
+    "mandate_ref": "MERIDIAN-SOR-TECH-2026-04",
+    "effective_on": "2026-04-01",
+    "regulator_reference": "MERIDIAN-CF-2026-017"
+  },
+  "oversight": {
+    "committee": "Board Risk and Technology Committee",
+    "terms_of_reference": "MERIDIAN-BRTC-TOR-2026",
+    "minutes_record": "board-portal:BRTC",
+    "review_every_days": 90,
+    "event_triggers": ["control-plane regression", "cease-use invocation", "failed rollback drill", "material model or pilot-scope change"]
+  },
+  "change_management": {
+    "system_of_record": "service-management:change",
+    "ticket_required_for_production": true,
+    "promotion_gate": "deployment-protection:production-change-approved",
+    "rollback_owner": "ops-dana",
+    "cease_use_owner": "exec-rashid",
+    "kill_switch": "feature-flag disable plus manual underwriting fallback"
+  },
+  "raci": [
+    { "activity": "propose-change", "accountable": "po-fatima", "responsible": ["agent-loom-delivery", "eng-omar"] },
+    { "activity": "approve-merge", "accountable": "exec-rashid", "responsible": ["padmin-zoe"] },
+    { "activity": "control-plane-change", "accountable": "exec-rashid", "responsible": ["padmin-zoe"] },
+    { "activity": "production-promotion", "accountable": "exec-rashid", "responsible": ["ops-dana"] },
+    { "activity": "rollback", "accountable": "exec-rashid", "responsible": ["ops-dana"] },
+    { "activity": "cease-use", "accountable": "exec-rashid", "responsible": ["padmin-zoe"] },
+    { "activity": "model-risk-signoff", "accountable": "exec-rashid", "responsible": ["mrm-aisha"] },
+    { "activity": "pilot-scope", "accountable": "exec-rashid", "responsible": ["risk-lena"] },
+    { "activity": "oversight-and-reperformance", "accountable": "exec-rashid", "responsible": ["audit-nadia"] }
+  ],
+  "iam_bindings": [
+    { "activity": "approve-merge", "subject": "padmin-zoe", "provider_group": "idp-group:platform-admins", "enforcement_ref": "platform-activation:github-codeowners-hold" },
+    { "activity": "control-plane-change", "subject": "padmin-zoe", "provider_group": "idp-group:platform-admins", "enforcement_ref": "platform-activation:github-branch-protection" },
+    { "activity": "production-promotion", "subject": "ops-dana", "provider_group": "idp-group:production-promoters", "enforcement_ref": "deployment-protection:production" },
+    { "activity": "cease-use", "subject": "exec-rashid", "provider_group": "idp-group:cease-use", "enforcement_ref": "kill-switch:credit-origination" }
+  ],
+  "independent_reperformance": {
+    "owner": "audit-nadia",
+    "sample_every_days": 90,
+    "procedure": "docs/governance/runbooks/independent-assurance-runbook.md",
+    "external_evidence_route": "external-record:kosli:CHG-2026-0042"
+  },
+  "_notice": "SYNTHETIC WORKED EXAMPLE. No appointment, IAM binding, committee meeting, production refusal, cease-use event, Kosli record or audit re-performance occurred."
+}

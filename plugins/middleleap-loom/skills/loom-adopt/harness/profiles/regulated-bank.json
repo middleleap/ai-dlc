@@ -109,6 +109,10 @@
         },
         "external_record": {
           "required": true
+        },
+        "operating_model": {
+          "required": true,
+          "institution_owned": true
         }
       },
       "_external_record_comment": "2.1.0 (hardening plan 2.2, decision K9): a high-tier change must name where the record of its gate results lives OUTSIDE the tree the agent edits (role `external-record`, adapters/providers/roles.json). Kosli is the first provider; the seam is core/external-record.mjs. With no provider selected PS-R06 fires; with one mounted, scripts/evidence-seal-check.mjs requires the manifest's external_record id to resolve at the provider."
@@ -145,7 +149,7 @@
         ],
         "max_diff_lines": 60
       },
-      "pre_compiled_plan_hash": "bff6fabb3a943a7bb2f6397266ba43921c39667f4665283312513fadaca6bd89",
+      "pre_compiled_plan_hash": "07ade801379be8d2e4ea8de028dff55b966a8160808472a5eb327da4e4ec44c8",
       "approved_by": "risk-lena",
       "approved_at": "2026-07-22",
       "_expires_comment": "ADOPT: a real pattern's window is short — 90 days is normal, and re-reading it is the point. The date here is far out ON PURPOSE: a shipped fixture with a 90-day expiry is a build that turns red on a calendar, and a check that turns red on a calendar gets deleted rather than renewed. The bundle's CI proves BOTH directions per run by restamping this field, so the expiry is exercised without being load-bearing on the date.",

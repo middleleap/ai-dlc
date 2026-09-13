@@ -82,7 +82,7 @@ fi
 if printf '%s' "$new_content" | grep -Eq '^\s*(//|#|--)\s*(expect|assert|should|t\.(is|deepEqual|truthy|falsy|throws))\b'; then
   deny "Test tripwire: this edit comments out an assertion (expect/assert) on branch '$branch'. Make the code satisfy the assertion; don't silence it. Genuine test defects belong on a test-fix branch (feature/<ID>-testfix-<slug>)."
 fi
-if printf '%s' "$new_content" | grep -Ezq '/\*([^*]|\*+[^*/])*\b(expect|assert)\s*\('; then
+if printf '%s' "$new_content" | grep -Ezq '/\*([^*]|[[:space:]]|\*+[^*/])*(expect|assert)[[:space:]]*\('; then
   deny "Test tripwire: this edit wraps an assertion (expect/assert) in a block comment on branch '$branch'. A commented assertion is a silenced one. Genuine test defects belong on a test-fix branch (feature/<ID>-testfix-<slug>)."
 fi
 

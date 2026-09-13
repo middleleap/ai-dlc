@@ -23,6 +23,7 @@ import { pathToFileURL } from 'node:url';
 
 export const TIERS = ['low', 'medium', 'high', 'critical'];
 export const CHANGE_TYPES = ['documentation', 'software-change', 'new-product', 'material-product-change'];
+export const AUTOMATIC_PREDICATES = ['flags_all', 'change_types', 'minimum_tier'];
 export const PRODUCT_CHANGE_TYPES = new Set(['new-product', 'material-product-change']);
 // plan field ← the key profiles use for it
 const FIELD_MAP = {
@@ -71,6 +72,98 @@ export function loadProfiles(names, baseDir = process.cwd()) {
     catch (e) { findings.push(`profile ${name} is not valid JSON: ${e.message}`); }
   }
   return { profiles: loaded, findings };
+}
+
+/** Validate an automatic-profile rule. Unknown or empty policy must fail closed. */
+export function automaticRuleFindings(rule) {
+  const findings = [];
+  if (!rule || typeof rule !== 'object' || Array.isArray(rule)) {
+    return ['rule must be an object'];
+  }
+  if (!(typeof rule.profile === 'string' && rule.profile.trim())) {
+    findings.push('profile must be a non-empty string');
+  }
+  for (const key of Object.keys(rule)) {
+    if (!['profile', 'when'].includes(key)) findings.push(`unknown rule field ${key}`);
+  }
+  const when = rule.when;
+  if (!when || typeof when !== 'object' || Array.isArray(when)) {
+    findings.push('when must be an object');
+    return findings;
+  }
+  const keys = Object.keys(when);
+  if (keys.length === 0) findings.push('when must contain at least one predicate');
+  for (const key of keys) {
+    if (!AUTOMATIC_PREDICATES.includes(key)) findings.push(`unknown predicate ${key}`);
+  }
+  if ('flags_all' in when && (!Array.isArray(when.flags_all) || when.flags_all.length === 0
+    || when.flags_all.some((flag) => typeof flag !== 'string' || !flag.trim()))) {
+    findings.push('flags_all must be a non-empty array of non-empty strings');
+  }
+  if ('change_types' in when && (!Array.isArray(when.change_types) || when.change_types.length === 0
+    || when.change_types.some((type) => !CHANGE_TYPES.includes(type)))) {
+    findings.push(`change_types must be a non-empty array containing only: ${CHANGE_TYPES.join('|')}`);
+  }
+  if ('minimum_tier' in when && !TIERS.includes(when.minimum_tier)) {
+    findings.push(`minimum_tier must be one of: ${TIERS.join('|')}`);
+  }
+  return findings;
+}
+
+/** Does a valid automatic-profile rule apply to this envelope? */
+export function automaticRuleMatches(rule, envelope) {
+  if (automaticRuleFindings(rule).length) return false;
+  const when = rule?.when;
+  if (Array.isArray(when.flags_all) && !when.flags_all.every((f) => envelope?.flags?.[f] === true)) return false;
+  if (Array.isArray(when.change_types) && !when.change_types.includes(envelope?.change_type)) return false;
+  if (typeof when.minimum_tier === 'string') {
+    const actual = TIERS.indexOf(envelope?.risk_tier);
+    const floor = TIERS.indexOf(when.minimum_tier);
+    if (actual < 0 || floor < 0 || actual < floor) return false;
+  }
+  return true;
+}
+
+/**
+ * Resolve the explicit profile set plus profiles implied by those facts.
+ *
+ * A classifier can truthfully say `model_involved` and still forget the profile that turns that
+ * fact into AI controls. Automatic profiles put that implication in jurisdiction policy, not in
+ * the classifier's memory. Inclusion is recursive, de-duplicated, bound and fail-closed.
+ */
+export function resolveProfileContext(envelope, baseDir = process.cwd()) {
+  const queue = [...(Array.isArray(envelope?.required_profiles) ? envelope.required_profiles : [])];
+  const names = [];
+  const profiles = [];
+  const findings = [];
+  const seen = new Set();
+
+  while (queue.length) {
+    const name = queue.shift();
+    if (typeof name !== 'string' || !name.trim() || seen.has(name)) continue;
+    seen.add(name);
+    const { profiles: loaded, findings: lf } = loadProfiles([name], baseDir);
+    findings.push(...lf);
+    if (!loaded.length) continue;
+    const profile = loaded[0];
+    names.push(name);
+    profiles.push(profile);
+    if (profile.automatic_profiles !== undefined && !Array.isArray(profile.automatic_profiles)) {
+      findings.push(`profile ${name} automatic_profiles must be an array`);
+    }
+    const automaticProfiles = Array.isArray(profile.automatic_profiles) ? profile.automatic_profiles : [];
+    for (const [index, rule] of automaticProfiles.entries()) {
+      const af = automaticRuleFindings(rule);
+      findings.push(...af.map((finding) => `profile ${name} automatic_profiles[${index}]: ${finding}`));
+      if (af.length === 0 && automaticRuleMatches(rule, envelope)) {
+        queue.push(rule.profile.trim());
+      }
+    }
+  }
+
+  const { bindings, findings: bf } = resolveBindings(names, baseDir);
+  findings.push(...bf);
+  return { names, profiles, bindings, envelope: { ...envelope, required_profiles: names }, findings };
 }
 
 /**
@@ -240,10 +333,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const [envPath] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
   if (!envPath) { process.stderr.write('usage: node core/policy-compiler.mjs <change-envelope.json> [--write]\n'); process.exit(2); }
   const envelope = JSON.parse(readFileSync(envPath, 'utf8'));
-  const { profiles, findings: pf } = loadProfiles(envelope.required_profiles);
-  const { bindings, findings: bf } = resolveBindings(envelope.required_profiles);
-  const { plan, findings } = compile(envelope, profiles, bindings);
-  const all = [...pf, ...bf, ...findings];
+  const context = resolveProfileContext(envelope);
+  const { plan, findings } = compile(context.envelope, context.profiles, context.bindings);
+  const all = [...context.findings, ...findings];
   if (all.length) {
     process.stderr.write('\nPolicy compiler — BLOCKED\n\n');
     for (const f of all) process.stderr.write(`  - ${f}\n`);

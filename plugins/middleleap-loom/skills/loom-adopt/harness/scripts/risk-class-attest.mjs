@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { buildRiskClassRecord, RECORD_FILE, signRiskClass, verifyRiskClass } from '../core/risk-class-attestation.mjs';
-import { compile, loadProfiles, resolveBindings } from '../core/policy-compiler.mjs';
+import { compile, planHash, resolveProfileContext } from '../core/policy-compiler.mjs';
 import { loadIssuers } from '../core/attestations.mjs';
 
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
@@ -26,6 +26,17 @@ export function draft(changeDir, { cwd = process.cwd(), compiledAt = new Date().
   if (!envelope) return { record: null, findings: [`${changeDir}: no parseable change-envelope.json`] };
   const plan = readJson(join(changeDir, envelope.control_plan || 'control-plan.json'));
   if (!plan) return { record: null, findings: [`${changeDir}: no stored control plan — run the policy compiler first`] };
+  const context = resolveProfileContext(envelope, cwd);
+  const findings = [...context.findings];
+  let freshPlan = null;
+  if (!findings.length) {
+    const compiled = compile(context.envelope, context.profiles, context.bindings);
+    findings.push(...compiled.findings);
+    freshPlan = compiled.plan;
+  }
+  if (planHash(plan) !== plan.plan_hash) findings.push('the stored control plan does not match its own plan_hash — recompile before attesting');
+  if (freshPlan && freshPlan.plan_hash !== plan.plan_hash) findings.push('the stored control plan does not reconcile with current profile policy — recompile before attesting');
+  if (findings.length) return { record: null, envelope, plan, findings };
   return { record: buildRiskClassRecord(envelope, plan, { compiledAt }), envelope, plan, findings: [] };
 }
 
@@ -37,13 +48,17 @@ export function verifyStored(changeDir, { cwd = process.cwd(), now = Date.now(),
   const envelope = readJson(join(changeDir, 'change-envelope.json'));
   const plan = envelope ? readJson(join(changeDir, envelope.control_plan || 'control-plan.json')) : null;
   let freshPlan = null;
+  const compilationFindings = [];
   if (envelope) {
-    const { profiles, findings: pf } = loadProfiles(envelope.required_profiles, cwd);
-    const { bindings, findings: bf } = resolveBindings(envelope.required_profiles, cwd);
-    if (!pf.length && !bf.length) freshPlan = compile(envelope, profiles, bindings).plan;
-    else notices.push(`fresh compile skipped: ${[...pf, ...bf].join('; ')}`);
+    const context = resolveProfileContext(envelope, cwd);
+    compilationFindings.push(...context.findings.map((finding) => `fresh compile blocked: ${finding}`));
+    if (!context.findings.length) {
+      const compiled = compile(context.envelope, context.profiles, context.bindings);
+      freshPlan = compiled.plan;
+      compilationFindings.push(...compiled.findings.map((finding) => `fresh compile blocked: ${finding}`));
+    }
   }
-  return { findings: verifyRiskClass(rec, { plan, freshPlan, envelope, issuers: loadIssuers(cwd), now, notices, requireSignature }), notices };
+  return { findings: [...compilationFindings, ...verifyRiskClass(rec, { plan, freshPlan, envelope, issuers: loadIssuers(cwd), now, notices, requireSignature })], notices };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -1,0 +1,14 @@
+{
+  "schema": "loom.ai-stress-test-example/v1",
+  "role": "affordability-assessment",
+  "model_id": "example-model@2026-01",
+  "prompt_version": "affordability-prompt@2.3.0",
+  "scenarios": [
+    "missing and contradictory income inputs",
+    "prompt injection in free-text supporting evidence",
+    "provider timeout and partial response",
+    "unsafe recommendation outside policy bounds"
+  ],
+  "result": "pass",
+  "note": "WORKED EXAMPLE ONLY — the bundle did not run this test and makes no production claim."
+}

@@ -542,6 +542,25 @@
         "Full tier: the intake/ directory lands on upgrade. Send each accountable role intake/questionnaire.html and their block letter; place the merged export at institution/intake/intake-record.json. Nothing fails if you do not — the skill falls back to interviewing every block.",
         "If you add a pre-fill pack for your market, rebuild: node intake/build-questionnaire.mjs (or scripts/intake-check.mjs --fix)."
       ]
+    },
+    {
+      "version": "2.4.0",
+      "headline": "2.4.0 — UAE consumer-AI applicability is derived, and the bank operating model becomes a compiled record",
+      "notes": [
+        "For the shipped UAE jurisdiction, a medium-or-higher new product or material product change with model_involved=true now automatically compiles the ai-decision-system profile. The author supplies facts; policy derives the route, closing the forgotten-profile bypass.",
+        "AI-GOVERNANCE is a new mechanically validated control. Its governed record joins each implicated model role and shipping pin to an accountable human, oversight and intervention path, non-AI alternative, customer review route, Arabic and English disclosure, monitoring, incident response, privacy/security and third-party assessments, and re-hashed stress evidence.",
+        "OPERATING-MODEL is a new mechanically validated control required by the high-tier regulated-bank profile. It turns the governance runbook's proposed seam into a real record: executive mandate, oversight, change control, rollback and cease-use, nine-activity RACI, four protected IAM bindings, and internal-audit re-performance through the external record.",
+        "Fairness and contestability now require coverage of the change envelope's model_roles. If a requiring change omits model_roles, coverage expands to every covered-tier manifest role; omission never narrows assurance.",
+        "test-tripwire now detects hidden assertions inside multiline block comments on BSD and GNU grep, fixing a pre-existing negative-test bypass."
+      ],
+      "action_required": [
+        "Recompile every stored plan that names uae-bank and regenerate its risk-class and approval surfaces: the jurisdiction profile digest changed. In-flight UAE product changes with a model may acquire the AI route and must be reviewed before merge.",
+        "At governed tier, adopt and complete docs/governance/ai-governance.json plus the fairness and contestability records. Treat the bundled ai-governance-example as a synthetic fixture only.",
+        "High-tier regulated-bank changes now require docs/governance/operating-model.json. Replace the worked fixture with institution-owned mandates, identity mappings, committee and change-control references. A green gate is structural evidence only; activate and independently observe every named IAM and operational mechanism.",
+        "Select and mount an external-record provider for high-tier bank changes. Kosli remains the first reference provider, not a dependency; a bank WORM store or transparency log may satisfy the same contract. Do not claim WORM retention until the selected platform has been observed and re-performed.",
+        "Validate your model-role inventory and automatic applicability with Legal, Compliance and Model Risk. Broaden the shipped rule where your institution treats more AI uses as consumer-impacting; do not narrow it while claiming the shipped UAE profile unchanged.",
+        "Keep AI-GOVERNANCE mechanically validated until production disclosure, intervention, alternative routes, monitoring and incident handling have been observed, bypass-tested, independently signed and retained in the institution's external record."
+      ]
     }
   ]
 }

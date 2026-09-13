@@ -49,7 +49,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { aggregateRequirements, capabilityRequired, requiredBy } from '../core/compiled-requirements.mjs';
+import { aggregateRequirements, capabilityRequired, requiredBy, modelRolesRequiredByCapability } from '../core/compiled-requirements.mjs';
 import { identityOf, loadRegistry } from './identity-registry-check.mjs';
 
 export const CONTESTABILITY_LOCATIONS = ['docs/governance/decision-contestability.json', 'decision-contestability.json'];
@@ -80,7 +80,7 @@ const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } ca
  * `enforced` is whether a compiled plan requires the capability, and it is the ONLY thing deciding
  * finding-vs-notice — for every rule. Mounting the template is not the declaration.
  */
-export function evaluate(doc, { models = null, registry = null, enforced = false } = {}) {
+export function evaluate(doc, { models = null, coveredRoles = null, registry = null, enforced = false } = {}) {
   const findings = [];
   const notices = [];
   const say = (m) => (enforced ? findings : notices).push(m);
@@ -102,7 +102,7 @@ export function evaluate(doc, { models = null, registry = null, enforced = false
   if (Array.isArray(models)) {
     const manifestRoles = new Map(models.filter((m) => m && nonEmpty(m.role)).map((m) => [m.role.trim(), m]));
     for (const [role, m] of manifestRoles) {
-      if (COVERED_TIERS.has(m.risk_tier) && !byRole.has(role)) {
+      if ((!coveredRoles || coveredRoles.has(role)) && COVERED_TIERS.has(m.risk_tier) && !byRole.has(role)) {
         say(`CT-R02: model role ${JSON.stringify(role)} is ${m.risk_tier}-tier in the model manifest and declares NO contest route here — a plan can satisfy its explainability-and-contestability section in prose while a model ships that the prose never mentioned, and this is the rule that catches it. Silence is not a pass`);
       }
     }
@@ -200,7 +200,12 @@ export function run(cwd = process.cwd()) {
   const manifestPath = MANIFEST_LOCATIONS.map((p) => join(cwd, p)).find(existsSync);
   const manifest = manifestPath ? readJson(manifestPath) : null;
   const models = Array.isArray(manifest?.models) ? manifest.models : null;
-  const { findings, notices, surfaces } = evaluate(doc, { models, registry: loadRegistry(cwd), enforced: required });
+  const { findings, notices, surfaces } = evaluate(doc, {
+    models,
+    coveredRoles: modelRolesRequiredByCapability(agg, CAPABILITY),
+    registry: loadRegistry(cwd),
+    enforced: required,
+  });
   const joinNotices = models ? [] : [
     `no model manifest found (looked in ${MANIFEST_LOCATIONS.join(', ')}) — THE COVERAGE RULE (CT-R02) could not run, so this record is checked for internal soundness only and the models it fails to cover are UNCOVERED rather than confirmed absent`,
   ];

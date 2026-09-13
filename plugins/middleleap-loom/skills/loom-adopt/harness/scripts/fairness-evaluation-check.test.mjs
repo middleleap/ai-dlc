@@ -154,6 +154,14 @@ test('FR-R06 — a covered-tier model with no evaluation is UNCOVERED, and silen
   assert.ok(COVERED_TIERS.has('high') && COVERED_TIERS.has('medium') && !COVERED_TIERS.has('low'));
 });
 
+test('2.4 — coverage follows the model roles named by the governed change', () => {
+  const models = [...MODELS, { role: 'pricing', risk_tier: 'medium', ...PIN }];
+  const scoped = evaluate(record(), { models, coveredRoles: new Set(['delivery-loop']), registry: REGISTRY, enforced: true });
+  assert.ok(!scoped.findings.some((f) => /FR-R06.*"pricing"/.test(f)), scoped.findings.join('\n'));
+  const expanded = evaluate(record(), { models, coveredRoles: null, registry: REGISTRY, enforced: true });
+  assert.ok(expanded.findings.some((f) => /FR-R06.*"pricing"/.test(f)), expanded.findings.join('\n'));
+});
+
 test('FR-R07 — an evaluation of a model this repository does not ship measures nothing', () => {
   const { findings } = evaluate(record({ evaluations: [evaluation({ role: 'ghost' })] }), { models: MODELS, registry: REGISTRY, enforced: true });
   assert.ok(findings.some((f) => /FR-R07.*"ghost"/.test(f)), findings.join('\n'));

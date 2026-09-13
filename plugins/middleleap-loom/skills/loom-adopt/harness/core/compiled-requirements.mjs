@@ -82,7 +82,15 @@ export function aggregateRequirements(cwd = process.cwd(), { changedPaths = null
     if (TIER_ORDER.includes(tier) && (maxTier === null || TIER_ORDER.indexOf(tier) > TIER_ORDER.indexOf(maxTier))) maxTier = tier;
     // rc.40 — plan_hash travels with the change. The gate result cache keys on the sorted set of
     // them, so recompiling ANY counted plan invalidates every cached result in the run.
-    changes.push({ change_id: envelope.change_id || name, state: envelope.current_state, families: [...fam], evidence: [...ev], capabilities: plan.required_capabilities || {}, plan_hash: plan.plan_hash || null });
+    changes.push({
+      change_id: envelope.change_id || name,
+      state: envelope.current_state,
+      families: [...fam],
+      evidence: [...ev],
+      capabilities: plan.required_capabilities || {},
+      model_roles: Array.isArray(envelope.model_roles) ? [...envelope.model_roles] : [],
+      plan_hash: plan.plan_hash || null,
+    });
   }
   return { families, evidence, capabilities, changes, anyInProduction, maxTier, scoped };
 }
@@ -100,6 +108,17 @@ export function capabilityRequired(agg, name) {
 /** Which change_ids require a given gate family — for a gate to name WHO makes it mandatory. */
 export function requiredBy(agg, family) {
   return agg.changes.filter((c) => c.families.includes(family)).map((c) => c.change_id);
+}
+
+/**
+ * Model roles implicated by changes requiring a capability.
+ * `null` means all manifest roles: that is the fail-closed result when any implicated envelope did
+ * not enumerate model_roles. A Set is safe to use for precise coverage when every change did.
+ */
+export function modelRolesRequiredByCapability(agg, capability) {
+  const changes = (agg?.changes || []).filter((c) => c?.capabilities?.[capability]?.required);
+  if (!changes.length || changes.some((c) => !Array.isArray(c.model_roles) || c.model_roles.length === 0)) return null;
+  return new Set(changes.flatMap((c) => c.model_roles).filter((r) => typeof r === 'string' && r.trim()));
 }
 
 // CLI: print the aggregated requirements (diagnostic).
