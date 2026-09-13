@@ -174,3 +174,18 @@ test('--dry-run reaches the binary with --dry-run and records nothing, queues no
     assert.ok(!log.some((c) => c.argv[0] === 'get'), 'no read-back on a dry run');
   } finally { rmSync(t.cwd, { recursive: true, force: true }); }
 });
+
+/* ---- 2.1.0 row 2.10: the snapshot through the seam ---- */
+import { environmentSnapshot } from './external-record.mjs';
+
+test('environmentSnapshot: unmounted is named; mounted reads the provider; an unreachable provider is unavailable', async () => {
+  const u = tree({ mount: false });
+  try { assert.equal((await environmentSnapshot('prod', { cwd: u.cwd, env: u.env })).status, 'unmounted'); } finally { rmSync(u.cwd, { recursive: true, force: true }); }
+  const t = tree();
+  try {
+    respond(t.fake, ['get', 'snapshot', 'prod'], { stdout: [{ artifact: 'app:1', fingerprint: 'ab'.repeat(32) }] });
+    const s = await environmentSnapshot('prod', { cwd: t.cwd, env: t.env });
+    assert.equal(s.status, 'ok'); assert.equal(s.provider, 'kosli'); assert.equal(s.artifacts.length, 1);
+    assert.equal((await environmentSnapshot('prod', { cwd: t.cwd, env: { ...process.env, KOSLI_BIN: '/nowhere' } })).status, 'unavailable');
+  } finally { rmSync(t.cwd, { recursive: true, force: true }); }
+});

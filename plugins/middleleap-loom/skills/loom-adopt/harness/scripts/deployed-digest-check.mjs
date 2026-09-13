@@ -40,6 +40,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { environmentSnapshot, status as recordStatus } from '../core/external-record.mjs';
 
 export const DEPLOYMENTS_DIR = 'docs/governance/deployments';
 export const SUBJECT_LOCATIONS = ['docs/governance/release-subject.json', 'release-subject.json'];
@@ -171,9 +172,61 @@ export function run(cwd = process.cwd()) {
   return { present: true, findings, count };
 }
 
+/**
+ * 2.1.0 (hardening plan row 2.10, decision K9): what is RUNNING, read from the provider when one
+ * is mounted and keeps environment snapshots; the repo's own deployment record otherwise — and
+ * the run says which. Pure over injected state: `snapshotFn(environmentName)` is
+ * core/external-record.mjs environmentSnapshot(). Per deployment record:
+ *   unmounted / unsupported  → note: "read the repo record"
+ *   snapshot ok              → the deployed digest must be running in that environment (a digest
+ *                              the platform does not see running was not deployed, whatever the
+ *                              record says); a different digest running is the drift this lane
+ *                              exists to catch
+ *   unavailable / unresolved → finding (an outage is not a pass on the deploy lane)
+ * The provider's environment name is environments.json `external_record_environment` when set,
+ * else the environment id.
+ */
+export async function snapshotFindings(deployments, { status, snapshotFn, environments = null, notes = null }) {
+  const findings = [];
+  if (!status?.mounted) { notes?.push(`environment snapshot: read the REPO RECORD — external record ${status?.reason ? `not mounted (${status.reason})` : 'not mounted'}`); return findings; }
+  const cache = new Map();
+  for (const d of deployments) {
+    const id = d?.deployment_id || '(no deployment_id)';
+    if (!d?.environment || !SHA256.test(d?.deployed_digest || '')) continue; // shape findings already raised
+    const decl = Array.isArray(environments) ? environments.find((e) => e?.id === d.environment) : null;
+    const mapped = decl?.external_record_environment;
+    const name = typeof mapped === 'string' && mapped.trim() && !/^ADOPT[\s:—-]/i.test(mapped) ? mapped.trim() : d.environment; // an untouched template row is not a mapping
+    if (!cache.has(name)) cache.set(name, await snapshotFn(name)); // eslint-disable-line no-await-in-loop
+    const snap = cache.get(name);
+    if (snap.status === 'unsupported') { notes?.push(`environment snapshot: read the REPO RECORD — ${snap.reason}`); return findings; }
+    if (snap.status !== 'ok') { findings.push(`${id}: the external record (${snap.provider}) could not say what is running in ${name} — ${snap.status}: ${snap.reason}. On the deploy lane an unanswered snapshot is a finding, not a pass`); continue; }
+    const want = d.deployed_digest.replace(/^sha256:/, '');
+    const running = (snap.artifacts || []).map((a) => String(a.fingerprint || '').replace(/^sha256:/, ''));
+    if (!running.includes(want)) {
+      findings.push(`${id}: the external record (${snap.provider}) does NOT see digest ${d.deployed_digest.slice(0, 19)}… running in ${name} — it sees ${running.length ? running.map((x) => x.slice(0, 12) + '…').join(', ') : 'nothing'}. The record says it was deployed; the platform says it is not running`);
+    } else {
+      notes?.push(`environment snapshot: ${id} — digest ${d.deployed_digest.slice(0, 19)}… confirmed RUNNING in ${name} by the external record (${snap.provider})`);
+    }
+  }
+  return findings;
+}
+
+/** run() plus the provider snapshot — the CLI path. */
+export async function runWithRecord(cwd = process.cwd()) {
+  const r = run(cwd);
+  r.notes = r.notes || [];
+  if (!r.present) return r;
+  const dir = `${cwd}/${DEPLOYMENTS_DIR}`;
+  const deployments = readdirSync(dir).filter((n) => n.endsWith('.json')).map((n) => readJson(`${dir}/${n}`)).filter(Boolean);
+  const envPath = ENVIRONMENT_LOCATIONS.map((p) => `${cwd}/${p}`).find(existsSync);
+  const environments = envPath ? readJson(envPath)?.environments ?? null : null;
+  r.findings.push(...await snapshotFindings(deployments, { status: recordStatus(cwd), snapshotFn: (name) => environmentSnapshot(name, { cwd }), environments, notes: r.notes }));
+  return r;
+}
+
 // CLI (skipped when imported by the test suite).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { present, findings, count } = run();
+  const { present, findings, count, notes } = await runWithRecord();
   if (!present) {
     process.stdout.write(`Deploy gate — no ${DEPLOYMENTS_DIR}/ in this repository; nothing has been recorded as deployed (nothing to check)\n`);
     process.exit(0);
@@ -184,5 +237,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.stderr.write('\nThe deployed artifact IS the authorized artifact, and it reached customers the way the\nservice declared it would. Everything upstream binds a digest; this is where that binding\nmeets what is running. See scripts/release-subject-check.mjs and R3b in service readiness.\n');
     process.exit(1);
   }
+  for (const n of notes || []) process.stdout.write(`NOTE: ${n}\n`);
   process.stdout.write(`Deploy gate — OK (${count} deployment record${count === 1 ? '' : 's'} bound to the authorized digest and the declared strategy)\n`);
 }

@@ -65,7 +65,7 @@ export function status(cwd = process.cwd()) {
     }
   }
   if (!adapter) return { mounted: false, reason: `role ${ROLE} selects ${sel.provider} but its adapter ${JSON.stringify(sel.adapter_id)} is not mounted at ${MOUNTED_DIR}/ — selecting is not installing (PS-R05)`, provider: sel.provider };
-  return { mounted: true, provider: sel.provider, adapter_id: sel.adapter_id, adapter, active: isActive(adapter), module: `./providers/${sel.provider}.mjs` };
+  return { mounted: true, provider: sel.provider, adapter_id: sel.adapter_id, adapter, active: isActive(adapter), module: new URL(`./providers/${sel.provider}.mjs`, import.meta.url).href };
 }
 
 async function loadProvider(st) {
@@ -198,4 +198,17 @@ export function signerFromArgs({ issuer = null, keyPath = null } = {}, env = pro
   const kp = keyPath || env.LOOM_RECORD_KEY || null;
   if (!iss || !kp) return null;
   try { return { issuer: iss, privateKeyPem: readFileSync(kp, 'utf8') }; } catch { return null; }
+}
+
+/** What the provider says is running in `environment` (row 2.10). { status: 'unmounted' | 'unsupported' | 'ok' | 'unavailable' | 'unresolved' }. */
+export async function environmentSnapshot(environment, { cwd = process.cwd(), env = process.env } = {}) {
+  const st = status(cwd);
+  if (!st.mounted) return { status: 'unmounted', reason: st.reason };
+  const provider = await loadProvider(st);
+  if (typeof provider.environmentSnapshot !== 'function') return { status: 'unsupported', provider: st.provider, reason: `provider ${st.provider} keeps no environment snapshots` };
+  let r;
+  try { r = await provider.environmentSnapshot(environment, { cwd, env, config: st.adapter.config || {} }); }
+  catch (e) { r = { ok: false, unavailable: true, error: e.message }; }
+  if (r?.ok) return { status: 'ok', provider: st.provider, environment: r.environment, artifacts: r.artifacts };
+  return { status: r?.unavailable ? 'unavailable' : 'unresolved', provider: st.provider, reason: r?.error || 'no snapshot' };
 }

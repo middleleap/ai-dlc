@@ -30,6 +30,7 @@ import { buildChain, evaluate, requiredTypesFor, verifyReleaseCommit } from './e
 import { aggregateRequirements } from '../core/compiled-requirements.mjs';
 import { actorFor, post as recordPost, runnerFromEnv, signerFromArgs, status as recordStatus } from '../core/external-record.mjs';
 import { buildEnvelope, signEnvelope } from '../core/provenance.mjs';
+import { controlsForRecord, loadObligations } from '../core/record-controls.mjs';
 
 export const DEFAULT_DIR = 'docs/governance/evidence';
 
@@ -192,7 +193,7 @@ export async function recordAnchor({ cwd = process.cwd(), dir, trail = null, act
   const subjectTrail = trail || (aggregateRequirements(cwd).changes.map((c) => c.change_id).filter(Boolean).sort()[0] ?? null);
   if (!subjectTrail) return { status: 'rejected', findings: ['no implicated change envelope and no --trail — a seal anchor binds to a change'] };
   let envl = buildEnvelope({ kind: 'seal-anchor', name: 'seal-anchor', subject: { flow: 'delivery', trail: subjectTrail }, commit: manifest.release_commit,
-    actor: actorFor(cwd, actor || process.env.LOOM_ACTOR_ID || null), runner: runnerFromEnv(process.env, manifest.release_commit),
+    actor: actorFor(cwd, actor || process.env.LOOM_ACTOR_ID || null), runner: runnerFromEnv(process.env, manifest.release_commit), controls: controlsForRecord(loadObligations(cwd), ['HG-0003']),
     payload: { anchor: manifest.anchor, release: manifest.release ?? null, release_commit: manifest.release_commit, entries: manifest.entries.length, types: manifest.entries.map((e) => e.type) } });
   if (signer) envl = signEnvelope(envl, signer);
   const r = await recordPost(envl, { cwd, dryRun });

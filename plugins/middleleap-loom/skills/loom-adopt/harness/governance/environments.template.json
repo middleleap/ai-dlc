@@ -8,7 +8,8 @@
       "identity": "eng-omar",
       "promotion_source": null,
       "approval_required": false,
-      "url": "https://dev.credit.example.invalid"
+      "url": "https://dev.credit.example.invalid",
+      "external_record_environment": "ADOPT: the name of this environment at your external-record provider (e.g. the Kosli environment), when one is mounted; omit to use the id \"dev\""
     },
     {
       "id": "staging",
@@ -17,7 +18,8 @@
       "identity": "ops-dana",
       "promotion_source": "dev",
       "approval_required": false,
-      "url": "https://staging.credit.example.invalid"
+      "url": "https://staging.credit.example.invalid",
+      "external_record_environment": "ADOPT: the name of this environment at your external-record provider (e.g. the Kosli environment), when one is mounted; omit to use the id \"staging\""
     },
     {
       "id": "production",
@@ -26,7 +28,9 @@
       "identity": "padmin-zoe",
       "promotion_source": "staging",
       "approval_required": true,
-      "url": "https://credit.example.invalid"
+      "url": "https://credit.example.invalid",
+      "external_record_environment": "ADOPT: the name of this environment at your external-record provider (e.g. the Kosli environment), when one is mounted; omit to use the id \"production\""
     }
-  ]
+  ],
+  "_external_record_comment": "2.1.0 (hardening plan row 2.10, decision K9): when an external-record provider that keeps environment snapshots is mounted, scripts/deployed-digest-check.mjs reads what is RUNNING from it and requires the deployed digest to be there; external_record_environment maps this ladder rung to the provider's name for it. Unmounted, the gate reads the repo's deployment record and says so."
 }

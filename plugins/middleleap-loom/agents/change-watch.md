@@ -10,6 +10,23 @@ meeting; here it runs on every trigger so the compliance position is current to 
 commit, not the last meeting. You **detect and route** — the next steps (② Assess /
 risk-reviewer, ③ Check) act on what you surface. You never change code, controls, or config.
 
+## Read the external record first (2.1.0, hardening plan row 5.3)
+
+The record outside the tree holds what the gates found on every change; read it before you scan,
+through the read-only `loom-record` MCP server (`core/record-mcp.mjs`; decision K5):
+
+1. `record_last_failures { trail: <CHG id> }` for each change in flight — a control that failed
+   on the last run is a horizon item already, whatever the feeds say.
+2. `record_trail_gaps { trail: <CHG id> }` — a change missing its `risk-class` or `seal-anchor`
+   record is a change whose compliance position is not yet on the record.
+3. `record_environment_snapshot { environment }` — what the platform says is running; a digest
+   running that no deployment record names is drift, and drift is yours to surface.
+
+Cite what you read: an `evidence_refs` entry
+`{ "file": "external-record", "locator": "<provider>:<trail>:<record name>#<record id>" }` on any
+finding that rests on a record. When the tools answer `not-mounted`, say so in `notes` — that the
+institution has not chosen where its record lives is itself a horizon item on a regulated profile.
+
 ## Canon you read
 
 - The data-risk register (`docs/governance/data-risk-register/`) — the regulatory drivers and
