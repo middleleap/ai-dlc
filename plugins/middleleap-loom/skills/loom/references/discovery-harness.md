@@ -54,7 +54,8 @@ diamond's job, and crossing the line is a gate failure (D4 — No-solutioning bo
 | 4 | **Define** | converge | **Data-governance feasibility** — classify the data the direction would touch, map to the register, assert acceptable residual risk | `data-governance.md` |
 | 5 | **Define** | *make tangible* | **Prototype** — a disposable low-fidelity wireframe that visualises how the solution *could* look, to test the framing before committing to delivery. Drafted with `/design`, committed through the renderer (§4) | `prototype.md` + wireframe asset |
 | 5b | **Define** | *validate* | **Stakeholder reaction** — show the prototype to the named roles; record their reaction per framing hypothesis as fresh signals. This *closes* the make-tangible loop (D9) | `stakeholder-reaction.md` |
-| 6 | **Hand-off** | converge | Package the validated problem + prototype as a delivery-ready brief | `handoff.md` |
+| 5c | **Define** | *decide to fund* | **Business case** (optional — where the institution funds change by decision): the case for solving *this* problem against the total cost of change, with "do nothing" as the baseline and the D1 measures as the only benefits. Names no mechanism (D4). Decision-routed: the funding decision is a signed record a second human merges | `business-case.md` |
+| 6 | **Hand-off** | converge | Package the validated problem + prototype (+ the funding position, where a case exists) as a delivery-ready brief | `handoff.md` |
 | 6′ | **Stop** | — | A run that ends **without** a hand-off records why: who decided (a human), which hypotheses were refuted or left uncertain, what would reopen it. Never coexists with `handoff.md` | `outcome.md` |
 
 The **Prototype** stage (5) is deliberate relative to a textbook Define: it satisfies the
@@ -213,6 +214,9 @@ format.
 - it links the **data-governance verdict** (D6) so delivery inherits the residual-risk
   position rather than rediscovering it;
 - it links the **prototype** as *direction, not specification* (§4);
+- where the institution funds change by decision, it carries the **funding position** from
+  `business-case.md` — the decision record and the total-cost-of-change band Develop's chosen
+  direction must land inside, or the case is re-decided;
 - it contains **no** delivery design — no endpoints, schemas, story breakdowns, or tech
   choices (those are the right diamond's to create).
 

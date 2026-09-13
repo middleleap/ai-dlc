@@ -29,6 +29,11 @@ licenses: [<STORY-ids this hand-off admits to delivery — one run licenses the 
 - **Validated framing hypotheses:**
 - **Open questions for Develop:**
 
+## Funding position (from `business-case.md`, where the institution requires one)
+
+- **Decision requested / recorded:** <fund · continue · stop — and the ADR or decision-envelope id, or "no business case required at this threshold">
+- **Total-cost-of-change band delivery must land inside:**
+
 ## Gate status
 
 | Gate | D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9 |

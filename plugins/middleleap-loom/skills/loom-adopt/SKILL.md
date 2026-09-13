@@ -93,10 +93,10 @@ are repo-root-relative.
 | `../../loom/references/glossary.md` | `discovery/GLOSSARY.md` | core | Every identifier expanded — discovery gates D1–D9, quality gates Q1–Q5, signals, themes, hypotheses, governance ids. Ships with the harness because the runbooks and templates that link it are installed here too |
 | `discovery/gates` | `discovery/gates` | core | Pure-Node D1–D9 validator + its tests |
 | `discovery/render` | `discovery/render` | core | Zero-dep branded renderer (HTML + OOXML) + tests |
-| `discovery/templates` | `discovery/templates` | core | One template per discovery artifact |
+| `discovery/templates` | `discovery/templates` | core | One template per discovery artifact (incl. the optional, decision-routed `business-case.md`) |
 | `discovery/brand/design.md` | `discovery/brand/design.md` | core | Brand seam (neutral demo instance) |
 | `discovery/brand/examples` | `discovery/brand/examples` | core | A second brand proving the seam swap |
-| `delivery/templates` | `delivery/templates` | core | One template per delivery decision artifact (ADR · Solution Direction Record · Business Case) |
+| `delivery/templates` | `delivery/templates` | core | One template per delivery decision artifact (ADR · Solution Direction Record) |
 | `backlog-example/backlog.yaml` | `docs/backlog.example.yaml` | core | The backlog SHAPE the delivery loop and the waist gate read — an example beside where yours goes |
 | `floor/templates` | `floor/templates` | full | Guided collaboration-surface forms, GENERATED from the git templates (parity-gated) |
 | `floor/catalog-b` | `floor/catalog-b` | full | Decision-routed floor forms (WS5 · Decision D5.4) — an ADR inbox card and an SDR flow, each mirroring the git template it produces. Write class `decision-routed`: authored here, but the decision only becomes real as a signed envelope a second human merges. Ships DECLARED, NOT ACTIVE — WS5's entry gate has not passed |

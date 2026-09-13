@@ -6,7 +6,7 @@
   "stage": "handoff",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/handoff.md",
-  "source_digest": "sha256:83101d21064c4fbf82287b09610c52fcb42c4e865e8184d1c7edae7b68942a2f",
+  "source_digest": "sha256:b78ce530246466452456a92fe45c4fab0d2135f4db2b975d1095c8246cfb9976",
   "gates": [
     "D1",
     "D2",
@@ -97,6 +97,16 @@
         "Prototype",
         "Validated framing hypotheses",
         "Open questions for Develop"
+      ]
+    },
+    {
+      "name": "Funding position (from `business-case.md`, where the institution requires one)",
+      "required": true,
+      "kind": "fields",
+      "help": "",
+      "fields": [
+        "Decision requested / recorded",
+        "Total-cost-of-change band delivery must land inside"
       ]
     },
     {

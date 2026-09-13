@@ -91,17 +91,15 @@ in. Write the ADR (`docs/adrs/`) and/or run the `spec-change` skill for the spec
 **human-approved, never self-merged**. The backlog item then `depends_on` that decision (or is
 `blocked` with the ADR/spec-PR reference) until a human ratifies it.
 
-## 3b. The business case — when the institution funds change by one
+## 3b. The business case is inherited, not written here
 
-Delivery is now the cheaper half of a change; organisational change, legal work, control-function
-time and run cost are not, and a regulated institution still funds by decision. Where the
-institution's decision rights (`institution/brainkit/governance.md`) require one, write
-`docs/develop/<slug>.business-case.md` from `delivery/templates/business-case.md` **after** the
-SDR (a case needs a chosen direction to cost) and **before** §4. Its benefits are the D1 success
-measures, valued — nothing else — so `product-eval-check` measures them after launch; its costs
-are the total cost of change, not the build. The case is `decision-routed`: the funding decision
-is an ADR or decision envelope a human other than the proposer merges, and the backlog item(s)
-`depends_on` it. No gate reads the case yet; the discipline is the template's and the roster's.
+Where the institution funds change by decision, the case was written **in discovery**
+(`discovery/runs/<slug>/business-case.md`, from `discovery/templates/business-case.md`) and
+decided before the hand-off — it belongs to the problem, not to a build. Develop's job with it
+is one check: the SDR's chosen direction must land inside the case's **total-cost-of-change
+band** (§4). If it does not, the case's re-decision trigger fires — it returns to its decision
+authority before §4 below, and the backlog item(s) `depends_on` that re-decision. Never absorb
+the overrun silently, and never rewrite the case here to fit the direction.
 
 ## 4. Emit — the discovery-linked backlog item(s)
 

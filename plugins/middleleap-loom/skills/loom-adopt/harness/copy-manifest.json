@@ -33,7 +33,7 @@
       "source": "discovery/templates",
       "dest": "discovery/templates",
       "kind": "dir",
-      "seam": "One template per discovery artifact",
+      "seam": "One template per discovery artifact (incl. the optional, decision-routed business-case.md)",
       "tier": "core"
     },
     {
@@ -55,7 +55,7 @@
       "source": "delivery/templates",
       "dest": "delivery/templates",
       "kind": "dir",
-      "seam": "One template per delivery decision artifact (ADR · Solution Direction Record · Business Case)",
+      "seam": "One template per delivery decision artifact (ADR · Solution Direction Record)",
       "tier": "core"
     },
     {

@@ -129,10 +129,10 @@
     },
     "discovery/templates/handoff.md": {
       "base": "sha256:00d6e0eb405519e352a78a64d6afcb1ab3980e9e29eb05e3e6147bd811bfecf8",
-      "bundle": "sha256:83101d21064c4fbf82287b09610c52fcb42c4e865e8184d1c7edae7b68942a2f",
+      "bundle": "sha256:b78ce530246466452456a92fe45c4fab0d2135f4db2b975d1095c8246cfb9976",
       "upstream": null,
       "state": "owed",
-      "note": "changed here 2026-09-12; see `git log -- discovery/templates/handoff.md`"
+      "note": "changed here 2026-09-13; see `git log -- discovery/templates/handoff.md`"
     },
     "discovery/templates/problem-statement.md": {
       "base": "sha256:29322e1fd936b40c6423a5c612663dccc59e02cd4176d2bf1d0f13e5c178e4a1",
@@ -179,6 +179,13 @@
     "discovery/templates/outcome.md": {
       "base": null,
       "bundle": "sha256:daaf7669f28a5b095a766871f146726dea040fb0304347e25603130c8a9cb50a",
+      "upstream": null,
+      "state": "bundle-only",
+      "note": "added here 2026-09-13"
+    },
+    "discovery/templates/business-case.md": {
+      "base": null,
+      "bundle": "sha256:25c1ec77ac2d3affe9539980dba6101aac54d233cb53094df43666dba0f9da5c",
       "upstream": null,
       "state": "bundle-only",
       "note": "added here 2026-09-13"

@@ -157,10 +157,13 @@ A prototype no one reacted to tested nothing; `D9` fails the run.
 
 | On the floor (author) | At the machine (facilitator) |
 |---|---|
+| Where the institution funds change by decision, opens the **business case** guided form (`decision-routed`). Writes the "do nothing" row first, then values only the D1 measures, then the total-cost-of-change band — the ▲ rows are the ones the author knows better than the facilitator does. | Checks the case names no mechanism, technology or vendor. Routes it to the decision authority named in `governance.md`; the decision comes back as an ADR or envelope merged by a second human, and its id goes into the case's `decision_record`. **The floor shows the case as `proposed` until then, never as approved.** |
 | Opens the **handoff** guided form. Its sections quote the frozen problem, governance position and prototype rather than restating them; the author writes **What delivery owns now** — the questions discovery could not answer. | Freezes it. Runs the full validator. Opens the hand-off PR. **A second human merges it.** The waist gate (`discovery-link-check`) then lets a backlog item cite the run. |
 | If the run ends **without** a hand-off: says so, and says why, in conversation. | Writes `outcome.md` at the machine — who decided (a human, named as a role), which hypotheses were refuted or left uncertain, what would reopen it. There is **no floor form for `outcome.md`**, deliberately: stopping is a record-side act by the facilitator, and a stop and a hand-off never coexist in one run. |
 
-- **Write class:** `born-on-the-floor` for the hand-off.
+- **Write class:** `born-on-the-floor` for the hand-off; `decision-routed` for the business case —
+  and catalog B ships **declared, not active**, so until WS5 clears, the case is authored on the
+  floor but its decision is routed by conversation and recorded at the machine.
 - **Gates:** all of `D1`–`D9`.
 - **A discovery is allowed to fail.** The author needs to hear that at stage 1, not stage 6.
 
