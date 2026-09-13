@@ -66,6 +66,19 @@ observed, so the leave/cancel test is still not counted as passed.
 - Sites version 3 deployed successfully with source commit `6e925f58ea1807f311d3d175a478a3d0eafc3c02`. Questionnaire digest: `sha256:8d67daad13631f71b6b6c18680d97d3a85877a57ca4db55bc4d5d4f13cf9d15d`.
 - The deployed DOM exposes named A1–A6 groups, and all 18 visible fields resolve their descriptions to the correct question. Both imported answers survived deployment/reload/resume. Thirty focused intake/session/pilot tests passed on Node 22.23.2.
 
+## Integration with concurrent review fixes
+
+While this work was in progress, PR #70 merged a second review pass into the PR #69 branch at
+`9c8aa96b2fef4f374b090d726355157d968edc65`. The accessibility commit was rebased onto that branch
+without conflict, preserving the review changes. Generated-questionnaire parity remained clean.
+Sixty-two focused intake, session, installed intake, pilot, runtime and repository-path tests
+passed on Node 22.23.2 after integration.
+
+The refreshed preview uses Sites source commit `24a1c9d6bb1797da312e5d3c327f7ae42952e58b` and
+questionnaire digest `sha256:a08e20ee3ae74ad6e53afe348278fd5699600f876b909ab5a90cd8418c09de81`.
+Version 3 browser results above describe their exact tested candidate; the version 4 refresh
+adds the second-pass record-validation and export-notice corrections.
+
 ## Acceptance still open
 
 - Actual downloaded-file receipt/content: browser cancellation before receiving bytes is confirmed; its cause and successful delivery remain unresolved. Copied JSON passed.
