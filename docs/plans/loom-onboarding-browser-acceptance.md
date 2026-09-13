@@ -54,11 +54,23 @@ by the computer-use safety policy. No alternate app-control mechanism was used. 
 is required before continuing this browser session; confirmation cancellation and exit have not
 been marked passed.
 
+## Follow-up: keyboard, reverse imports and accessible context
+
+The previously blocked tab became available again. The cause of dialog dismissal was not
+observed, so the leave/cancel test is still not counted as passed.
+
+- Tab traversal from the role selector reached the facilitator checkbox, import, clear, block navigation, then answer/reference/respondent fields. Buttons exposed 2px focus outlines and text fields exposed a 3px focus shadow. This is DOM/style evidence, not a full visual contrast or screen-reader audit.
+- A separate same-name draft imported architecture first, then brand. Both answers retained their own role attribution. Reimporting brand reported zero new answers/conflicts and kept the same two sourced answers.
+- Recover previous questionnaire answers displayed an actionable no-previous-answers message. The browser did not support the DOMStorage command needed to create an isolated legacy fixture; no alternate storage-injection path was attempted. Populated legacy recovery and storage-denial UI testing remain unverified.
+- Browser inspection found that generic answer/reference/respondent labels did not identify the corresponding question programmatically. Added a named group for each question and linked all three fields to the question ID and prompt with aria-describedby.
+- Sites version 3 deployed successfully with source commit `6e925f58ea1807f311d3d175a478a3d0eafc3c02`. Questionnaire digest: `sha256:8d67daad13631f71b6b6c18680d97d3a85877a57ca4db55bc4d5d4f13cf9d15d`.
+- The deployed DOM exposes named A1–A6 groups, and all 18 visible fields resolve their descriptions to the correct question. Both imported answers survived deployment/reload/resume. Thirty focused intake/session/pilot tests passed on Node 22.23.2.
+
 ## Acceptance still open
 
 - Actual downloaded-file receipt/content: browser cancellation before receiving bytes is confirmed; its cause and successful delivery remain unresolved. Copied JSON passed.
 - Complete keyboard focus order, focus visibility, screen-reader behavior, text enlargement, touch/physical-device and cross-browser coverage.
-- Completion of the stale-tab leave/cancel flow after manual dialog dismissal, browser storage-denial recovery, legacy recovery with old-format browser state, reverse-order and repeated-import interaction coverage. Pure-module tests cover these separately.
+- Completion of the stale-tab leave/cancel flow, browser storage-denial recovery and populated legacy recovery with old-format browser state. Pure-module tests cover these separately.
 - Unfamiliar sponsor/developer/platform/risk/context participant sessions, first-to-second-team comparisons and measured completion targets.
 
 Do not mark the full browser acceptance gate or phase 6 complete from this smoke pass. The next
