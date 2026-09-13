@@ -27,7 +27,12 @@ The BrainKit is the **institution-owned seed of the Loom's context brain**. This
 ## Steps
 
 1. **Inspect.** Read the repository (README, architecture docs, existing `AGENTS.md`/`CLAUDE.md`,
-   package manifests) and the **approved sources the user provides**. List what you found.
+   package manifests) and the **approved sources the user provides**. If
+   `institution/intake/intake-record.json` exists, read it first: its **SOURCED** answers name the
+   documents to draft from (each becomes a `source-register.json` candidate with `approved_by`
+   still to be confirmed by a human), and its CLAIMED and UNKNOWN answers go straight into the gap
+   register. A CLAIMED answer is never drafted into a section, however confident it reads. List
+   what you found.
 2. **Scaffold from the templates.** In an adopted repo the neutral templates are already at
    `institution/brainkit/` (the `loom-adopt` installer places them there); use those. Only when
    working directly in the plugin bundle are they under `loom-adopt/harness/brainkit/`.

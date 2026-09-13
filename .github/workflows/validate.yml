@@ -29,6 +29,13 @@ jobs:
         run: |
           node scripts/doc-integrity-check.mjs   # copy table ← copy-manifest; scorecard ← control catalog
           node scripts/self-claims-check.mjs     # rc.26 — the bundle is held to its own claims
+          node scripts/intake-check.mjs          # 2.3.0 — questionnaire.html ← intake/questions.json + prefill packs
+          # ── Negative bypass: a bank edit without a rebuild must be SEEN failing ──────────────
+          node -e 'const fs=require("fs");const p="intake/questions.json";const b=JSON.parse(fs.readFileSync(p));b.questions.push({id:"I9",block:"I",prompt:"probe",hint:"",type:"text",home:"x"});fs.writeFileSync(p,JSON.stringify(b,null,2)+"\n")'
+          if node scripts/intake-check.mjs; then
+            echo "::error::intake-check passed on a question bank edited without rebuilding the questionnaire"; exit 1; fi
+          git checkout -- intake/questions.json
+          node scripts/intake-check.mjs > /dev/null
           # ── Negative bypass test for C5, the documented-flag rule (rc.32) ────────────────
           # C5 exists because this gate MISSED a defect: rc.29 advertised `--reconcile` in the
           # header of discovery-sync-check.mjs and never implemented it. Prove the rule bites, on
