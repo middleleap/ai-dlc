@@ -96,6 +96,12 @@ the full canon for one part of that page, or an appendix.
   open a repository: the four planes and the one path that must bypass the seam, the three write
   classes, the freeze round trip, the four non-approving seam identities, and the ten gates that
   keep enforcement identical whether the floor is there or not.
+- `references/floor-discovery-runbook.md` — the **day-one runbook** for running discovery on
+  the floor: two roles (a facilitator at the machine, an author on the floor), what each does at
+  every stage 1–6 with the write class and gates per artifact, what the author sees at a freeze
+  versus what actually happens, the cards a projection must never show, and the six things that
+  must be true before a floor exists. Read this when someone asks how a non-technical stakeholder
+  takes part in discovery.
 - `references/enterprise-rings.md` — the fractal framing: the Loom as the micro ring (one
   change) plus the shipped half of the meso ring (one product), and an honest naming of the
   macro ring (the enterprise operating model) as adopter- and advisory-side, not bundled.
