@@ -7,7 +7,7 @@ banner: "DEMO — synthetic data, non-production"
 brand: meridian-trust
 brainkit_id: "meridian-trust-brainkit"
 brainkit_version: "1.0.0"
-brainkit_digest: "sha256:7d72a0968c928ec70c65786998be376061e5cbd3e3baf9a068071918619bc5bc"
+brainkit_digest: "sha256:229b58a17cdfb58f7585e816c93a1613d1cb0e3ee3daa24f30e789d8dfc6047d"
 projected_from: "institution/brainkit/identity/design.md"
 ---
 

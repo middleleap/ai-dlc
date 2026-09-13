@@ -135,6 +135,46 @@ test('AUDIT 2 — an approved package cannot silently omit a canonical section (
   });
 });
 
+/* ---- 2.2.0: the canonical set is versioned by schema_version ---- */
+
+test('SCHEMA 1.1 — an approved package that omits `strategy` fails', () => {
+  withTempExample((dir) => {
+    const p = join(dir, 'institution/brainkit/manifest.json');
+    const m = JSON.parse(readFileSync(p, 'utf8'));
+    assert.equal(m.schema_version, '1.1');
+    m.sections = m.sections.filter((s) => s.section !== 'strategy');
+    writeFileSync(p, JSON.stringify(m, null, 2));
+    rmSync(join(dir, 'institution/brainkit/strategy.md'));
+    seal(dir);
+    const f = run(dir);
+    assert.ok(f.some((x) => /canonical section strategy is not declared/.test(x)), JSON.stringify(f));
+  });
+});
+
+test('SCHEMA 1.0 — a six-section package on the old schema is NOT broken by the upgrade', () => {
+  // Migration property: an adopter's approved rc.8 BrainKit keeps passing until they move to 1.1.
+  withTempExample((dir) => {
+    const p = join(dir, 'institution/brainkit/manifest.json');
+    const m = JSON.parse(readFileSync(p, 'utf8'));
+    m.schema_version = '1.0';
+    m.sections = m.sections.filter((s) => s.section !== 'strategy');
+    delete m.owners.strategy;
+    writeFileSync(p, JSON.stringify(m, null, 2));
+    rmSync(join(dir, 'institution/brainkit/strategy.md'));
+    seal(dir);
+    const bk = loadBrainkit(dir);
+    const f = evaluate(bk, { required: true, registry: REGISTRY });
+    assert.ok(!f.some((x) => /canonical section/.test(x)), JSON.stringify(f));
+  });
+});
+
+test('SCHEMA unknown — an unrecognised schema_version is a finding, never a guessed section set', () => {
+  const bk = brainkit();
+  bk.manifest.schema_version = '9.9';
+  const f = evaluate(bk, { required: true, registry: REGISTRY });
+  assert.ok(f.some((x) => /not a known BrainKit schema/.test(x)), JSON.stringify(f));
+});
+
 test('AUDIT 2b — a duplicated section declaration fails', () => {
   const bk = brainkit();
   bk.manifest.sections = [...bk.manifest.sections, bk.manifest.sections[0]];

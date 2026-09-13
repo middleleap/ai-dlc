@@ -15,6 +15,11 @@ run: "<slug>"
 > For **<target user, synthetic persona>** who **<situation / job-to-be-done>**, today
 > **<problem>**, which causes **<consequence>**. We know this from **<signal ids>**.
 
+## Strategic intent
+
+- `SI-nn` from `institution/brainkit/strategy.md`, or **none recorded** — say which. No gate reads
+  this line; the decision authority does.
+
 ## Target user
 
 - Persona (synthetic):

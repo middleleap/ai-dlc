@@ -10,7 +10,22 @@ import process from 'node:process';
 
 export const BRAINKIT_DIR = 'institution/brainkit';
 export const LIFECYCLE = new Set(['draft', 'approved', 'retired']);
-export const SECTION_KEYS = ['identity', 'terminology', 'architecture', 'technology-policy', 'governance', 'source-register'];
+/**
+ * The canonical section set is versioned by manifest.schema_version (2.2.0). Schema 1.0 is the
+ * six-section package rc.8 shipped; schema 1.1 adds `strategy` (the institution's approved
+ * strategic intents, `SI-*`). A manifest keeps the set its schema names, so an approved 1.0
+ * BrainKit is not broken by the bundle upgrading — it is migrated by declaring the new section,
+ * moving to 1.1 and resealing. An unknown schema_version is a finding, never a silent default.
+ */
+export const SCHEMA_SECTIONS = Object.freeze({
+  '1.0': Object.freeze(['identity', 'terminology', 'architecture', 'technology-policy', 'governance', 'source-register']),
+  '1.1': Object.freeze(['identity', 'terminology', 'architecture', 'technology-policy', 'governance', 'strategy', 'source-register']),
+});
+export const LATEST_SCHEMA = '1.1';
+/** The canonical set for a manifest — its declared schema's, or the latest when the field is missing/unknown (the gate reports that separately). */
+export const sectionKeysFor = (manifest) => SCHEMA_SECTIONS[manifest?.schema_version] ?? SCHEMA_SECTIONS[LATEST_SCHEMA];
+/** The latest canonical set — what a NEW BrainKit declares. */
+export const SECTION_KEYS = SCHEMA_SECTIONS[LATEST_SCHEMA];
 
 /** sha256 of a file's bytes, prefixed. */
 export const fileDigest = (absPath) => 'sha256:' + createHash('sha256').update(readFileSync(absPath)).digest('hex');

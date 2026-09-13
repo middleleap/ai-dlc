@@ -152,8 +152,9 @@ are repo-root-relative.
 | `brainkit/identity/design.md` | `institution/brainkit/identity/design.md` | full | BrainKit institutional identity + design language (the D7 projection source) |
 | `brainkit/terminology.md` | `institution/brainkit/terminology.md` | full | BrainKit binding vocabulary |
 | `brainkit/architecture.md` | `institution/brainkit/architecture.md` | full | BrainKit architecture principles and constraints |
-| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | full | BrainKit technology policy (allowed / consult / forbidden) |
+| `brainkit/technology-policy.json` | `institution/brainkit/technology-policy.json` | full | BrainKit technology policy (allowed / consult / forbidden) + the radar lifecycle (assess / trial / adopt / hold) |
 | `brainkit/governance.md` | `institution/brainkit/governance.md` | full | BrainKit decision rights |
+| `brainkit/strategy.md` | `institution/brainkit/strategy.md` | full | BrainKit strategic intents (SI-*) — schema 1.1; a discovery run cites the intent its problem serves |
 | `brainkit/source-register.json` | `institution/brainkit/source-register.json` | full | BrainKit approved source register (every section grounds in it) |
 | `brainkit/repository-instructions.md` | `institution/brainkit/repository-instructions.md` | full | Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them |
 | `ci/ci.yml` | `.github/workflows/ci.yml` | core | The reference CI workflow that runs every gate |

@@ -1,15 +1,59 @@
 {
   "_comment": "NEUTRAL FICTIONAL EXAMPLE — Meridian Trust technology policy. Each entry grounds in an approved source id present in source-register.json.",
   "allowed": [
-    { "technology": "TypeScript / Node.js (standard service runtime)", "source": "mt-tech-2026" }
+    {
+      "technology": "TypeScript / Node.js (standard service runtime)",
+      "source": "mt-tech-2026"
+    }
   ],
   "consult": [
-    { "technology": "New managed datastore", "authority": "ctx-mariam", "source": "mt-tech-2026" }
+    {
+      "technology": "New managed datastore",
+      "authority": "ctx-mariam",
+      "source": "mt-tech-2026"
+    }
   ],
   "forbidden": [
-    { "technology": "Unpinned dependency ranges in production services", "reason": "supply-chain integrity (see the supply-chain policy)", "source": "mt-tech-2026" }
+    {
+      "technology": "Unpinned dependency ranges in production services",
+      "reason": "supply-chain integrity (see the supply-chain policy)",
+      "source": "mt-tech-2026"
+    }
   ],
   "standards": [
-    { "standard": "All customer-facing copy passes the plain-language readability bar", "source": "mt-identity-2026" }
-  ]
+    {
+      "standard": "All customer-facing copy passes the plain-language readability bar",
+      "source": "mt-identity-2026"
+    }
+  ],
+  "radar": {
+    "entries": [
+      {
+        "technology": "Event-streaming platform for decision audit trails",
+        "ring": "assess",
+        "owner": "ctx-mariam",
+        "since": "2026-05-01",
+        "review_by": "2026-11-01",
+        "source": "mt-tech-2026"
+      },
+      {
+        "technology": "Managed feature store for affordability models",
+        "ring": "trial",
+        "owner": "ctx-mariam",
+        "since": "2026-03-01",
+        "review_by": "2026-09-30",
+        "authority": "ctx-mariam",
+        "source": "mt-tech-2026"
+      },
+      {
+        "technology": "Self-hosted message broker (legacy)",
+        "ring": "hold",
+        "owner": "ctx-mariam",
+        "since": "2026-01-15",
+        "exit_by": "2027-06-30",
+        "reason": "replaced by the managed platform; no new consumers",
+        "source": "mt-tech-2026"
+      }
+    ]
+  }
 }

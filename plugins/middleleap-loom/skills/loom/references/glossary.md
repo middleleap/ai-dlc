@@ -52,6 +52,7 @@ traceable: every downstream claim cites the id of the thing it rests on.
 | `S-001` | **Signal** | One observation from research, with a source and a confidence. Everything downstream must trace back to one (that is gate `D2`) |
 | `T-1` | **Theme** | A cluster of signals, named in synthesis. Every theme cites at least one signal (gate `D5`) |
 | `H1` | **Hypothesis** | A framing hypothesis the prototype makes tangible, so a stakeholder can confirm or refute it (gate `D9`) |
+| `SI-01` / `SI-P01` | **Strategic intent** (pursued / parked) | Not run-level: an institution-level id from the BrainKit's `strategy.md`. A problem statement or business case cites the intent it serves, or says it serves none. No gate reads it (2.2.0) |
 | `G-01` | **Gap** | An open question the run has not answered. Recorded so it stays visible rather than being silently assumed |
 | `I-1` | **Inference** | A plausible reading the evidence does *not* actually support. Carried explicitly so it can never pass as a finding |
 

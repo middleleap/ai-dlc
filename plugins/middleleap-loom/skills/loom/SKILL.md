@@ -126,8 +126,8 @@ dimensions:
 3. **Institutional DNA** — how the entity itself works: approval routes, architectural patterns,
    approved technologies, design tokens, terminology, tone of voice. Its institution-owned **seed**
    is the **Institutional BrainKit** (`institution/brainkit/`, 2.0-rc.10) — a versioned, approved,
-   digest-pinned package of identity, terminology, architecture principles, technology policy and
-   decision rights that every repository inherits before it writes code, PRDs, ADRs, interfaces or
+   digest-pinned package of identity, terminology, architecture principles, technology policy (with
+   its radar), decision rights and strategic intents that every repository inherits before it writes code, PRDs, ADRs, interfaces or
    reports. The BrainKit projects to the **brand profile** seam (gate D7) and composes through the
    policy compiler as the `brainkit-conformance` gate; `brainkit-check` enforces its integrity, and
    `brainkit-init` drafts one from an institution's approved sources, and `institution-intake` is

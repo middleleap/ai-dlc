@@ -6,7 +6,7 @@
   "stage": "define",
   "write_class": "born-on-the-floor",
   "source": "discovery/templates/problem-statement.md",
-  "source_digest": "sha256:2fda98a745bee184954dadfc218f761a0a7e1ee4938474c8133a0d78416cd73c",
+  "source_digest": "sha256:b92c5a517186779c0d9ce82e4f89921add46fda10a1b43bfa113fec8ae9918c9",
   "gates": [
     "D1",
     "D3",
@@ -62,6 +62,12 @@
       "required": true,
       "kind": "rich_text",
       "help": "For **<target user, synthetic persona>** who **<situation / job-to-be-done>**, today **<problem>**, which causes **<consequence>**. We know this from **<signal ids>**."
+    },
+    {
+      "name": "Strategic intent",
+      "required": true,
+      "kind": "rich_text",
+      "help": ""
     },
     {
       "name": "Target user",

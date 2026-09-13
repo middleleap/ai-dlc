@@ -6,7 +6,7 @@
   "stage": "develop",
   "write_class": "decision-routed",
   "source": "delivery/templates/solution-direction-record.md",
-  "source_digest": "sha256:1e30e4e88183da7fd99799b335555c65c1ead2f34d86c107af0a4cd2f13a196d",
+  "source_digest": "sha256:185a413ab353e65146a7f2d32c19ed19c22bd2d9ab1cbe67618500e962e4e5df",
   "gates": [
     "D1",
     "D6",

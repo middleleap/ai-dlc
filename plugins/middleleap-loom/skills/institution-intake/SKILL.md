@@ -106,10 +106,10 @@ register with the proposed home named — that is honest state, not a bug in the
 - The **registry**: is there a curated package mirror or hardened-libraries supplier? Does the
   resolver fall back to the public index? Who owns the resolver config? (These are the
   `registry.*` fields; an unenforced registry is the honest answer if that is the case.)
-- The **radar**: what is being *assessed*, *trialled*, *adopted*, *held*, and by whom.
-  **No BrainKit field holds a radar lifecycle yet.** Record the rings in the gap register under
-  a proposed `radar` block in `technology-policy.json`; until the schema carries it, the `consult`
-  list is the only mechanical on-ramp for a technology on trial.
+- The **radar**: what is being *assessed*, *trialled*, *adopted*, *held*, and by whom — each
+  with a date it was decided and a date it is re-decided (`review_by`, or `exit_by` for a hold).
+  These are the `radar.entries` of `technology-policy.json`. A ring with no owner or no source is
+  a CLAIMED; a "we're looking at it" with no review date is not on the radar yet.
 
 ### E · Decision rights → `governance.md` and the identity registry
 
@@ -123,7 +123,7 @@ register with the proposed home named — that is honest state, not a bug in the
 - Who is the **second human** who merges what the facilitator proposes? It is never the
   facilitator.
 
-### F · Strategic intents → *no BrainKit section yet*
+### F · Strategic intents → `strategy.md`
 
 - What are the institution's stated strategic intents for the next planning horizon, and where
   are they written (strategy paper, board pack, OKRs)?
@@ -132,10 +132,10 @@ register with the proposed home named — that is honest state, not a bug in the
 - Which intents are explicitly *not* being pursued this cycle? (A problem that serves a parked
   intent should know it.)
 
-**Honest state:** the BrainKit's canonical section set has no `strategy.md`, and `brainkit-check`
-enforces that set, so adding one is a schema version change. Record intents in the intake record
-with their ids and in the gap register as "proposed `strategy.md` section". A discovery run may
-still cite an `SI-*` id in its problem statement as prose; no gate reads it yet.
+**Honest state:** `strategy.md` is canonical from BrainKit schema 1.1 (2.2.0), so a SOURCED
+intent has a home and `brainkit-check` will refuse an approved package that omits the section.
+What is still true: **no gate reads `SI-*`**. A problem statement or business case citing an
+intent is prose the decision authority reads, not a mechanical check.
 
 ### G · Regulated context → *pointers only*
 

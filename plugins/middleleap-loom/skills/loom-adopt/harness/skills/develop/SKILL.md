@@ -74,6 +74,12 @@ Spawn a judge subagent (or a small panel) that scores each direction, NOT on ele
 3. **Composition** — reuses primitives vs invents them. New primitives require an ADR (and so are
    costlier and riskier).
 4. **Delivery cost / story count** — fewer, smaller, independently-shippable stories win.
+5. **Institutional fit** — read `institution/brainkit/technology-policy.json` where a BrainKit is
+   mounted. A direction resting on a `forbidden` technology, or on a `radar` entry in the `hold`
+   ring, is **disqualified**; one resting on a `trial` entry needs the named `authority`'s sign-off
+   before it can be chosen (treat as `consult`); one resting on an `assess` entry is not available
+   to a governed change. `architecture.md`'s constraints apply the same way. Fit is a filter before
+   it is a score.
 
 The judge returns a ranking with one-line rationale per direction and a recommended winner.
 

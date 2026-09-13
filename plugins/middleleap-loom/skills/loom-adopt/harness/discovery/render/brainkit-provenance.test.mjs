@@ -13,7 +13,7 @@ import { renderOffice } from './render-office.mjs';
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEMO = resolve(HARNESS, 'discovery/brand/design.md');           // a plain brand, no BrainKit
 const PROJECTION = resolve(HARNESS, 'brainkit-example/discovery/brand/design.md'); // a BrainKit projection
-const DIGEST = 'sha256:7d72a0968c928ec70c65786998be376061e5cbd3e3baf9a068071918619bc5bc';
+const DIGEST = 'sha256:229b58a17cdfb58f7585e816c93a1613d1cb0e3ee3daa24f30e789d8dfc6047d';
 
 test('a plain brand seam yields NO BrainKit provenance (backward compatible)', () => {
   const brand = parseTokens(DEMO);

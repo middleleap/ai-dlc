@@ -6,6 +6,7 @@
     { "id": "mt-glossary-2026", "title": "Meridian Trust Glossary (approved)", "kind": "standard", "reference": "internal://approved/glossary-2026", "approved_by": "ctx-mariam" },
     { "id": "mt-arch-2026", "title": "Meridian Trust Architecture Principles (approved)", "kind": "standard", "reference": "internal://approved/architecture-2026", "approved_by": "ctx-mariam" },
     { "id": "mt-tech-2026", "title": "Meridian Trust Technology Policy (approved)", "kind": "policy", "reference": "internal://approved/technology-2026", "approved_by": "ctx-mariam" },
-    { "id": "mt-governance-2026", "title": "Meridian Trust Decision Rights (approved)", "kind": "decision", "reference": "internal://approved/governance-2026", "approved_by": "ctx-mariam" }
+    { "id": "mt-governance-2026", "title": "Meridian Trust Decision Rights (approved)", "kind": "decision", "reference": "internal://approved/governance-2026", "approved_by": "ctx-mariam" },
+    { "id": "mt-strategy-2026", "title": "Meridian Trust Strategic Plan FY2027–FY2028 (board-approved)", "kind": "decision", "reference": "internal://approved/strategy-2026", "approved_by": "ctx-mariam" }
   ]
 }
