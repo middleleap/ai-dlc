@@ -6,13 +6,9 @@ import { loadBrainkit, BRAINKIT_DIR } from '../core/brainkit.mjs';
 import { evaluate, readFrontmatter } from './brainkit-check.mjs';
 import { loadRegistry, evaluate as evaluateIdentities } from './identity-registry-check.mjs';
 import { evaluate as evaluateEstate } from './brainkit-registry-check.mjs';
+import { resolveNoSymlink } from '../core/repo-path.mjs';
 
-function safePath(root, rel) {
-  if (typeof rel !== 'string' || !rel || rel.startsWith('/') || rel.includes('\\') || rel.includes(':') || rel.split('/').some(p => !p || p === '..' || p === '.')) throw new Error(`Unsafe repository path: ${rel}`);
-  let path = root;
-  for (const part of rel.split('/')) { path = join(path, part); try { if (lstatSync(path).isSymbolicLink()) throw new Error(`Symlink is not a snapshot input: ${rel}`); } catch (e) { if (e.code !== 'ENOENT') throw e; } }
-  return path;
-}
+const safePath = (root, rel) => resolveNoSymlink(root, rel, 'snapshot input');
 function filesBelow(root, rel) {
   const path = safePath(root, rel);
   return readdirSync(path, { withFileTypes: true }).flatMap(e => {

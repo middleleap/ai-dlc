@@ -16,6 +16,9 @@ export function validateRecord(record, bank, digest) {
   if (record.prefill_pack != null && typeof record.prefill_pack !== 'string') findings.push('prefill_pack must be text or null');
   if (!Array.isArray(record.answers)) return { findings: [...findings, 'answers is not an array'], notices, summary };
   const questions = new Map(bank.questions.map(q => [q.id, q]));
+  // Roles the bank itself names ("Chief Risk Officer") are never mistaken for a person's name.
+  // Anything else that has name shape is a notice, not a refusal: the shape check is a heuristic.
+  const knownRoles = new Set([...(bank.blocks || []).map(b => b.role), 'the facilitator'].map(r => String(r).trim().toLowerCase()));
   const seen = new Set();
   for (const a of record.answers) {
     if (!a || typeof a !== 'object' || Array.isArray(a)) { findings.push('answer entry is not an object'); continue; }
@@ -34,7 +37,8 @@ export function validateRecord(record, bank, digest) {
     summary[expected]++;
     if (a.disposition !== expected) findings.push(`${tag}: disposition disagrees with its content — expected ${expected}`);
     if (expected !== 'UNKNOWN' && !a.respondent_role?.trim()) findings.push(`${tag}: answered questions require a respondent_role`);
-    if (/^[A-Z][a-z]+(?:\s+[A-Z][a-z'’-]+){1,2}$/.test(a.respondent_role?.trim() || '')) findings.push(`${tag}: respondent_role looks like a person's name — roles only`);
+    const role = a.respondent_role?.trim() || '';
+    if (role && !knownRoles.has(role.toLowerCase()) && /^[A-Z][a-z]+(?:\s+[A-Z][a-z'’-]+){1,2}$/.test(role)) notices.push(`${tag}: respondent_role looks like a person's name — roles only`);
   }
   const missing = [...questions.keys()].filter(id => !seen.has(id));
   summary.UNKNOWN += missing.length;

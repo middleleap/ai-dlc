@@ -5,11 +5,11 @@ import {createHash} from 'node:crypto';
 import {spawn,spawnSync,fork} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {validate,invariants} from './agent-output-check.mjs';
+import {resolveNoSymlink} from '../core/repo-path.mjs';
 const hash=bytes=>'sha256:'+createHash('sha256').update(bytes).digest('hex');
 const json=path=>JSON.parse(readFileSync(path,'utf8'));
 function localFile(cwd,path){
- if(typeof path!=='string'||!path||path.startsWith('/')||path.includes('\\')||path.split('/').some(p=>!p||p==='.'||p==='..'))throw new Error('Use a repository-relative file path.');
- let abs=cwd;for(const part of path.split('/')){abs=join(abs,part);if(existsSync(abs)&&lstatSync(abs).isSymbolicLink())throw new Error(`Symlink is not a pinned adapter input: ${path}`);}
+ const abs=resolveNoSymlink(cwd,path,'pinned adapter input');
  if(!existsSync(abs)||!lstatSync(abs).isFile())throw new Error(`Required file is absent: ${path}`);return abs;
 }
 export function prepareCodex(cwd,{task,role}){
@@ -80,7 +80,10 @@ export async function runCodex(request,{spawnProcess=spawn,versionProbe=spawnSyn
   killTimer=setTimeout(()=>terminate('SIGKILL'),5000);killTimer.unref();
  };process.on('SIGINT',stop);process.on('SIGTERM',stop);
  const result=await new Promise(resolveResult=>{
-  child.stdout.on('data',chunk=>{stream+=chunk.toString();try{appendFileSync(join(dir,'events.jsonl'),chunk);}catch(e){captureError=e.message;stop();}});
+  // Decode as one UTF-8 stream: a multi-byte character split across pipe chunks must reach
+  // inspectEvents intact, and the on-disk capture must carry the same bytes.
+  child.stdout.setEncoding('utf8');
+  child.stdout.on('data',chunk=>{stream+=chunk;try{appendFileSync(join(dir,'events.jsonl'),chunk);}catch(e){captureError=e.message;stop();}});
   child.stderr.on('data',chunk=>{try{appendFileSync(join(dir,'stderr.log'),chunk);}catch(e){captureError=e.message;stop();}});
   child.once('error',e=>{captureError=e.message;});
   child.once('close',(code,signal)=>resolveResult(inspectEvents(stream,request,{exitCode:code,signal:signal||(interrupted?'SIGTERM':null)})));
