@@ -19,7 +19,7 @@ jobs:
       # The validator is the only gate this repo has, so it is itself gated: the
       # suite builds throwaway git repos and asserts every violation still fails.
       - name: Validator self-test
-        run: node --test scripts/validate-marketplace.test.mjs
+        run: node --test scripts/validate-marketplace.test.mjs scripts/onboarding-pilot.test.mjs
 
       - name: Onboarding handoff, configuration and all-tier installation contracts
         run: node --test plugins/middleleap-loom/skills/loom-adopt/harness/scripts/intake-*.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/onboarding-commands.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/configuration-tasks.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/brainkit-reuse.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/project-integration.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/codex-runtime.test.mjs

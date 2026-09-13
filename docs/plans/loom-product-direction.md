@@ -9,8 +9,8 @@ This plan authorizes implementation sequencing, not institutional approval, prod
 ## Current review status
 
 Refreshed origin/main on 13 September 2026: unchanged at 3e5564d. Local Node 22.23.2 suite:
-2,482 passed, zero failures/skips. Synthetic harness and BrainKit upgrade/rollback checks passed.
-Browser acceptance, unfamiliar-user pilots, remote CI and release publication remain outstanding.
+2,485 passed, zero failures/skips at review-fix commit 4e4fc73. Synthetic harness and BrainKit upgrade/rollback checks passed.
+Remote Linux CI passed for review-fix commit 4e4fc73. Browser acceptance, unfamiliar-user observations and release publication remain outstanding.
 Codex remains read-only; detached-process cleanup and automatic complete action evidence are open.
 Historical progress entries below describe their validation state at the time.
 
@@ -23,7 +23,7 @@ Historical progress entries below describe their validation state at the time.
 | 3 | P2: one start flow for example / institution / first team; role-specific questionnaire views; resumable institution-scoped sessions with visible persistence failures; source retrieval/approval states; JSON/interview handoff contract. | An unfamiliar user reaches a useful synthetic artifact; separate reference-supplied/source-checked/approval-pending states; interrupted work resumes; no duplicated governance ledger. | Phase 2 | Locally implemented; browser and user validation pending |
 | 4 | P3: reusable institutional defaults independently selectable from unrelated full-tier content; pinned BrainKit publisher/consumer flow; CI integration patches; configuration data outside managed executable code; upgrade conflict/rollback guidance. | A second project inherits approved context with fewer repeated questions; existing CI is preserved; upgrades preserve local configuration and rollback is demonstrated. | Phase 3 | Locally implemented; synthetic upgrade/rollback passed; institutional review and release validation remain |
 | 5 | Runtime portability: documented adapter contract and a second implementation (Codex first); model-role evaluation contract; published coverage matrix. | Shared conformance tests exercise file/shell actions, instruction loading, reviewer outputs, approvals, evidence and interruption recovery; unsupported controls are explicit; model/prompt changes require applicable evaluations. | Phase 2 contract, Phase 4 integration patterns | Bounded read-only Codex reviewer implemented and partially live-qualified; detached-process containment and write-capable delivery remain |
-| 6 | Adoption validation with unfamiliar sponsors, developers, platform/risk/context owners; supervised first-team then second-team pilot. | Measure task completion, recovery, review effort, repeated entry, waiting time and correct readiness interpretation. Record findings and revise before expanding rollout. | Formative rounds begin in Phase 3; pilot after Phase 4 | Planned |
+| 6 | Adoption validation with unfamiliar sponsors, developers, platform/risk/context owners; supervised first-team then second-team pilot. | Measure task completion, recovery, review effort, repeated entry, waiting time and correct readiness interpretation. Record findings and revise before expanding rollout. | Formative rounds begin in Phase 3; pilot after Phase 4 | Protocol, synthetic kit and descriptive reporting prepared; participant sessions not yet run |
 
 ## Implementation boundaries and design decisions
 
@@ -244,3 +244,31 @@ an allowed preview URL because the earlier local-file access was rejected; no by
 Codex remains read-only with the previously recorded runtime gaps.
 
 See [release validation](loom-onboarding-release-validation.md) and its evidence index.
+
+## Phase 6 preparation: executable pilot kit and measurement
+
+Added a version-bound synthetic pilot builder, role/cohort task protocol, browser acceptance
+checklist, private observations template and descriptive reporting command. Reports exclude
+synthetic rehearsals from user metrics, preserve failed/abandoned attempts in the denominator,
+require missing coverage/tasks to be completed, and block expansion after answer loss or false
+readiness. Per-participant first-artifact time prevents a fast median hiding a slow participant.
+First/second-team repeated-entry comparisons remain descriptive and explicitly confounded by
+learning. No participant records or browser outcomes have been fabricated.
+
+The kit can be built with `node scripts/onboarding-pilot.mjs build <new-directory>`.
+See [pilot protocol](../pilots/loom-onboarding/README.md). The user acknowledged the request for
+a preview and participants but has not supplied their URL or identities. Actual browser and
+unfamiliar-user validation remain pending those arrangements; no outreach or hosting occurred.
+
+Codex containment, complete automatic action evidence and independent model-role evaluation
+remain open. Do not infer completion of phase 5 from the phase 6 research tooling.
+
+Prepared the remaining phase 5 qualification protocol in
+[runtime qualification](../pilots/loom-onboarding/runtime-qualification.md), including an
+OS-boundary teardown requirement and independent reviewer-owned evaluation cases. It explicitly
+rejects treating process-name/PID cleanup as complete containment. No approved disposable runner
+or independent model-risk evaluator has been supplied; no write-capable mode was enabled.
+
+Pilot tooling validation: full Node 22 suite passed 2,492 tests; seven focused pilot cases passed
+after adding protocol-digest binding. A ready-to-run synthetic kit was generated; its empty
+observation report remains needs-evidence-or-iteration with null user metrics.
