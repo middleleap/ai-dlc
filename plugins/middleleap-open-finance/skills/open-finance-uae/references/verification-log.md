@@ -106,6 +106,28 @@ re-checked this pass — items marked PENDING below need that.
 | JWE `alg` wording | **OPEN — minor**: `technical-specs.md` states `RSA-OAEP-256` (from the hub encryption guide); the errata3 spec's `AEJWEPaymentPII` example header decodes to `{"alg":"RSA-OAEP","enc":"A256GCM"}`. Both are RSA-OAEP family; confirm which the Hub/LFI JWKS actually advertise before hard-coding either | flagged here only |
 | NOT verified this pass | Register / Confluence status of v2.2-rc1 and of the insurance file in the errata3 folder; `servers` base paths; anything outside the two payment specs | — |
 
+## Pass of 14 September 2026 — weekly ecosystem-watcher re-check + check_current.py fix
+
+Trigger: the recurring weekly ecosystem-watcher cadence (see the 31 Aug 2026 pass).
+Method: live fetches (no GitHub-API tree read available this pass — the session's
+GitHub access is scoped to this repo only, so `api.github.com` 403s as a permissions
+block rather than the usual rate limit; `raw.githubusercontent.com` file reads are
+unaffected and were used instead) against the community hub erratas page
+(`erratas/v2.1/`), the `community-standards` registry sources (`erratas-registry.ts`,
+`api-hub-releases-registry.ts`, `trust-framework-releases-registry.ts`), specific
+`dist/standards/` paths on `api-specs` (existence probes), and the doc-level Confluence
+"Consolidated Errata" page (anonymous REST).
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| errata3 scope | **UNCHANGED** — still exactly 5 corrections (§1–5), no §6+, no errata4, on both the versioned register page and `erratas-registry.ts` | — |
+| Doc-level Confluence register | **UNCHANGED** — page 1366294554 still at version 5 / last edit 8 Jul 2026 (§1–2 only); §3–5 still spec-only | — |
+| API Hub releases | **UNCHANGED** — `2026.22.0` still the latest in `api-hub-releases-registry.ts` | — |
+| Trust Framework releases | **UNCHANGED** — `2.5.0` still `planned`, no date, in `trust-framework-releases-registry.ts` | — |
+| Pre-release line | **UNCHANGED** — `dist/standards/v2.2-rc1/` still the highest on `main` (`v2.2-rc2`, `v2.2`, `v2.1-errata4` all 404 on raw-file probes) | — |
+| `check_current.py` blind spot | **FIXED**: the 31 Aug pass flagged that the script only compares the errata *number* and would miss an existing group growing sections in place — flagged again as still-open on 3 Sep. Added `register_section_count()` (parses the register's "N corrections" badge for the stated errata) and `skill_stated_sections()` (parses the same count from SKILL.md's Quick Reference); when the errata numbers already agree, main() now also compares these counts and reports STALE with a `section_note` on mismatch instead of a false FRESH. Verified against live data this pass: skill=5, register=5 for errata3 (agree, correctly FRESH); register=17 for errata2 (agrees with the known count, confirming the parser) | `scripts/check_current.py`, SKILL.md |
+| NOT re-verified this pass | Full site/Confluence audit (scoped to the watcher's usual register + release-registry surfaces, not a full re-verification pass); the `api-specs` git tree via GitHub API (session-scoped access denied it this pass — see Method above); the insurance-file-in-errata3 PENDING item from 3 Sep (not re-checked; still assumed to hold since nothing upstream changed) | flagged above |
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the
