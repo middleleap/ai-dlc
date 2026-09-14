@@ -1,0 +1,25 @@
+{
+  "wordmark": "Meridian Trust",
+  "context": "Discovery prototype · low fidelity · synthetic data · not a screen specification",
+  "title": "What I owe, and when — across my banks",
+  "intro": "Noura, salary account at Meridian; card at bank B; car finance at bank C. Shown the week before salary day. Every number is invented.",
+  "tiles": [
+    { "label": "Due in the next 7 days", "value": "AED 4,850", "status": "warn", "pill": "2 payments", "sub": "Card (bank B) on the 28th · Car finance (bank C) on the 1st" },
+    { "label": "Available across banks", "value": "AED 6,120", "status": "ok", "pill": "covers it", "sub": "Meridian salary account + bank B current account" },
+    { "label": "Consent", "value": "2 banks connected", "status": "ok", "pill": "revocable", "sub": "Scope: balances and due dates · expires in 84 days · withdraw at any time" },
+    { "label": "Total exposure", "value": "AED 61,300", "sub": "Card balance + remaining car finance, as reported by each bank" }
+  ],
+  "table": {
+    "label": "Upcoming commitments (H1)",
+    "headers": ["When", "What", "Where", "Amount", "Covered?"],
+    "rows": [
+      ["28 Sep", "Credit card minimum", "Bank B", "AED 1,250", "yes"],
+      ["1 Oct", "Car finance instalment", "Bank C", "AED 3,600", "yes, after salary"],
+      ["3 Oct", "Meridian savings standing order", "Meridian", "AED 1,000", "yes"]
+    ]
+  },
+  "affordance": {
+    "label": "H3 — held, not authorised",
+    "text": "Move money to cover the 28th (labelled affordance only — payment initiation is a separate proposition under its own obligations and is not prototyped here)"
+  }
+}

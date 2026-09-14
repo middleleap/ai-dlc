@@ -64,8 +64,8 @@ fictional planning · executed local check · recorded agent run · simulated pr
 
 ## To prepare, in order
 
-1. **A worked Meridian discovery run** — the one fixture the story lacks: `discovery/runs/cross-bank-money/` with research log, evidence, synthesis, problem statement, data-governance citing the Open Finance obligation rows, three directions, prototype, stakeholder reaction, hand-off — D1–D9 green — plus the alternative `outcome.md` stop. Rendered under the Meridian brand profile that already exists. This is most of the remaining work and the whole first half of the demo.
-2. Open Finance obligation rows in the register for Meridian (owners, sources, "verify against Standards" flagged), replacing the generic illustrative set for the demo tree.
+1. ~~A worked Meridian discovery run~~ **Done:** `demo/meridian/discovery-run/` (`cross-bank-money`, D1–D9 green under the Meridian brand, wireframe rendered) and `discovery-run-stopped/` (the stop, with its `discovery-stopped` record). `run-demo.mjs --scenario meridian` walks them: nine gates, the D4 refusal of the sponsor's app idea, the stop.
+2. ~~Open Finance obligation rows~~ **Done:** `demo/meridian/open-finance-obligations.json` — six obligations with owners and register rows, cited by id from the run's data-governance (D6). **Articles are deliberately blank-by-design; verify each against the current Regulation and Standards before the meeting and fill them in.** Three solution directions (HG-0009) are not yet written as a Solution Direction Record — add if the Define beat needs it.
 3. Private illustration: add the presenter block and evidence chips (snippet prepared); regenerate through the export workflow.
 4. Verify the Kosli citations the week of the meeting; drop anything stale.
 5. Ask for a sandbox org and token; if granted, run `--real` once and send the LIVE join page as the follow-up.
@@ -73,4 +73,4 @@ fictional planning · executed local check · recorded agent run · simulated pr
 
 ## What exists today
 
-Delivery half: `demo/run-demo.mjs --scenario meridian` — green PR lane, refusal, recorded agent repair, seam against the fake, `record-join.mjs` — all in this repository, run in CI. Discovery half: the gates, templates, renderer and the Meridian brand and institution profiles exist; the *run* for this story does not yet. Live Kosli integration: still owed (`docs/integration-run.md`). The operations-queue demo and the second-team exercise stay in the private repository and are not on this agenda.
+Delivery half: `demo/run-demo.mjs --scenario meridian` — green PR lane, refusal, recorded agent repair, seam against the fake, `record-join.mjs` — all in this repository, run in CI. Discovery half: `cross-bank-money` and its stopped twin run in the same script and in CI. Live Kosli integration: still owed (`docs/integration-run.md`). The operations-queue demo and the second-team exercise stay in the private repository and are not on this agenda.
