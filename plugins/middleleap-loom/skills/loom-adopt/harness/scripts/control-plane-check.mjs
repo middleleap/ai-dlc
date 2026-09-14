@@ -71,6 +71,8 @@ export const CONTROL_TARGETS = [
   'institution/brainkit/manifest.json', // the Institutional BrainKit is institution-owned, not agent-writable
   'docs/governance/brainkit-registry.json', // rc.15 WS7 — the estate registry (revocation lives here); an agent must not un-revoke a release
   '.github/workflows/ci.yml',
+  '.github/workflows/loom.yml',
+  '.loom/project.json',
   'docs/governance/data-risk-register/controls.json',
   'docs/governance/control-catalog.json',
   'docs/governance/model-manifest.json',

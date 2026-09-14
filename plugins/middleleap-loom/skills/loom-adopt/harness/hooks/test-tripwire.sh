@@ -78,11 +78,16 @@ fi
 
 # Commented-out expectations — the quiet way to defang an assertion. Line comments in the
 # JS/Python/SQL/Lua spellings, and (2.1.0) a block comment wrapping an expectation, matched
-# across lines with grep -z so `/* … expect(...) … */` is one record.
-if printf '%s' "$new_content" | grep -Eq '^\s*(//|#|--)\s*(expect|assert|should|t\.(is|deepEqual|truthy|falsy|throws))\b'; then
+# across lines with jq's string regex. BSD grep's multiline behaviour differs from GNU
+# grep -z; jq is already a required dependency and reads the complete edit portably.
+# One assertion vocabulary for both spellings, so a line comment and a block comment can
+# never disagree about what counts as silenced. Dotted members (`assert.strict.equal`,
+# `should.equal`) are part of the callee, to any depth.
+assertion_re='(expect|assert|should|t\.(is|deepEqual|truthy|falsy|throws))(\.[A-Za-z_][A-Za-z_0-9]*)*'
+if printf '%s' "$new_content" | grep -Eq "^\s*(//|#|--)\s*${assertion_re}\b"; then
   deny "Test tripwire: this edit comments out an assertion (expect/assert) on branch '$branch'. Make the code satisfy the assertion; don't silence it. Genuine test defects belong on a test-fix branch (feature/<ID>-testfix-<slug>)."
 fi
-if printf '%s' "$new_content" | grep -Ezq '/\*([^*]|[[:space:]]|\*+[^*/])*(expect|assert)[[:space:]]*\('; then
+if printf '%s' "$new_content" | jq -Rse --arg re "$assertion_re" 'test("/\\*([^*]|\\*+[^*/])*\\b" + $re + "\\s*\\(")' >/dev/null; then
   deny "Test tripwire: this edit wraps an assertion (expect/assert) in a block comment on branch '$branch'. A commented assertion is a silenced one. Genuine test defects belong on a test-fix branch (feature/<ID>-testfix-<slug>)."
 fi
 

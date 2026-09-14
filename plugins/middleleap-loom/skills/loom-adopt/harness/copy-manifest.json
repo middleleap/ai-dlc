@@ -91,8 +91,8 @@
       "source": "intake",
       "dest": "intake",
       "kind": "dir",
-      "seam": "The institutional intake (2.3.0): the question bank, the pre-fill packs, the builder and the GENERATED questionnaire.html each role opens locally and answers; exports institution/intake/intake-record.json (authority: none). scripts/intake-check.mjs keeps the HTML in step with the bank",
-      "tier": "full"
+      "seam": "Institutional intake machinery: question bank, pre-fill packs, shared record operations, builder and generated questionnaire. Available at every tier; installs no institutional answers or approvals.",
+      "tier": "core"
     },
     {
       "source": "scripts",
@@ -490,7 +490,8 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit manifest — identity, version, lifecycle, owners, digests, approvals (draft until owners approve)",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/identity/design.md",
@@ -498,7 +499,8 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit institutional identity + design language (the D7 projection source)",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/terminology.md",
@@ -506,7 +508,8 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit binding vocabulary",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/architecture.md",
@@ -514,7 +517,8 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit architecture principles and constraints",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/technology-policy.json",
@@ -522,7 +526,8 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit technology policy (allowed / consult / forbidden) + the radar lifecycle (assess / trial / adopt / hold)",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/governance.md",
@@ -530,7 +535,8 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit decision rights",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/strategy.md",
@@ -538,7 +544,8 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit strategic intents (SI-*) — schema 1.1; a discovery run cites the intent its problem serves",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/source-register.json",
@@ -546,14 +553,16 @@
       "kind": "file",
       "adopt": "template",
       "seam": "BrainKit approved source register (every section grounds in it)",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "brainkit/repository-instructions.md",
       "dest": "institution/brainkit/repository-instructions.md",
       "kind": "file",
       "seam": "Canonical read-the-BrainKit fragment — referenced from AGENTS.md/CLAUDE.md, never overwriting them",
-      "tier": "full"
+      "tier": "full",
+      "component": "brainkit"
     },
     {
       "source": "ci/ci.yml",
@@ -561,6 +570,28 @@
       "kind": "file",
       "seam": "The reference CI workflow that runs every gate",
       "tier": "core"
+    },
+    {
+      "source": "project.template.json",
+      "dest": ".loom/project.json",
+      "kind": "file",
+      "adopt": "template",
+      "tier": "core",
+      "seam": "Project-owned contract paths, feature ID pattern and verification command arguments"
+    },
+    {
+      "source": "project-configuration.md",
+      "dest": "docs/governance/project-configuration.md",
+      "kind": "file",
+      "tier": "core",
+      "seam": "Project settings and CI migration guide"
+    },
+    {
+      "source": "runtime-contract.md",
+      "dest": "docs/governance/runtime-contract.md",
+      "kind": "file",
+      "tier": "core",
+      "seam": "Runtime adapter contract, bounded Codex reviewer pilot and qualification gaps"
     }
   ],
   "_tiers": "Adoption tiers (adopt.mjs --tier). core = the warp: all machinery plus the governance data whose gate FAILS CLOSED when it is absent, so a core adoption is safe rather than merely small. governed = the product-governance plane. full = estate, floor and institution. MACHINERY IS ALWAYS INSTALLED at every tier — only what an adopter must FILL IN is tiered, because the burden was never the gates (a gate whose input is absent is silent) but the ADOPT markers. Which entries may be deferred was determined by TEST, not by taste: every deferred entry was removed from a real adoption and its gates confirmed silent."

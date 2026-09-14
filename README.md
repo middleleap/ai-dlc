@@ -13,6 +13,20 @@ DLC = knowledge packs and structured workflows you install into an AI coding ass
 
 Run it from inside Claude Code. `/plugin` lists what's available and lets you enable or disable plugins per project.
 
+## Starting an institutional adoption
+
+Install `middleleap-loom@middleleap-ai-dlc` from the same marketplace in Claude Code.
+Open the [guided start](plugins/middleleap-loom/skills/loom-adopt/harness/intake/questionnaire.html) for an example, institutional intake or first-team setup. The [Loom introduction](docs/the-loom.html#adopt) explains the method.
+
+- **Understand the method:** open the [Loom Atlas](plugins/middleleap-loom/skills/loom/assets/loom-atlas.html).
+- **Prepare an institution:** run `/middleleap-loom:institution-intake` to gather role-specific inputs and source references, then `/middleleap-loom:brainkit-init` to draft its institutional context. Drafts require accountable review.
+- **Prepare a team's repository:** run `/middleleap-loom:loom-adopt`, review the proposed installation, then use `node scripts/loom.mjs configure` to see setup tasks and owners.
+
+The [adoption guide](plugins/middleleap-loom/README.md#starting-and-checking-an-adoption)
+covers prerequisites, checks and activation evidence. Claude Code is the reference runtime;
+a specific model is not required by the method. Other runtimes need verified adapters for
+runtime controls before equivalent enforcement can be claimed.
+
 ## Plugins
 
 ### [middleleap-ai-sdlc](plugins/middleleap-ai-sdlc/)

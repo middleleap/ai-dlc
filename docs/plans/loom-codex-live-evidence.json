@@ -1,0 +1,195 @@
+{
+  "scope": "Local synthetic observations only; hashes do not authenticate events or establish approval. Temporary captures may be removed by host cleanup.",
+  "date": "2026-09-13",
+  "files": [
+    {
+      "path": "runtime-run-olHjWI/events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runtime-run-olHjWI/request.json",
+      "sha256": "bb7ecc5c6fb61c65b874fc8a0a9b33fd7f7e6320c6a260c27963206756a26506"
+    },
+    {
+      "path": "runtime-run-olHjWI/result.json",
+      "sha256": "27117cca8ba6ca3bb4c0facf72651c540a40940053aaed48758aebdd17e415ca"
+    },
+    {
+      "path": "runtime-run-olHjWI/stderr.log",
+      "sha256": "0ba46706cc9696bf8bcdb3a2ebde4295e2588ee89d9505836f6e26f07d57b226"
+    },
+    {
+      "path": "runtime-run-2ysvJp/events.jsonl",
+      "sha256": "ebb426aed98a7e69986c28d1e2b8b6a2f5eb60c042a1d4dcff0a040be11af801"
+    },
+    {
+      "path": "runtime-run-2ysvJp/request.json",
+      "sha256": "bb7ecc5c6fb61c65b874fc8a0a9b33fd7f7e6320c6a260c27963206756a26506"
+    },
+    {
+      "path": "runtime-run-2ysvJp/result.json",
+      "sha256": "4ea4491a7cef12eba17f17cd825be1ddfc8e3c117b95589d5bc5c9a892bfeecc"
+    },
+    {
+      "path": "runtime-run-2ysvJp/stderr.log",
+      "sha256": "b512505e5ce7f60e77c0e30ece2c9ef53626158a3e345396b281416a599556c3"
+    },
+    {
+      "path": "runtime-run-rJSEzn/events.jsonl",
+      "sha256": "27bb1e28c9e9cf610598a95381fa6ee1a694f9aa04b20aa2139c3fafcf7ae407"
+    },
+    {
+      "path": "runtime-run-rJSEzn/request.json",
+      "sha256": "7bd384fb23337936b2612ab42754d92059403a43b070e1495633e9c7ef27b9cb"
+    },
+    {
+      "path": "runtime-run-rJSEzn/result.json",
+      "sha256": "85477b0057151e1c254b1a96fd4fec39c92e9839764795334ca2b18a4089d661"
+    },
+    {
+      "path": "runtime-run-rJSEzn/stderr.log",
+      "sha256": "13d49d6154aa0d9d91f475af9c588c79b4c8ac103add7467fff73cb0ba552cd6"
+    },
+    {
+      "path": "runtime-run-1sHl6m/events.jsonl",
+      "sha256": "a28c7660003de399a6c588fca19be671712c031e673d323d3b35c68e2fda086e"
+    },
+    {
+      "path": "runtime-run-1sHl6m/request.json",
+      "sha256": "fa2dbe06cbb4329d745b21b43ad44f62b447cb15df06804d221ba7bcd5700f44"
+    },
+    {
+      "path": "runtime-run-1sHl6m/result.json",
+      "sha256": "6d31f878c99d5b659f7f395eaca83564c15d8554fe94213de67baecd97d79b2c"
+    },
+    {
+      "path": "runtime-run-1sHl6m/stderr.log",
+      "sha256": "b45ccd32cb0dea725ed195ce058b521561e3cb0607a9e9679f81a58b1495e7ba"
+    },
+    {
+      "path": "runtime-run-1Rb8Qc/events.jsonl",
+      "sha256": "45ac0246fe5891a5d1de346620fb311154fdbedceca369d4c6878aca90f1eca0"
+    },
+    {
+      "path": "runtime-run-1Rb8Qc/request.json",
+      "sha256": "8281e38e9a784ec6480341b4256a8386e1002fcc2be211a51ced63bcac9e5390"
+    },
+    {
+      "path": "runtime-run-1Rb8Qc/result.json",
+      "sha256": "b59a860b115e8631d4f2945e3c6b88680eb54503e4844a0c7326930507de950a"
+    },
+    {
+      "path": "runtime-run-1Rb8Qc/stderr.log",
+      "sha256": "17c731eab05ae61615c7ce0fb6a4b9aa9dde25c90bd8ce2e7f9acda112846b66"
+    },
+    {
+      "path": "loom-native-write-probe/probe.md",
+      "sha256": "554c325cfa65a496699f7bb64bd0f602ec3525c85c85619a2a9e50052ed920ce"
+    },
+    {
+      "path": "loom-native-write-probe/stderr.log",
+      "sha256": "cf117a663619f2c937dfed51d5707df2abf8562345b9d1b8676a189ec62bcb72"
+    },
+    {
+      "path": "loom-native-write-probe/events.jsonl",
+      "sha256": "bb3de7dbfb08928376f7a6b7d9c3f15095b9fff5b5e9c37ad38642d4013dce9b"
+    },
+    {
+      "path": "loom-native-write-probe/AGENTS.md",
+      "sha256": "6370edf2dca6d48cd25a36d2bf964f62570cee8b9e7409c8c5217a51a2eda886"
+    },
+    {
+      "path": "loom-native-write-probe/canary.txt",
+      "sha256": "622e823bcfccaeb66dcb224f756e78ee41d2efa0adcad7d47d79710a41029db0"
+    },
+    {
+      "path": "runtime-run-59kU6g/events.jsonl",
+      "sha256": "502691e038b5811ed8d4542445545b2460ede7ba652e568f38acd175c84ba103"
+    },
+    {
+      "path": "runtime-run-59kU6g/request.json",
+      "sha256": "8281e38e9a784ec6480341b4256a8386e1002fcc2be211a51ced63bcac9e5390"
+    },
+    {
+      "path": "runtime-run-59kU6g/result.json",
+      "sha256": "14610f1fa47a916f147ae3019ed1ea48fba4e2b3ec949d5d0a98e040b802b6b1"
+    },
+    {
+      "path": "runtime-run-59kU6g/stderr.log",
+      "sha256": "99850c72aa99cbc18ad49d1973c07e0a45ac085bcd4e9a30bccd5a1d0ad0480f"
+    },
+    {
+      "path": "runtime-run-bs5x5Y/request.json",
+      "sha256": "8281e38e9a784ec6480341b4256a8386e1002fcc2be211a51ced63bcac9e5390"
+    },
+    {
+      "path": "runtime-run-bs5x5Y/stderr.log",
+      "sha256": "8e64e088ca9d81ae73dbed96cb2d0818e0a016d5680001592a8803f0506b592c"
+    },
+    {
+      "path": "runtime-run-bs5x5Y/events.jsonl",
+      "sha256": "ac423ebce486f250a49d6c73aa55b6ce8c192c2099b835ce263f8b9d8b915bd1"
+    },
+    {
+      "path": "runtime-run-tLwFMg/request.json",
+      "sha256": "8281e38e9a784ec6480341b4256a8386e1002fcc2be211a51ced63bcac9e5390"
+    },
+    {
+      "path": "runtime-run-tLwFMg/stderr.log",
+      "sha256": "6946a585c949018b96385c1882ec01d38e91b80823a4b3d9e5e110b26b96a6d3"
+    },
+    {
+      "path": "runtime-run-tLwFMg/result.json",
+      "sha256": "a8595809f3ee85b043cbabd9cbd0d345b2f52e147ceecff9ae62281a410aca95"
+    },
+    {
+      "path": "runtime-run-tLwFMg/events.jsonl",
+      "sha256": "d880ff6bbe9a1b5c7aa81f60d8583fd9df4e6f14edb3e316bcc51f80104e7a3f"
+    },
+    {
+      "path": "runtime-run-SJagGX/request.json",
+      "sha256": "8281e38e9a784ec6480341b4256a8386e1002fcc2be211a51ced63bcac9e5390"
+    },
+    {
+      "path": "runtime-run-SJagGX/stderr.log",
+      "sha256": "a1fdfbdb9e103226c0643370a07eda5d0faea9c9248fdc51b98ad112c7e15d91"
+    },
+    {
+      "path": "runtime-run-SJagGX/result.json",
+      "sha256": "9142a0645d826fbff026e88f2c91bf633f88b0b47e913c4df345a71de5b7c44d"
+    },
+    {
+      "path": "runtime-run-SJagGX/events.jsonl",
+      "sha256": "b3cba2558496d44ee1e54aca99460d4cb3fd2957cafb847dca697482c042c304"
+    },
+    {
+      "path": "loom-native-nested-probe/team/stderr.log",
+      "sha256": "f1ebe5f90ddad667ad11b9a2b98dfd475db3a5761d6d980a8369ba411df24ee6"
+    },
+    {
+      "path": "loom-native-nested-probe/team/events.jsonl",
+      "sha256": "a85cfcf9e9d270824d655e672bbb8ed2a3edf286f8cc902fcf7d4a7d0217274b"
+    },
+    {
+      "path": "loom-native-nested-probe/team/task.md",
+      "sha256": "ecdf0fb9a48c7b0d14d07d176c17dfee0eb841bfc2175b13300ea227d47d72cb"
+    },
+    {
+      "path": "loom-native-nested-probe/team/AGENTS.md",
+      "sha256": "949c65301340e2c2a0f2b2faf80ee5895e6cab92a8395b3c06016cffc5b3f48c"
+    },
+    {
+      "path": "loom-native-nested-probe/team/sample.txt",
+      "sha256": "5fd63c737d7740b8bc9734c6ba02d89fa7d77ac1a3d043d053800a1912bedbe5"
+    },
+    {
+      "path": "loom-global-instruction-observation.json",
+      "sha256": "5cbac374b86baee79dbabbe1ff255b5ed1aea821300a9a15ff3180333712d4e9"
+    },
+    {
+      "path": "loom-native-write-probe/denial-tool-excerpt.json",
+      "sha256": "8de2a4186f2710338e0f36ed04bc4be33f1716850fadc1590350a5e7e603998d"
+    }
+  ],
+  "artifact_location_note": "Paths identify temporary local artifacts, not repository files or downloadable hosted evidence. Original absolute indexes remain on the qualification host."
+}

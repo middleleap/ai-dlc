@@ -51,8 +51,8 @@ institution-intake ──► source-register skeleton + gap register + intake re
 
 ## 0. Start from the questionnaire, interview only the gaps
 
-Most of the intake does not need you in the room. `intake/questionnaire.html` (installed at the
-full tier; in the bundle, `loom-adopt/harness/intake/`) is the same nine blocks as a form each
+Most of the intake does not need you in the room. `intake/questionnaire.html` (installed at every
+tier; in the bundle, `loom-adopt/harness/intake/`) is the same nine blocks as a form each
 role opens **locally in a browser** and answers on their own time. Every question carries the
 second field — *where is this written down?* — so the form computes the disposition the way you
 would: an answer with a reference is SOURCED, without one CLAIMED, blank is UNKNOWN. A pre-fill
@@ -60,12 +60,13 @@ pack (`intake/prefill/<pack>.json`, e.g. `uae-bank`) suggests answers from the b
 the form says beside every suggestion that confirming it does **not** make it sourced. Answers
 save in the respondent's browser and export as `intake-record.json`.
 
-1. Send each role the file and the block letter that is theirs. Roles, never names, in the
-   "answering as" field.
+1. Send each role the file and ask them to start a separate intake using the institution's agreed name, then select their role. The page shows their block; facilitators can show all roles. The start page also offers an isolated synthetic example and first-team setup guidance.
+   Resume a named saved session from the start page. Browser drafts retain role and navigation; they are not shared across devices. Export backups. Legacy browser answers require explicit recovery; an unanswered attribution must be corrected, not guessed.
+   Follow `loom-adopt/harness/intake/handoff.md` for the JSON/interview contract. A reference is supplied, retrieval is not checked here, and approval is not assessed here. Establish those in the existing source register and accountable review process.
 2. Collect the exports. Place the merged record at `institution/intake/intake-record.json`
-   (the form's **Import** button merges a second person's export into the first).
+   (the form's **Import** button previews additions and conflicts before applying them). Blank incoming entries never erase completed answers. Resolve each conflicting answer explicitly, or cancel without changing the current answers. A record from another institution or question bank must be reconciled separately; it is never silently combined.
 3. `node scripts/intake-check.mjs` — shape only: the schema id, `authority: none`, dispositions
-   that agree with their content, roles not names, and whether the record answers the current
+   that agree with their content, roles on answered questions, and whether the record answers the current
    question bank. **It judges nothing about the institution.**
 4. Read the record. Every CLAIMED and UNKNOWN answer is your interview agenda; every SOURCED
    answer is a source-register entry waiting for a human to confirm `approved_by`. Interview only
@@ -220,9 +221,13 @@ gap register.
 ## What this skill is not
 
 - **Not the BrainKit.** It produces inputs. `brainkit-init` drafts; owners approve; `brainkit-check`
-  enforces. Nothing this skill writes is read by any gate.
+  enforces. The JSON intake record is checked for shape by `intake-check`; this does not validate policy or institutional readiness.
 - **Not a maturity assessment.** It does not score the institution. An institution with forty
   gaps and honest owners is in better shape than one with none and a confident interviewee.
 - **Not a substitute for the documents.** If the interview surfaces that the brand guideline is
   a 2019 PDF nobody can find, the output is a gap that says so, and the first task is to find or
   re-approve it — not to transcribe the interviewee's memory of it into `identity/design.md`.
+
+## Upgrading questionnaire records
+
+Use the current generated questionnaire and re-import original role exports if earlier merging lost answers. Missing attribution must be corrected in **Answered by** before export; the current selected role never fills ownership of old answers retroactively. Summary totals are derived from answers. The JSON record is the questionnaire consolidation input; the Markdown record supplements it with gap-interview notes and never silently replaces it. Local save failures are shown; export a backup before leaving a browser that cannot persist.

@@ -30,7 +30,7 @@ import process from 'node:process';
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // An adopted repo carries the workflow at the GitHub path; the bundle carries the reference copy.
-export const CI_LOCATIONS = ['.github/workflows/ci.yml', resolve(HARNESS, 'ci/ci.yml')];
+export const CI_LOCATIONS = ['.github/workflows/loom.yml', '.github/workflows/ci.yml', resolve(HARNESS, 'ci/ci.yml')];
 export const CATALOG_LOCATIONS = [
   'docs/governance/control-catalog.json',
   'control-catalog.json',

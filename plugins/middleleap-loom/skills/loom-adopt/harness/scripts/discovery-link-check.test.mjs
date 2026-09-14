@@ -237,7 +237,7 @@ test('a genuinely empty backlog passes, and says it examined nothing', () => {
   assert.match(notices[0], /no items yet/);
 });
 
-test('an unedited ADOPT marker matching nothing FAILS — the gate would gate nothing', () => {
+test('an unconfigured feature pattern matching nothing FAILS — the gate would gate nothing', () => {
   // Every brownfield repo has ids like FEAT-102 or PAY-88; the shipped STORY-<n> default matches
   // none of them, so the gate reads the whole backlog and waist-gates zero items.
   const { findings, stats } = coverage('- id: FEAT-102\n  status: pending\n- id: PAY-88\n  status: pending');
@@ -246,7 +246,7 @@ test('an unedited ADOPT marker matching nothing FAILS — the gate would gate no
   assert.equal(stats.unedited, true);
   assert.equal(findings.length, 1);
   assert.match(findings[0], /still this bundle's shipped default/);
-  assert.match(findings[0], /ADOPT/);
+  assert.match(findings[0], /feature_pattern in \.loom\/project\.json/);
 });
 
 test('a CUSTOMISED marker matching nothing today only REPORTS', () => {

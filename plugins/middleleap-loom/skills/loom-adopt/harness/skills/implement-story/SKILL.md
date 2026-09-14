@@ -45,7 +45,7 @@ exactly.
 5. **Implement to green.** Code against interfaces, never concrete adapters. Synthetic data
    only — no PII in fixtures, test names, or logs.
 6. **Definition of Done — verify with evidence before claiming done:**
-   - full suite green; coverage at or above the project floor on changed packages
+   - run `node scripts/loom.mjs verify-project` using the command arrays in `.loom/project.json`; full suite green; coverage at or above the project floor on changed packages
    - integration tests against real local stores (the enforcement you claim is actually exercised)
    - lineage/audit emission in the same change — never retrofit
    - grep the diff for PII-shaped literals and any egress bypassing the sanctioned path

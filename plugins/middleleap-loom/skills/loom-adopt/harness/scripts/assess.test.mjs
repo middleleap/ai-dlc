@@ -203,4 +203,25 @@ test('a directory that does not exist exits non-zero rather than assessing nothi
   try { assert.equal(main(['--dest', join(tmpdir(), 'definitely-not-here-9f2a')]), 2); }
   finally { process.stderr.write = err; }
 });
+
+test('footprint counts actual files and preserved leaves, including pending templates', async () => {
+  const { install } = await import(join(HARNESS, 'adopt.mjs'));
+  const dir = repo();
+  try {
+    const before = costOfTier(dir, 'core');
+    const report = install(dir, { tier: 'core' });
+    assert.equal(before.lands, Object.keys(report.stamp.files).length);
+    assert.ok(before.pendingTemplates > 0);
+    assert.ok(before.lands > before.entries);
+    const unchanged = costOfTier(dir, 'core');
+    assert.equal(unchanged.lands, 0);
+    assert.equal(unchanged.current, before.lands);
+    writeFileSync(join(dir, 'scripts/discovery-link-check.mjs'), '// local project change');
+    const edited = costOfTier(dir, 'core');
+    assert.deepEqual(edited.collisions, ['scripts/discovery-link-check.mjs']);
+    assert.equal(edited.lands, 0);
+    assert.equal(edited.current, before.lands - 1);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 }

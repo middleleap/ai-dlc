@@ -16,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const INTAKE = resolve(dirname(fileURLToPath(import.meta.url)));
 export const MARKER = '/*LOOM:INTAKE-DATA*/';
+export const LOGIC_MARKER = '/*LOOM:INTAKE-LOGIC*/';
 
 export const questionsDigest = (bankText) => 'sha256:' + createHash('sha256').update(bankText).digest('hex');
 
@@ -41,7 +42,12 @@ export function dataBlock(sources) {
 export function render(intakeDir = INTAKE) {
   const tpl = readFileSync(join(intakeDir, 'questionnaire.template.html'), 'utf8');
   if (!tpl.includes(MARKER)) throw new Error(`questionnaire.template.html has no ${MARKER} marker`);
-  return tpl.replace(MARKER, dataBlock(loadSources(intakeDir)));
+  if (!tpl.includes(LOGIC_MARKER)) throw new Error('questionnaire template has no logic marker');
+  const logic = readFileSync(join(intakeDir, 'record.mjs'), 'utf8').replace(/^export /gm, '').replace(/<\/script/gi, '<\\/script');
+  if (!tpl.includes('/*LOOM:SESSION-LOGIC*/')) throw new Error('questionnaire template has no session logic marker');
+  const session = readFileSync(join(intakeDir, 'session.mjs'), 'utf8').replace(/^export /gm, '').replace(/<\/script/gi, '<\\/script');
+  return tpl.replace('/*LOOM:SESSION-LOGIC*/', () => `const Sessions = (() => {\n${session}\nreturn { PREFIX, visibleBlocks, createSession, validateSession, saveSession, listSessions, recoverLegacy, sourceState };\n})();`).replace(MARKER, () => dataBlock(loadSources(intakeDir)))
+    .replace(LOGIC_MARKER, () => `const Intake = (() => {\n${logic}\nreturn { validateRecord, updateAnswer, exportRecord, previewImport, applyImport };\n})();`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

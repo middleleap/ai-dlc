@@ -62,7 +62,7 @@
           },
           "reference": {
             "type": "string",
-            "description": "Where it is written down. Present and non-empty ⇒ SOURCED."
+            "description": "Where it is written down. Present and non-empty \u21d2 SOURCED."
           },
           "respondent_role": {
             "type": "string",
@@ -82,7 +82,33 @@
               "UNKNOWN"
             ]
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "answer"
+              ],
+              "properties": {
+                "answer": {
+                  "type": "string",
+                  "pattern": "\\S"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "respondent_role"
+              ],
+              "properties": {
+                "respondent_role": {
+                  "type": "string",
+                  "pattern": "\\S"
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "summary": {

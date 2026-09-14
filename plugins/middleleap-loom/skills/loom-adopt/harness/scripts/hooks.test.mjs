@@ -140,6 +140,10 @@ test('test-tripwire: the evasions of the plain it.skip regex are caught', { skip
       'xtest / fit': 'xtest("x", () => {})\nfit("y", () => {})',
       'options object': "test('x', { skip: true }, () => {})",
       'block-commented expect': '/* temporarily\n   expect(total).toBe(3);\n*/',
+      'block-commented AVA t.is': '/* flaky\nt.is(total, 3);\n*/',
+      'block-commented should': '/* later\nshould.equal(x, 1);\n*/',
+      'block-commented nested member': '/* later\nassert.strict.equal(a, b);\n*/',
+      'line-commented nested member': '// assert.strict.equal(a, b);',
       'hash-commented assert': '# assert result == 3',
       'tautology': 'expect(true).toBe(true);',
       'tautology assert.ok': 'assert.ok(true);',
@@ -149,6 +153,17 @@ test('test-tripwire: the evasions of the plain it.skip regex are caught', { skip
     for (const [name, new_string] of Object.entries(cases)) {
       assert.ok(denied(run('test-tripwire.sh', { file_path: 'tests/x.test.ts', new_string }, repo)), `not denied: ${name}`);
     }
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('test-tripwire: multiline comments are portable and do not consume subsequent live assertions', { skip: SKIP }, () => {
+  const repo = repoOn('feature/STORY-9-x');
+  try {
+    for (const new_string of ['/* disabled\nexpect(total).toBe(3);\n*/', '/** disabled\n * assert.equal(total, 3);\n */', '/* first */\n/* disabled\nassert(total);\n*/']) {
+      assert.ok(denied(run('test-tripwire.sh', {file_path:'src/x.test.ts',new_string},repo)));
+    }
+    const new_string='/* setup explanation */\nexpect(total).toBe(3);\n/* cleanup explanation */\nassert.equal(total, 3);';
+    assert.ok(!denied(run('test-tripwire.sh', {file_path:'src/x.test.ts',new_string},repo)));
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
 

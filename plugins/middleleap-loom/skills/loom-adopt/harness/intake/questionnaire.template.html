@@ -55,7 +55,7 @@ p{margin:0}
 .eyebrow{font:500 12px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--ember)}
 .eyebrow::before{content:'// '}
 .muted{color:var(--muted)}
-code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1px 5px;border:1px solid var(--line)}
+code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1px 5px;border:1px solid var(--line);overflow-wrap:anywhere}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:36px}
 .mark{display:inline-flex;align-items:center;gap:4px}
 .mark .sq{width:14px;height:14px;background:var(--ink);border-radius:16%}
@@ -86,6 +86,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ember);b
 /* layout */
 .main{display:grid;grid-template-columns:260px minmax(0,1fr);gap:32px;align-items:start}
 @media (max-width:860px){.main{grid-template-columns:1fr}}
+[hidden]{display:none!important}
 nav.blocks{position:sticky;top:16px;display:grid;gap:2px}
 nav.blocks button{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;text-align:left;background:transparent;border:1px solid transparent;padding:10px 12px;cursor:pointer;color:var(--ink);font:400 14px/1.3 var(--sans);border-radius:0}
 nav.blocks button .k{font:500 12px/1 var(--mono);color:var(--ember)}
@@ -125,6 +126,7 @@ nav.blocks button:focus-visible{outline:2px solid var(--ember);outline-offset:-2
 .notice{font-size:13.5px;color:var(--muted);max-width:70ch}
 .toast{font:500 12px/1 var(--mono);color:var(--pos)}
 footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--faint);display:flex;flex-wrap:wrap;gap:8px 24px}
+@media(max-width:600px){.q .top{grid-template-columns:auto 1fr}.q .top .badge{grid-column:2;justify-self:start;white-space:normal}.brand .right{max-width:48%;line-height:1.4}.tally .r{gap:12px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -136,29 +138,46 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-si
     <span class="right">THE LOOM · INSTITUTIONAL INTAKE · authority: none</span>
   </header>
 
+  <section id="start" class="card" aria-labelledby="start-title">
+    <span class="eyebrow">Start with the Loom</span><h1 id="start-title">Choose your next step</h1>
+    <p>Explore an example, prepare institutional context, or set up your first team repository.</p>
+    <div class="row"><button class="btn" id="example-start" type="button">Try a synthetic example</button><button class="btn" id="team-start" type="button">Set up a team repository</button></div>
+    <label class="f" for="new-institution">Prepare an institution<input id="new-institution" type="text" placeholder="Institution name"></label>
+    <button class="btn primary" id="institution-start" type="button">Start a separate intake</button>
+    <label class="f" for="saved-session">Resume a saved intake<select id="saved-session"></select></label>
+    <div class="row"><button class="btn" id="resume" type="button">Resume selected intake</button><button class="btn" id="legacy" type="button">Recover previous questionnaire answers</button></div>
+    <p id="start-error" role="alert"></p>
+    <div id="team-guide" hidden><h2>Prepare your first team</h2><ol><li>Gather the institution's approved sources with <code>/middleleap-loom:institution-intake</code>. Use <code>brainkit-init</code> to draft missing context for review.</li><li>Open the team's repository in Claude Code and run <code>/middleleap-loom:loom-adopt</code>. Review prerequisites and the proposed installation before applying it.</li><li>Run <code>node scripts/loom.mjs configure</code> for setup tasks and owners, then <code>node scripts/loom.mjs gates</code> for repository checks.</li></ol><p>Installation and passing checks do not establish institutional approval or platform activation. Follow the adoption guide for the applicable evidence and human decisions.</p></div>
+  </section>
+  <div id="workspace" hidden>
+  <div class="row"><button class="btn" id="switch-session" type="button">Save and return to start</button><button class="btn" id="leave-unsaved" type="button" hidden>Return without saving</button><span id="session-label" role="status"></span></div>
   <section class="setup">
     <div class="txt">
       <span class="eyebrow">Before the first problem</span>
       <h1>Tell the Loom how your institution works, <em>and where that is written.</em></h1>
       <p class="lede">Nine blocks, one per accountable role. Answer only your block. Every question asks two things: what is true here, and which document says so. That second field decides what happens to your answer.</p>
       <ul class="rules">
-        <li><b class="d-S">Sourced</b>: you named a document, register or signed decision. Only these reach a BrainKit section.</li>
+        <li><b class="d-S">Reference supplied (SOURCED in JSON)</b>: you named a document, register or signed decision. A reference is supplied; the source still needs retrieval and accountable review before use.</li>
         <li><b class="d-C">Claimed</b>: you answered from experience. It goes to the gap register with your role as owner, to be written down.</li>
         <li><b class="d-U">Unknown</b>: left blank. It goes to the gap register for escalation.</li>
-        <li>Roles, never names. Nothing you type here is approved by typing it. Your answers are saved in this browser and exported as a file the facilitator imports.</li>
+        <li>Roles, never names. Nothing you type here is approved by typing it. Save status is shown below. Export a backup before leaving or switching devices; browser storage is not shared.</li>
       </ul>
     </div>
     <div class="card">
-      <label class="f" for="inst">Institution <small>The name as it should appear in the record.</small><input type="text" id="inst" placeholder="e.g. Meridian Trust" autocomplete="organization"></label>
+      <label class="f" for="inst">Institution <small>Fixed for this intake. Start a separate intake for another institution.</small><input type="text" id="inst" readonly placeholder="e.g. Meridian Trust" autocomplete="organization"></label>
       <label class="f" for="pack">Pre-fill pack <small>Suggestions from a bundled jurisdiction profile. A suggestion you confirm is still <b>claimed</b> until you name the document.</small><select id="pack"></select></label>
       <label class="f" for="role">I am answering as <small>Your role. Never your name.</small><select id="role"></select></label>
+      <label><input type="checkbox" id="all-blocks"> Show all roles (facilitator view)</label>
       <div class="row">
-        <label class="btn" for="importf">Import a saved record</label>
+        <button class="btn" type="button" id="import-button">Import a saved record</button>
         <input type="file" id="importf" accept="application/json" hidden>
-        <button class="btn" id="clear" type="button">Clear this browser's answers</button>
+        <button class="btn" id="clear" type="button">Clear answers in this intake</button>
       </div>
     </div>
   </section>
+
+  <p id="save-status" role="status" aria-live="polite"></p>
+  <section id="import-review" class="card" hidden aria-label="Review imported answers"></section>
 
   <div class="main">
     <nav class="blocks" id="nav" aria-label="Blocks"></nav>
@@ -167,17 +186,19 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-si
       <section class="export" id="export">
         <span class="eyebrow">Export</span>
         <h2>Hand the record to the facilitator</h2>
-        <p class="notice">The record is a JSON file, <code>intake-record.json</code>, saved to <code>institution/intake/</code> in the repository. The <code>institution-intake</code> skill imports it and interviews only the gaps; <code>brainkit-init</code> drafts from the sourced answers. It carries <code>authority: none</code> on purpose.</p>
+        <p class="notice">Download the record and send it through your approved institutional channel. The facilitator reviews imports before combining answers. The record is a JSON file, <code>intake-record.json</code>, saved to <code>institution/intake/</code> in the repository. The <code>institution-intake</code> skill imports it and interviews only the gaps; <code>brainkit-init</code> drafts from the sourced answers. It carries <code>authority: none</code> on purpose.</p>
         <div class="row">
           <button class="btn primary" id="download" type="button">Download intake-record.json</button>
           <button class="btn" id="copy" type="button">Copy JSON</button>
           <span class="toast" id="toast" aria-live="polite"></span>
         </div>
+        <p id="export-error" role="alert"></p>
         <textarea id="out" readonly aria-label="Intake record JSON"></textarea>
       </section>
     </div>
   </div>
 
+  </div>
   <footer>
     <span>The Loom · MiddleLeap AI DLC · generated from <code>intake/questions.json</code> — edit the bank, rebuild with <code>node intake/build-questionnaire.mjs</code></span>
     <span>Questions digest <code id="qd"></code></span>
@@ -188,15 +209,41 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-si
 /*LOOM:INTAKE-DATA*/
 </script>
 <script>
+/*LOOM:INTAKE-LOGIC*/
+/*LOOM:SESSION-LOGIC*/
 (function(){
   var DATA = JSON.parse(document.getElementById('intake-data').textContent);
   var BANK = DATA.questions, PACKS = DATA.prefill, DIGEST = DATA.questions_digest;
-  var KEY = 'loom.intake.v1';
-  var state = load() || { institution:'', pack:'', role:'', answers:{} };
-  var current = BANK.blocks[0].id;
-
-  function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch(e){ return null; } }
-  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} render(); }
+  var session = null, state = {institution:'',pack:'',role:'',answers:{}}, current = BANK.blocks[0].id;
+  var pendingImport = null, savedSessions = [], unsaved = false;
+  var storage = {getItem:function(k){return localStorage.getItem(k);},setItem:function(k,v){localStorage.setItem(k,v);},key:function(i){return localStorage.key(i);},get length(){return localStorage.length;}};
+  function newId(){return crypto.randomUUID ? crypto.randomUUID() : 'session-'+Date.now()+'-'+Math.random().toString(36).slice(2);}
+  function persist(){
+    if(!session)return false;
+    try {
+      session=Sessions.saveSession(storage,Object.assign({},session,{state:state,current:current,all:document.getElementById('all-blocks').checked}),BANK,DIGEST);
+      document.getElementById('save-status').textContent=session.route==='example'?'Synthetic example only. Not saved as an institutional intake.':'Saved in this browser. Export a copy to keep a backup.';
+      unsaved=false;document.getElementById('leave-unsaved').hidden=true;return true;
+    }catch(e){unsaved=true;document.getElementById('leave-unsaved').hidden=false;document.getElementById('save-status').textContent='Could not save: '+e.message+' Keep this page open and copy or download your record before leaving.';return false;}
+  }
+  function save(){persist();render();}
+  window.addEventListener('beforeunload',function(e){if(unsaved){e.preventDefault();e.returnValue='';}});
+  function startScreen(){
+    var report=Sessions.listSessions(storage,BANK,DIGEST);savedSessions=report.sessions;
+    document.getElementById('saved-session').innerHTML='<option value="">Choose a saved intake</option>'+savedSessions.map(function(v){return '<option value="'+esc(v.id)+'">'+esc(v.state.institution)+' · '+esc(v.state.role||'role not selected')+' · '+esc(v.id.slice(-8))+'</option>';}).join('');
+    document.getElementById('start-error').textContent=report.errors.join(' ');
+    document.getElementById('start').hidden=false;document.getElementById('workspace').hidden=true;
+  }
+  function enter(next){
+    session=next;state=next.state;current=next.current;pendingImport=null;
+    inst.value=state.institution;pack.value=state.pack;role.value=state.role;
+    document.getElementById('all-blocks').checked=next.all;
+    document.getElementById('import-review').hidden=true;
+    document.getElementById('session-label').textContent=(next.route==='example'?'SYNTHETIC EXAMPLE · ':'')+state.institution;
+    document.getElementById('start').hidden=true;document.getElementById('workspace').hidden=false;
+    persist();render();role.focus();
+  }
+  function startAction(fn){try{fn();}catch(e){document.getElementById('start-error').textContent=e.message;}}
   function disp(a){ if(!a || !(a.answer||'').trim()) return 'UNKNOWN'; return (a.reference||'').trim() ? 'SOURCED' : 'CLAIMED'; }
   function letter(d){ return d[0]; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -206,18 +253,62 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-si
   pack.innerHTML = '<option value="">No pre-fill</option>' + PACKS.map(function(p){return '<option value="'+esc(p.pack)+'">'+esc(p.title)+'</option>';}).join('');
   role.innerHTML = '<option value="">Choose a role</option>' + BANK.blocks.map(function(b){return '<option value="'+esc(b.role)+'">'+esc(b.role)+'</option>';}).join('') + '<option value="the facilitator">the facilitator</option>';
   inst.value=state.institution; pack.value=state.pack||''; role.value=state.role||'';
-  inst.addEventListener('input',function(){state.institution=inst.value;save();});
+  document.getElementById('institution-start').addEventListener('click',function(){startAction(function(){enter(Sessions.createSession(document.getElementById('new-institution').value,'institution',BANK,newId()));});});
+  document.getElementById('example-start').addEventListener('click',function(){enter(Sessions.createSession('Example','example',BANK,newId()));});
+  document.getElementById('team-start').addEventListener('click',function(){document.getElementById('team-guide').hidden=false;});
+  document.getElementById('resume').addEventListener('click',function(){startAction(function(){
+    var id=document.getElementById('saved-session').value;if(!id)throw new Error('Choose a saved intake.');
+    var raw=storage.getItem(Sessions.PREFIX+id);if(!raw)throw new Error('This intake is no longer stored in this browser.');
+    enter(Sessions.validateSession(JSON.parse(raw),BANK,DIGEST));
+  });});
+  document.getElementById('legacy').addEventListener('click',function(){startAction(function(){
+    var raw=storage.getItem('loom.intake.v1');if(!raw)throw new Error('No previous questionnaire answers were found in this browser.');
+    enter(Sessions.recoverLegacy(raw,BANK,newId(),document.getElementById('new-institution').value));
+  });});
+  document.getElementById('switch-session').addEventListener('click',function(){if(persist())startScreen();});
+  document.getElementById('leave-unsaved').addEventListener('click',function(){if(confirm('Leave without saving these changes? Copy or download your record first. The last successful browser save will be retained.')){unsaved=false;startScreen();}});
+  document.getElementById('all-blocks').addEventListener('change',function(){render();persist();});
+  document.getElementById('import-button').addEventListener('click',function(){document.getElementById('importf').click();});
   pack.addEventListener('change',function(){state.pack=pack.value;save();});
-  role.addEventListener('change',function(){state.role=role.value;save();});
-  document.getElementById('clear').addEventListener('click',function(){ if(confirm('Clear every answer saved in this browser?')){ state={institution:'',pack:'',role:'',answers:{}}; inst.value='';pack.value='';role.value=''; save(); } });
+  role.addEventListener('change',function(){state.role=role.value;render();persist();});
+  document.getElementById('clear').addEventListener('click',function(){if(confirm('Clear the answers for '+state.institution+'? Other intakes and exported files are unchanged.')){state=Object.assign({},state,{answers:{}});save();}});
   document.getElementById('importf').addEventListener('change',function(e){
     var f=e.target.files[0]; if(!f) return; var r=new FileReader();
-    r.onload=function(){ try{ var rec=JSON.parse(r.result); if(rec.schema!=='loom.intake-record/v1') throw new Error('not an intake record');
-      state.institution=rec.institution||state.institution; state.pack=rec.prefill_pack||state.pack; inst.value=state.institution; pack.value=state.pack||'';
-      (rec.answers||[]).forEach(function(a){ state.answers[a.id]={answer:a.answer||'',reference:a.reference||'',role:a.respondent_role||'',prefilled_from:a.prefilled_from||null}; });
-      save(); toast('Imported '+(rec.answers||[]).length+' answers'); } catch(err){ toast('Could not import: '+err.message); } };
+    r.onload=function(){
+      try {
+        var rec=JSON.parse(r.result), preview=Intake.previewImport(state,rec,BANK,DIGEST);
+        if(preview.errors.length) throw new Error(preview.errors.join(' '));
+        pendingImport={record:rec,preview:preview,base:JSON.stringify(state)};
+        showImportReview();
+      } catch(err){ pendingImport=null; var panel=document.getElementById('import-review');panel.hidden=false;panel.innerHTML='<p role="alert">Could not import: '+esc(err.message)+'</p><p>Your answers have not changed.</p>'; }
+      e.target.value='';
+    };
+    r.onerror=function(){toast('Could not read this file. Your answers have not changed.');e.target.value='';};
     r.readAsText(f);
   });
+
+  function showImportReview(){
+    var panel=document.getElementById('import-review'), p=pendingImport.preview;
+    panel.hidden=false;
+    var html='<h2>Review imported answers</h2><p>'+p.additions.length+' new answers and '+p.conflicts.length+' conflicts. Blank entries will not erase your answers. Nothing is approved by importing.</p>';
+    p.notices.forEach(function(n){html+='<p>'+esc(n)+'</p>';});
+    p.conflicts.forEach(function(c){
+      function details(a){return '<p><b>Answer:</b> '+esc(a.answer)+'</p><p><b>Reference:</b> '+esc(a.reference)+'</p><p><b>Role:</b> '+esc(a.role)+'</p><p><b>Pre-fill:</b> '+esc(a.prefilled_from||'none')+'</p>';}
+      html+='<div class="q"><h3>'+esc(c.id)+'</h3><div class="fields"><div><b>Current</b>'+details(c.current)+'</div><div><b>Incoming</b>'+details(c.incoming)+'</div></div><label class="f">Which answer should be retained?<select data-conflict="'+esc(c.id)+'"><option value="">Choose an answer</option><option value="keep">Keep current answer</option><option value="incoming">Use incoming answer</option></select></label></div>';
+    });
+    html+='<div class="row"><button type="button" class="btn primary" id="apply-import">Apply import</button><button type="button" class="btn" id="cancel-import">Cancel</button></div><p id="import-error" role="alert"></p>';
+    panel.innerHTML=html;
+    document.getElementById('cancel-import').addEventListener('click',function(){pendingImport=null;panel.hidden=true;toast('Import cancelled. Your answers have not changed.');});
+    document.getElementById('apply-import').addEventListener('click',function(){
+      try {
+        if(pendingImport.base!==JSON.stringify(state)) throw new Error('Your answers changed during review. Cancel and import again to compare the current answers.');
+        var choices={};panel.querySelectorAll('[data-conflict]').forEach(function(el){choices[el.dataset.conflict]=el.value;});
+        state=Intake.applyImport(state,pendingImport.record,BANK,DIGEST,choices);
+        inst.value=state.institution;pack.value=state.pack||'';pendingImport=null;panel.hidden=true;save();toast('Import applied. Existing answers were preserved unless you chose a replacement.');
+      }catch(err){document.getElementById('import-error').textContent=err.message;}
+    });
+    document.getElementById('apply-import').focus();
+  }
 
   function packFor(){ return PACKS.filter(function(p){return p.pack===state.pack;})[0]; }
 
@@ -228,49 +319,57 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-si
   }
 
   function render(){
-    var T=tallies();
+    var T=tallies(), blocks=Sessions.visibleBlocks(BANK,state.role,document.getElementById('all-blocks').checked);
+    if(blocks.length&&!blocks.some(function(b){return b.id===current;}))current=blocks[0].id;
     // nav
     var nav=document.getElementById('nav');
-    nav.innerHTML = BANK.blocks.map(function(b){ var p=T.per[b.id]; var n=BANK.questions.filter(function(q){return q.block===b.id;}).length;
+    nav.innerHTML = blocks.map(function(b){ var p=T.per[b.id]; var n=BANK.questions.filter(function(q){return q.block===b.id;}).length;
       return '<button type="button" data-b="'+b.id+'" class="'+(b.id===current?'active':'')+'" aria-current="'+(b.id===current)+'"><span class="k">'+b.id+'</span><span>'+esc(b.title)+'</span><span class="n">'+(n-p.UNKNOWN)+'/'+n+'</span></button>'; }).join('')
-      + '<div class="tally"><div class="r"><span class="d-S">Sourced</span><b>'+T.total.SOURCED+'</b></div><div class="r"><span class="d-C">Claimed</span><b>'+T.total.CLAIMED+'</b></div><div class="r"><span class="d-U">Unknown</span><b>'+T.total.UNKNOWN+'</b></div></div>';
-    nav.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ current=b.dataset.b; render(); window.scrollTo({top:document.getElementById('block').offsetTop-16,behavior:'smooth'}); }); });
+      + '<div class="tally"><span>Whole intake</span><div class="r"><span class="d-S">References supplied</span><b>'+T.total.SOURCED+'</b></div><div class="r"><span class="d-C">Claimed</span><b>'+T.total.CLAIMED+'</b></div><div class="r"><span class="d-U">Unknown</span><b>'+T.total.UNKNOWN+'</b></div></div>';
+    nav.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ current=b.dataset.b; persist();render(); window.scrollTo({top:document.getElementById('block').offsetTop-16,behavior:'smooth'}); }); });
     // block
+    if(!blocks.length){document.getElementById('block').innerHTML='<h2>Choose your role to begin</h2><p>Your questions will appear here. A facilitator can show all roles.</p>';document.getElementById('out').value=JSON.stringify(record(),null,2);return;}
     var b=BANK.blocks.filter(function(x){return x.id===current;})[0]; var P=packFor();
-    var html='<div class="block-h"><span class="eyebrow">Block '+b.id+'</span><h2>'+esc(b.title)+'</h2><div class="meta"><span>ANSWERED BY · '+esc(b.role)+'</span><span>SOURCED ANSWERS LAND IN · '+esc(b.home)+'</span></div></div><div class="qs">';
+    var html='<div class="block-h"><span class="eyebrow">Block '+b.id+'</span><h2>'+esc(b.title)+'</h2><div class="meta"><span>ANSWERED BY · '+esc(b.role)+'</span><span>CANDIDATE CONTEXT HOME · '+esc(b.home)+'</span></div></div><div class="qs">';
     BANK.questions.filter(function(q){return q.block===b.id;}).forEach(function(q){
       var a=state.answers[q.id]||{answer:'',reference:'',role:'',prefilled_from:null}; var d=disp(a);
       var sug = P && P.suggestions[q.id] && !(a.answer||'').trim() ? '<div class="sugg"><span class="l">Suggested by the '+esc(P.title)+' pack — confirm or override. Confirming does not make it sourced.</span><div class="row"><span>'+esc(P.suggestions[q.id])+'</span><button type="button" class="btn" data-use="'+q.id+'">Use this</button></div></div>' : '';
-      html += '<div class="q" id="q-'+q.id+'"><div class="top"><span class="id">'+q.id+'</span><div><div class="prompt">'+esc(q.prompt)+'</div>'+(q.hint?'<div class="hint">'+esc(q.hint)+'</div>':'')+'</div><span class="badge '+letter(d)+'">'+d+'</span></div>'+sug
-        +'<div class="fields"><label class="f full" for="a-'+q.id+'">Answer'+(q.type==='textarea'?'<textarea id="a-'+q.id+'" data-a="'+q.id+'">'+esc(a.answer)+'</textarea>':'<input type="text" id="a-'+q.id+'" data-a="'+q.id+'" value="'+esc(a.answer)+'">')+'</label>'
-        +'<label class="f" for="r-'+q.id+'">Where is this written down? <small class="ref-hint">A document, register or signed decision. Empty means <b>claimed</b>.</small><input type="text" id="r-'+q.id+'" data-r="'+q.id+'" value="'+esc(a.reference)+'" placeholder="e.g. Brand Guideline v4.2, intranet/brand"></label>'
-        +'<label class="f" for="o-'+q.id+'">Answered by <small>Defaults to the role above.</small><input type="text" id="o-'+q.id+'" data-o="'+q.id+'" value="'+esc(a.role||'')+'" placeholder="'+esc(state.role||b.role)+'"></label></div></div>';
+      html += '<div class="q" id="q-'+q.id+'" role="group" aria-labelledby="qid-'+q.id+' prompt-'+q.id+'"><div class="top"><span class="id" id="qid-'+q.id+'">'+q.id+'</span><div><div class="prompt" id="prompt-'+q.id+'">'+esc(q.prompt)+'</div>'+(q.hint?'<div class="hint">'+esc(q.hint)+'</div>':'')+'</div><span class="badge '+letter(d)+'">'+(d==='SOURCED'?'REFERENCE SUPPLIED':d)+'</span></div>'+sug
+        +'<div class="fields"><label class="f full" for="a-'+q.id+'">Answer'+(q.type==='textarea'?'<textarea id="a-'+q.id+'" aria-describedby="qid-'+q.id+' prompt-'+q.id+'" data-a="'+q.id+'">'+esc(a.answer)+'</textarea>':'<input type="text" id="a-'+q.id+'" aria-describedby="qid-'+q.id+' prompt-'+q.id+'" data-a="'+q.id+'" value="'+esc(a.answer)+'">')+'</label>'
+        +'<label class="f" for="r-'+q.id+'">Where is this written down? <small class="ref-hint">A document, register or signed decision. Empty means <b>claimed</b>.</small><input type="text" id="r-'+q.id+'" aria-describedby="qid-'+q.id+' prompt-'+q.id+'" data-r="'+q.id+'" value="'+esc(a.reference)+'" placeholder="e.g. Brand Guideline v4.2, intranet/brand"></label>'
+        +'<label class="f" for="o-'+q.id+'">Answered by <small>Recorded when you first enter this answer. Correct it here if missing.</small><input type="text" id="o-'+q.id+'" aria-describedby="qid-'+q.id+' prompt-'+q.id+'" data-o="'+q.id+'" value="'+esc(a.role||'')+'" placeholder="'+esc(state.role||b.role)+'"></label></div><p class="ref-hint">Source retrieval: '+esc(Sessions.sourceState(a).retrieval)+'. Source approval: '+esc(Sessions.sourceState(a).approval)+'. A reference is a candidate for review.</p></div>';
     });
     html+='</div>';
     var blk=document.getElementById('block'); blk.innerHTML=html;
-    blk.querySelectorAll('[data-a]').forEach(function(el){ el.addEventListener('input',function(){ upd(el.dataset.a,'answer',el.value); }); el.addEventListener('blur',render); });
-    blk.querySelectorAll('[data-r]').forEach(function(el){ el.addEventListener('input',function(){ upd(el.dataset.r,'reference',el.value); }); el.addEventListener('blur',render); });
+    blk.querySelectorAll('[data-a]').forEach(function(el){ el.addEventListener('input',function(){ upd(el.dataset.a,'answer',el.value); }); });
+    blk.querySelectorAll('[data-r]').forEach(function(el){ el.addEventListener('input',function(){ upd(el.dataset.r,'reference',el.value); }); });
     blk.querySelectorAll('[data-o]').forEach(function(el){ el.addEventListener('input',function(){ upd(el.dataset.o,'role',el.value); }); });
-    blk.querySelectorAll('[data-use]').forEach(function(btn){ btn.addEventListener('click',function(){ var id=btn.dataset.use; state.answers[id]=state.answers[id]||{}; state.answers[id].answer=P.suggestions[id]; state.answers[id].prefilled_from=P.pack; save(); document.getElementById('r-'+id).focus(); }); });
+    blk.querySelectorAll('[data-use]').forEach(function(btn){ btn.addEventListener('click',function(){ var id=btn.dataset.use; state=Intake.updateAnswer(state,id,'answer',P.suggestions[id]); state=Intake.updateAnswer(state,id,'prefilled_from',P.pack); save(); document.getElementById('r-'+id).focus(); }); });
     document.getElementById('out').value = JSON.stringify(record(), null, 2);
     document.getElementById('qd').textContent = DIGEST;
   }
-  function upd(id,k,v){ state.answers[id]=state.answers[id]||{answer:'',reference:'',role:'',prefilled_from:null}; state.answers[id][k]=v; try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
-
-  function record(){
+  function refreshProgress(){
     var T=tallies();
-    return { schema:'loom.intake-record/v1', authority:'none', institution: state.institution||'', generated_at: new Date().toISOString(), prefill_pack: state.pack||null, questions_digest: DIGEST,
-      answers: BANK.questions.map(function(q){ var a=state.answers[q.id]||{}; var d=disp(a); var o={id:q.id, block:q.block, disposition:d};
-        if((a.answer||'').trim()) o.answer=a.answer.trim(); if((a.reference||'').trim()) o.reference=a.reference.trim();
-        var r=(a.role||'').trim()||state.role||''; if(r) o.respondent_role=r; if(a.prefilled_from) o.prefilled_from=a.prefilled_from; return o; }),
-      summary: T.total };
+    BANK.blocks.forEach(function(b){var button=document.querySelector('[data-b="'+b.id+'"]');if(button)button.querySelector('.n').textContent=(BANK.questions.filter(function(q){return q.block===b.id;}).length-T.per[b.id].UNKNOWN)+'/'+BANK.questions.filter(function(q){return q.block===b.id;}).length;});
+    var totals=document.querySelectorAll('.tally b');['SOURCED','CLAIMED','UNKNOWN'].forEach(function(k,i){if(totals[i])totals[i].textContent=T.total[k];});
+    BANK.questions.filter(function(q){return q.block===current;}).forEach(function(q){var badge=document.querySelector('#q-'+q.id+' .badge');if(badge){var d=disp(state.answers[q.id]);badge.textContent=d==='SOURCED'?'REFERENCE SUPPLIED':d;badge.className='badge '+letter(d);}});
+  }
+  function upd(id,k,v){ state=Intake.updateAnswer(state,id,k,v); persist(); refreshProgress(); document.getElementById('out').value=JSON.stringify(record(),null,2); }
+
+  function record(){ return Intake.exportRecord(state,BANK,DIGEST); }
+  function validExport(){
+    var rec=record(), checked=Intake.validateRecord(rec,BANK,DIGEST);
+    var exportError=document.getElementById('export-error');
+    exportError.textContent=checked.findings.length?'Before exporting: '+checked.findings.join(' '):checked.notices.length?'Check before sending: '+checked.notices.join(' '):'';
+    if(checked.findings.length){exportError.scrollIntoView({block:'center'});return null;}
+    return JSON.stringify(rec,null,2);
   }
   function toast(m){ var t=document.getElementById('toast'); t.textContent=m; setTimeout(function(){ t.textContent=''; },3000); }
   document.getElementById('download').addEventListener('click',function(){
-    var blob=new Blob([JSON.stringify(record(),null,2)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='intake-record.json'; document.body.appendChild(a); a.click(); a.remove(); toast('Downloaded');
+    var json=validExport();if(!json)return;var blob=new Blob([json],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=session.route==='example'?'synthetic-example-intake.json':'intake-record.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000);toast('Download requested. Check your downloads before leaving.');
   });
-  document.getElementById('copy').addEventListener('click',function(){ var o=document.getElementById('out'); o.select(); try{ navigator.clipboard.writeText(o.value).then(function(){toast('Copied');}); }catch(e){ document.execCommand('copy'); toast('Copied'); } });
-  render();
+  document.getElementById('copy').addEventListener('click',function(){var json=validExport();if(!json)return;var o=document.getElementById('out');o.value=json;o.select();try{navigator.clipboard.writeText(json).then(function(){toast('Copied');},function(){toast('Clipboard unavailable. Copy the selected JSON manually.');});}catch(e){toast('Clipboard unavailable. Copy the selected JSON manually.');}});
+  startScreen();
 })();
 </script>
 </body>

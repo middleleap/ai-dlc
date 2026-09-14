@@ -1,0 +1,15 @@
+{
+  "schema": "loom.pilot-tasks/v1",
+  "roles": ["sponsor", "developer", "platform", "risk", "context"],
+  "tasks": [
+    {"id":"first-artifact","roles":["sponsor","context"],"cohorts":["first"],"prompt":"Explore the synthetic example and produce something you could hand to a colleague. Explain what it does and does not establish."},
+    {"id":"role-intake","roles":["context","risk"],"cohorts":["first"],"prompt":"Start the named fictional institution, find your questions, and record one answer with a reference and one without."},
+    {"id":"recover","roles":["context"],"cohorts":["first"],"prompt":"Leave and return to your saved intake. Show that your answers, role and progress are intact."},
+    {"id":"handoff","roles":["context"],"cohorts":["first"],"prompt":"Combine the two supplied role exports, resolve the conflicting version deliberately, and export the result."},
+    {"id":"team-setup","roles":["developer","platform"],"cohorts":["first","second"],"prompt":"Add the candidate to the supplied disposable team repository while retaining its workflow and settings. Identify the next unfinished setup action."},
+    {"id":"readiness","roles":["sponsor","platform","risk"],"cohorts":["first","second"],"prompt":"Explain whether this team can start, whether institutional content is approved, and whether the platform is activated. Identify the evidence or owner still needed."},
+    {"id":"context-reuse","roles":["developer","platform"],"cohorts":["second"],"prompt":"Mount the supplied fictional institutional release for the second team without re-entering its institutional answers. Explain what remains team-owned."}
+  ],
+  "targets": {"first_artifact_seconds_excluding_downloads":1200,"unassisted_completion_percent":80},
+  "scope": "Proposed usability targets; not institutional approval, observed results or statistical claims."
+}
