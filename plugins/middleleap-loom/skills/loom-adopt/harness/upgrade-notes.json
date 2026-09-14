@@ -609,6 +609,19 @@
         "If .claude/hooks/test-tripwire.sh was customized, review its .loom-new proposal and merge the portable multiline assertion check; the installer preserves your edits.",
         "Review previously tracked .loom/runtime-run-* captures separately; ignoring new captures does not remove already committed data."
       ]
+    },
+    {
+      "version": "2.4.3",
+      "headline": "The Kosli seam demo tells one bank's story, green, with an inspectable join",
+      "notes": [
+        "demo/run-demo.mjs stages the same fixture set as the CI dry-run, so the pr lane is green and the only failures on screen are the deliberate refusals; the per-run signing key now lives outside the adopted tree (the secrets gate was finding it). Every step is tagged with the evidence it produces: fixture, executed check, scripted repair, simulated/live provider, refusal.",
+        "demo/run-demo.mjs --scenario meridian traces one obligation end to end: demo/meridian/ registers a fictional Meridian Trust payment-status obligation (OB-AE-MTPOL-PSI-001), its data-risk register rows and a demo-scoped PAYMENT-STATUS control in the adopted tree; the team's first timeout contract is refused (a timeout reported as failed, an automatic retry), a scripted repair fixes it, the rerun passes, and the gate record posted to the provider carries the obligation id. Nothing is added to the shipped catalog template.",
+        "scripts/record-join.mjs <CHG> [--obligation OB-id] prints the one inspectable join the briefing asks for \u2014 mandate, obligation, control catalog digest, change, compiled route, commit, artifact, check result, producer (actor and runner), signature, approval, external record \u2014 with a per-row status: VERIFIED (re-checked here), DECLARED (read from a governed file), RESOLVED \u00b7 LIVE or \u00b7 SIMULATED (the provider answered; the fake is detected from its bytes, never from a flag), NOT CHECKED. --out renders it as a page under the mounted brand.",
+        "kosli-seam.md and core.md no longer say Kosli's custody starts at the first commit or reduce Kosli to a store: the seam is a proposed division of responsibilities in an adopter's operating model, and the Loom's contribution is what it adds upstream of the record."
+      ],
+      "action_required": [
+        "None for adopters. scripts/record-join.mjs is installed with the other scripts and reads only what the tree and the mounted provider already hold."
+      ]
     }
   ]
 }

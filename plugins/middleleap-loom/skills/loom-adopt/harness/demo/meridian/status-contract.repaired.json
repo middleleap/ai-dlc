@@ -1,0 +1,17 @@
+{
+  "_comment": "The REPAIRED payment-initiation timeout contract (demo/meridian): a timeout resolves to unknown, the reference is preserved, a status query precedes any retry, and the retry is idempotent on the original reference. Mounted as docs/governance/services/payment-initiation.status-contract.json. Passing scripts/payment-status-check.mjs proves the declaration and the recorded negative test agree with the obligation — not that a payment system behaves this way in production (PSI-R06).",
+  "schema": "loom.demo-status-contract/v1",
+  "service_id": "payment-initiation",
+  "obligation_ids": ["OB-AE-MTPOL-PSI-001"],
+  "timeout": {
+    "client_deadline_ms": 8000,
+    "outcome": "unknown",
+    "preserve_reference": true,
+    "status_query_before_retry": true,
+    "retry": "idempotent-on-original-reference-after-terminal-status"
+  },
+  "negative_test": {
+    "ref": "docs/governance/evidence/payment-status-tests.json",
+    "sha256": "ce7092f089ac186b5aaccc14be1c84d2579446989ead020d151c4814c7442093"
+  }
+}

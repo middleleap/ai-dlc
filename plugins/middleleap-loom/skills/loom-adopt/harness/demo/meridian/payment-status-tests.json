@@ -1,0 +1,12 @@
+{
+  "_comment": "SYNTHETIC negative-test evidence for the Kosli founder demo (demo/meridian). Recorded shape of a test run against a payment-initiation adapter with a stubbed platform: nothing here was run against Al Tareq, a participant bank or any production system. It exists so PSI-R05 checks a real file with a real digest, not prose.",
+  "schema": "loom.demo-test-evidence/v1",
+  "service_id": "payment-initiation",
+  "obligation_ids": ["OB-AE-MTPOL-PSI-001"],
+  "harness": "stubbed platform · synthetic accounts · no network",
+  "cases": [
+    { "id": "timeout-resolves-unknown", "given": "platform responds after the client deadline", "then": "customer-facing status is UNKNOWN, never FAILED", "result": "pass" },
+    { "id": "reference-preserved", "given": "the call timed out", "then": "the original payment reference is retained on the transaction record", "result": "pass" },
+    { "id": "retry-blocked-until-status-known", "given": "a retry is requested while status is UNKNOWN", "then": "the retry is refused until a status query returns a terminal outcome", "result": "pass" }
+  ]
+}
