@@ -15,7 +15,7 @@ const issuers = { issuers: [{ id: 'observer', mechanism: 'ed25519', verify: { pu
 const registry = { identities: [{ id: 'admin', kind: 'human', groups: ['platform-admins'] }] };
 const now = Date.parse('2026-09-13T00:00:00Z');
 const receipt = id => {
-  const r = { platform: 'github', repository: 'example/project', satisfies_control: id, mechanism: 'branch_protection', observer_identity: 'admin', observation: { enforce_admins: true }, observed_at: new Date(now - 1000).toISOString(), bypass_test: { attempted: 'direct push', result: 'rejected', tested_at: new Date(now - 1000).toISOString() } };
+  const r = { platform: 'github', repository: 'example/project', satisfies_control: id, mechanism: id === 'HG-0004' ? 'workflow_permissions' : 'branch_protection', observer_identity: 'admin', observation: { enforce_admins: true }, observed_at: new Date(now - 1000).toISOString(), bypass_test: { attempted: 'direct push', result: 'rejected', tested_at: new Date(now - 1000).toISOString() } };
   r.attestation = { issuer: 'observer', signature: sign(null, Buffer.from(activationHash(r)), privateKey).toString('base64') }; return r;
 };
 const evaluate = records => readiness({ records, registry, issuers, repository: 'example/project', now });
@@ -27,6 +27,16 @@ test('named baseline requires verified receipts for each baseline control', () =
   assert.equal(evaluate(BASELINE.map(receipt)).ready, true);
   const records = BASELINE.map(receipt); records[0].observation.enforce_admins = false;
   assert.equal(evaluate(records).ready, false);
+});
+test('a signed observation for the wrong mechanism cannot satisfy the baseline', () => {
+  const records = BASELINE.map(receipt);
+  const wrong = records.find(r => r.satisfies_control === 'HG-0004');
+  wrong.mechanism = 'branch_protection';
+  wrong.attestation.signature = sign(null, Buffer.from(activationHash(wrong)), privateKey).toString('base64');
+  const result = evaluate(records);
+  assert.equal(result.ready, false);
+  assert.ok(result.missing.includes('HG-0004'));
+  assert.match(result.findings.join(' '), /cannot activate this control/);
 });
 test('another repository, a missing registry and future observations cannot establish readiness', () => {
   const records = BASELINE.map(receipt);

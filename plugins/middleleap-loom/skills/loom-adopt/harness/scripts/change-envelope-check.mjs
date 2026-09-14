@@ -64,7 +64,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import process from 'node:process';
-import { compile, loadProfiles, resolveBindings, planHash } from '../core/policy-compiler.mjs';
+import { compile, resolveProfileContext, planHash } from '../core/policy-compiler.mjs';
 import { TERMINAL_STATES } from '../core/compiled-requirements.mjs';
 import { collectPatterns, evaluateClaim } from '../core/change-patterns.mjs';
 import { loadRegistry, identityOf, resolveAcceptor } from './identity-registry-check.mjs';
@@ -698,8 +698,9 @@ export function run(cwd = process.cwd(), { baseRef = null, now = Date.now() } = 
     const plan = readJson(`${base}/${envelope.control_plan || 'control-plan.json'}`);
     const passport = readJson(`${base}/product-passport.json`);
     const architectureExists = existsSync(`${base}/architecture-assurance.json`);
-    const { profiles, findings: pf } = loadProfiles(envelope.required_profiles, cwd);
-    findings.push(...pf.map((f) => `${envelope.change_id}: ${f}`));
+    const context = resolveProfileContext(envelope, cwd);
+    const profiles = context.profiles;
+    findings.push(...context.findings.map((f) => `${envelope.change_id}: ${f}`));
     // rc.38 — the pre-approved patterns THIS change's own profiles declare. Scoped to the
     // envelope's profiles on purpose: a pattern approved for one product line is not a standing
     // pre-approval across the estate.
@@ -707,9 +708,7 @@ export function run(cwd = process.cwd(), { baseRef = null, now = Date.now() } = 
     findings.push(...patf.map((f) => `${envelope.change_id}: ${f}`));
     // rc.8 WS4: recompile with the SAME profile-content bindings the plan was written from, so a
     // revised profile (or a BrainKit that an institution profile pins) makes the stored plan stale.
-    const { bindings, findings: bf } = resolveBindings(envelope.required_profiles, cwd);
-    findings.push(...bf.map((f) => `${envelope.change_id}: ${f}`));
-    const { plan: freshPlan, findings: cf } = compile(envelope, profiles, bindings);
+    const { plan: freshPlan, findings: cf } = compile(context.envelope, profiles, context.bindings);
     findings.push(...cf.map((f) => `${envelope.change_id}: ${f}`));
     // 1.12 context: R-gate results per declared service, the second-line hold, the evidence anchor.
     const readiness = { missing: [], findings: [] };

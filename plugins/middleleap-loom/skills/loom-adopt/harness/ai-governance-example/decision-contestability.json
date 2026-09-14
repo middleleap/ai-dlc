@@ -1,0 +1,20 @@
+{
+  "response_sla_days": 14,
+  "surfaces": [
+    {
+      "role": "affordability-assessment",
+      "decision": "The requested credit-limit increase was not approved.",
+      "reason_surface": {
+        "where": "The decision screen and the Arabic or English decision letter.",
+        "reason_source": "The model's input sensitivities are mapped to approved reason codes and reviewed by the deciding underwriter."
+      },
+      "contest_route": {
+        "how": "Use Review this decision in the app, call the published number, or ask a branch agent; provide the decision reference.",
+        "sla_days": 14
+      },
+      "authority": "credit-hassan",
+      "overturns_recorded_in": "The model-oversight ledger, feeding monthly monitoring and fairness review."
+    }
+  ],
+  "_notice": "WORKED EXAMPLE ONLY. This record describes a route; the bundle does not operate it."
+}

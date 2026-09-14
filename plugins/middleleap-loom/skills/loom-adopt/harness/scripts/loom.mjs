@@ -11,7 +11,7 @@
 //   loom compile <envelope-path>   the policy compiler, forwarded (rc.34)
 //   loom seal                      derive + verify the evidence manifest (rc.35, seal-evidence.mjs)
 //   loom activate --platform github --repository org/repo  verify baseline activation evidence
-//   loom attest-adoption           sign the adoption report (fails while anything is adopt-pending)
+//   loom attest-adoption           verify the signed adoption report (fails while anything is adopt-pending)
 //   loom status                    the five-stage matrix + unresolved inventory (machine or human)
 //
 // Run from the adopted repo root: `node scripts/loom.mjs <command> [args]`.

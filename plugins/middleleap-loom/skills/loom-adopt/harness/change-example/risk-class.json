@@ -5,8 +5,14 @@
   "change_type": "material-product-change",
   "change_class": "normal",
   "risk_tier": "high",
-  "plan_hash": "b706c669699a8b226da6f4417ad3c810b4f155ffde360bcbe270012934430ffb",
+  "plan_hash": "086a2c225cf33bdeac93dd7c88bf4086cbb450cc3d71a015db6fdf8c1b44930f",
   "profiles": [
+    {
+      "profile": "ai-decision-system",
+      "kind": "product",
+      "version": null,
+      "digest": "sha256:ab0573e2ea1c3bf157bb6698e9178434fccf05660550d0e26f5c73aebadf261a"
+    },
     {
       "profile": "lending",
       "kind": "product",
@@ -17,13 +23,13 @@
       "profile": "regulated-bank",
       "kind": "base",
       "version": null,
-      "digest": "sha256:b93d101681491c5fee296a279b1981f0446ab5d7cf42b7fc1dddfe82e55b721b"
+      "digest": "sha256:cc82394a81840b24f30dcf893d29f42193f4772ce7cf02ff6c25ca18c696e426"
     },
     {
       "profile": "uae-bank",
       "kind": "jurisdiction",
       "version": null,
-      "digest": "sha256:802a87a9397b90cffd86dfbd2c7c94dd65facab4d055c395536f86ce21b0974e"
+      "digest": "sha256:9d3b4ca1af9e4585099f445be40d3d447c28f1e4a35dcb7da74cac4e4729ef81"
     }
   ],
   "flags": {
@@ -42,19 +48,25 @@
     "product-eval"
   ],
   "required_capabilities": [
+    "ai_governance",
     "data_risk_register",
+    "decision_contestability",
     "dpia",
     "evidence_retention",
     "exposure_control",
     "external_record",
+    "fairness_evaluation",
     "hardened_runtime",
+    "human_oversight",
     "model_risk",
+    "operating_model",
     "real_data_controls",
+    "runtime_guardrails",
     "sca",
     "threat_model"
   ],
   "classified_by": "po-fatima",
   "classified_at": "2026-07-18",
-  "compiled_at": "2026-09-13T03:56:48.613Z",
+  "compiled_at": "2026-09-13T17:26:14.488Z",
   "attestation": null
 }

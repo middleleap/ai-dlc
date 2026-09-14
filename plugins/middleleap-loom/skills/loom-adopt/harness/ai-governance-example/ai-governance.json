@@ -1,0 +1,42 @@
+{
+  "schema": "loom.ai-governance/v1",
+  "systems": [
+    {
+      "role": "affordability-assessment",
+      "model_id": "example-model@2026-01",
+      "prompt_version": "affordability-prompt@2.3.0",
+      "use_case": "Recommend whether a customer receives a requested credit-limit increase; a credit underwriter remains the decision maker.",
+      "consumer_impact": "material-decision",
+      "accountable_owner": "exec-rashid",
+      "human_oversight": {
+        "mode": "human-in-the-loop",
+        "operator_role": "credit-underwriter",
+        "intervention_path": "The underwriter must accept or reject the recommendation before the limit changes and may override it with a reason code.",
+        "alternative_arrangement": "A customer may request manual affordability assessment with no model recommendation shown to the decision maker.",
+        "customer_review_path": "The decision screen and letter link to the human-review request; branch and telephone agents can open the same case.",
+        "overrides_recorded_in": "The model-oversight ledger, reviewed with outcome and disparity monitoring."
+      },
+      "disclosure": {
+        "english_surface": "Credit-limit decision screen and decision letter, English variant.",
+        "arabic_surface": "Credit-limit decision screen and decision letter, Arabic variant."
+      },
+      "monitoring": {
+        "metrics": [
+          "decision-vs-outcome drift",
+          "underwriter override rate with reason code",
+          "input distribution shift",
+          "complaint and overturn rate"
+        ],
+        "review_every_days": 30,
+        "incident_runbook": "docs/governance/runbooks/ai-incident-runbook.md"
+      },
+      "privacy_security_assessment": "docs/governance/changes/CHG-2026-0042/dpia.json and architecture-assurance.json",
+      "third_party_assessment": "docs/governance/outsourcing/OSR-021-example-provider.md",
+      "stress_test": {
+        "ref": "docs/governance/ai-evidence/stress-test-affordability.json",
+        "sha256": "41a58181cb2248eb02739615c258192a7929ccf6036a25c2758d9f0a0b7c8c5a"
+      }
+    }
+  ],
+  "_notice": "WORKED EXAMPLE ONLY. The bundle did not run the model, observe an intervention or speak to a customer."
+}

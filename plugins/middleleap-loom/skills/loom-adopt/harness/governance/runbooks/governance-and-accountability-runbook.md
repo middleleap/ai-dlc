@@ -2,7 +2,7 @@
 
 A name in an org chart is not accountability. The bundled harness fences the build loop — the agent cannot merge its own work, cannot toggle its own protection, holds no admin rights (HG-0001 / HG-0002 / HG-0004, `activation-runbook.md`) — and it seals the release evidence so the story cannot be rewritten after the fact (HG-0003, `evidence-seal-check.mjs`). That is a *governable* loop. It is **not** the operating model a regulated institution must run *around* the loop before it goes near production, because that operating model is people, reporting lines, a change board, a wired kill-switch, a supervised pilot, and a regulator's opinion — none of which a plugin can ship. This is `bank-grade-gap.md` **cluster F**, where the *named accountable officer* (HG-0010) is **Named-only** and the *senior-manager regime / board oversight / RACI*, *supervised production pilot*, *legacy / core-banking integration*, and *live regulator examination* rows are all **Absent**.
 
-> **Why a bundle cannot enforce this.** A plugin bundle cannot appoint a Senior Manager, convene a board, run a CAB, revoke an identity, integrate your core-banking, or obtain a regulator's no-objection — those are people, reporting lines, platform mechanisms the agent cannot reach, and a supervisor's written opinion. What the bundle gives you is the fenced loop and the sealed evidence the operating model is built *around*. Almost nothing below is enforced by the harness. Where a step sketches a declaration gate for the operating model, treat it as **proposed — it does not ship today**; and even a shipped declaration gate only checks that a field is *populated*, never that the named human is accountable. The enforcement of record is always the platform mechanism or regulator filing named alongside the step.
+> **Why a bundle cannot enforce this.** A plugin bundle cannot appoint a Senior Manager, convene a board, run a CAB, revoke an identity, integrate your core-banking, or obtain a regulator's no-objection — those are people, reporting lines, platform mechanisms the agent cannot reach, and a supervisor's written opinion. The shipped `operating-model.json` seam and `operating-model-check.mjs` gate make the declarations and identity joins checkable; they do not make any of those facts true. The enforcement of record is always the platform mechanism, institution record or regulator filing named alongside the step.
 
 ## Where this sits
 
@@ -19,9 +19,9 @@ Be ruthless about the split. Almost every load-bearing row is you.
 
 | Concern | The bundle ships (Enforced repo-side) | You build (the institution's, org-side) |
 |---|---|---|
-| Accountable Senior Manager | Nothing that appoints one — `activation-runbook.md` proves the agent cannot merge or toggle protection, so there is a fenced loop *for* an SM to own | The regulator-registered accountability (SoR / CBUAE approved individual) + the IAM binding tying the kill-switch and prod gate to that person's credential |
+| Accountable Senior Manager | `operating-model-check.mjs` requires one registered, non-builder accountable executive and the references that should evidence the mandate; it appoints nobody | The regulator-registered accountability (SoR / CBUAE approved individual) + the IAM binding tying the kill-switch and prod gate to that person's credential |
 | Board / risk-committee oversight | The sealed evidence bundle (`evidence-seal-check.mjs`, HG-0003) + the ⑥ report as MI inputs | The committee, its terms of reference, its minuted decisions, and the standing MI pack |
-| RACI / responsibilities map | The four-eyes / CODEOWNERS config the map sits on (`activation-runbook.md`, HG-0001) | The RACI itself, wired to real IAM groups, every "A" a single accountable human |
+| RACI / responsibilities map | The operating-model gate requires all nine activities, one accountable human per row, no build authority on controlled decisions, and IAM-binding references | The actual RACI, wired to real IAM groups and exercised by the institution |
 | Change management / CAB (HG-0005, promotion) | Sealed evidence to attach to a change ticket | The CAB, the change system of record, environment segregation, and the promotion gate that refuses prod without an approved ticket |
 | Rehearsed rollback (HG-0005, rollback) | Nothing — no rollback or promotion gate ships | The rollback capability, the drill, and the evidence the drill worked on the shipping release |
 | Cease-use kill-switch (HG-0010) | Nothing that trips it — the HG-0010 decision, no more | The wired switch: identity revocation, pipeline halt, and the fact that only the named owner can trip it |
@@ -29,7 +29,7 @@ Be ruthless about the split. Almost every load-bearing row is you.
 | Legacy / core-banking integration | Nothing — the harness is synthetic-only by design | The anti-corruption layer, idempotency, reconciliation, and maker-checker on core writes |
 | Regulator engagement / no-objection | The examinable, sealed evidence trail to support a submission | The engagement, the submission, and the regulator's written non-objection |
 
-The single honest line, from cluster F: *the harness makes declarations legible and evidence sealed; it does not make the accountability, the oversight, the pilot, or the exam **exist**.* This runbook is the org-side work that does, and none of it is closable from inside the plugin. A proposed `operating-model.json` seam and `operating-model-check.mjs` gate (see step 3) would make some of these declarations checkable, but they **do not ship today** and are absent from the left column above for that reason.
+The single honest line, from cluster F: *the harness makes declarations legible, joined and evidence sealed; it does not make the accountability, the oversight, the pilot, or the exam **exist**.* The `operating-model.json` seam now ships and becomes mandatory for a high-tier regulated-bank plan. This runbook remains the org-side work that makes its declarations operational.
 
 ## The accountability chain, and where the harness sits
 
@@ -37,7 +37,7 @@ The single honest line, from cluster F: *the harness makes declarations legible 
 |---|---|---|---|
 | **Build agent** | Proposes change; runs its reviewer agents and gates | Delivery / engineering leadership | The four-eyes fence + reviewer agents (Enforced) — **never** an approver |
 | **Platform admin** | Activates and holds the control plane | Delivery / engineering leadership | `activation-runbook.md`, `control-plane-check.mjs` (HG-0001 / 0002 / 0004) |
-| **Accountable SM** (HG-0010) | The loop's safe operation, controls, cease-use, evidence | The board risk committee | Nothing that appoints them — the sealed evidence they answer with |
+| **Accountable SM** (HG-0010) | The loop's safe operation, controls, cease-use, evidence | The board risk committee | A structurally checked identity and mandate reference; nothing that appoints them |
 | **Board / risk committee** | Oversight, scope approval, standing MI | The board | The MI inputs (sealed bundle + ⑥ report) — **never** the quorum or the minute |
 | **Regulator** | Supervision, no-objection | — | The examinable trail — **never** the opinion |
 
@@ -60,7 +60,7 @@ The autonomous build loop authors change into a regulated SDLC. Under SMCR and t
 3. **Record the appointment in your governance operating model** (step 3), so change and cease-use reference a written accountability rather than folklore.
 4. **Bind the identity, not just the name.** The kill-switch (step 6), the prod-promotion approval (step 4), and the pilot go/no-go (step 7) must be exercisable **only** through credentials attributed to this person or their formally-recorded deputy.
 
-**Enforcement of record:** the **regulator-registered Statement of Responsibilities / approved-individual mandate**, plus the **platform binding** that attributes the switch and the prod gate to that credential. The bundle ships **no gate here** — a proposed `operating-model.json` seam (step 3, does not ship today) would at most prove a name is present, and presence is hygiene. The control is the regulator filing and the IAM attribution, both adopter-side. Do not describe any gate as "enforcing accountability"; at most it enforces that a field is non-empty.
+**Enforcement of record:** the **regulator-registered Statement of Responsibilities / approved-individual mandate**, plus the **platform binding** that attributes the switch and the prod gate to that credential. `operating-model-check.mjs` requires those references and resolves the identity; that is structural hygiene, not appointment. Do not describe the gate as "enforcing accountability."
 
 ## 2. Establish board / risk-committee oversight
 
@@ -96,11 +96,11 @@ Rules that make it a control, not a diagram:
 2. **The build agent is never `A` and never `R` on any approval, promotion, control-plane, or cease-use row.** *AI proposes; humans and a protected control plane dispose.* If the agent identity appears in an approver group, the control plane is not activated (return to `activation-runbook.md`).
 3. **Every `A` and approval-`R` resolves to a real IAM group.** The merge row maps to CODEOWNERS; the prod row maps to the promotion-approver group; the CAB row maps to the change-approval group.
 
-**Enforcement of record:** the **IAM group memberships and CODEOWNERS / branch-protection configuration** — the RACI is only real to the extent the platform enforces it. The activated control plane (`activation-runbook.md`, `control-plane-check.mjs`) enforces the merge and control-plane rows; the prod, CAB, and cease-use rows resolve to IAM groups you own. **No shipped gate checks the RACI.**
+**Enforcement of record:** the **IAM group memberships and CODEOWNERS / branch-protection configuration** — the RACI is only real to the extent the platform enforces it. The activated control plane (`activation-runbook.md`, `control-plane-check.mjs`) enforces the merge and control-plane rows; the prod, CAB, and cease-use rows resolve to IAM groups you own. `operating-model-check.mjs` now checks the complete RACI and its declared IAM joins, not the live groups.
 
-*The proposed operating-model seam.* To give a future gate something to check, an `operating-model.json` declaration — in the same family as `model-manifest.json` and `data-lifecycle.json` — could record the accountable SM, the oversight committee, the kill-switch owner, the RACI role→IAM mapping, and the change-management linkage, with an `operating-model-check.mjs` gate failing a release if a required role is empty or references an IAM group that does not resolve. **This seam and gate are proposed and do not ship today — do not present them as runnable.** Until they ship, the operating model lives in your own records and the resolution is checked by hand.
+*The shipped operating-model seam.* `docs/governance/operating-model.json` records the accountable SM, oversight committee, kill-switch owner, nine-activity RACI, four protected IAM bindings, change-management linkage and independent re-performance route. `operating-model-check.mjs` is mandatory-when-compiled through the high-tier regulated-bank profile.
 
-> **Honest limit on the proposed seam.** Even shipped, such a gate would check *declarations* — exactly like the model and data-lifecycle gates. A green result would prove the fields are populated and internally consistent; it would prove nothing about whether the named person is competent, present, or actually exercising the responsibility. It would never mean "governance enforced." The enforcement of the governance itself lives in the regulator filings, the committee minutes, and the IAM bindings — none of which a CI gate can see.
+> **Honest limit.** The gate checks *declarations* and identity joins. A green result proves the record is populated and internally consistent; it proves nothing about whether the named person is competent, present, appointed or exercising the responsibility. It never means "governance enforced." That evidence lives in regulator filings, committee minutes and independently observed IAM bindings.
 
 ## 4. Integrate change management and the CAB (HG-0005, promotion half)
 
@@ -110,7 +110,7 @@ HG-0005 is *promotion + rehearsed rollback*. `bank-grade-gap.md` grades it Named
 2. **Make a change ticket the entry condition for prod.** The promotion pipeline must refuse a prod deploy unless it carries a reference to an **approved change record** in your CAB / change system of record. No ticket, no promotion — enforced by the pipeline, not by policy.
 3. **Route standard vs. non-standard changes correctly.** Pre-authorised, low-risk, reversible changes may follow a standard-change path with the accountable SM's standing delegation; anything touching prod scope, core-banking, or the control plane is a normal change requiring CAB review. Do not let "standard change" become a bypass.
 4. **Attach the sealed evidence bundle to the ticket.** The CAB reviews evidence-by-construction (gate results, model provenance, data-lifecycle dispositions), not a hand-written summary. This is where the loop earns its keep: the change record is pre-populated with tamper-evident evidence.
-5. **Record the change-ticket linkage in your operating model.** (A proposed `operating-model.json` field + gate — does not ship today — could check the reference is present and fresh, treating a ticket referenced but closed weeks ago as stale. Today that freshness check is your pipeline's to build.)
+5. **Record the change-ticket linkage in your operating model.** The gate checks that the system and promotion mechanism are named and that production tickets are required. Ticket status and freshness remain the deployment pipeline's evidence.
 
 **Enforcement of record:** the **change-management system of record + the promotion gate that will not deploy to prod without a live, approved ticket linked to it.** The harness contributes the sealed evidence to attach; it ships no promotion gate, does not run your CAB, holds no prod credentials, and performs no deploy. DORA's change-management expectations and your prod-change control are the institution's.
 
@@ -133,7 +133,7 @@ HG-0010 pairs a **mandatory cease-use capability** with a **named accountable of
 2. **Implement it as a platform mechanism, not a Slack message.** Options: revoke / disable the agent service identity in IAM, flip a global pipeline pause the agent cannot un-flip, or pull a feature flag outside the agent's write scope. It must be **outside the agent's reach** — the same immutability property as the control plane (HG-0002).
 3. **Restrict who can trip it** to the accountable SM (step 1) and formally-recorded deputies. Log every invocation to the audit trail with actor, time, reason, and scope.
 4. **Rehearse it.** An untested switch is `activation-runbook.md`'s live incident in a new costume — *configured but not activated.* Trip it in a controlled window; confirm the agent identity is genuinely inert; confirm restoration is itself a controlled, approved action.
-5. **Record the owner in your operating model** so it can be reconciled with the identity registered with the regulator in step 1. (A proposed `operating-model.json` field — does not ship today — could make this reconciliation a gate; for now it is a manual check.)
+5. **Record the owner in your operating model** so the gate can reconcile cease-use ownership with the accountable executive and RACI. The live credential binding remains an observed platform control.
 
 **Enforcement of record:** the **IAM / pipeline mechanism that halts the loop and can only be tripped by the named owner's credential** — plus the audit log of invocations. The bundle ships **no gate** here; it cannot revoke your agent's identity or pause your pipeline. The switch is the platform's, the accountability is the regulator's filing, and the rehearsal is the adopter's discipline. Never call HG-0010 "enforced by the harness" — the harness enforces none of it.
 
@@ -191,7 +191,7 @@ Named, not clause-cited. Cite your own regulator's clause numbers in your ADRs.
 - **Consumes** the sealed evidence bundle (`evidence-seal-check.mjs`, HG-0003) as the MI the board reads and the trail the regulator examines — reconstructable, not narrated.
 - **Instruments** a supervised pilot with `change-watch` (① Watch) and `risk-reviewer` (② Assess); every cycle seals evidence into the bundle.
 - **Runs continuously** via the assurance lifecycle (`../loom/references/continuous-assurance.md`) ⑥ Confirm & report — the four-eyes (HG-0001) and MI stay human. Agents make the operating model's *evidence* evidence-by-construction, never its *accountability*.
-- **Ships no operating-model gate today.** The `operating-model.json` seam and `operating-model-check.mjs` gate are **proposed — they do not ship**; everything load-bearing in cluster F is the institution's to build.
+- **Ships a structural operating-model gate.** It validates the declaration and joins it to identities; every load-bearing organisational fact remains the institution's to establish and evidence.
 
 ## Verify — evidence, not vibes
 
@@ -201,7 +201,7 @@ Cluster F is where "we have a policy" is most tempting and least sufficient. Eve
 - [ ] The accountable Senior Manager is a **single named individual** with a **regulator-registered** Statement of Responsibilities / approved-individual mandate covering the loop — produce the filing, not a slide.
 - [ ] The kill-switch and prod-promotion approval are **attributed to that person's credential** in IAM — demonstrated, not asserted.
 - [ ] The RACI has **exactly one `A` per row**, and the **build agent appears in no approval, promotion, control-plane, or cease-use cell** — checked against the actual CODEOWNERS and approver groups.
-- [ ] There is **no shipped operating-model gate.** If you built the proposed `operating-model-check` yourself (does not ship today), you can state in one sentence that green means "roles are declared and resolve," not "governance is enforced."
+- [ ] `operating-model-check.mjs` is green, and the report states in one sentence that green means "roles are declared and resolve," not "governance is enforced."
 
 **Change & rollback (steps 4–5, HG-0005)**
 - [ ] A prod deploy **attempted without a linked, approved change ticket is rejected by the pipeline** (attempted-and-rejected).
@@ -230,5 +230,5 @@ Only when every box holds an artefact is cluster F **closed for the pilot's scop
 
 - **HG catalog** (`../loom/references/governance.md`): **HG-0005** (promotion + rehearsed rollback — the decision this operationalises); **HG-0010** (cease-use switch + accountable officer); **HG-0001** (four-eyes merge — the approver group this operating model sits above, activate first); **HG-0006** (model-risk accountability under the same Senior Manager).
 - **Bank-grade gap** (`../loom/references/bank-grade-gap.md`): **cluster F**. This runbook is the org-side work behind the *senior-manager regime / board oversight / RACI*, *supervised production pilot*, *legacy / core-banking integration*, and *live regulator examination* rows — all **Absent** — and the *named accountable officer* (HG-0010) **Named-only** row. None of it flips to Enforced from inside the plugin.
-- **Gates & agents this complements:** `activation-runbook.md` (activate first); `evidence-seal-check.mjs` (HG-0003) + `evidence-manifest.json`; `control-plane-check.mjs` (HG-0002); `model-provenance-check.mjs` (HG-0006); `change-watch` / `risk-reviewer` (① Watch / ② Assess); continuous-assurance ⑥ (`../loom/references/continuous-assurance.md`); the sibling `independent-assurance-runbook.md` (the 2nd / 3rd lines this pilot embeds). **Proposed, does not ship:** `operating-model.json` + `operating-model-check.mjs`.
+- **Gates & agents this complements:** `operating-model-check.mjs`; `activation-runbook.md` (activate first); `evidence-seal-check.mjs` (HG-0003) + `evidence-manifest.json`; `control-plane-check.mjs` (HG-0002); `model-provenance-check.mjs` (HG-0006); `change-watch` / `risk-reviewer` (① Watch / ② Assess); continuous-assurance ⑥ (`../loom/references/continuous-assurance.md`); the sibling `independent-assurance-runbook.md` (the 2nd / 3rd lines this pilot embeds).
 - **Frameworks** (named, not clause-cited): SMCR; CBUAE senior-manager / controlled-function + Corporate Governance; DORA; SR 11-7 / PRA SS1/23 / EU AI Act / ISO 42001; BCBS 239.

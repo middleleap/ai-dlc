@@ -636,6 +636,39 @@
       "check": "scripts/project-config-check.mjs",
       "action": "Set spec_paths, feature_pattern and verification_commands for this repository. Run loom verify-project after reviewing the commands.",
       "completion": "Configured contract exists and project verification commands are declared; passing checks and approval remain separate."
+    },
+    {
+      "id": "docs.governance.ai-governance.json",
+      "title": "AI governance",
+      "owner": "Model Risk and accountable AI owner",
+      "path": "docs/governance/ai-governance.json",
+      "tier": "governed",
+      "validator": "json-inputs",
+      "check": "scripts/ai-governance-check.mjs",
+      "action": "Complete docs/governance/ai-governance.json using institution-owned evidence and the accountable roles; retain provenance.",
+      "completion": "Required input exists and contains no unresolved values; approval and operating effectiveness are assessed separately."
+    },
+    {
+      "id": "docs.governance.operating-model.json",
+      "title": "Bank operating model",
+      "owner": "Accountable executive and governance owner",
+      "path": "docs/governance/operating-model.json",
+      "tier": "governed",
+      "validator": "json-inputs",
+      "check": "scripts/operating-model-check.mjs",
+      "action": "Complete docs/governance/operating-model.json using institution-owned evidence and the accountable roles; retain provenance.",
+      "completion": "Required input exists and contains no unresolved values; approval and operating effectiveness are assessed separately."
+    },
+    {
+      "id": "docs.governance.activation-plan.json",
+      "title": "Adopter activation plan",
+      "owner": "Platform administrator and pilot coordinator",
+      "path": "docs/governance/activation-plan.json",
+      "tier": "full",
+      "validator": "json-inputs",
+      "check": "scripts/activation-readiness-check.mjs",
+      "action": "Complete docs/governance/activation-plan.json using institution-owned evidence and the accountable roles; retain provenance.",
+      "completion": "Required input exists and contains no unresolved values; approval and operating effectiveness are assessed separately."
     }
   ]
 }

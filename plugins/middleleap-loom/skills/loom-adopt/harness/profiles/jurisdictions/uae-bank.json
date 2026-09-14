@@ -23,6 +23,17 @@
       ]
     }
   },
+  "_automatic_profiles_comment": "2.4.0 — a UAE new or materially changed product that declares a model in its decision path automatically compiles the ai-decision-system profile. This closes the profile-omission gap: the classifier supplies facts, and jurisdiction policy derives the route. It is intentionally narrower than every use of a model — internal engineering assistants remain under the regulated-bank model-risk conditional unless they are part of a product change. The rule implements the CBUAE February 2026 consumer-AI guidance scope (AI/ML use bearing on consumers); an institution may add broader automatic rules, never delete this one while claiming this shipped profile unchanged.",
+  "automatic_profiles": [
+    {
+      "profile": "ai-decision-system",
+      "when": {
+        "flags_all": ["model_involved"],
+        "change_types": ["new-product", "material-product-change"],
+        "minimum_tier": "medium"
+      }
+    }
+  ],
   "conditional": [
     {
       "when": "islamic",

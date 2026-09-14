@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CHANGE_CLASSES, EMERGENCY_RETROSPECTIVE_MAX_DAYS, EMERGENCY_STATE, PIR_MAX_DAYS, UAT_STATE, checkPostImplementationReview, checkRequiredInstitutions, checkStateHistory, checkUatSignoff, corroborateFlags, evaluate, loadInstitutionProfiles, STATES, stateHistoryRequired } from './change-envelope-check.mjs';
 import { collectPatterns } from '../core/change-patterns.mjs';
-import { compile, resolveBindings } from '../core/policy-compiler.mjs';
+import { compile, resolveBindings, resolveProfileContext } from '../core/policy-compiler.mjs';
 
 import { existsSync } from 'node:fs';
 
@@ -30,11 +30,12 @@ const ENVELOPE = EX('change-envelope.json');
 const PLAN = EX('control-plan.json');
 const PASSPORT = EX('product-passport.json');
 const REGISTRY = J('governance/identities.template.json', 'docs/governance/identities.json');
-const PROFILES = [J('profiles/regulated-bank.json'), J('profiles/jurisdictions/uae-bank.json'), J('profiles/products/lending.json')];
-// rc.8 WS4: the stored plan is bound to exact profile content, so a fresh compile must resolve
-// the same bindings to reconcile. HARNESS is the harness root in both layouts, so profiles/… resolves.
-const BINDINGS = resolveBindings(ENVELOPE.required_profiles, HARNESS).bindings;
-const fresh = (env = ENVELOPE) => compile(env, PROFILES, BINDINGS).plan;
+// 2.4: a fresh compile must resolve automatic profiles as production does. Building this fixture
+// from the explicit list would silently test the old classifier-remembers-the-route behaviour.
+const fresh = (env = ENVELOPE) => {
+  const context = resolveProfileContext(env, HARNESS);
+  return compile(context.envelope, context.profiles, context.bindings).plan;
+};
 
 const ok = (over = {}, ctx = {}) => evaluate({ ...ENVELOPE, ...over }, {
   plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY, freshPlan: fresh(), ...ctx,
@@ -76,7 +77,7 @@ test('RECONCILIATION — a hand-edited plan fails even when it keeps its old has
 test('RECONCILIATION — a stale stored plan (hash differs from fresh compile) fails', () => {
   const f = evaluate({ ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: true } }, {
     plan: PLAN, passport: PASSPORT, architectureExists: true, registry: REGISTRY,
-    freshPlan: compile({ ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: true } }, PROFILES, BINDINGS).plan,
+    freshPlan: fresh({ ...ENVELOPE, flags: { ...ENVELOPE.flags, islamic: true } }),
   });
   assert.ok(f.some((x) => /does not reconcile with a fresh compile/.test(x)));
 });

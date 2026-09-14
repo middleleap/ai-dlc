@@ -1,0 +1,36 @@
+{
+  "metric": "demographic-parity-difference",
+  "threshold": {
+    "max_disparity": 0.05,
+    "direction": "ceiling"
+  },
+  "owner": "mrm-aisha",
+  "material_retrain": "Any weight update, calibration change, feature-set change or decision prompt change requires a new pin and a new measurement.",
+  "protected_attributes": [
+    {
+      "attribute": "age-band",
+      "basis": "Worked fixture for the institution's approved fairness policy.",
+      "measured_by": "Synthetic cohort label in the worked fixture.",
+      "proxy_risk": "Income history and channel were reviewed as potential age proxies."
+    }
+  ],
+  "evaluations": [
+    {
+      "role": "affordability-assessment",
+      "evaluated_model_id": "example-model@2026-01",
+      "evaluated_prompt_version": "affordability-prompt@2.3.0",
+      "ran_at": "2026-09-13",
+      "population": {
+        "dataset_version": "synthetic-fixture@1",
+        "representativeness": "Synthetic worked example only; it represents no bank population and cannot support a production fairness conclusion."
+      },
+      "disparities": {
+        "age-band": 0.02
+      },
+      "report": {
+        "ref": "docs/governance/ai-evidence/fairness-affordability.json",
+        "sha256": "89008cebcaa562e5d50d6fa38089a4cd42484baf3af0704f6ea02b885d5eac74"
+      }
+    }
+  ]
+}

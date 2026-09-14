@@ -201,6 +201,19 @@ jobs:
           cp "$H/exposure-example/feature-flags.json" "$A/docs/governance/feature-flags.json"
           mkdir -p "$A/docs/governance/deployments"
           cp "$H/exposure-example/deployment.json" "$A/docs/governance/deployments/DEP-2026-0042-01.json"
+          # 2.4.0: the UAE profile automatically compiles ai-decision-system for this
+          # model-involved material product change. Stage the worked AI governance joins so the
+          # dry-run exercises accountability, human oversight, bilingual disclosure, fairness,
+          # contestability and stress-evidence binding without pretending the bundle ran a model.
+          mkdir -p "$A/docs/governance/ai-evidence"
+          cp "$H/ai-governance-example/ai-governance.json" "$A/docs/governance/ai-governance.json"
+          cp "$H/ai-governance-example/fairness-evaluations.json" "$A/docs/governance/fairness-evaluations.json"
+          cp "$H/ai-governance-example/decision-contestability.json" "$A/docs/governance/decision-contestability.json"
+          cp "$H/ai-governance-example/ai-evidence/"*.json "$A/docs/governance/ai-evidence/"
+          # 2.4.0: the high-tier bank profile now requires the operating-model seam. Mount the
+          # synthetic worked record so the dry-run checks the RACI, accountable executive, IAM
+          # bindings and independent re-performance route without claiming any organisation exists.
+          cp "$H/operating-model-example/operating-model.json" "$A/docs/governance/operating-model.json"
           # rc.7: the high-tier change-example's compiled plan REQUIRES product evals; lay the
           # example + its sealed report and let it stand in for the installed template.
           cp -r "$H/product-eval-example" "$A/product-eval-example"
@@ -660,17 +673,22 @@ jobs:
           # the tree the agent edits. Kosli is the first provider, never a dependency; the seam
           # (core/external-record.mjs) is exercised below against the record-and-replay fake.
           cp docs/governance/adapters/providers/external-record/kosli.json docs/governance/adapters/
+          # 2.4.0: the auto-compiled AI route requires an explicit serving-path enforcement point.
+          # Selecting the gateway fixture exercises the seam; placeholder activation evidence keeps
+          # it honestly "selected, not active" and makes no claim about a live denial.
+          cp docs/governance/adapters/providers/runtime-guardrails/gateway-policy-enforcement.json docs/governance/adapters/
           node -e '
             const fs=require("fs"), sel=(role,provider,adapter_id)=>({role,provider,adapter_id,
               decided_by:"infosec-noor",decided_at:new Date().toISOString().slice(0,10),source:"mt-tech-2026"});
             fs.writeFileSync("/tmp/provider-selection.json",JSON.stringify({selections:[
               sel("sca","snyk","snyk-sca"), sel("hardened-runtime","chainguard","chainguard-runtime"),
               sel("real-data-controls","kms-field-encryption","kms-field-encryption"),
-              sel("external-record","kosli","kosli-external-record")]},null,2));
+              sel("external-record","kosli","kosli-external-record"),
+              sel("runtime-guardrails","gateway-policy-enforcement","gateway-policy-enforcement")]},null,2));
           '
           cp /tmp/provider-selection.json docs/governance/provider-selection.json
           node scripts/provider-selection-check.mjs | tee /tmp/ps1.txt
-          grep -q '4 roles selected' /tmp/ps1.txt || {
+          grep -q '5 roles selected' /tmp/ps1.txt || {
             echo "::error::the provider-selection gate is not counting the real selections"; exit 1; }
           grep -q 'selected, not active' /tmp/ps1.txt || {
             echo "::error::a mounted-but-unactivated provider must be reported as selected, not active"; exit 1; }

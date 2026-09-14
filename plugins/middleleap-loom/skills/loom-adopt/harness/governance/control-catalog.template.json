@@ -608,6 +608,25 @@
       "adopter_side": true
     },
     {
+      "control_id": "OPERATING-MODEL",
+      "objective": "A high-tier bank change is governed by one internally consistent operating-model record joining accountable executive, mandate, board oversight, change control, rollback and cease-use, RACI, protected IAM bindings and independent re-performance",
+      "owner_role": "accountable-executive",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/operating-model-check.mjs",
+      "test_ref": "scripts/operating-model-check.test.mjs",
+      "doc_ref": "docs/governance/runbooks/governance-and-accountability-runbook.md",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/operating-model.json",
+        "docs/governance/identities.json",
+        "docs/governance/changes/"
+      ],
+      "gate_family": "PA2",
+      "adopter_side": true,
+      "note": "NEW AT 2.4.0, and only mechanically validated. The governance runbook previously proposed this seam and admitted that no gate checked the RACI. The high-tier regulated-bank profile now compiles operating_model; the gate requires one accountable executive with a mandate and regulator/controlled-function reference, standing committee oversight, production ticket and promotion controls, a complete nine-activity RACI, four IAM enforcement bindings, cease-use ownership and an internal-audit re-performance route through the external evidence provider. OM-R12 states the boundary on every run: the gate validates declarations and identity joins. It does not appoint a person, convene a committee, inspect IAM, refuse a deployment, trip a kill switch, connect Kosli or perform an audit. HG-0010, WORM-EVIDENCE, SUPERVISED-PILOT and LIVE-EXAM keep their honest defined/absent grades until institution evidence exists."
+    },
+    {
       "control_id": "HG-0011",
       "objective": "Residency-controlled model traffic, pre-egress DLP, attested execution",
       "owner_role": "security",
@@ -695,7 +714,32 @@
         "docs/governance/platform-activation/",
         "docs/governance/control-catalog.json"
       ],
-      "note": "The gate VERIFIES observations (mechanically-validated): the observation is signed, independent, bypass-tested and fresh. Producing the observation — `loom activate --platform github` querying the live platform with read-only credentials — is the adopter's; the bundle ships ZERO platform-enforced controls, so graduation passes trivially here and the negative test proves an overstated claim fails"
+      "note": "The gate VERIFIES observations (mechanically-validated): the observation is signed, independent, bypass-tested and fresh. Producing and signing the observation through an institution-controlled, read-only live-platform workflow is the adopter's; `loom activate` verifies the resulting record. The bundle ships ZERO platform-enforced controls, so graduation passes trivially here and the negative test proves an overstated claim fails"
+    },
+    {
+      "control_id": "ACTIVATION-READINESS",
+      "objective": "A bank adoption cannot claim readiness for a supervised AI pilot until one reference change joins four independent owners, the platform baseline's verified bypass observations, an active external-record provider, the operating model, AI governance, fairness, contestability and the pilot state machine",
+      "owner_role": "risk-second-line",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/activation-readiness-check.mjs",
+      "test_ref": "scripts/activation-readiness-check.test.mjs",
+      "doc_ref": "docs/governance/runbooks/adopter-activation-pack.md",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/activation-plan.json",
+        "docs/governance/platform-activation/",
+        "docs/governance/provider-selection.json",
+        "docs/governance/adapters/",
+        "docs/governance/operating-model.json",
+        "docs/governance/ai-governance.json",
+        "docs/governance/fairness-evaluations.json",
+        "docs/governance/decision-contestability.json",
+        "docs/governance/pilot-record.json",
+        "docs/governance/identities.json"
+      ],
+      "adopter_side": true,
+      "note": "The gate coordinates existing evidence and adds no substitute ledger. activating is a non-blocking work list; ready-for-pilot and later states fail closed. Platform status is derived only from fresh, independently signed observations whose bypass tests were rejected. The external-record join requires the selected adapter to have every activation field completed and explicitly carries its integration, tamper, audit-access and retention assessments. A green result still observes no platform, customer, transaction, appointment or audit itself."
     },
     {
       "control_id": "CONFIG-RECONCILIATION",
@@ -711,7 +755,7 @@
         "docs/governance/platform-activation/",
         "docs/governance/identities.json"
       ],
-      "note": "The gate reconciles records (mechanically-validated): baseline vs observed vs registry. The CURRENT observation is produced adopter-side by `loom activate` (live platform read). On drift, the routine-change gate fails closed via routine-envelope.suspended, and the WS2.3 controller — gating auto-merge on this gate — does not merge"
+      "note": "The gate reconciles records (mechanically-validated): baseline vs observed vs registry. The CURRENT observation is produced and signed by the adopter's independent live-platform workflow, then verified by `loom activate`. On drift, the routine-change gate fails closed via routine-envelope.suspended, and the WS2.3 controller — gating auto-merge on this gate — does not merge"
     },
     {
       "control_id": "ROUTINE-CONTROLLER",
@@ -890,7 +934,7 @@
       "lane": "pr",
       "execute": false,
       "execute_note": "adopter tool (loom status / attest-adoption), run on demand — not a per-PR merge gate (a reference repo is intentionally adopt-pending). The gate ships mechanically-validated; producing the signed report is the adopter's",
-      "note": "loom status projects the stage matrix + the unresolved-marker inventory; attest-adoption refuses to sign while adopt-pending (closes F7). The signature is adopter-side"
+      "note": "loom status projects the stage matrix + the unresolved-marker inventory; attest-adoption refuses to accept a signed report while adopt-pending (closes F7). Report creation and signature are adopter-side"
     },
     {
       "control_id": "BRAINKIT-REGISTRY",
@@ -1055,6 +1099,27 @@
       "note": "MOVED FROM ABSENT AT 2.0.0, AND ONLY TO mechanically-validated. Everything the rc.46 note said the harness cannot do it still cannot do: it holds NO fairness metric, no test rig and no population, measures no disparity, and cannot detect a proxy. Every number it reads was produced by the adopter's rig and is taken as a declaration — a rig measuring the wrong thing produces a record this gate passes. What changed is that a slot became a JOIN: an evaluation names the model_id and prompt_version it was run against and the gate compares them to the pin in the model manifest, so A RETRAIN THAT MOVES THE PIN INVALIDATES ITS OWN FAIRNESS EVIDENCE (FR-R08) — the mechanical half of 're-tested on every material retrain', and the thing an eval slot could never hold. Alongside it: coverage in both directions (a covered-tier model with no measurement is named, FR-R06), a register whose attributes each carry a legal basis, a threshold with an EXPLICIT direction (a ratio metric fails LOW, and inferring that from the metric name is how a failing model reads green), an owner who resolves to a human outside `builders`, and a report artifact re-hashed. Mandatory-when-compiled on `fairness_evaluation`: inert for a repository whose plans never ask, fail-closed from the first run for one that does. A GREEN GATE MEANS THE RECORD EXISTS, IS BOUND TO THE PIN THAT SHIPS AND SITS UNDER A THRESHOLD ITS OWNER SET — never that the model is fair. What stays adopter-side is what always was: the rig, the representative population, and whether the metric chosen is the one that matters"
     },
     {
+      "control_id": "AI-GOVERNANCE",
+      "objective": "A consumer-impacting AI system is automatically routed and bound to accountable ownership, meaningful human oversight, a non-AI alternative, bilingual disclosure, monitoring, incident response, privacy/security review, third-party assessment and stress-test evidence",
+      "owner_role": "model-risk",
+      "line": 2,
+      "state": "mechanically-validated",
+      "mechanism_ref": "scripts/ai-governance-check.mjs",
+      "test_ref": "scripts/ai-governance-check.test.mjs",
+      "lane": "pr",
+      "paths": [
+        "docs/governance/ai-governance.json",
+        "docs/governance/model-manifest.json",
+        "docs/governance/identities.json",
+        "docs/governance/changes/",
+        "profiles/jurisdictions/uae-bank.json",
+        "profiles/products/ai-decision-system.json"
+      ],
+      "gate_family": "PA2",
+      "adopter_side": true,
+      "note": "NEW AT 2.4.0, and only mechanically validated. The UAE jurisdiction profile automatically includes ai-decision-system for a medium-or-higher new/material product change with model_involved=true, so omission of the AI profile can no longer produce a lighter route. The gate then joins each implicated model role to the shipping model/prompt pin, an accountable-executive outside builders, human-in/on-the-loop intervention, a customer review path and non-AI alternative, Arabic and English disclosure surfaces, runtime metrics and incident runbook, privacy/security and outsourcing assessments, and a re-hashed stress-test report. AG-R15 states the boundary on every run: the harness observes none of these controls in production. Platform enforcement, operational effectiveness and consumer outcomes remain the institution's evidence. Regulatory basis: CBUAE Guidance Note on Consumer Protection and Responsible Adoption and Use of AI and ML by LFIs, issued 11 February 2026, sections 2 and 4 through 9"
+    },
+    {
       "control_id": "AI-EXPLAINABILITY",
       "objective": "Explainability and contestability of an automated decision: a reason the affected customer can be given, a route by which they can challenge it, and a human with the authority to act on the challenge",
       "owner_role": "model-risk",
@@ -1071,7 +1136,7 @@
       ],
       "gate_family": "PA2",
       "adopter_side": true,
-      "note": "MOVED FROM ABSENT AT 2.0.0, AND ONLY TO mechanically-validated. The rc.46 note called what shipped 'a REQUIREMENT TO SAY' — the ai-decision-system profile compiles an `explainability-and-contestability` PA2 section and product-approval-check verifies it is present and approved. The hole was that the section was joined to nothing: A PLAN COULD SATISFY IT IN PROSE WHILE A MODEL SHIPPED THAT THE PROSE NEVER MENTIONED. CT-R02 is that join — a covered-tier role in the model manifest with no declared contest route is named. Around it: where the reason actually appears (a reason that exists only in a log is not a reason anybody was given), what the shown reason is DERIVED from (the field most often quietly false — a reason composed from a rules layer that did not make the decision is a plausible sentence about a different process, and the gate cannot tell), a bounded response time, an authority who resolves to a human who is neither an agent nor a builder, and somewhere overturns are recorded so the runtime monitoring can see them. STILL TRUE, AND REPORTED AS A NOTICE ON EVERY RUN FOR EVERY SURFACE (CT-R11): no gate here generates a reason code, judges whether a reason is intelligible to the person who received it, delivers anything to a customer, or routes a contest. The explanation surface and the contest path are the adopter's runtime; this control holds that they were DESIGNED and named, never that they work. KNOWN BOUNDARY, named rather than left to be discovered: the capability compiles from products/ai-decision-system ONLY. products/shariah-model restates `ai-disclosure` on the reasoning that a Shari'ah-significant model may ship without ai-decision-system being named and the customer's right to be told is not conditional on which profiles an envelope happened to list — the same argument reaches contestability, and 2.0.0 does not act on it. An institution deploying a deciding model under a profile that does not name this capability arms neither gate; naming all applicable product profiles on the envelope is the adopter's act, as it already is for disclosure"
+      "note": "MOVED FROM ABSENT AT 2.0.0, AND ONLY TO mechanically-validated. The rc.46 note called what shipped 'a REQUIREMENT TO SAY' — the ai-decision-system profile compiles an `explainability-and-contestability` PA2 section and product-approval-check verifies it is present and approved. The hole was that the section was joined to nothing: A PLAN COULD SATISFY IT IN PROSE WHILE A MODEL SHIPPED THAT THE PROSE NEVER MENTIONED. CT-R02 is that join — a covered-tier role in the model manifest with no declared contest route is named. Around it: where the reason actually appears (a reason that exists only in a log is not a reason anybody was given), what the shown reason is DERIVED from (the field most often quietly false — a reason composed from a rules layer that did not make the decision is a plausible sentence about a different process, and the gate cannot tell), a bounded response time, an authority who resolves to a human who is neither an agent nor a builder, and somewhere overturns are recorded so the runtime monitoring can see them. STILL TRUE, AND REPORTED AS A NOTICE ON EVERY RUN FOR EVERY SURFACE (CT-R11): no gate here generates a reason code, judges whether a reason is intelligible to the person who received it, delivers anything to a customer, or routes a contest. The explanation surface and the contest path are the adopter's runtime; this control holds that they were DESIGNED and named, never that they work. At 2.4.0 the UAE product-change omission boundary is closed: `uae-bank` automatically compiles `ai-decision-system` for medium-or-higher new/material product changes with `model_involved=true`, and fairness and contestability scope to the implicated `model_roles`. Other jurisdictions and non-product software changes retain explicit profile applicability and the regulated-bank model-risk route."
     },
     {
       "control_id": "SELF-CLAIMS",

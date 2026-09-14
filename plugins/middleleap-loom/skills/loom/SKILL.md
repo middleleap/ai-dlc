@@ -88,6 +88,10 @@ the full canon for one part of that page, or an appendix.
   the repo-side half. Since 2.1.0 this covers the reviewer agents too: they emit one output
   schema (`loom.agent-output/v1`), say `INSUFFICIENT_EVIDENCE` when their register is absent,
   and are a role in the model manifest.
+- `references/uae-ai-governance.md` — the 2.4 UAE consumer-AI route: when a model-bearing
+  product change automatically acquires the `ai-decision-system` profile, what the governed
+  AI record and three joined assurance gates prove, and what only the institution can observe
+  at runtime.
 - `references/agent-runtime.md` — the agent's own runtime, **optional** components: the egress
   gateway that fills HG-0011's block half and HG-0012's allow-list, and the credential broker
   that holds the secret so the agent never does (HG-0004's vault half); the deny → proposal →

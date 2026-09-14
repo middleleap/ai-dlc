@@ -24,8 +24,9 @@
 // `--run` that column prints `?`, never a tick: an unasked question is not a pass.
 //
 // `loom status` prints this as a machine-readable JSON (--json) or a human table, plus the
-// UNRESOLVED-MARKER INVENTORY — every adopt-pending file, named. `attest-adoption` (adoption-attest.mjs)
-// reads this and refuses to sign while any mandatory item is adopt-pending.
+// UNRESOLVED-MARKER INVENTORY — every adopt-pending file, named. `attest-adoption`
+// (adoption-attest.mjs) reads this and refuses to accept a signed report while any mandatory item
+// is adopt-pending.
 //
 // Run from the adopted repo root: `node scripts/adoption-status.mjs [--json] [--run]`.
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -34,10 +35,13 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { configurationTasks, REGISTRY } from './configuration-tasks.mjs';
+import { run as platformActivationStatus } from './platform-activation-check.mjs';
+import { evaluateAdoptionAttestation } from '../core/adoption-attestation.mjs';
+import { loadIssuers } from '../core/attestations.mjs';
 
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json'];
-const ACTIVATION_DIR = ['docs/governance/platform-activation', 'platform-activation'];
 const ATTEST_LOCATIONS = ['docs/governance/adoption-attestation.json', 'adoption-attestation.json'];
+const IDENTITY_LOCATIONS = ['docs/governance/identities.json', 'identities.json'];
 // The scan roots for unresolved-marker detection (config the adopter must fill).
 const SCAN_ROOTS = ['docs/governance', 'institution', 'guardrails', 'CODEOWNERS'];
 export const MARKER = /@your-org\/|ADOPT:|ADOPT-|"status":\s*"draft"/;
@@ -108,11 +112,16 @@ export function computeStatus(cwd = process.cwd(), { run = false, spawn = spawnS
   ])].sort();
   const pendingSet = new Set(pending);
 
-  // Which controls a signed platform-activation names, and which an adoption attestation covers.
-  const actDir = find(cwd, ACTIVATION_DIR);
-  const activated = new Set(actDir ? readdirSync(actDir).filter((f) => f.endsWith('.json')).map((f) => readJson(join(actDir, f))?.satisfies_control).filter(Boolean) : []);
+  // Only independently verified activation records advance the platform column. Reading the
+  // satisfies_control string directly made an unsigned one-line JSON file look platform-active.
+  const activation = platformActivationStatus(cwd);
+  const activated = new Set(activation.verifiedControls || []);
   const attest = readJson(find(cwd, ATTEST_LOCATIONS) || '');
-  const orgApproved = new Set(attest?.approved_controls || []);
+  const registry = readJson(find(cwd, IDENTITY_LOCATIONS) || '');
+  const orgFindings = attest
+    ? evaluateAdoptionAttestation({ adoptPending: pending.length > 0, unresolved: pending }, attest, { issuers: loadIssuers(cwd), registry })
+    : [];
+  const orgApproved = new Set(orgFindings.length === 0 ? (attest?.approved_controls || []) : []);
 
   const capabilities = catalog.controls.map((c) => {
     const state = c.state;
@@ -120,14 +129,14 @@ export function computeStatus(cwd = process.cwd(), { run = false, spawn = spawnS
     const installed = validated || state === 'defined' || Boolean(c.mechanism_ref || c.doc_ref);
     // configured: nothing left adopt-pending under the paths this control governs.
     const configured = installed && !anyMarkerUnder(cwd, c.paths, pendingSet);
-    const platform = ['platform-enforced', 'organisationally-enforced'].includes(state) || activated.has(c.control_id);
+    const platform = activated.has(c.control_id);
     const organisation = state === 'organisationally-enforced' || orgApproved.has(c.control_id);
     // `passing` is undefined unless --run: the projection must never imply it asked.
     const passing = run ? runMechanism(c, cwd, spawn) : undefined;
     return { control_id: c.control_id, adopter_side: Boolean(c.adopter_side), installed, configured, validated, platform, organisation, passing };
   });
   const failing = capabilities.filter((c) => c.passing === false).map((c) => c.control_id);
-  return { capabilities, configuration, unresolved: pending, adoptPending: pending.length > 0, ran: run, failing };
+  return { capabilities, configuration, unresolved: pending, adoptPending: pending.length > 0, ran: run, failing, activationFindings: activation.findings, organisationFindings: orgFindings };
 }
 
 const yn = (b) => (b ? 'yes' : '—');
@@ -167,8 +176,16 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (status.unresolved.length) {
     process.stdout.write(`\n${status.unresolved.length} file(s) ADOPT-PENDING (setup inputs and additional legacy markers):\n`);
     for (const f of status.unresolved) process.stdout.write(`  · ${f}\n`);
-    process.stdout.write('\nFill these before `attest-adoption` — a signed adoption report cannot be produced while any mandatory item is adopt-pending.\n');
+    process.stdout.write('\nFill these before `attest-adoption` — the verifier will not accept a signed adoption report while any mandatory item is adopt-pending.\n');
   } else {
     process.stdout.write('\nNo pending inputs detected in the assessed inventory. This does not establish approval or production readiness.\n');
+  }
+  if (status.activationFindings?.length) {
+    process.stdout.write(`\n${status.activationFindings.length} platform-activation finding(s); the Platform column ignores unverified claims:\n`);
+    for (const finding of status.activationFindings) process.stdout.write(`  · ${finding}\n`);
+  }
+  if (status.organisationFindings?.length) {
+    process.stdout.write(`\n${status.organisationFindings.length} adoption-attestation finding(s); the Organisation column ignores unverified claims:\n`);
+    for (const finding of status.organisationFindings) process.stdout.write(`  · ${finding}\n`);
   }
 }

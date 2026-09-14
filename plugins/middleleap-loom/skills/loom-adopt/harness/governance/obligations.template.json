@@ -295,9 +295,9 @@
     {
       "id": "OB-AE-AI-001",
       "illustrative": true,
-      "source": "CBUAE guidance on AI and machine learning in financial services",
-      "article": "ADOPT: cite the guidance section",
-      "title": "AI-driven decisions affecting customers are explainable, contestable by the customer, and tested for unfair bias",
+      "source": "CBUAE Guidance Note on Consumer Protection and Responsible Adoption and Use of Artificial Intelligence and Machine Learning by Licensed Financial Institutions",
+      "article": "Sections 2-7 and 9; issued 11 February 2026",
+      "title": "Consumer-impacting AI is governed, transparent, explainable, contestable, monitored and subject to meaningful human oversight",
       "applicability": {
         "jurisdictions": [
           "AE"
@@ -319,6 +319,7 @@
         "CTRL-001"
       ],
       "catalog_controls": [
+        "AI-GOVERNANCE",
         "AI-EXPLAINABILITY",
         "AI-FAIRNESS"
       ],

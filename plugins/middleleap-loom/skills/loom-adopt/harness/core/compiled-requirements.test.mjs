@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { aggregateRequirements, requiredBy, capabilityRequired } from './compiled-requirements.mjs';
+import { aggregateRequirements, requiredBy, capabilityRequired, modelRolesRequiredByCapability } from './compiled-requirements.mjs';
 
 // Build a tmp repo with N governed changes, each {id, state, gates, evidence, capabilities}.
 function repo(changes) {
@@ -12,7 +12,7 @@ function repo(changes) {
   for (const c of changes) {
     const base = join(dir, 'docs/governance/changes', c.id);
     mkdirSync(base, { recursive: true });
-    writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: c.id, current_state: c.state || 'in-delivery', control_plan: 'control-plan.json' }));
+    writeFileSync(join(base, 'change-envelope.json'), JSON.stringify({ change_id: c.id, current_state: c.state || 'in-delivery', control_plan: 'control-plan.json', model_roles: c.model_roles }));
     writeFileSync(join(base, 'control-plan.json'), JSON.stringify({ required_gates: c.gates || [], required_evidence: c.evidence || [], required_capabilities: c.capabilities || {} }));
   }
   return dir;
@@ -31,6 +31,24 @@ test('capabilities aggregate across changes; capabilityRequired reflects "requir
     assert.equal(agg.capabilities.data_risk_register.minimum_version, '3.1');
     assert.equal(agg.capabilities.data_risk_register.institution_owned, true);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('2.4 — model-role scope is precise only when every capability-requiring change enumerates it', () => {
+  const scoped = repo([
+    { id: 'CHG-1', model_roles: ['credit-decision'], capabilities: { ai_governance: { required: true } } },
+    { id: 'CHG-2', model_roles: ['fraud-screen'], capabilities: { ai_governance: { required: true } } },
+  ]);
+  const failOpen = repo([
+    { id: 'CHG-1', model_roles: ['credit-decision'], capabilities: { ai_governance: { required: true } } },
+    { id: 'CHG-2', capabilities: { ai_governance: { required: true } } },
+  ]);
+  try {
+    assert.deepEqual([...modelRolesRequiredByCapability(aggregateRequirements(scoped), 'ai_governance')].sort(), ['credit-decision', 'fraud-screen']);
+    assert.equal(modelRolesRequiredByCapability(aggregateRequirements(failOpen), 'ai_governance'), null, 'an unscoped envelope must expand coverage, never narrow it');
+  } finally {
+    rmSync(scoped, { recursive: true, force: true });
+    rmSync(failOpen, { recursive: true, force: true });
+  }
 });
 
 test('capability attributes aggregate STRONGEST-WINS in either read order (rc.33 — the first-wins weakening)', () => {

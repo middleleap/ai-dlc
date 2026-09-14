@@ -221,7 +221,7 @@ jobs:
 # DELIBERATELY NOT A JOB HERE: scripts/adoption-attest.mjs (rc.14 · WS5 · F7).
 #
 # It verifies the signed claim "this repository has adopted the Loom to stage N", and its central
-# rule is that no such claim may be produced while ANY mandatory item is still adopt-pending.
+# rule is that no such claim may be accepted while ANY mandatory item is still adopt-pending.
 #
 # That rule makes it the wrong shape for a per-PR gate on a FRESH adoption. A repo that has just run
 # adopt.mjs has adopt-pending items by design — the installer never fakes activation — so wiring
@@ -231,7 +231,8 @@ jobs:
 # shorter, but it is still not zero on day one.)
 #
 # Run it as a COMMAND while adopting (`node scripts/adoption-status.mjs --run` to see what is
-# outstanding and what actually passes, then `attest-adoption` once nothing is), and add it as a job
+# outstanding and what actually passes, then create, sign and verify the attestation once nothing
+# is), and add it as a job
 # here once your adoption is attested — from that point it is exactly the right gate, because it
 # fails if the adoption ever regresses.
 #
@@ -239,4 +240,4 @@ jobs:
 #     run: node scripts/adoption-attest.mjs
 #
 # The Loom's own CI asserts the NEGATIVE instead: its dry-run repo is half-adopted, so it proves a
-# signed report is impossible there. The positive path is covered by scripts/adoption-attest.test.mjs.
+# signed report is rejected there. The positive path is covered by scripts/adoption-attest.test.mjs.

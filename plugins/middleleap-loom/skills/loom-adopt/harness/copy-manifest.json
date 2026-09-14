@@ -408,6 +408,30 @@
       "tier": "governed"
     },
     {
+      "source": "governance/ai-governance.template.json",
+      "dest": "docs/governance/ai-governance.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The consumer-impacting AI governance register: shipping model pin to accountable owner, meaningful human oversight, a non-AI route, bilingual disclosure, monitoring, incident response, privacy/security assessment and re-hashed stress-test evidence. Mandatory once a compiled plan requires ai_governance; records are mechanically validated and the runtime remains adopter-side",
+      "tier": "governed"
+    },
+    {
+      "source": "governance/operating-model.template.json",
+      "dest": "docs/governance/operating-model.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The institution-owned operating model: accountable executive and mandate, board oversight, change control, rollback and cease-use ownership, a complete RACI joined to identities, protected IAM bindings and independent re-performance through the selected external record. Mandatory for a high-tier regulated-bank plan. The gate validates the record and joins; appointments, IAM and organisational operation remain adopter-side",
+      "tier": "governed"
+    },
+    {
+      "source": "governance/activation-plan.template.json",
+      "dest": "docs/governance/activation-plan.json",
+      "kind": "file",
+      "adopt": "template",
+      "seam": "The adopter activation campaign: four independent owners, one reference AI change, verified platform bypass observations, an active external-record provider (Kosli is the worked option), governed AI joins and a pilot state that cannot outrun its evidence. activating is a non-blocking work list; ready-for-pilot and later states fail closed. The gate coordinates records and observes no live system itself",
+      "tier": "full"
+    },
+    {
       "source": "governance/decision-contestability.template.json",
       "dest": "docs/governance/decision-contestability.json",
       "kind": "file",

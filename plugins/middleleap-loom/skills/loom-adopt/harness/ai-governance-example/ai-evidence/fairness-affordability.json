@@ -1,0 +1,13 @@
+{
+  "schema": "loom.fairness-report-example/v1",
+  "role": "affordability-assessment",
+  "model_id": "example-model@2026-01",
+  "prompt_version": "affordability-prompt@2.3.0",
+  "population": "synthetic-fixture@1",
+  "metric": "demographic-parity-difference",
+  "measurements": {
+    "age-band": 0.02
+  },
+  "result": "pass",
+  "note": "WORKED EXAMPLE ONLY — synthetic numbers demonstrate the record shape; no population or model was measured by the bundle."
+}

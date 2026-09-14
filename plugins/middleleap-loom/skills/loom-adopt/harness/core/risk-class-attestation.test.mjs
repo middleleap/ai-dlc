@@ -2,11 +2,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMA_ID, buildRiskClassRecord, canonicalRiskClassPayload, payloadDigest, signRiskClass, verifyRiskClass } from './risk-class-attestation.mjs';
-import { compile, resolveBindings } from './policy-compiler.mjs';
+import { compile, resolveProfileContext } from './policy-compiler.mjs';
+import { draft, verifyStored } from '../scripts/risk-class-attest.mjs';
 
 const HARNESS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const J = (...c) => { const p = c.map((x) => `${HARNESS}/${x}`).find(existsSync); return p ? JSON.parse(readFileSync(p, 'utf8')) : null; };
@@ -73,8 +75,8 @@ test('the record must be the plan\'s: a foreign hash, a moved tier, a different 
   assert.ok(verifyRiskClass(rec, { plan: PLAN, freshPlan: { plan_hash: 'd'.repeat(64) }, issuers: ISSUERS }).some((x) => /does not reconcile with a fresh compile/.test(x)));
   assert.ok(verifyRiskClass(rec, { plan: PLAN, envelope: { ...ENVELOPE, risk_tier: 'critical' }, issuers: ISSUERS }).some((x) => /not the envelope's critical/.test(x)));
   // a genuinely fresh compile of the shipped example reconciles
-  const profiles = ['regulated-bank', 'uae-bank', 'lending'].map((n) => J(`profiles/${n}.json`, `profiles/jurisdictions/${n}.json`, `profiles/products/${n}.json`));
-  const fresh = compile(ENVELOPE, profiles, resolveBindings(ENVELOPE.required_profiles, HARNESS).bindings).plan;
+  const context = resolveProfileContext(ENVELOPE, HARNESS);
+  const fresh = compile(context.envelope, context.profiles, context.bindings).plan;
   assert.deepEqual(verifyRiskClass(rec, { plan: PLAN, freshPlan: fresh, issuers: ISSUERS }), []);
 });
 
@@ -93,4 +95,20 @@ test('the canonical payload is stable under key order and ignores the attestatio
   const shuffled = Object.fromEntries(Object.entries(rec).reverse());
   assert.equal(canonicalRiskClassPayload(rec), canonicalRiskClassPayload(shuffled));
   assert.equal(canonicalRiskClassPayload(rec), canonicalRiskClassPayload({ ...rec, attestation: { issuer: 'x' } }));
+});
+
+test('the attestation CLI refuses to draft or verify when current profile policy cannot compile', { skip }, () => {
+  const dir = mkdtempSync(resolve(tmpdir(), 'loom-risk-class-'));
+  try {
+    const changeDir = resolve(dir, 'docs/governance/changes/CHG-X');
+    mkdirSync(changeDir, { recursive: true });
+    const envelope = { ...ENVELOPE, change_id: 'CHG-X', required_profiles: ['missing-profile'] };
+    writeFileSync(resolve(changeDir, 'change-envelope.json'), JSON.stringify(envelope));
+    writeFileSync(resolve(changeDir, 'control-plan.json'), JSON.stringify(PLAN));
+    writeFileSync(resolve(changeDir, 'risk-class.json'), JSON.stringify(buildRiskClassRecord(envelope, PLAN)));
+    assert.ok(draft(changeDir, { cwd: dir }).findings.some((f) => /missing-profile.*not found/.test(f)));
+    assert.ok(verifyStored(changeDir, { cwd: dir, requireSignature: false }).findings.some((f) => /fresh compile blocked.*missing-profile/.test(f)));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
