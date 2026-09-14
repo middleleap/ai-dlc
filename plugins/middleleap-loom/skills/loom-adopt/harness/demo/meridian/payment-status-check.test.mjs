@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
@@ -25,14 +26,17 @@ test('the first cut is refused: timeout reported as failed, automatic retry', ()
   assert.deepEqual(notices, [BOUNDARY]);
 });
 
-test('the repaired contract passes, and the boundary notice still prints', () => {
-  const { findings, notices } = evaluate(load('status-contract.repaired.json'), withEvidence);
+test('the recorded agent run\'s output passes, matches its recorded digest, and the boundary notice still prints', () => {
+  const run = load('agent-run/run.json');
+  const bytes = readFileSync(join(H, run.output.ref));
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), run.output.sha256, 'agent output edited since the run was recorded');
+  const { findings, notices } = evaluate(JSON.parse(bytes.toString('utf8')), withEvidence);
   assert.deepEqual(findings, []);
   assert.deepEqual(notices, [BOUNDARY]);
 });
 
 test('the evidence binding: a changed digest, a missing case, a failed case, a missing file', () => {
-  const good = load('status-contract.repaired.json');
+  const good = JSON.parse(readFileSync(join(H, load('agent-run/run.json').output.ref), 'utf8'));
   let r = evaluate({ ...good, negative_test: { ...good.negative_test, sha256: 'ab'.repeat(32) } }, withEvidence);
   assert.ok(r.findings.some((f) => /does not match the cited sha256/.test(f)));
   const ev = JSON.parse(evidence.toString());

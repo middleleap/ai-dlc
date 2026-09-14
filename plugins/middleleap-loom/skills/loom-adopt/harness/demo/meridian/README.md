@@ -14,7 +14,7 @@ shipped templates; the demo registers these files in the *adopted* scratch tree 
 | `payment-status-check.mjs` | The executable check (`PSI-R01`–`PSI-R06`): a timeout resolves to *unknown*, the reference is preserved, a status query precedes any retry, and a recorded negative test is digest-bound | executed local check |
 | `payment-status-check.test.mjs` | The control's own negative test (`test_ref`) | executed local check |
 | `status-contract.first-cut.json` | The AI-assisted team's first reading: timeout → *failed*, automatic retry. **Refused.** | fixture |
-| `status-contract.repaired.json` | The repaired contract. The demo script writes it — a *scripted repair* standing in for an agent task, and labelled as such on screen | fixture |
+| `agent-run/` | A bounded agent task that was run once (14 Sep 2026) against the first cut: `task.md` (the brief and its boundaries), `output/payment-initiation.status-contract.json` (the repair it produced, the only repaired contract), `transcript.md` (its final report, verbatim), `run.json` (digests of task, inputs and output; model declared, not attested; per-call tool log not captured). The demo replays the output after checking the digests and re-executes the check over it | recorded agent run |
 | `payment-status-tests.json` | Synthetic negative-test evidence the contract cites by sha256 | fixture |
 
 What the walk then shows: the gate runner posts the `PAYMENT-STATUS` result to the provider with
@@ -24,6 +24,6 @@ one inspectable join — mandate, obligation, catalog digest, change, commit, ar
 producer, signature, approval, external record — each row marked VERIFIED, DECLARED,
 RESOLVED · SIMULATED (the fake) or RESOLVED · LIVE (`--real`), or NOT CHECKED.
 
-The boundary the check prints on every run is the boundary of the demo: it validates a declared
+A recorded run is a run that happened once and was kept, not a live agent on stage: the demo says so on the step. The boundary the check prints on every run is the boundary of the demo: it validates a declared
 contract and a recorded test. It does not observe a payment system, a participant bank or the
 platform's status API, and it does not make the Open Finance proposition a running service.

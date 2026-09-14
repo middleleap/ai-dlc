@@ -1,0 +1,47 @@
+{
+  "schema": "loom.demo-agent-run/v1",
+  "ran_at": "2026-09-14T08:45:00Z",
+  "harness": "Claude Code Agent tool (general-purpose subagent), one bounded task, read-only inputs, one permitted output path",
+  "model": {
+    "configured": "claude-opus-5",
+    "note": "the configured model id for the session that spawned the run; the serving model is not independently attested"
+  },
+  "task": {
+    "ref": "agent-run/task.md",
+    "sha256": "cc9fed061690b62aa4674b6fc42275c292a2180e86abb0ebee390406531f6a15"
+  },
+  "inputs": [
+    {
+      "ref": "obligation.json",
+      "sha256": "9cd3a438e091d5351fd33a346f998c9e061d20230477ff0c129ee49e40ef191a"
+    },
+    {
+      "ref": "payment-status-check.mjs",
+      "sha256": "c94ebaebe3d1f36bdac471592e1797830b9d8c1664e96d2717d5e5a4b025603b"
+    },
+    {
+      "ref": "status-contract.first-cut.json",
+      "sha256": "52e1d8a264892d6354e2a4348d45ad1f530e534e45db8520d874a5408985d334"
+    },
+    {
+      "ref": "payment-status-tests.json",
+      "sha256": "ce7092f089ac186b5aaccc14be1c84d2579446989ead020d151c4814c7442093"
+    }
+  ],
+  "output": {
+    "ref": "agent-run/output/payment-initiation.status-contract.json",
+    "sha256": "ad569a201af3c5b7d943077c2e799e072765314848926fd4c290e29a690e8913"
+  },
+  "transcript": {
+    "ref": "agent-run/transcript.md",
+    "kind": "final report verbatim; per-call tool log not captured",
+    "tool_calls": 7,
+    "duration_ms": 25992
+  },
+  "verification": {
+    "check": "node payment-status-check.mjs",
+    "result": "pass",
+    "rerun_by": "the demo re-executes the check over this output on every run (the pass is not replayed, the output is)"
+  },
+  "boundary": "A recorded bounded run: the transcript and output are kept and digest-bound; it is not a live agent execution during the demo, and the model identity is declared, not attested."
+}
