@@ -20,6 +20,14 @@ authoritative for "current", so the states are:
             ahead of the skill. Update the skill. Exit 1.
   ERROR   — neither source reachable. Exit 2.
 
+Errata-number equality is not sufficient on its own: the community hub has been
+observed adding sections to an open errata group without bumping its number (see
+the 31 Aug 2026 pass in verification-log.md — errata3 grew from 2 to 5 corrections
+while staying "errata3" on both sides). When the register and skill agree on the
+errata number, this script also compares the register's "N corrections" count for
+that errata against the count recorded in SKILL.md's Quick Reference, and reports
+STALE with a section_note if they diverge.
+
 Note on GitHub 403s: unauthenticated api.github.com allows ~60 req/hr per IP.
 A 403 here is almost always the rate limit (shared egress IPs exhaust it fast),
 not a permissions problem — this script now says so and falls back to the
@@ -106,6 +114,45 @@ def register_current(version_hint: str) -> tuple[str, int] | None:
     return f"v{best[0]}.{best[1]}", best[2]
 
 
+def register_section_count(version_hint: str, errata_num: int) -> int | None:
+    """How many corrections the register's versioned page lists under vX.Y-errataN.
+
+    The community hub does not mint a new errata number when it adds sections to an
+    open group (see the 31 Aug 2026 pass in verification-log.md) — an errata group can
+    grow from 2 to 5 corrections while `v2.1-errata3` stays the highest number either
+    side of the change. `register_current()` alone is blind to that. The versioned page
+    tags each errata heading with a "N correction(s)" badge immediately after it
+    (e.g. "v2.1-errata3 5 corrections §1 ..."); this counts that badge for the specific
+    errata number so main() can compare it against what the skill has recorded.
+    Returns None if the page is unreachable or the badge isn't found (never raises —
+    this is a supplementary signal, not a hard requirement).
+    """
+    url = f"{REGISTER_BASE}/erratas/{version_hint}/"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "of-skill-check-current"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            html = r.read().decode("utf-8", errors="replace")
+    except (urllib.error.URLError, OSError):
+        return None
+    text = re.sub(r"<[^>]+>", " ", html)
+    text = re.sub(r"\s+", " ", text)
+    m = re.search(
+        rf"{re.escape(version_hint)}-errata{errata_num}\s+(\d+)\s+corrections?", text
+    )
+    return int(m.group(1)) if m else None
+
+
+def skill_stated_sections(text: str, version_hint: str, errata_num: int) -> int | None:
+    """How many corrections SKILL.md's Quick Reference records for vX.Y-errataN.
+
+    Looks for the "errataN** (N corrections" pattern in the Quick Reference table.
+    Returns None if not found (older phrasing, or the section-count practice hasn't
+    been adopted yet) rather than failing — see register_section_count().
+    """
+    m = re.search(rf"errata{errata_num}\*\*\s*\((\d+)\s+corrections?", text)
+    return int(m.group(1)) if m else None
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -151,6 +198,23 @@ def main() -> None:
     else:
         status = "FRESH"
 
+    # The errata *number* matching isn't sufficient: the register can add sections to an
+    # open errata group without bumping its number (see the 31 Aug 2026 pass in
+    # verification-log.md). When the numbers agree, cross-check the section count too.
+    section_note = None
+    if status == "FRESH" and register and register[1] == stated[1]:
+        reg_sections = register_section_count(stated[0], stated[1])
+        skill_sections = skill_stated_sections(SKILL_MD.read_text(), stated[0], stated[1])
+        if reg_sections is not None and skill_sections is not None and reg_sections != skill_sections:
+            status = "STALE"
+            section_note = (
+                f"errata{stated[1]} grew in place: the register now lists {reg_sections} "
+                f"correction(s) under {stated[0]}-errata{stated[1]}, but SKILL.md still "
+                f"records {skill_sections}. The errata number is unchanged, so the plain "
+                "number comparison above reported FRESH — this is exactly the blind spot "
+                "flagged in verification-log.md. Re-verify the new section(s) and update."
+            )
+
     result = {
         "skill_states": f"{stated[0]}-errata{stated[1]}",
         "register_published": f"{register[0]}-errata{register[1]}" if register else None,
@@ -159,6 +223,7 @@ def main() -> None:
         "prerelease_lines_in_repo": prerelease,
         "status": status,
         "note": repo_note,
+        "section_note": section_note,
     }
     if args.json:
         print(json.dumps(result, indent=2))
@@ -173,6 +238,8 @@ def main() -> None:
                   "note it in standards-versions.md if the skill does not mention it)")
         if repo_note:
             print(f"note                 : {repo_note}")
+        if section_note:
+            print(f"section check        : {section_note}")
         if status == "FRESH":
             print("FRESH — the skill matches the published register (and repo, if reachable).")
         elif status == "PENDING":
