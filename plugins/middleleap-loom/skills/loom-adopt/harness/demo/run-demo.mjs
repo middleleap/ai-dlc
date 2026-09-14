@@ -15,16 +15,17 @@
 // --scenario meridian (docs/plans/kosli-founder-demo-briefing.md) adds the ONE obligation the
 // founder demo traces: demo/meridian/ registers a Meridian Trust payment-status obligation, its
 // register rows and a demo-scoped PAYMENT-STATUS control in the adopted tree; the team's first
-// contract FAILS that check, a scripted repair fixes it, the rerun passes, and the gate record
-// that Kosli receives carries the obligation id. The walk ends with scripts/record-join.mjs — the
+// contract FAILS that check, the output of a RECORDED bounded agent run (demo/meridian/agent-run/,
+// digest-bound) repairs it, the rerun passes, and the gate record that Kosli receives carries the
+// obligation id. The walk ends with scripts/record-join.mjs — the
 // one inspectable join from mandate to external record.
 //
 // EVIDENCE LEGEND — every step is tagged with what kind of evidence it produces, so nothing on
 // the screen is mistaken for more than it is:
 //   [fixture]            prepared synthetic files copied into the scratch tree
 //   [executed check]     a gate mechanism actually ran here, against those files
-//   [scripted repair]    this script edited a file to stand in for an agent task — NOT a
-//                        recorded agent run
+//   [recorded agent run] the output of a bounded agent task that was run once and kept
+//                        (task, transcript, output, digests); replayed here, not re-executed
 //   [simulated provider] the record-and-replay fake answered as Kosli; nothing left this machine
 //   [live provider]      --real: the official CLI against an org; the read-back is the proof
 //   [refusal]            a deliberate negative case the harness must reject
@@ -155,8 +156,19 @@ try {
     for (const l of lines) process.stdout.write(`     ${l}\n`);
     process.stdout.write('     refused: the acceptance condition is executable, and the team\'s reading of it was wrong\n');
 
-    say('MERIDIAN — repair: timeout → unknown, status query before any retry, retry idempotent on the original reference. This script writes the fix; it stands in for the agent task and is labelled as such', 'scripted repair');
-    cpSync(join(H, 'demo/meridian/status-contract.repaired.json'), join(A, 'docs/governance/services/payment-initiation.status-contract.json'));
+    {
+      const runRec = JSON.parse(readFileSync(join(H, 'demo/meridian/agent-run/run.json'), 'utf8'));
+      say(`MERIDIAN — repair: the output of a recorded bounded agent run (${runRec.ran_at}, ${runRec.transcript.tool_calls} tool calls; task, transcript and output kept under demo/meridian/agent-run/). Replayed from the record, not re-executed live; the check below IS re-executed`, 'recorded agent run');
+      const { createHash } = await import('node:crypto');
+      const outPath = join(H, 'demo/meridian', runRec.output.ref);
+      const bytes = readFileSync(outPath);
+      if (createHash('sha256').update(bytes).digest('hex') !== runRec.output.sha256) fail('the recorded agent output does not match the digest in run.json — the record has been edited since the run');
+      const taskBytes = readFileSync(join(H, 'demo/meridian', runRec.task.ref));
+      if (createHash('sha256').update(taskBytes).digest('hex') !== runRec.task.sha256) fail('the recorded task does not match the digest in run.json');
+      writeFileSync(join(A, 'docs/governance/services/payment-initiation.status-contract.json'), bytes);
+      process.stdout.write(`     output sha256:${runRec.output.sha256.slice(0, 12)}… matches run.json; model ${runRec.model.configured} (declared, not attested)\n`);
+      for (const l of readFileSync(join(H, 'demo/meridian', runRec.transcript.ref), 'utf8').split('\n').filter((l) => l.startsWith('- `'))) process.stdout.write(`     ${l.slice(0, 150)}${l.length > 150 ? '…' : ''}\n`);
+    }
 
     say('MERIDIAN — rerun the same check over the repaired contract and its recorded negative-test evidence (digest-bound); it passes, and prints its own boundary', 'executed check');
     const again = node(['scripts/payment-status-check.mjs'], { expect: 0, quiet: true });
