@@ -89,21 +89,40 @@ try {
 
   let M = null; // the Meridian scenario, when chosen
   if (meridian) {
-    M = JSON.parse(readFileSync(join(H, 'demo/meridian/obligation.json'), 'utf8'));
-    say(`MERIDIAN — register the one obligation the demo traces: ${M.obligation.id} → ${M.register.control.control_id} → catalog control ${M.control.control_id} → ${M.control.mechanism_ref} (mandate ${M.mandate_ref})`, 'fixture');
-    // The obligation joins the register the OBLIGATIONS gate already checks; its risk and control
-    // join the data-risk register so the ids resolve; the control joins the adopted catalog with
-    // its mechanism and test copied beside the other scripts. Nothing in the bundle's templates moves.
-    { const ob = J('docs/governance/obligations.json'); ob.obligations.push(M.obligation); W('docs/governance/obligations.json', ob); }
-    const R = 'docs/governance/data-risk-register';
-    for (const [file, row] of [['risk-taxonomy.json', M.register.taxonomy], ['risk-statements.json', M.register.statement], ['controls.json', M.register.control], ['residual-risk.json', M.register.residual]]) { const rows = J(`${R}/${file}`); rows.push(row); W(`${R}/${file}`, rows); }
-    { const cat = J('docs/governance/control-catalog.json'); cat.controls.push(M.control); W('docs/governance/control-catalog.json', cat); }
-    cpSync(join(H, 'demo/meridian/payment-status-check.mjs'), join(A, 'scripts/payment-status-check.mjs'));
-    cpSync(join(H, 'demo/meridian/payment-status-check.test.mjs'), join(A, 'scripts/payment-status-check.test.mjs'));
-    cpSync(join(H, 'demo/meridian/payment-status-tests.json'), join(A, 'docs/governance/evidence/payment-status-tests.json'));
+    const { mountMeridian } = await import(pathToFileURL(join(H, 'demo/meridian/mount.mjs')).href);
+    M = { obligation: JSON.parse(readFileSync(join(H, 'demo/meridian/obligation.json'), 'utf8')).obligation };
+    say('MERIDIAN — mount the scenario: the Meridian brand, two discovery runs, the Open Finance obligations and their register rows, and the one demo-scoped control. The bundle\'s templates do not move', 'fixture');
+    const ids = mountMeridian(A);
+    M.ids = ids;
     node(['scripts/obligations-check.mjs'], { quiet: true });
     node(['scripts/control-catalog-check.mjs'], { quiet: true });
-    process.stdout.write(`     obligation and catalog gates accept the registration; owner_role ${M.obligation.owner_role} resolves to a human in the registry\n`);
+    process.stdout.write(`     obligations: ${ids.obligations.join(', ')}\n     traced end to end: ${ids.obligation} → ${ids.registerControl} → ${ids.control} → ${ids.mechanism} (mandate ${ids.mandate})\n     the obligations and catalog gates accept the rows; every owner_role resolves to a human in the registry\n`);
+
+    say('MERIDIAN · DISCOVER — the run cross-bank-money: research log → synthesis → problem statement → data-governance feasibility (citing the Open Finance obligations by id) → prototype → stakeholder reaction → hand-off. D1–D9, under the Meridian brand', 'executed check');
+    const v = node(['discovery/gates/validate.mjs', 'discovery/runs/cross-bank-money', '--register', 'docs/governance/data-risk-register', '--brand', 'discovery/brand/design.md', '--obligations', 'docs/governance/obligations.json'], { expect: 0, quiet: true });
+    for (const l of v.stdout.split('\n').filter((l) => /\[(PASS|FAIL|SKIP)\]/.test(l))) process.stdout.write(`     ${l.trim()}\n`);
+    if ((v.stdout.match(/\[PASS\]/g) || []).length !== 9) fail('the discovery run is not green on all nine gates');
+    process.stdout.write('     wireframe: discovery/runs/cross-bank-money/wireframe.html (open it — Meridian brand, synthetic numbers, H3 greyed)\n');
+
+    say('MERIDIAN · DISCOVER — the sponsor\'s app idea, written into the problem statement as if it were the answer, is REFUSED by D4 (no-solutioning boundary). The problem is named; the build is not', 'refusal');
+    {
+      const p = join(A, 'discovery/runs/cross-bank-money/problem-statement.md');
+      const original = readFileSync(p, 'utf8');
+      writeFileSync(p, original + '\n\nWe will build the PFM app on a new transfers endpoint with a React front end.\n');
+      const r = node(['discovery/gates/validate.mjs', 'discovery/runs/cross-bank-money', '--register', 'docs/governance/data-risk-register', '--brand', 'discovery/brand/design.md', '--obligations', 'docs/governance/obligations.json'], { expect: null, quiet: true });
+      writeFileSync(p, original);
+      const d4 = r.stdout.split('\n').filter((l) => /D4|endpoint|tech-stack/.test(l));
+      if (r.status === 0 || !d4.some((l) => /FAIL/.test(l))) fail('D4 did not refuse the solutioning sentence');
+      for (const l of d4) process.stdout.write(`     ${l.trim()}\n`);
+      process.stdout.write('     refused, then restored: discovery names the problem; delivery owns the solution\n');
+    }
+
+    say('MERIDIAN · DISCOVER — the alternative ending: cross-bank-money-stopped. Same signals, a customer panel that refuted the trust hypothesis, and a STOP recorded by a human product owner — the record Kosli would receive as discovery-stopped', 'executed check');
+    const vs = node(['discovery/gates/validate.mjs', 'discovery/runs/cross-bank-money-stopped', '--register', 'docs/governance/data-risk-register', '--brand', 'discovery/brand/design.md', '--obligations', 'docs/governance/obligations.json'], { expect: 0, quiet: true });
+    process.stdout.write(`     ${(vs.stdout.match(/\[PASS\]/g) || []).length} gates pass; no hand-off exists for this run\n`);
+    const { readOutcome, discoveryStoppedRecord } = await import(pathToFileURL(join(H, 'core/loop-attestations.mjs')).href);
+    const rec = discoveryStoppedRecord('cross-bank-money-stopped', readOutcome(join(A, 'discovery/runs/cross-bank-money-stopped')));
+    process.stdout.write(`     discovery-stopped: decided by ${rec.decided_by} (human) · ${rec.hypotheses.map((h) => `${h.id} ${h.verdict}`).join(', ')}\n     reason: ${String(rec.reason).slice(0, 140)}…\n`);
   }
 
   say('choose providers for the five roles the high-tier AI change requires (PS-R06 fires until this is done)', 'executed check');

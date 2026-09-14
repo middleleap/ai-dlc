@@ -10,6 +10,11 @@ shipped templates; the demo registers these files in the *adopted* scratch tree 
 
 | File | Role in the walk | Evidence status |
 |---|---|---|
+| `mount.mjs` | Mounts the scenario into an adopted tree: registers, obligations, the control, both discovery runs, the Meridian brand as `discovery/brand/design.md` | — |
+| `open-finance-obligations.json` | The Open Finance obligations Meridian meets in Define (participation, consent, personal data, security and certification, resilience and outsourcing) with their register rows. Sources named; **articles deliberately not cited** — verify against the current Regulation and Standards before the meeting | fictional planning |
+| `discovery-run/` | The run `cross-bank-money`: research log (S-001–S-011), synthesis (T-1–T-4), problem statement (H1–H3), data-governance feasibility citing the obligations by id, prototype brief + `specs/wireframe.prototype.json` rendered to `wireframe.html` under the Meridian brand, stakeholder reaction (digest-bound), hand-off. D1–D9 green | executed local check |
+| `discovery-run-stopped/` | The alternative ending `cross-bank-money-stopped`: same signals, a customer panel that refuted H2, and `outcome.md` — a STOP decided by a human product owner, from which the `discovery-stopped` record is built | executed local check |
+| `scenario.test.mjs` | Adopts a scratch tree, mounts the scenario, requires D1–D9 on both runs, the D4 refusal, a well-formed stop record, and green register gates | executed local check |
 | `obligation.json` | The obligation `OB-AE-MTPOL-PSI-001`, its data-risk register rows (`DR-2.1-001`, `CTRL-002`) and the demo-scoped catalog control `PAYMENT-STATUS` | fictional planning |
 | `payment-status-check.mjs` | The executable check (`PSI-R01`–`PSI-R06`): a timeout resolves to *unknown*, the reference is preserved, a status query precedes any retry, and a recorded negative test is digest-bound | executed local check |
 | `payment-status-check.test.mjs` | The control's own negative test (`test_ref`) | executed local check |
