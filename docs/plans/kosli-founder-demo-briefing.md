@@ -131,7 +131,22 @@ If the slot is 15 minutes, shorten discovery and reuse; retain the concrete obli
 5. Correct the “first commit” and “Kosli only stores” framing in the supporting seam narrative. Preserve the useful provider-neutral architecture.
 6. Rehearse the refusal and repair before optional installation details. Keep the public website unchanged for this audience-specific material.
 
-Candidate implementation locations: private scenario/presenter content in `middleleap/loom-private-demo/private-source/`; reusable rendering in `ai-dlc/scripts/customer-demo-illustration.mjs` and the customer-demo source; adapter-specific evidence under the Loom harness. Generated private `dist/` content should follow the established export workflow, not become an independent source of truth. These are recommendations only; no repository implementation was performed for this briefing.
+Candidate implementation locations: private scenario/presenter content in `middleleap/loom-private-demo/private-source/`; reusable rendering in `ai-dlc/scripts/customer-demo-illustration.mjs` and the customer-demo source; adapter-specific evidence under the Loom harness. Generated private `dist/` content should follow the established export workflow, not become an independent source of truth.
+
+**Implementation status (14 September, this repository)**
+
+| # | Change | Where | Status |
+| --- | --- | --- | --- |
+| 1 | Presenter route — mandate and three role cards above the method detail | `scripts/customer-demo-illustration.mjs` (`presenter` block, optional) | Rendering and validation done; the private scenario JSON must add the block |
+| 2 | Persistent evidence legend, status on the artifact where the claim appears | `scripts/customer-demo-illustration.mjs` (`evidence_status` per excerpt, legend always rendered); `demo/run-demo.mjs` tags every step with the same vocabulary | Done |
+| 3 | One traceable change with the explicit planning → mechanics transition | `harness/demo/run-demo.mjs --scenario meridian` + `harness/demo/meridian/` — one fictional Meridian obligation (`OB-AE-MTPOL-PSI-001`, payment-status integrity) → register rows → demo-scoped `PAYMENT-STATUS` control → executable check; first cut refused, scripted repair, rerun, record posted with the obligation id | Done against the fake; the repair is scripted and labelled so, not a recorded agent run |
+| 4 | Kosli responsibility/evidence view with source, producer, check, external reference and verification status | `harness/scripts/record-join.mjs <CHG> --obligation <OB>` — one table, per-row VERIFIED / DECLARED / RESOLVED · LIVE or SIMULATED / NOT CHECKED; `--out` renders a page | Done; no live dashboard is fabricated — the fake is detected from its bytes |
+| 5 | Correct the "first commit" and "Kosli only stores" framing | `loom/references/kosli-seam.md` §1 and §6, `loom/references/core.md` "Where Kosli sits" | Done |
+| 6 | Rehearse refusal and repair; public website unchanged | `run-demo.mjs --scenario meridian` runs in CI (`validate.yml`) | Done; website untouched |
+
+Also fixed on the way: the default demo's pr lane was red on eight gates (missing fixtures the CI dry-run stages, and the demo's own signing key tripping the secrets gate). It is now green, and the script fails if it is not, so the only failures on screen are the deliberate ones.
+
+Still outside this repository: the operations-queue demo, the case study, the pilot offer and the second-team exercise (private material on the presenter's machine and in `loom-private-demo`), and the live-org integration run (`docs/integration-run.md`, still owed). The join and the scenario say `simulated provider` until that run exists.
 
 **The minimum credible joint technical evaluation**
 
@@ -147,12 +162,12 @@ Closing question:
 
 **Local evidence inspected**
 
-- `/Users/michartmann/Documents/GitHub/ai-dlc/plugins/middleleap-loom/skills/loom/references/kosli-seam.md`
-- `/Users/michartmann/Documents/GitHub/ai-dlc/plugins/middleleap-loom/skills/loom-adopt/harness/docs/kosli-surface.md`
-- `/Users/michartmann/Documents/GitHub/ai-dlc/plugins/middleleap-loom/skills/loom-adopt/harness/core/providers/kosli.mjs`
-- `/Users/michartmann/Documents/GitHub/ai-dlc/plugins/middleleap-loom/skills/loom-adopt/harness/demo/run-demo.mjs`
-- `/Users/michartmann/Documents/GitHub/ai-dlc/docs/demos/loom-customer/case-study.md`
-- `/Users/michartmann/Documents/GitHub/ai-dlc/docs/demos/loom-customer/pilot-offer.md`
-- `/private/tmp/loom-private-demo-integration/private-source/open-finance-illustration.json`
+- `plugins/middleleap-loom/skills/loom/references/kosli-seam.md`
+- `plugins/middleleap-loom/skills/loom-adopt/harness/docs/kosli-surface.md`
+- `plugins/middleleap-loom/skills/loom-adopt/harness/core/providers/kosli.mjs`
+- `plugins/middleleap-loom/skills/loom-adopt/harness/demo/run-demo.mjs`
+- `docs/demos/loom-customer/case-study.md` — local, uncommitted; not on any branch of this repository
+- `docs/demos/loom-customer/pilot-offer.md` — local, uncommitted; not on any branch of this repository
+- `loom-private-demo` `private-source/open-finance-illustration.json` — private repository
 
 Source review used the current local checkout, whose tracked HEAD was `36ea325e3db363f8130e638675b96184f95cf2f0`, plus existing local demo work and the private scenario copy. It did not certify that every local capability is present in the hosted demo or current remote main. Public positioning was researched live; no authenticated live demo or Kosli organization was exercised during this review.

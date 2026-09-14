@@ -1,0 +1,17 @@
+{
+  "_comment": "The AI-assisted team's FIRST CUT of the payment-initiation timeout contract (demo/meridian). It is wrong in the way that is easy to write and hard to see: a timeout is reported as failed and the client retries automatically. scripts/payment-status-check.mjs refuses it (PSI-R02, PSI-R04). This file is the DEFECT the demo repairs; it is never the state the tree is committed in.",
+  "schema": "loom.demo-status-contract/v1",
+  "service_id": "payment-initiation",
+  "obligation_ids": ["OB-AE-MTPOL-PSI-001"],
+  "timeout": {
+    "client_deadline_ms": 8000,
+    "outcome": "failed",
+    "preserve_reference": true,
+    "status_query_before_retry": false,
+    "retry": "automatic"
+  },
+  "negative_test": {
+    "ref": "docs/governance/evidence/payment-status-tests.json",
+    "sha256": "ce7092f089ac186b5aaccc14be1c84d2579446989ead020d151c4814c7442093"
+  }
+}
