@@ -106,6 +106,24 @@ re-checked this pass — items marked PENDING below need that.
 | JWE `alg` wording | **OPEN — minor**: `technical-specs.md` states `RSA-OAEP-256` (from the hub encryption guide); the errata3 spec's `AEJWEPaymentPII` example header decodes to `{"alg":"RSA-OAEP","enc":"A256GCM"}`. Both are RSA-OAEP family; confirm which the Hub/LFI JWKS actually advertise before hard-coding either | flagged here only |
 | NOT verified this pass | Register / Confluence status of v2.2-rc1 and of the insurance file in the errata3 folder; `servers` base paths; anything outside the two payment specs | — |
 
+## Pass of 7 September 2026 — closed the check_current.py section-count blind spot
+
+Trigger: weekly "Open Finance Ecosystem Watcher" cadence, this time asked to look one level
+up — whether the watcher's own recent passes (31 Aug, 3 Sep) suggested a refinement to how the
+skill is kept current, not just a content re-check. Both of those passes had independently
+flagged the same unfixed gap: `check_current.py` compares only the stated errata *number*, so
+an already-published errata group growing new sections in place (exactly what happened to
+errata3 between 17 Aug and 31 Aug) reads as FRESH.
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| Register page structure | **CONFIRMED**: the versioned erratas page (`erratas/{version}/`) is server-rendered and states each group's own count right next to its id — `<div class="ed-er-group__id">v2.1-errata3</div><div class="ed-er-group__count">5 corrections</div>` — for every errata group under that version line (errata1: 1 correction, errata2: 17, errata3: 5, matching the skill). This was previously only cross-checked by hand; it is a stable, parseable signal | — |
+| `check_current.py` | **Fixed the blind spot**: `register_current()` now also extracts each group's stated correction count from the versioned page; a new `skill_stated_section_count()` parses the skill's own claimed count from the SKILL.md Quick Reference (`errataN** (M corrections`); `main()` compares them for the skill's current errata group and reports a new `STALE_SECTIONS` status (exit 1) when the register's count exceeds the skill's — distinct from `STALE` (number behind) so the operator knows to look at sections, not chase a new errata number | `scripts/check_current.py` |
+| Live re-check with the fixed script | **FRESH** (including sections): register still states 5 corrections under v2.1-errata3, matching the skill — no drift since the 3 Sep pass, 4 days prior. No content change needed this pass | — |
+| Landing page | **Confirmed thin**: the landing page (`release-notes-and-erratas/`, ~21KB after its 308 redirect) does not carry per-group counts — that data exists only on the versioned page. `register_current()` already fetched the versioned page for the number check, so no new request was added, only new parsing of the same response | — |
+| Doc updates | Cross-referenced the fix in `SKILL.md` (the "Last verified" banner and the "Staleness check" line no longer describe the section-count gap as open) and in `standards-versions.md`'s errata3 detection note | `SKILL.md`, `standards-versions.md` |
+| NOT verified this pass | Whether the same `ed-er-group__count` markup is stable across other version lines (only v2.1 was checked, since it's the skill's current line); no new content-level re-check of pricing/liability/other pages (out of scope — this pass was about the tooling gap, not a fresh content sweep) | — |
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the

@@ -7,7 +7,7 @@ description: Expert guidance on UAE Open Finance — CBUAE regulation and compli
 
 Expert knowledge base for UAE's Open Finance ecosystem covering CBUAE regulations, Standards versions (v2.1-final production, errata3 current), Al Tareq platform requirements, implementation guidance, testing/certification, commercial model, roadmap, and CAAP authentication.
 
-> **Last verified against sources: 31 August 2026 (errata3 register re-check found 3 corrections added since the 17 Aug full pass; prior passes 17 Aug / 13 Jul / 10 Jun 2026); wire-schema pass 3 September 2026 (Risk extension points, PII envelope, ControlParameters, errata3 folder contents, v2.2-rc1 detection — authenticated api-specs read; register not re-checked).** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py` (note: the script tracks the errata *number* and now reports pre-release lines, but it does not count sections — it will not by itself catch an existing errata group growing in place; cross-check `references/standards-versions.md` too).
+> **Last verified against sources: 31 August 2026 (errata3 register re-check found 3 corrections added since the 17 Aug full pass; prior passes 17 Aug / 13 Jul / 10 Jun 2026); wire-schema pass 3 September 2026 (Risk extension points, PII envelope, ControlParameters, errata3 folder contents, v2.2-rc1 detection — authenticated api-specs read; register not re-checked); ecosystem-watcher cadence 7 September 2026 re-confirmed errata3 still at 5 corrections and closed the tooling gap below.** Full audit trail, provenance, and resolved items: `references/verification-log.md`. Re-verify standards/errata level, pricing, and metrics before relying on time-sensitive figures — start with `python3 scripts/check_current.py` (the script now compares BOTH the errata number and, for the skill's current group, the register's own per-group correction count — e.g. "5 corrections" under v2.1-errata3 — so an existing group growing new sections in place surfaces as `STALE_SECTIONS` instead of silently reading FRESH; still cross-check `references/standards-versions.md` for the section-level detail).
 
 ## Quick Reference
 
@@ -188,7 +188,7 @@ Volatile facts have one canonical home each — update there first, then sync th
 | Liability amounts | `liability-framework.md` |
 | Roadmap dates / what's live | `implementation-roadmap.md` |
 
-**Staleness check:** `python3 scripts/check_current.py` compares this skill's stated current version/errata against the live `api-specs` repo. When an errata bumps (e.g. errata3), grep the whole skill for the old errata string — it appears in several files — and re-run a verification pass. Log outcomes in `references/verification-log.md`.
+**Staleness check:** `python3 scripts/check_current.py` compares this skill's stated current version/errata against the live `api-specs` repo AND the community-hub register's own per-group correction count (catching a group that grew sections without a number bump — exits `STALE_SECTIONS`). When an errata bumps or grows, grep the whole skill for the old errata string — it appears in several files — and re-run a verification pass. Log outcomes in `references/verification-log.md`.
 
 ## Key Resources
 
