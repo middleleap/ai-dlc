@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { addIllustration } from './customer-demo-illustration.mjs';
+import { addIllustration, EVIDENCE_STATUSES } from './customer-demo-illustration.mjs';
 function fixture(t) {
  const root=mkdtempSync(join(tmpdir(),'illustration-test-'));t.after(()=>rmSync(root,{recursive:true,force:true}));const base=join(root,'base');mkdirSync(join(base,'dist/evidence'),{recursive:true});
  for(const file of ['README.md','Dockerfile','server.mjs'])writeFileSync(join(base,file),'unchanged');
@@ -21,4 +21,18 @@ test('refuses non-editorial authority, unsafe links, overwrite and repeated laye
  const f=fixture(t);f.scenario.authority='production';writeFileSync(f.input,JSON.stringify(f.scenario));assert.throws(()=>addIllustration(f.base,f.input,f.out),/editorial/);
  f.scenario.authority='fictional-editorial';f.scenario.sources[0].url='javascript:alert(1)';writeFileSync(f.input,JSON.stringify(f.scenario));assert.throws(()=>addIllustration(f.base,f.input,f.out),/HTTPS/);
  f.scenario.sources[0].url='https://example.com';writeFileSync(f.input,JSON.stringify(f.scenario));addIllustration(f.base,f.input,f.out);assert.throws(()=>addIllustration(f.base,f.input,f.out),/new destination/);assert.throws(()=>addIllustration(f.out,f.input,join(f.root,'repeat')),/already exists/);assert.throws(()=>addIllustration(f.base,f.input,join(f.base,'child')),/outside/);
+});
+test('the evidence legend is always rendered, artifacts carry a status chip, and an unknown status is refused',t=>{
+ const f=fixture(t);f.scenario.artifacts[0].evidence_status='executed local check';f.scenario.artifacts[1].evidence_status='simulated provider';writeFileSync(f.input,JSON.stringify(f.scenario));addIllustration(f.base,f.input,f.out);
+ const html=readFileSync(join(f.out,'dist/illustration.html'),'utf8');
+ assert.match(html,/<section id="legend"/);for(const k of Object.keys(EVIDENCE_STATUSES))assert.ok(html.includes(`data-status="${k}"`),k);
+ const chips=[...html.matchAll(/<article><p class="eyebrow">[^<]*<\/p><p><span class="chip" data-status="([^"]+)"/g)].map(m=>m[1]);
+ assert.deepEqual(chips,['executed local check','simulated provider','fictional planning']);
+ f.scenario.artifacts[2].evidence_status='verified by me';writeFileSync(f.input,JSON.stringify(f.scenario));assert.throws(()=>addIllustration(f.base,f.input,join(f.root,'bad')),/evidence_status must be one of/);
+});
+test('the presenter block renders the mandate and three role cards, and is validated',t=>{
+ const f=fixture(t);f.scenario.presenter={mandate:'MERIDIAN-SOR-TECH-2026-04',opening:'You are the bank <b>',roles:[1,2,3].map(i=>({title:'Role '+i,holds:'authority',asks:'what must be true'}))};writeFileSync(f.input,JSON.stringify(f.scenario));addIllustration(f.base,f.input,f.out);
+ const html=readFileSync(join(f.out,'dist/illustration.html'),'utf8');
+ assert.match(html,/class="presenter"/);assert.match(html,/Mandate MERIDIAN-SOR-TECH-2026-04/);assert.match(html,/You are the bank &lt;b&gt;/);assert.equal((html.match(/<strong>Holds:<\/strong>/g)||[]).length,3);
+ f.scenario.presenter.roles.pop();writeFileSync(f.input,JSON.stringify(f.scenario));assert.throws(()=>addIllustration(f.base,f.input,join(f.root,'bad')),/Three presenter roles/);
 });

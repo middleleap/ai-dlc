@@ -13,6 +13,16 @@ route (which gates, which approvers, which evidence), runs the gates, and signs 
 Kosli holds the record of those results outside the tree the agent edits, evaluates policy
 over it, and — from deploy onward — sees the one thing the Loom cannot: what is running.
 
+This is a division of *responsibilities in an adopter's operating model*, not a description of
+what Kosli can or cannot express. Kosli positions itself as governance infrastructure for the
+AI SDLC — evidence, controls, audit and insight — and its Flows cover business processes as well
+as delivery pipelines; it participates in the FINOS SDLC Common Control Catalog. The overlap in
+vocabulary with the Loom is real. What the Loom adds is upstream of the record: the institution's
+context, the domain interpretation, the compiled route, the signed actor, and the adoption
+workflow that produces the obligations, decisions and constraints the record then carries. The
+seam's proposal is to connect those earlier decisions to the delivery record Kosli keeps, not to
+claim a lifecycle boundary Kosli cannot cross.
+
 Why the record has to be outside: every Loom trust root — the control catalog, the identity
 registry, the issuer keys, the evidence chain — lives in the repository the agent writes to.
 The only thing separating a control from a self-attestation is a platform setting no gate can
@@ -157,9 +167,14 @@ contribution (3.7), all of which wait on the 18 September call, and the real-org
 
 ## 6. Limits
 
-- Kosli's chain of custody starts at the first commit. Everything before it — intent,
-  requirement, risk decision, who or which agent decided — is the Loom's to produce and sign.
-  The seam carries it across; it does not exist in Kosli otherwise.
+- The Loom produces and signs what happens before code exists — intent, requirement, risk
+  decision, who or which agent decided — and the seam carries it across as `intent`,
+  `problem-selected`, `risk-class` and `spec-locked` records. That is where the Loom's
+  contribution sits; it is not a claim that Kosli's custody begins at the first commit (Kosli's
+  Flows and attestations can carry business-process records too). Which record governs a release
+  when both the Loom and Kosli evaluate the same thing, and how a disagreement is resolved, is
+  agreed per adoption (question 5) — the Loom's default is that the compiled route policy is one
+  source, rendered into the provider's form (row 2.9), so there is one list to disagree about.
 - A record is not a control. Kosli proving a gate ran does not prove the gate was right;
   `bank-grade-gap.md`'s five states still apply to every row, and *platform enforced* still
   needs the platform observed refusing a bypass.

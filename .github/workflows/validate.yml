@@ -280,7 +280,7 @@ jobs:
           '
           if node scripts/obligations-check.mjs > /dev/null 2>&1; then :; else
             echo "::error::the obligations gate failed on the dry-run register after the fixture substitution"; exit 1; fi
-          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
+          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs "$H"/demo/meridian/*.test.mjs
           # rc.12 WS2: model `loom activate` — generate a today-dated, independently-signed
           # observation that the live platform refused a bypass, and register the observer key. Done
           # BEFORE the base commit so the record + registry entry are TRACKED — the negative-bypass
@@ -1208,9 +1208,12 @@ jobs:
           echo "all negative bypass tests rejected, as required"
 
       - name: Loom — the external-record seam end to end against the fake (2.1.0, hardening plan row 2.13)
-        # Fifteen steps from adoption to the audit package, two of them deliberate refusals, with no
-        # Kosli org (decision K8). Proves the harness; the real-org half is docs/integration-run.md.
-        run: node plugins/middleleap-loom/skills/loom-adopt/harness/demo/run-demo.mjs
+        # From adoption to the audit package with a GREEN pr lane, two deliberate refusals, no Kosli
+        # org (decision K8). Proves the harness; the real-org half is docs/integration-run.md. The
+        # meridian scenario adds the one-obligation trace and the join (2.4.3).
+        run: |
+          node plugins/middleleap-loom/skills/loom-adopt/harness/demo/run-demo.mjs
+          node plugins/middleleap-loom/skills/loom-adopt/harness/demo/run-demo.mjs --scenario meridian
 
       - name: Loom — evidence is derived, not authored (rc.35, flow-plan Phase 2)
         run: |

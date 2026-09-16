@@ -1,0 +1,66 @@
+{
+  "_comment": "The ONE obligation the Kosli founder demo traces (docs/plans/kosli-founder-demo-briefing.md): a proposed Meridian Trust product obligation for the fictional Open Finance payment-initiation case. It is FICTIONAL PLANNING material — the source and article are Meridian's own internal policy reference, not a regulatory citation, and nothing here asserts what any regulation requires. run-demo.mjs --scenario meridian appends `obligation` to the adopted obligations register and the `register` blocks to the data-risk register, then registers `control` in the adopted control catalog with demo/meridian/payment-status-check.mjs as its mechanism. None of this touches the shipped templates.",
+  "mandate_ref": "MERIDIAN-SOR-TECH-2026-04",
+  "obligation": {
+    "id": "OB-AE-MTPOL-PSI-001",
+    "illustrative": false,
+    "source": "Meridian Trust internal payment-operations policy (fictional)",
+    "article": "MT-PAY-POL-2026 §4.3 Payment status integrity (fictional institutional policy, not a regulatory citation)",
+    "title": "A payment-initiation timeout is never reported to the customer as a failed payment: the reference is preserved, the existing outcome is investigated by status query, and no retry is made until the outcome is known",
+    "applicability": { "jurisdictions": ["AE"], "product_types": ["open-finance-payment-initiation"], "conditions": ["customer_facing"] },
+    "owner_role": "operations",
+    "last_verified": "2026-09-14",
+    "risk_ids": ["DR-2.1-001"],
+    "control_ids": ["CTRL-002"],
+    "catalog_controls": ["PAYMENT-STATUS"],
+    "finos": []
+  },
+  "register": {
+    "taxonomy": {
+      "risk_domain_id": "DR-2",
+      "risk_domain_name": "Payment Operations",
+      "risk_category_id": "DR-2.1",
+      "risk_category_name": "Payment Status Ambiguity Risk",
+      "definition": "Risk that an indeterminate payment outcome (timeout, partial response) is reported or acted on as a terminal outcome, causing duplicate payments, false failure notices or unrecoverable references."
+    },
+    "statement": {
+      "risk_id": "DR-2.1-001",
+      "risk_category_id": "DR-2.1",
+      "statement": "A payment-initiation call that times out is treated as failed and retried, so the customer may pay twice or be told a completed payment failed.",
+      "regulatory_drivers": ["Meridian internal policy MT-PAY-POL-2026 §4.3 (fictional)"],
+      "inherent_rating": "High",
+      "control_ids": ["CTRL-002"],
+      "residual_rating": "Medium"
+    },
+    "control": {
+      "control_id": "CTRL-002",
+      "control_name": "Timeout-to-unknown contract with status-query-before-retry",
+      "control_type": "Preventive",
+      "control_owner": "First line — engineering",
+      "risk_ids": ["DR-2.1-001"],
+      "automation_level": "Automated",
+      "effectiveness_score": 0.8,
+      "description": "The payment-initiation service declares its timeout contract; scripts/payment-status-check.mjs refuses a contract that resolves a timeout to failed, drops the reference or retries before a status query, and requires recorded negative-test evidence."
+    },
+    "residual": {
+      "risk_id": "DR-2.1-001",
+      "inherent_rating": "High",
+      "control_effectiveness": 0.8,
+      "residual_rating": "Medium",
+      "verdict": "Acceptable with conditions",
+      "conditions": ["status-contract gate green on every change to the service", "runtime reconciliation evidence owed before production authorisation"]
+    }
+  },
+  "control": {
+    "control_id": "PAYMENT-STATUS",
+    "objective": "A payment-initiation timeout resolves to unknown, preserves the reference, and is never retried before a status query — declared by the service and evidenced by a recorded negative test",
+    "owner_role": "operations",
+    "line": 1,
+    "state": "mechanically-validated",
+    "mechanism_ref": "scripts/payment-status-check.mjs",
+    "test_ref": "scripts/payment-status-check.test.mjs",
+    "lane": "pr",
+    "paths": ["docs/governance/services/", "docs/governance/evidence/payment-status-tests.json"],
+    "note": "DEMO-SCOPED control registered by demo/run-demo.mjs --scenario meridian. Validates a declaration and a recorded test (PSI-R06); does not observe a payment system or the platform status API. Not in the shipped catalog template."
+  }
+}

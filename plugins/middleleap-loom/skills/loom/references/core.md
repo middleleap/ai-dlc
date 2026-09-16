@@ -80,10 +80,14 @@ Five states, and the word *enforced* is earned, not claimed:
 
 ## Where Kosli sits
 
-The Loom decides what must be true; Kosli records what happened. Every gate result, approval
-and decision posts to a Kosli trail through the seam, signed with the harness's own attestation
-core; the seal gate's external anchor is the Kosli attestation id; agents read Kosli back before
-they plan; from deploy onward Kosli owns the only thing the Loom cannot see, what is running.
+The Loom decides what must be true; the external record keeps what happened, and Kosli is the
+first provider of that record. Every gate result, approval and decision posts to a Kosli trail
+through the seam, signed with the harness's own attestation core; the seal gate's external anchor
+is the Kosli attestation id; agents read Kosli back before they plan; from deploy onward the
+Loom reads from Kosli the one thing it cannot see itself, what is running. This is a proposed
+division of responsibilities in an adopter's operating model — Kosli's own scope (evidence,
+controls, audit, insight; Flows over business processes as well as pipelines) overlaps the
+Loom's vocabulary, and the Loom's contribution is what it adds upstream of the record.
 `kosli-seam.md` holds the decisions; the harness holds no second copy of anything Kosli keeps.
 
 ## What never moves
