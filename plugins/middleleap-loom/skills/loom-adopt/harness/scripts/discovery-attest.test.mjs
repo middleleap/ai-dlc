@@ -17,6 +17,11 @@ const STOPPED = join(H, 'demo/meridian/discovery-run-stopped');
 const FORM = join(H, '../../../../middleleap-open-finance/skills/npa-uae/references/example-cross-bank-money.md');
 const DECISION = join(H, 'demo/meridian/npa/decision.json');
 const SIGNALS = join(H, 'demo/meridian/operations-signal.json');
+// The Meridian fixtures are the bundle's own demonstration data; adopt.mjs does not ship them, so in
+// an adopted tree (CI's adoption dry-run runs this suite there) these tests skip rather than fail.
+const HAVE_FIXTURES = [RUN, STOPPED, DECISION, SIGNALS].every(existsSync);
+const fx = { skip: !HAVE_FIXTURES && 'Meridian demo fixtures are not shipped to adopted trees' };
+const fxForm = { skip: (!HAVE_FIXTURES && 'Meridian demo fixtures are not shipped to adopted trees') || (!existsSync(FORM) && 'sibling plugin middleleap-open-finance not present') };
 const COMMIT = 'a'.repeat(40);
 const RUNNER = { subject: 'repo:demo-bank/credit:ref:refs/heads/main', repository: 'demo-bank/credit', ref: 'refs/heads/main', sha: COMMIT };
 const REGISTRY = { identities: [
@@ -30,7 +35,7 @@ const ISSUERS = { issuers: [{ id: 't-signer', mechanism: 'ed25519', verify: { pu
 const signer = { issuer: 't-signer', privateKeyPem: keys.privateKey.export({ type: 'pkcs8', format: 'pem' }).toString() };
 const signedOk = (env) => evaluateProvenance(signEnvelope(env, signer), { registry: REGISTRY, issuers: ISSUERS });
 
-test('intent: the sponsor, the strategic intent and the statement come from intent.md, sources from its front-matter', () => {
+test('intent: the sponsor, the strategic intent and the statement come from intent.md, sources from its front-matter', fx, () => {
   const p = intentPayload(RUN);
   assert.equal(p.run, 'cross-bank-money');
   assert.equal(p.sponsor, 'po-fatima');
@@ -39,7 +44,7 @@ test('intent: the sponsor, the strategic intent and the statement come from inte
   assert.ok(p.sources.includes('S-002'));
 });
 
-test('problem-selected: the falsifiable problem, H1–H3, the evidence ids, and that D4 refused solutioning', () => {
+test('problem-selected: the falsifiable problem, H1–H3, the evidence ids, and that D4 refused solutioning', fx, () => {
   const p = problemSelectedPayload(RUN);
   assert.equal(p.run, 'cross-bank-money');
   assert.match(p.problem, /^For /);
@@ -49,14 +54,14 @@ test('problem-selected: the falsifiable problem, H1–H3, the evidence ids, and 
   assert.equal(p.refused_solutioning, true);
 });
 
-test('discovery-stopped: the stopped run yields a human-decided stop with hypothesis verdicts', () => {
+test('discovery-stopped: the stopped run yields a human-decided stop with hypothesis verdicts', fx, () => {
   const p = discoveryStoppedPayload(STOPPED);
   assert.equal(p.outcome, 'stopped');
   assert.equal(typeof p.decided_by, 'string');
   assert.ok(p.hypotheses.length >= 1);
 });
 
-test('reopened-discovery: a signal routed discovery names the run it reopens and the change that sent it back', () => {
+test('reopened-discovery: a signal routed discovery names the run it reopens and the change that sent it back', fx, () => {
   const p = reopenedDiscoveryPayload(SIGNALS, 'OPS-2026-0912');
   assert.equal(p.reopened_run, 'cross-bank-money');
   assert.equal(p.sent_back_by_change, 'CHG-2026-0042');
@@ -64,7 +69,7 @@ test('reopened-discovery: a signal routed discovery names the run it reopens and
   assert.throws(() => reopenedDiscoveryPayload(SIGNALS, 'OPS-0000'), /not in/);
 });
 
-test('npa-pack: the Business Proposition Form is read, not typed — 33 fields, request type, obligations by id, digest', { skip: !existsSync(FORM) && 'sibling plugin not present' }, () => {
+test('npa-pack: the Business Proposition Form is read, not typed — 33 fields, request type, obligations by id, digest', fxForm, () => {
   const p = npaPackPayload(FORM, { propositionId: 'NPA-2026-CBM-001' });
   assert.equal(p.proposition_id, 'NPA-2026-CBM-001');
   assert.equal(p.request_type, 'New');
@@ -76,7 +81,7 @@ test('npa-pack: the Business Proposition Form is read, not typed — 33 fields, 
   assert.match(p.product, /Cross-Bank Money/);
 });
 
-test('npa-approved: the PA1 decision reads back with its six conditions', () => {
+test('npa-approved: the PA1 decision reads back with its six conditions', fx, () => {
   const p = npaApprovedPayload(DECISION);
   assert.equal(p.receipt, 'PA1');
   assert.equal(p.decision, 'approved-with-conditions');
@@ -84,7 +89,7 @@ test('npa-approved: the PA1 decision reads back with its six conditions', () => 
   assert.equal(p.conditions.length, 6);
 });
 
-test('every kind builds an envelope on the run trail that passes the provenance rules once signed', () => {
+test('every kind builds an envelope on the run trail that passes the provenance rules once signed', fx, () => {
   const cases = [
     ['intent', intentPayload(RUN), 'po-fatima', 'human'],
     ['problem-selected', problemSelectedPayload(RUN), 'po-fatima', 'human'],
@@ -101,13 +106,13 @@ test('every kind builds an envelope on the run trail that passes the provenance 
   }
 });
 
-test('a decision record — problem-selected or npa-approved — from an agent is refused before it is built', () => {
+test('a decision record — problem-selected or npa-approved — from an agent is refused before it is built', fx, () => {
   const agent = REGISTRY.identities.find((i) => i.id === 'agent-loom-delivery');
   assert.throws(() => envelopeFor('npa-approved', { run: 'cross-bank-money', payload: npaApprovedPayload(DECISION), actor: agent, origin: 'tool', commit: COMMIT, runner: RUNNER }), /human/);
   assert.throws(() => envelopeFor('problem-selected', { run: 'cross-bank-money', payload: problemSelectedPayload(RUN), actor: agent, origin: 'tool', commit: COMMIT, runner: RUNNER }), /human/);
 });
 
-test('npa-pack carries the obligations it cites as controls.institution, never typed', { skip: !existsSync(FORM) && 'sibling plugin not present' }, () => {
+test('npa-pack carries the obligations it cites as controls.institution, never typed', fxForm, () => {
   const payload = npaPackPayload(FORM, { propositionId: 'NPA-2026-CBM-001' });
   const env = envelopeFor('npa-pack', { run: 'cross-bank-money', payload, actor: REGISTRY.identities[0], origin: 'human', commit: COMMIT, runner: RUNNER });
   assert.deepEqual(env.controls.institution, payload.obligations_cited);
