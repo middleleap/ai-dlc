@@ -12,7 +12,11 @@ import process from 'node:process';
 import { status, trailStatus } from '../core/external-record.mjs';
 
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json', 'governance/control-catalog.template.json'];
-export const FIXED_STAGES = { delivery: ['risk-class', 'seal-anchor'], discovery: ['intent', 'problem-selected', 'discovery-stopped'] };
+export const FIXED_STAGES = { delivery: ['risk-class', 'seal-anchor'], discovery: ['intent', 'problem-selected'] };
+/** Records a trail MAY carry without the catalog requiring them: a run either hands off or stops
+ *  (discovery-stopped), assembles an NPA pack and receives its decisions (npa-*), and may be reopened
+ *  by an operations signal (reopened-discovery.<id>). Present is reported; absent is not missing. */
+export const OPTIONAL = { delivery: [], discovery: [/^discovery-stopped$/, /^npa-pack$/, /^npa-approved\./, /^reopened-discovery\./] };
 export const gateName = (mechanism) => `gate.${String(mechanism).replace(/\.mjs$/, '').replace(/[\\/]/g, '-')}`;
 
 /** The record names a trail in `flow` should carry, from the catalog. */
@@ -27,9 +31,16 @@ export function expectedFor(flow, catalog) {
   return [...FIXED_STAGES.delivery, ...[...names].sort()];
 }
 
-export function report(expected, present) {
+export function report(expected, present, optional = []) {
   const have = new Set(present.map((a) => a.name));
-  return { present: expected.filter((n) => have.has(n)), missing: expected.filter((n) => !have.has(n)), extra: present.map((a) => a.name).filter((n) => !expected.includes(n)) };
+  const isOptional = (n) => optional.some((re) => re.test(n));
+  const names = present.map((a) => a.name);
+  return {
+    present: expected.filter((n) => have.has(n)),
+    missing: expected.filter((n) => !have.has(n)),
+    optional: names.filter((n) => !expected.includes(n) && isOptional(n)),
+    extra: names.filter((n) => !expected.includes(n) && !isOptional(n)),
+  };
 }
 
 export async function main(argv = process.argv.slice(2), cwd = process.cwd()) {
@@ -43,11 +54,12 @@ export async function main(argv = process.argv.slice(2), cwd = process.cwd()) {
   const expected = expectedFor(flow, catalog);
   const t = await trailStatus({ flow, trail }, { cwd });
   if (t.status !== 'ok') { process.stderr.write(`external record (${st.provider}): ${t.status} — ${t.reason}\n`); return 4; }
-  const r = report(expected, t.present);
+  const r = report(expected, t.present, OPTIONAL[flow] || []);
   if (argv.includes('--json')) { process.stdout.write(JSON.stringify({ provider: st.provider, active: st.active, flow: t.flow, trail, compliance: t.compliance, ...r, unexpected_by_provider: t.unexpected }, null, 2) + '\n'); return r.missing.length ? 6 : 0; }
   process.stdout.write(`external record (${st.provider}${st.active ? '' : ', selected-not-active'}) — trail ${trail} on flow ${t.flow}: ${t.compliance ?? 'n/a'}\n`);
   for (const n of r.present) process.stdout.write(`  · present  ${n}\n`);
   for (const n of r.missing) process.stdout.write(`  · MISSING  ${n}\n`);
+  for (const n of r.optional) process.stdout.write(`  · present  ${n} (optional — a run either hands off or stops; a pack and its decisions; a reopen)\n`);
   for (const n of r.extra) process.stdout.write(`  · extra    ${n} (not expected by the catalog)\n`);
   return r.missing.length ? 6 : 0;
 }

@@ -25,7 +25,7 @@ import { loadObligations } from './record-controls.mjs';
 export const SERVER = { name: 'loom-record', version: '2.1.0' };
 export const PROTOCOL_VERSION = '2024-11-05';
 const CATALOG_LOCATIONS = ['docs/governance/control-catalog.json', 'control-catalog.json', 'governance/control-catalog.template.json'];
-const FIXED_STAGES = { delivery: ['risk-class', 'seal-anchor'], discovery: ['intent', 'problem-selected', 'discovery-stopped'] };
+const FIXED_STAGES = { delivery: ['risk-class', 'seal-anchor'], discovery: ['intent', 'problem-selected'] }; // a stop replaces the hand-off, it is not a third requirement (scripts/record-trail-status.mjs OPTIONAL)
 const gateName = (m) => `gate.${String(m).replace(/\.mjs$/, '').replace(/[\\/]/g, '-')}`;
 
 export const TOOLS = [

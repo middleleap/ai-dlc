@@ -144,6 +144,11 @@ try {
     // read-back path is exercised; and it holds exactly one attestation id for the anchor.
     const names = ['seal-anchor', 'risk-class', ...J('docs/governance/control-catalog.json').controls.filter((c) => typeof c.mechanism_ref === 'string' && c.mechanism_ref.endsWith('.mjs') && c.execute !== false && ['pr', 'release'].includes(c.lane || 'pr')).map((c) => `gate.${c.mechanism_ref.replace(/\.mjs$/, '').replace(/[\\/]/g, '-')}`)];
     const rows = names.map((n, i) => ({ attestation_name: n, attestation_type: 'generic', attestation_id: `att-${i + 1}`, status: 'COMPLETE', is_compliant: true, unexpected: false }));
+    // The discovery trails hold only discovery records — a trail-specific rule wins over the generic one below,
+    // so the read-back for a run never shows gate rows that belong to the change's trail.
+    const drow = (n, i) => ({ attestation_name: n, attestation_type: 'generic', attestation_id: `att-d${i + 1}`, status: 'COMPLETE', is_compliant: true, unexpected: false });
+    respond(fake.dir, ['get', 'trail', 'cross-bank-money'], { stdout: { name: 'cross-bank-money', compliance_status: { status: 'COMPLETE', is_compliant: true, attestations_statuses: ['intent', 'problem-selected', 'npa-pack', 'npa-approved.pa1', 'reopened-discovery.OPS-2026-0912'].map(drow) } } });
+    respond(fake.dir, ['get', 'trail', 'cross-bank-money-stopped'], { stdout: { name: 'cross-bank-money-stopped', compliance_status: { status: 'COMPLETE', is_compliant: true, attestations_statuses: ['intent', 'discovery-stopped'].map(drow) } } });
     respond(fake.dir, ['get', 'trail'], { stdout: { name: 'CHG-2026-0042', compliance_status: { status: 'COMPLETE', is_compliant: true, attestations_statuses: rows } } });
     respond(fake.dir, ['get', 'attestation', '--attestation-id', 'att-1'], { stdout: { attestation_name: 'seal-anchor', attestation_type: 'generic', is_compliant: true, created_at: 1, html_url: 'https://app.kosli.com/demo' } });
     respond(fake.dir, ['get', 'attestation', '--attestation-id', 'forged'], { exit: 1, stderr: 'Error: attestation not found' });
@@ -238,6 +243,28 @@ try {
   dep.release_commit = releaseCommit;
   W('docs/governance/deployments/DEP-2026-0042-01.json', dep);
 
+  if (meridian) {
+    const signOnly = sign.slice(2); // the issuer and the key; the actor is named per record — these are human records
+    say('MERIDIAN · the record BEFORE code exists — intent (the sponsor\'s own words, po-fatima) and problem-selected (a human choice among H1–H3, the D4 refusal on record) on the discovery trail cross-bank-money; discovery-stopped on the stopped run\'s trail. Each is built from the run\'s own artifact, never typed, and passes the same provenance rules as a gate record', PROVIDER);
+    node(['scripts/discovery-attest.mjs', 'intent', '--run', 'cross-bank-money', ...signOnly], { env });
+    node(['scripts/discovery-attest.mjs', 'problem-selected', '--run', 'cross-bank-money', '--actor', 'po-fatima', ...signOnly], { env });
+    node(['scripts/discovery-attest.mjs', 'discovery-stopped', '--run', 'cross-bank-money-stopped', ...signOnly], { env });
+
+    say('MERIDIAN · the NPA is the content of PA1 — npa-pack (the Business Proposition Form READ: 33 fields, request type New, the obligations it cites by id, its digest) and npa-approved.pa1 (the committee\'s permission to develop with six conditions, attested by the approver) on the same trail', PROVIDER);
+    if (!M.ids.npaForm) fail('the NPA form was not mounted — the sibling plugin middleleap-open-finance is not beside this bundle');
+    const np = node(['scripts/discovery-attest.mjs', 'npa-pack', '--run', 'cross-bank-money', '--actor', 'po-fatima', '--proposition', 'NPA-2026-CBM-001', '--json', ...signOnly], { env, quiet: true });
+    const npj = JSON.parse(np.stdout);
+    const kept = J(npj.kept);
+    process.stdout.write(`     npa-pack: ${kept.payload.product?.slice(0, 60)}… · request ${kept.payload.request_type} · ${kept.payload.fields_present}/${kept.payload.fields_expected} fields · ${kept.payload.status} · obligations ${kept.payload.obligations_cited.length} · sha256 ${kept.payload.form_sha256.slice(0, 12)}… · ${npj.result.status}${npj.result.id ? ` as ${npj.result.id}` : ''}\n`);
+    if (kept.payload.status !== 'complete' || !kept.controls?.institution?.includes('OB-AE-OFR-CONSENT-001')) fail('the npa-pack record is not complete or does not carry the cited obligations');
+    node(['scripts/discovery-attest.mjs', 'npa-approved', '--run', 'cross-bank-money', ...signOnly], { env });
+
+    say('MERIDIAN · REFUSED — the delivery agent tries to record the PA1 approval itself; a decision needs a human actor, and the record is never built, let alone posted', 'refusal');
+    const bad = node(['scripts/discovery-attest.mjs', 'npa-approved', '--run', 'cross-bank-money', '--actor', 'agent-loom-delivery', ...signOnly], { expect: 2, env, quiet: true });
+    if (!/human/.test(bad.stderr)) fail(`the agent's approval was not refused for being non-human: ${bad.stderr}`);
+    process.stdout.write(`     refused: ${bad.stderr.trim().split('\n')[0].slice(0, 150)}\n`);
+  }
+
   say('the seal gate REFUSES while the provider is mounted and the anchor is only in the tree', 'refusal');
   const before = node(['scripts/evidence-seal-check.mjs'], { expect: 1, quiet: true, env });
   if (!/carries no external_record id/.test(before.stderr)) fail('the seal gate did not ask for the external record id');
@@ -282,6 +309,13 @@ try {
   say('the deploy lane reads what is RUNNING from the provider snapshot, and says so', PROVIDER);
   const dd = node(['scripts/deployed-digest-check.mjs'], { expect: 0, env });
   if (!/confirmed RUNNING/.test(dd.stdout)) fail('the deploy gate did not read the provider snapshot');
+
+  if (meridian) {
+    say('MERIDIAN · the record AFTER deploy — an operations signal (OPS-2026-0912: with the view in use, customers still cannot tell whether a transfer completed) is routed discovery by operations (ops-dana); reopened-discovery posts on the cross-bank-money trail, attributed to CHG-2026-0042. The loop closes on the record, not on a slide', PROVIDER);
+    node(['scripts/operations-signal-check.mjs'], { quiet: true });
+    node(['scripts/discovery-attest.mjs', 'reopened-discovery', '--run', 'cross-bank-money', '--signal', 'OPS-2026-0912', '--actor', 'ops-dana', ...sign.slice(2)], { env });
+    node(['scripts/record-trail-status.mjs', 'cross-bank-money', '--flow', 'discovery'], { expect: null, env });
+  }
 
   say('the provenance gate over every kept envelope, and the audit package for the change', 'executed check');
   node(['scripts/provenance-check.mjs'], { env });

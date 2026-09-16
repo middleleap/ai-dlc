@@ -28,7 +28,7 @@ import { identityKey, requireSeparate } from './separation.mjs';
 
 export const SCHEMA_ID = 'loom.record-envelope/v1';
 /** Every kind the seam carries (kosli-seam.md §3). */
-export const KINDS = ['intent', 'problem-selected', 'gate', 'risk-class', 'spec-locked', 'design-decision', 'review', 'accepted', 'discovery-stopped', 'reopened-discovery', 'seal-anchor'];
+export const KINDS = ['intent', 'problem-selected', 'gate', 'risk-class', 'spec-locked', 'design-decision', 'review', 'accepted', 'discovery-stopped', 'reopened-discovery', 'seal-anchor', 'npa-pack', 'npa-approved'];
 /** Kinds an agent may NARRATE (PR3). Everything else originates from a tool or a human. */
 export const NARRATABLE = new Set(['intent', 'problem-selected', 'design-decision', 'spec-locked']);
 export const ORIGINS = ['tool', 'human', 'narrated'];

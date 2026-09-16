@@ -1,0 +1,17 @@
+{
+  "_comment": "FICTIONAL PLANNING — one operations signal the Meridian scenario appends to the adopted tree's docs/governance/operations-signal.json: the Run → Discovery edge. It is the private illustration's M05 branch made into a record: after the consolidated view is in use, customers still cannot tell whether a transfer they initiated elsewhere completed. It is routed `discovery` and links the run it reopens, so scripts/discovery-attest.mjs can post it as `reopened-discovery` on that run's trail, attributed to the change that shipped the view.",
+  "signals": [
+    {
+      "id": "OPS-2026-0912",
+      "source": "care-queue",
+      "type": "customer-signal",
+      "severity": "medium",
+      "detected": "2026-09-12",
+      "summary": "With the consolidated view in use, customers still cannot tell whether a transfer they initiated at another bank has completed; the seven-day tile shows the commitment, not the payment's state. The H3 question returns as a signal, not a feature request. Reopened as discovery on cross-bank-money.",
+      "evidence_ref": "care/OPS-2026-0912.md",
+      "route": "discovery",
+      "link": "discovery/cross-bank-money",
+      "caused_by_change": "CHG-2026-0042"
+    }
+  ]
+}
