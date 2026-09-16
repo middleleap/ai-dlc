@@ -90,6 +90,19 @@ test('attachOidc requests a token for the loom audience from the platform, and i
   assert.equal(await requestIdToken({ }, { fetchImpl }), null);
 });
 
+test('on a pull-request event the token names the subject (repo:<repo>:pull_request) and the environment cannot — attaching adopts the token\'s sub, and the concrete claims still have to match', async () => {
+  const prClaims = { ...CLAIMS, sub: 'repo:demo-bank/credit:pull_request', ref: 'refs/pull/83/merge' };
+  const fetchImpl = async () => ({ ok: true, json: async () => ({ value: mint(prClaims) }) });
+  const env = { ACTIONS_ID_TOKEN_REQUEST_URL: 'https://token.example/req', ACTIONS_ID_TOKEN_REQUEST_TOKEN: 's', GITHUB_REPOSITORY: 'demo-bank/credit', GITHUB_REF: 'refs/pull/83/merge', GITHUB_SHA: SHA };
+  const synthesised = { subject: 'repo:demo-bank/credit:ref:refs/pull/83/merge', repository: 'demo-bank/credit', ref: 'refs/pull/83/merge', sha: SHA };
+  const r = await attachOidc(synthesised, env, { fetchImpl });
+  assert.equal(r.subject, 'repo:demo-bank/credit:pull_request');
+  assert.deepEqual(verifyRunner(r, { jwks: JWKS, now: NOW }), []);
+  // the self-check compares the concrete claims and lets the token name the subject
+  assert.deepEqual(runnerFindings(synthesised, prClaims, { fields: ['repository', 'ref', 'sha'] }), []);
+  assert.match(runnerFindings({ ...synthesised, ref: 'refs/heads/main' }, prClaims, { fields: ['repository', 'ref', 'sha'] }).join('\n'), /ref/);
+});
+
 test('PR6 with a JWKS: an envelope whose runner carries a matching token passes; a runner that lies about its sha is refused', () => {
   const { publicKey: ek, privateKey: epk } = generateKeyPairSync('ed25519');
   const issuers = { issuers: [{ id: 'ci', mechanism: 'ed25519', verify: { public_key: ek.export({ type: 'spki', format: 'pem' }).toString() } }] };

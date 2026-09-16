@@ -66,10 +66,16 @@ export function runnerFromClaims(claims) {
   return { subject: claims?.sub ?? null, repository: claims?.repository ?? null, ref: claims?.ref ?? null, sha: claims?.sha ?? null, run: claims?.run_id != null ? String(claims.run_id) : null, workflow: claims?.job_workflow_ref ?? null };
 }
 
-/** Findings where the envelope's runner record disagrees with the token's claims. */
-export function runnerFindings(runner, claims) {
+/**
+ * Findings where the envelope's runner record disagrees with the token's claims. `fields` narrows the
+ * comparison: the environment synthesises `subject` as repo:<repo>:ref:<ref>, but GitHub's token says
+ * `repo:<repo>:pull_request` on a pull-request event (and other shapes for environments and tags), so a
+ * caller comparing a synthesised record checks the concrete claims and lets the token name the subject.
+ */
+export function runnerFindings(runner, claims, { fields = Object.keys(RUNNER_CLAIMS) } = {}) {
   const f = [];
   for (const [field, claim] of Object.entries(RUNNER_CLAIMS)) {
+    if (!fields.includes(field)) continue;
     const a = runner?.[field], b = claims?.[claim];
     if (isStr(a) && isStr(b) && a !== b) f.push(`runner ${field} ${JSON.stringify(a)} does not match the token's ${claim} ${JSON.stringify(b)}`);
     else if (isStr(a) && !isStr(b)) f.push(`the token carries no ${claim} to check the runner's ${field} against`);
@@ -123,5 +129,8 @@ export async function attachOidc(runner, env = process.env, { audience = AUDIENC
   if (!token) return runner;
   let d;
   try { d = decodeJwt(token); } catch { return runner; }
-  return { ...runner, oidc: { token, iss: d.claims.iss ?? null, aud: d.claims.aud ?? null, sub: d.claims.sub ?? null, kid: d.header.kid ?? null, exp: d.claims.exp ?? null } };
+  // The token is the authority for the subject: the environment can only synthesise repo:<repo>:ref:<ref>,
+  // and the platform's own `sub` differs by event (pull_request, environment, tag). Repository, ref and
+  // sha stay as the environment stated them and are checked against the claims on verification.
+  return { ...runner, subject: isStr(d.claims.sub) ? d.claims.sub : runner.subject, oidc: { token, iss: d.claims.iss ?? null, aud: d.claims.aud ?? null, sub: d.claims.sub ?? null, kid: d.header.kid ?? null, exp: d.claims.exp ?? null } };
 }

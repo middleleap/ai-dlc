@@ -23,7 +23,8 @@ export async function check(env = process.env, { fetchImpl = globalThis.fetch } 
   const v = verifyJwt(token, jwks);
   if (!v.ok) return { state: 'fail', findings: v.findings.map((f) => `token: ${f}`) };
   const declared = runnerFromEnv(env);
-  const f = declared ? runnerFindings(declared, v.claims) : ['no runner identity in the environment to compare the token against'];
+  // The environment synthesises the subject; the token names it. Compare what both state concretely.
+  const f = declared ? runnerFindings(declared, v.claims, { fields: ['repository', 'ref', 'sha'] }) : ['no runner identity in the environment to compare the token against'];
   return { state: f.length ? 'fail' : 'verified', kid: v.kid, audience: AUDIENCE, runner: runnerFromClaims(v.claims), findings: f };
 }
 
