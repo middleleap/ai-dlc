@@ -550,45 +550,43 @@ shipped, reconciliation README present, record types added.
 
 ### Task 5: Regenerate the private package (`loom-private-demo`)
 
-**Blocked:** the repo is not cloned. `~/code/loom-private-demo` and
-`~/Github/loom-private-demo` are both absent. Clone it before starting.
+**Gated on T4 merging.** The clone, the wording fix and the regeneration script are done
+(PR #2 on loom-private-demo); what remains is running it against the post-T4 `main`.
 
-- [ ] **Step 1: Clone it alongside `ai-dlc`**
+- [x] **Step 1: Clone it alongside `ai-dlc`** — done 16 Sep: `~/Github/loom-private-demo`.
 
-```bash
-gh repo clone middleleap/loom-private-demo ~/Github/loom-private-demo
-```
-
-(`middleleap/loom-private-demo` — public, confirmed via `gh repo list middleleap`.)
-
-- [ ] **Step 2: Fix the stale privacy wording**
-
-`README.md` and `private-source/README.md` still say the repository must stay private. It is
-public now. Reword to: the repository is public, the scenario is fictional, and protected
-hosting comes from the gateway and hosting secrets — **not** from repository visibility.
-
-**Do not touch `dist/`, `server.mjs`, or the Dockerfile in this step.**
+- [x] **Step 2: Fix the stale privacy wording** — done 16 Sep in PR #2 on loom-private-demo,
+together with `scripts/sync-check.mjs`, `scripts/regenerate.mjs` and a daily CI check against
+ai-dlc `main`. `dist/`, `server.mjs` and the Dockerfile untouched. **Merge PR #2 first.**
 
 - [ ] **Step 3: Regenerate from the merged `ai-dlc` main**
 
-Follow the recipe in `private-source/README.md`: extract the base package commit it names into
-a fresh directory, then:
+The recipe in `private-source/README.md` is now a script (PR #2 on loom-private-demo):
 
 ```bash
-node ~/Github/ai-dlc/scripts/customer-demo-illustration.mjs \
-  <base-dir> private-source/open-finance-illustration.json <new-dir>
+cd ~/Github/loom-private-demo
+node scripts/regenerate.mjs --ai-dlc ~/Github/ai-dlc            # dry run: lists what changes
+node scripts/regenerate.mjs --ai-dlc ~/Github/ai-dlc --apply    # replaces dist/
 ```
 
-Use the `ai-dlc` `main` commit **after Tasks 1–4 have merged**. Copy the generated `dist/`
-into the checkout.
+Run it with `~/Github/ai-dlc` on the `main` commit **after Tasks 1–4 have merged**. It
+git-archives the base commit into a fresh directory, runs the generator, and diffs before it
+replaces anything.
 
 - [ ] **Step 4: Confirm the release metadata**
 
 ```bash
-grep -E 'source_commit|recorded_evidence_unchanged' dist/release.json
+node scripts/sync-check.mjs --ai-dlc ~/Github/ai-dlc
+grep -E 'source_commit|ai_dlc_commit|recorded_evidence_unchanged' dist/release.json
 ```
 
-Expected: the new `source_commit`, and `recorded_evidence_unchanged: true`.
+Expected: `sync-check — OK`, `illustration.ai_dlc_commit` = the ai-dlc `main` commit you
+regenerated from, and `recorded_evidence_unchanged: true`.
+
+**Runbook correction:** Step 3 says to confirm a *new `source_commit`*. The generator copies
+`source_commit` from the base package and never rewrites it — it will always read `36ea325`,
+the commit the recorded-evidence base was built from. `scripts/regenerate.mjs` (PR #2 on
+loom-private-demo) stamps `illustration.ai_dlc_commit` instead; that is the field that moves.
 
 - [ ] **Step 5: Check the gateway locally**
 
