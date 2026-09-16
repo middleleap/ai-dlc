@@ -31,10 +31,15 @@ repository and says so in a **Runbook correction** note.
   `plugins/<plugin>/.claude-plugin/plugin.json` **and** the `.claude-plugin/marketplace.json` entry.
 - **The version chain is fixed. Do not improvise numbers:**
 
-  | Plugin | `main` today | Task 1 | Task 2 | Task 4 |
+  | Plugin | `main` today (after #75) | Task 1 | Task 2 | Task 4 |
   |---|---|---|---|---|
-  | `middleleap-loom` | 2.4.2 | **2.4.3** (as branched) | — | **2.4.4** (renumber) |
-  | `middleleap-open-finance` | 2.3.1 | — | **2.3.2** (as branched) | **2.4.0** (as branched) |
+  | `middleleap-loom` | 2.4.3 | **2.4.4** (renumbered — done) | — | **2.4.5** |
+  | `middleleap-open-finance` | 2.4.0 | — | **2.4.1** (renumber from 2.3.2) | **2.4.2** |
+
+  > **Revised 16 Sep, afternoon.** PR #75 (npa-uae) was merged into `main` before T1 opened,
+  > so this is the chain's second version. The collision landed on T1 instead of T4 and was
+  > resolved there: the founder demo is renumbered to loom **2.4.4** (PR #74). Everything that
+  > follows moves up one.
 
 - **Never commit anything under `.loom/record-outbox/`.**
 - **Never write `KOSLI_API_TOKEN`, `DEMO_PASSWORD`, or any token into a file, a prompt, or a commit.**
@@ -44,26 +49,23 @@ repository and says so in a **Runbook correction** note.
 
 ### The collision this plan exists to resolve
 
-Two branches independently claim **loom 2.4.3**:
+Two branches were cut claiming **loom 2.4.3**, and #75 got there first:
 
 ```
-origin/main                     loom 2.4.2   open-finance 2.3.1
-claude/kosli-founder-demo       loom 2.4.3   (open-finance untouched)
-claude/npa-uae-skill  (PR #75)  loom 2.4.3   open-finance 2.4.0   ← collides on loom
-claude/islamic-banking-deidentify            open-finance 2.3.2   ← no collision
+origin/main  (after #75)        loom 2.4.3   open-finance 2.4.0
+claude/kosli-founder-demo       loom 2.4.3 → 2.4.4  (renumbered on rebase, PR #74)
+claude/islamic-banking-deidentify            open-finance 2.3.2 → 2.4.1  (must renumber)
+T4 (new branch off main)        loom 2.4.5   open-finance 2.4.2
 ```
 
-Git auto-merges identical version bumps without conflict, so if `claude/kosli-founder-demo`
-and `claude/npa-uae-skill` both land unmodified, **loom 2.4.3 ships twice with different
-content and no user receives the second one.** Task 4 renumbers the npa branch to 2.4.4.
+What happened on the T1 rebase is the mechanism this section warned about, observed:
+`plugin.json` merged to 2.4.3 **with no conflict** (both sides made the identical edit) while
+`marketplace.json` conflicted. Had the rebase been trusted, loom 2.4.3 would have shipped twice.
+Both files now read 2.4.4.
 
-`open-finance` needs no renumber: 2.3.2 (patch, Task 2) then 2.4.0 (minor, new skill, Task 4)
-is already monotonic.
-
-**Runbook correction:** Step 2 says "bump `middleleap-open-finance` to 2.4.1". That assumed
-PR #75 had already merged at 2.4.0 and Step 2 was a follow-up release. In this plan Step 2's
-content lands *on the same branch before it merges*, so it ships as one release at **2.4.0**.
-Do not use 2.4.1.
+**Runbook correction:** Step 2's "bump `middleleap-open-finance` to 2.4.1" is right again
+now that #75 merged first — but T2 (de-identify) is ready and T4 is not, so T2 takes
+**2.4.1** and T4 takes **2.4.2**.
 
 ---
 
@@ -73,10 +75,10 @@ Branches, in merge order:
 
 | # | Branch | State | Touches |
 |---|---|---|---|
-| 1 | `claude/kosli-founder-demo` | pushed, 5 commits, 44 files, **0 behind main** | loom harness + demo, `scripts/customer-demo-illustration*.mjs` |
-| 2 | `claude/islamic-banking-deidentify` | **local only, 1 commit (582a648), not pushed** | 4 files in `islamic-banking-uae` + 2 manifests |
+| 1 | `claude/kosli-founder-demo` | **PR #74 open** — rebased onto main, 6 commits, loom 2.4.4, all checks green | loom harness + demo, `scripts/customer-demo-illustration*.mjs` |
+| 2 | `claude/islamic-banking-deidentify` | local only, 1 commit (582a648), not pushed — **needs renumber 2.3.2 → 2.4.1** | 4 files in `islamic-banking-uae` + 2 manifests |
 | 3 | `loom/value-chain-page` | **local only, 1 commit (c4c7817), absent from origin** | `docs/loom-for-the-value-chain.html`, `README.md` |
-| 4 | `claude/npa-uae-skill` (PR #75) | pushed, 2 commits, 16 files | npa-uae skill, loom discovery canon, `docs/` |
+| 4 | ~~`claude/npa-uae-skill` (PR #75)~~ **merged 16 Sep** → T4 is a new branch `claude/npa-cross-bank-money` off main | npa-uae example, walkthrough, kosli README, record types |
 
 ---
 
@@ -108,11 +110,12 @@ Expected: loom `2.4.2`, open-finance `2.3.1`, `Marketplace OK.` If either number
 
 ---
 
-### Task 1: Land the founder demo
+### Task 1: Land the founder demo — **DONE 16 Sep: PR #74 open, awaiting your merge**
 
-**Runbook correction:** Step 1's prompt says to rebase. **No rebase is needed** —
-`claude/kosli-founder-demo` is already 0 commits behind `origin/main`, so there is no
-`marketplace.json` / `plugin.json` conflict to resolve. Skip straight to verification.
+What happened: after #75 merged, the branch was 1 behind; rebased, `marketplace.json`
+conflicted (resolved to main's copy), `plugin.json` silently read 2.4.3, both renumbered to
+**2.4.4**. Validator OK · 2538/2538 · scenario 4/4 · `DEMO OK — 23 steps`. The steps below
+are kept as the record of what was checked.
 
 **Files:** none modified — this task verifies and opens a PR.
 
@@ -229,16 +232,22 @@ git fetch origin && git checkout claude/islamic-banking-deidentify
 git rebase origin/main
 ```
 
-Expected: clean. Task 1 touches no `open-finance` file.
+Expected: conflicts on `marketplace.json` and `open-finance/plugin.json` (#75 rewrote the
+description lines). Take main's copy of both; Step 2 sets the version.
 
-- [ ] **Step 2: Confirm the version is still 2.3.2 and nothing else claimed it**
+- [ ] **Step 2: Renumber 2.3.2 → 2.4.1** — main is at 2.4.0 since #75, so 2.3.2 is now *below* main
+
+Set `"version": "2.4.1"` in `plugins/middleleap-open-finance/.claude-plugin/plugin.json` and in
+the open-finance entry of `.claude-plugin/marketplace.json` (a one-line `sed` or editor change
+in each; the value `2.3.2` appears exactly once per file), then:
 
 ```bash
+git commit -qam "open-finance 2.4.1: de-identify lands after npa-uae took 2.4.0"
 grep -o '"version": "[0-9.]*"' plugins/middleleap-open-finance/.claude-plugin/plugin.json
-git show origin/main:plugins/middleleap-open-finance/.claude-plugin/plugin.json | grep -o '2\.[0-9.]*'
 ```
 
-Expected: branch `2.3.2`, main `2.3.1`.
+Expected: `2.4.1`. The rebase in Step 1 will conflict on the same two files (#75 changed the
+open-finance description line too) — resolve to main's copy, then do this.
 
 - [ ] **Step 3: Confirm the de-identification is complete**
 
@@ -321,36 +330,31 @@ with customer-initiated payment as a **separate, later** proposition.
 - Modify: `plugins/middleleap-loom/skills/loom-adopt/harness/scripts/record-types-compile.mjs`
 - Modify: `plugins/middleleap-loom/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`
 
-- [ ] **Step 1: Rebase and renumber loom to 2.4.4**
+- [ ] **Step 1: Branch off main (after T1 merges) and set the versions**
+
+`claude/npa-uae-skill` is merged; T4 is a fresh branch. Loom moves because the record types
+change harness code; open-finance moves because the skill gains an example.
 
 ```bash
 cd ~/Github/ai-dlc
-git checkout claude/npa-uae-skill && git rebase origin/main
+git checkout main && git pull --ff-only origin main
+git checkout -b claude/npa-cross-bank-money
 ```
 
-The two manifests behave **differently** during this rebase, and the difference is the trap:
-
-- `.claude-plugin/marketplace.json` **will conflict** — the founder demo changed line 72
-  (loom version) and this branch changed lines 71–72 (loom description + version). Resolve the
-  loom entry to version **2.4.4**.
-- `plugins/middleleap-loom/.claude-plugin/plugin.json` **will not conflict.** Both sides
-  changed line 4 from `2.4.2` to `2.4.3` identically, so git merges it silently and the file
-  reads **2.4.3 — the number the founder demo already shipped.** Edit it to `2.4.4` by hand.
-
-Leave `open-finance` at **2.4.0** — do not change it to 2.4.1.
+Set `middleleap-loom` to **2.4.5** and `middleleap-open-finance` to **2.4.2** in both
+`plugin.json` files and both `marketplace.json` entries.
 
 ```bash
-grep -o '"version": "[0-9.]*"' plugins/middleleap-loom/.claude-plugin/plugin.json
-grep -A3 '"./plugins/middleleap-loom"' .claude-plugin/marketplace.json | grep -o '"version": "[0-9.]*"'
+grep -o '"version": "[0-9.]*"' plugins/middleleap-loom/.claude-plugin/plugin.json plugins/middleleap-open-finance/.claude-plugin/plugin.json
 ```
 
-Expected: `2.4.4` **twice**. If either says `2.4.3` the trap has closed — fix it before going on.
+Expected: loom `2.4.5`, open-finance `2.4.2`. If main has moved past either, take the next
+number — never reuse one.
 
-- [ ] **Step 1b: Undo the em-dash churn**
+- [ ] **Step 1b: Undo the em-dash churn #75 left behind**
 
-The patch export re-encoded every `—` in `marketplace.json` as `\u2014`, which touched the
-description lines of four plugins this branch has nothing to do with (lines 6, 12, 31, 52).
-Restore the literal em-dashes so the diff shows only the two real changes:
+#75's patch export re-encoded every `—` in `marketplace.json` as `\u2014` and it merged that
+way. Restore the literal em-dashes here so the file reads as it did:
 
 ```bash
 python3 - <<'PY'
@@ -536,15 +540,15 @@ Expected: `Record-types gate — OK (types match the catalog)`. Commit the regen
 the compiler change. Don't use `--render` — it needs a mounted provider and is not part of
 this task.
 
-- [ ] **Step 13: Push and update PR #75**
+- [ ] **Step 13: Push and open the PR**
 
 ```bash
-git push --force-with-lease
-gh pr edit 75 --title "npa-uae: New Product Approval, aligned to the Meridian scenario"
+git push -u origin claude/npa-cross-bank-money
+gh pr create --base main --title "npa-uae: New Product Approval, aligned to the Meridian scenario"
 ```
 
-Update the PR description to state: loom **2.4.4**, open-finance **2.4.0**, both examples
-shipped, reconciliation README present, record types added.
+The description states: loom **2.4.5**, open-finance **2.4.2**, both examples shipped,
+reconciliation README present, record types added.
 
 ---
 
@@ -762,10 +766,7 @@ independent. Task 7 needs only the sandbox org and can run in parallel with 2–
 
 ## Open decisions
 
-1. **Does PR #75 stay open?** This plan assumes yes — Task 4 force-pushes onto it so the whole
-   npa work lands as one release at open-finance 2.4.0. The alternative is merging #75 as-is
-   at 2.4.0 and shipping Task 4's content as 2.4.1, which means two marketplace releases for
-   one feature.
+1. ~~Does PR #75 stay open?~~ **Resolved by merge, 16 Sep.** T4 is a follow-up release.
 2. **`CLAUDE.md` documents `scripts/discovery-sync-check.mjs` as a load-bearing gate. That file
    does not exist on `main`** — `scripts/` holds only the validator, its test, and the
    onboarding/demo scripts. Either the gate was removed and the doc is stale, or the script was
