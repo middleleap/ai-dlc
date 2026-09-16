@@ -56,10 +56,12 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 
 **[Read how the Loom works →](docs/the-loom.html)** — the interactive, human-facing documentation page (open it in a browser).
 
+**[The Loom for the value chain →](docs/loom-for-the-value-chain.html)** — the same method for the people who have to approve it: executive sponsor, product, engineering, risk, audit, operations, security. Five views — the machine, one idea end to end, the adversarial checklist, the toolkit, and the decision.
+
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | `loom` | The method canon — the double diamond, the gate models, the context brain, the governance catalog (HG-0001…HG-0012) |
-| Skill | `loom-adopt` | Stands the harness up in a repo — gate validator, branded renderer, artifact templates, waist gate, five build-loop skills, reviewer templates, guardrail hooks |
+| Skill | `loom-adopt` | Stands the harness up in a repo — gate validator, branded renderer, artifact templates, waist gate, eight build-loop skills, reviewer templates, guardrail hooks |
 | Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line and prototype fidelity on discovery runs |
 | Agent | `data-governance-reviewer` | Judges control coverage and residual-risk soundness beyond the mechanical D6 gate |
 
