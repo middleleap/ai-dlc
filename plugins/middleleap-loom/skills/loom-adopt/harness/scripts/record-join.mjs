@@ -114,7 +114,14 @@ export async function gather(changeId, { cwd = process.cwd(), env = process.env,
     const actor = kept.actor || {};
     const inReg = registry?.identities?.some((i) => i.id === actor.id);
     row('producer (actor)', `${actor.id || '—'} · ${actor.kind || '—'}${actor.model ? ` · model ${actor.model.model_id}` : ''}${inReg ? ' · in identities.json' : ' · NOT IN REGISTRY'}`, inReg ? 'DECLARED' : 'NOT CHECKED', 'signed actor record (K4) — legible, not independently authenticated');
-    row('producer (runner)', kept.runner ? `${kept.runner.subject} @ ${short(kept.runner.sha, 10)}` : null, kept.runner ? 'DECLARED' : 'NOT CHECKED', 'PR6 — from the CI environment; platform-verified OIDC is question 3 (kosli-surface.md)');
+    if (kept.runner?.oidc?.token) {
+      const { fetchJwks, verifyRunner } = await import('../core/runner-identity.mjs');
+      const jwks = await fetchJwks();
+      const f = jwks ? verifyRunner(kept.runner, { jwks }) : null;
+      if (f && !f.length) row('producer (runner)', `${kept.runner.subject} @ ${short(kept.runner.sha, 10)} · OIDC kid ${kept.runner.oidc.kid}`, 'VERIFIED', 'PR6 — the platform\'s OIDC token re-verified HERE against the issuer\'s published keys; subject, repository, ref and sha match the token');
+      else if (f) row('producer (runner)', `${kept.runner.subject} @ ${short(kept.runner.sha, 10)} · OIDC FAILS: ${f[0]}`, 'NOT CHECKED', 'PR6 — the token does not vouch for this runner record');
+      else row('producer (runner)', `${kept.runner.subject} @ ${short(kept.runner.sha, 10)} · OIDC kid ${kept.runner.oidc.kid}${kept.record?.runner_oidc?.verified ? ` · verified at post ${kept.record.runner_oidc.at}` : ''}`, 'DECLARED', 'PR6 — token carried; the issuer\'s keys were unreachable here, so it is not re-verified (the key may also have rotated out)');
+    } else row('producer (runner)', kept.runner ? `${kept.runner.subject} @ ${short(kept.runner.sha, 10)}` : null, kept.runner ? 'DECLARED' : 'NOT CHECKED', 'PR6 — from the CI environment, no platform token attached (a hand-named runner, or a platform that issues none)');
     row('signature', sig.length ? `FAILS: ${sig[0]}` : `verifies · issuer ${kept.attestation?.issuer}`, sig.length ? 'NOT CHECKED' : 'VERIFIED', 'ed25519 over the canonical envelope, issuer in attestation-issuers.json');
     if (sig.length) flagged.push(`kept record ${kept.name}: ${sig[0]}`);
     if (kept.controls?.institution && ob && !kept.controls.institution.includes(ob.id)) flagged.push(`kept record ${kept.name} does not cite ${ob.id}`);

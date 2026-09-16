@@ -96,18 +96,20 @@ export function listOutbox(cwd = process.cwd()) {
  * Order matters: provenance FIRST, so a bad envelope is refused whether or not anything is
  * mounted — an unmounted seam must not make a bad record look merely unrecorded.
  */
-export async function post(envelope, { cwd = process.cwd(), env = process.env, registry = undefined, issuers = undefined, requireSignature = true, now = Date.now(), dryRun = false, noQueue = false } = {}) {
+export async function post(envelope, { cwd = process.cwd(), env = process.env, registry = undefined, issuers = undefined, requireSignature = true, now = Date.now(), dryRun = false, noQueue = false, jwks = null } = {}) {
   const reg = registry === undefined ? loadRegistry(cwd) : registry;
   const iss = issuers === undefined ? loadIssuers(cwd) : issuers;
-  const findings = evaluateProvenance(envelope, { registry: reg, issuers: iss, requireSignature, now });
+  const findings = evaluateProvenance(envelope, { registry: reg, issuers: iss, requireSignature, now, jwks });
   if (findings.length) return { status: 'rejected', findings };
+  // PR6 second half, recorded on the result: was the runner's token checked before posting, and against which key?
+  const runnerCheck = envelope.runner?.oidc?.token ? (jwks ? { verified: true, at: new Date(now).toISOString(), kid: envelope.runner.oidc.kid ?? null } : { verified: false, reason: 'no JWKS at post time — token carried, not checked here' }) : null;
   const st = status(cwd);
   if (!st.mounted) return { status: 'unmounted', reason: st.reason };
   const provider = await loadProvider(st);
   let r;
   try { r = await provider.post(envelope, { cwd, env, config: st.adapter.config || {}, dryRun }); }
   catch (e) { r = { ok: false, error: e.message }; }
-  if (r?.ok) return { status: 'recorded', provider: st.provider, id: r.id ?? null, ref: r.ref ?? null, dry_run: !!r.dry_run, recorded_at: new Date().toISOString() };
+  if (r?.ok) return { status: 'recorded', provider: st.provider, id: r.id ?? null, ref: r.ref ?? null, dry_run: !!r.dry_run, recorded_at: new Date().toISOString(), ...(runnerCheck ? { runner_oidc: runnerCheck } : {}) };
   const error = r?.error || 'provider call failed';
   if (noQueue || dryRun) return { status: 'queued', file: null, error };
   return { status: 'queued', file: queue(cwd, envelope, error), error };

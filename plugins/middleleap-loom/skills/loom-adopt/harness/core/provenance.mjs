@@ -26,6 +26,8 @@ import { createHash, sign as edSign } from 'node:crypto';
 import { verifySignatureOver } from './attestations.mjs';
 import { identityKey, requireSeparate } from './separation.mjs';
 
+import { verifyRunner } from './runner-identity.mjs';
+
 export const SCHEMA_ID = 'loom.record-envelope/v1';
 /** Every kind the seam carries (kosli-seam.md §3). */
 export const KINDS = ['intent', 'problem-selected', 'gate', 'risk-class', 'spec-locked', 'design-decision', 'review', 'accepted', 'discovery-stopped', 'reopened-discovery', 'seal-anchor', 'npa-pack', 'npa-approved'];
@@ -104,7 +106,7 @@ export function verifyEnvelope(env, issuers, opts = {}) {
  * false skips the signature (a shape check on a draft, never evidence).
  * Returns findings ([] ⇒ the envelope may leave the tree).
  */
-export function evaluateProvenance(env, { registry = null, issuers = null, requireSignature = true, now = Date.now() } = {}) {
+export function evaluateProvenance(env, { registry = null, issuers = null, requireSignature = true, now = Date.now(), jwks = null } = {}) {
   const f = [];
   if (!env || typeof env !== 'object') return ['record envelope is not an object'];
   if (env.schema !== SCHEMA_ID) f.push(`record envelope schema is ${JSON.stringify(env.schema)}, expected ${SCHEMA_ID}`);
@@ -164,6 +166,9 @@ export function evaluateProvenance(env, { registry = null, issuers = null, requi
   if (!r || typeof r !== 'object') f.push('PR6: record envelope carries no runner identity — a record with no runner is a record anyone could have written');
   else {
     for (const k of RUNNER_FIELDS) if (!isStr(r[k])) f.push(`PR6: runner identity has no ${k}`);
+    // PR6, second half: when the runner carries the platform's OIDC token and the issuer's keys are at hand, the
+    // declaration is checked against the token — signature, issuer, audience, expiry, and every named field.
+    if (r.oidc?.token && jwks) for (const x of verifyRunner(r, { jwks, now })) f.push(`PR6: ${x}`);
     if (isStr(r.sha) && isStr(env.commit) && r.sha !== env.commit) f.push(`PR6: runner sha ${r.sha.slice(0, 12)}… is not the attested commit ${String(env.commit).slice(0, 12)}… — the runner that produced this record was not running the commit it describes`);
   }
 
