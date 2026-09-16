@@ -1,0 +1,22 @@
+{
+  "$comment": "Names that must not appear in anything installable. scripts/deidentify-check.mjs scans every tracked text file under plugins/ for these terms (case-insensitive) and fails the build on a hit, unless the file is allowlisted below with a reason. The Open Finance, Islamic banking and risk-reviewer skills are imported from the Claude.ai skills UI as whole-file overwrites (CLAUDE.md, provenance rules); this gate is what makes a careless re-import fail in the PR instead of shipping a client's name to the public marketplace.",
+  "scope": "plugins",
+  "terms": [
+    "ADCB",
+    "Abu Dhabi Commercial"
+  ],
+  "allow": [
+    {
+      "path": "plugins/middleleap-open-finance/skills/open-finance-uiux/references/INDEX.md",
+      "reason": "prototyping kit: documents that the sample scenarios use real UAE brand names on purpose and tells the reader to replace them"
+    },
+    {
+      "path": "plugins/middleleap-open-finance/skills/open-finance-uiux/references/html-blueprint.md",
+      "reason": "prototyping kit: placeholder account labels in sample UI"
+    },
+    {
+      "path": "plugins/middleleap-open-finance/skills/open-finance-uiux/references/value-propositions.md",
+      "reason": "prototyping kit: illustrative multi-bank scenarios with named market participants, meant to be replaced"
+    }
+  ]
+}

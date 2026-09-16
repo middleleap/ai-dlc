@@ -16,10 +16,15 @@ jobs:
       - name: Validate manifests, skills, and agents
         run: node scripts/validate-marketplace.mjs
 
+      # Three skills are imported from the Claude.ai skills UI as whole-file overwrites. This
+      # fails the PR if a re-import brings a client's name back into the public marketplace.
+      - name: De-identification gate (no client names under plugins/)
+        run: node scripts/deidentify-check.mjs
+
       # The validator is the only gate this repo has, so it is itself gated: the
       # suite builds throwaway git repos and asserts every violation still fails.
       - name: Validator self-test
-        run: node --test scripts/validate-marketplace.test.mjs scripts/onboarding-pilot.test.mjs scripts/onboarding-pilot-workspaces.test.mjs
+        run: node --test scripts/validate-marketplace.test.mjs scripts/deidentify-check.test.mjs scripts/onboarding-pilot.test.mjs scripts/onboarding-pilot-workspaces.test.mjs
 
       - name: Onboarding handoff, configuration and all-tier installation contracts
         run: node --test plugins/middleleap-loom/skills/loom-adopt/harness/scripts/intake-*.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/onboarding-commands.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/configuration-tasks.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/brainkit-reuse.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/project-integration.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/codex-runtime.test.mjs
