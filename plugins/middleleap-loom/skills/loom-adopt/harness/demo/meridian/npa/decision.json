@@ -1,0 +1,18 @@
+{
+  "_comment": "FICTIONAL PLANNING — the Meridian Trust NPA committee's permission-to-develop (PA1) decision for the cross-bank-money proposition, as the npa-uae skill's worked example records it. Nothing here is a regulatory approval. The conditions are the discovery run's D6 verdict conditions; the Loom compiles each into a control or a manual owner (example-cross-bank-money.md, 'NPA Committee decision').",
+  "proposition_id": "NPA-2026-CBM-001",
+  "receipt": "PA1",
+  "decision": "approved-with-conditions",
+  "approved_by": "exec-rashid",
+  "decided_at": "2026-09-10T09:00:00Z",
+  "conditions": [
+    "The receiving-consent journey has a named owner (S-005)",
+    "Certification evidence for the data-recipient role exists before any pilot exposure (OB-AE-OFS-CERT-001)",
+    "The platform dependency is on the outsourcing register with its resilience assessment (OB-AE-CBUAE-RES-001)",
+    "H3 — customer-initiated payment — is excluded from the hand-off; the greyed affordance stays greyed until an Amendment is approved",
+    "Every obligation cited in 5.1 is verified by its owner against the current Regulation and Standards",
+    "Post-implementation review at ninety days with the 1.5 KPIs; liability for a wrong balance shown answered before pilot"
+  ],
+  "valid_until": "2026-12-10",
+  "evidence_status": "fictional planning"
+}

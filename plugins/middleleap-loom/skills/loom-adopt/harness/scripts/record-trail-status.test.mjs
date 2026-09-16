@@ -1,7 +1,7 @@
 // Tests for the trail-status report (2.1.0, plan row 2.3).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FIXED_STAGES, expectedFor, gateName, report } from './record-trail-status.mjs';
+import { FIXED_STAGES, OPTIONAL, expectedFor, gateName, report } from './record-trail-status.mjs';
 
 const CATALOG = { controls: [
   { control_id: 'A', mechanism_ref: 'scripts/a-check.mjs', lane: 'pr' },
@@ -20,5 +20,16 @@ test('expected delivery records: the fixed stages plus one gate record per runna
 
 test('report splits present, missing and extra by name', () => {
   const r = report(['risk-class', 'gate.x', 'gate.y'], [{ name: 'gate.x' }, { name: 'stray' }]);
-  assert.deepEqual(r, { present: ['gate.x'], missing: ['risk-class', 'gate.y'], extra: ['stray'] });
+  assert.deepEqual(r, { present: ['gate.x'], missing: ['risk-class', 'gate.y'], optional: [], extra: ['stray'] });
+});
+
+test('a discovery trail requires intent and problem-selected; a stop, the NPA receipts and a reopen are optional — present when there, never missing, never extra', () => {
+  assert.deepEqual(FIXED_STAGES.discovery, ['intent', 'problem-selected']);
+  const handedOff = report(FIXED_STAGES.discovery, [{ name: 'intent' }, { name: 'problem-selected' }, { name: 'npa-pack' }, { name: 'npa-approved.pa1' }, { name: 'reopened-discovery.OPS-1' }, { name: 'gate.x' }], OPTIONAL.discovery);
+  assert.deepEqual(handedOff.missing, []);
+  assert.deepEqual(handedOff.optional, ['npa-pack', 'npa-approved.pa1', 'reopened-discovery.OPS-1']);
+  assert.deepEqual(handedOff.extra, ['gate.x']);
+  const stopped = report(FIXED_STAGES.discovery, [{ name: 'intent' }, { name: 'discovery-stopped' }], OPTIONAL.discovery);
+  assert.deepEqual(stopped.missing, ['problem-selected']);
+  assert.deepEqual(stopped.optional, ['discovery-stopped']);
 });

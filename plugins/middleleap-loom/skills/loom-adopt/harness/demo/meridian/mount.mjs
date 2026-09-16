@@ -46,6 +46,19 @@ export function mountMeridian(A) {
   const brand = [join(A, 'discovery/brand/examples/meridian-trust.design.md'), join(HERE, '../../discovery/brand/examples/meridian-trust.design.md')].find(existsSync);
   if (!brand) throw new Error('the Meridian brand profile (discovery/brand/examples/meridian-trust.design.md) is not in the bundle');
   cpSync(brand, join(A, 'discovery/brand/design.md'));
+  // The NPA pack the run assembles at 'Investment case assembled': the npa-uae skill's worked example
+  // for this very run (middleleap-open-finance is a sibling plugin in this repository), plus the
+  // committee's PA1 decision. An adopter's tree carries its own form; the demo borrows the skill's.
+  const form = join(HERE, '../../../../../../middleleap-open-finance/skills/npa-uae/references/example-cross-bank-money.md');
+  const npaDir = join(A, 'discovery/runs/cross-bank-money/npa');
+  mkdirSync(npaDir, { recursive: true });
+  if (existsSync(form)) cpSync(form, join(npaDir, 'business-proposition-form.md'));
+  cpSync(join(HERE, 'npa/decision.json'), join(npaDir, 'decision.json'));
+  // The Run → Discovery edge: one signal routed `discovery`, appended to the adopted operations log.
+  const sigPath = join(A, 'docs/governance/operations-signal.json');
+  const sig = existsSync(sigPath) ? J(sigPath) : { signals: [] };
+  sig.signals = [...(sig.signals || []), ...J(join(HERE, 'operations-signal.json')).signals];
+  W(sigPath, sig);
   return {
     mandate: M.mandate_ref,
     obligation: M.obligation.id,
@@ -54,5 +67,7 @@ export function mountMeridian(A) {
     control: M.control.control_id,
     mechanism: M.control.mechanism_ref,
     runs: RUNS,
+    npaForm: existsSync(form) ? 'discovery/runs/cross-bank-money/npa/business-proposition-form.md' : null,
+    signal: 'OPS-2026-0912',
   };
 }

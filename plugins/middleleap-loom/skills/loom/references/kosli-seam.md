@@ -84,6 +84,14 @@ are answered:
 - **The risk-class record** (row 2.8): `core/risk-class-attestation.mjs` builds, signs and
   verifies the compiler's decision as it leaves the tree — tier, plan hash, profile inputs,
   flags, classifier. `scripts/risk-class-attest.mjs` writes it beside the envelope.
+- **Both ends of the loop, posted** (row 2.14, completed 16 Sep 2026): `scripts/discovery-attest.mjs`
+  builds `intent` (from `intent.md`), `problem-selected` (from `problem-statement.md`),
+  `discovery-stopped`, `npa-pack` (the Business Proposition Form read and digested), `npa-approved`
+  (PA1/PA2, attested by the approver) and `reopened-discovery` (from a signal routed `discovery`) —
+  each from the run's own artifact, never typed, bound to the run's trail, signed, and refused by
+  the same PR1–PR6 rules as a gate record. A decision kind with an agent actor is refused before it
+  is built. `record-trail-status` treats a stop, the NPA receipts and a reopen as optional on a
+  discovery trail: present when there, never missing.
 - **The two loop attestation types** (row 2.14): `discovery-stopped` from a run's `outcome.md`
   and `reopened-discovery` from an operations signal routed `discovery`, in
   `core/loop-attestations.mjs`.
@@ -147,7 +155,8 @@ Each record is signed with the one attestation stack and refused as evidence whi
   one page per change with the discovery renderer under the mounted brand; every row is
   VERIFIED or FLAGGED, and exit 6 says a flag exists.
 - **The demo** (row 2.13): `demo/run-demo.mjs` walks the whole seam against the fake in
-  fifteen steps, two of them deliberate refusals; `--real` runs it against an org and writes
+  fifteen steps, two of them deliberate refusals; `--scenario meridian` makes it twenty-seven,
+  with a third refusal (an agent trying to record a PA1 approval); `--real` runs it against an org and writes
   `docs/integration-run.md`, which is owed until someone has.
 
 Still ahead: the refusal half of question 2 (2.7), the change ticket (4.3) and the FINOS
