@@ -44,6 +44,7 @@ import { TIERS } from './policy-compiler.mjs';
 import { CACHE_DIR, cacheability, computeKey, read as cacheRead, write as cacheWrite } from './gate-cache.mjs';
 import { pathToFileURL } from 'node:url';
 import { actorFor, post as recordPost, runnerFromEnv, signerFromArgs, status as recordStatus } from './external-record.mjs';
+import { attachOidc, fetchJwks } from './runner-identity.mjs';
 import { buildEnvelope, signEnvelope } from './provenance.mjs';
 import { controlsForRecord, loadObligations } from './record-controls.mjs';
 
@@ -355,7 +356,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (!signer) xr.notes.push('no signing material (--record-issuer/--record-key or LOOM_RECORD_ISSUER/LOOM_RECORD_KEY) — envelopes are unsigned and the provenance rules refuse them');
     const actorId = arg('--actor') || process.env.LOOM_ACTOR_ID || null;
     const actor = actorFor(cwd, actorId);
-    const runner = runnerFromEnv(process.env, head);
+    // PR6, both halves: the runner from the environment, and — where the platform issues one — its OIDC token,
+    // checked against the issuer's published keys before any record is posted (core/runner-identity.mjs).
+    const runner = await attachOidc(runnerFromEnv(process.env, head), process.env);
+    const jwks = runner?.oidc?.token ? await fetchJwks() : null;
+    if (runner?.oidc?.token) xr.notes.push(jwks ? `runner OIDC token verified against the issuer's keys (kid ${runner.oidc.kid})` : 'runner OIDC token carried but the issuer JWKS was unreachable — not verified at post time');
     const trails = requirements.changes.map((c) => c.change_id).filter(Boolean).sort();
     if (!trails.length) xr.notes.push('no implicated change envelope — nothing to record against (a record binds to a change)');
     const obligations = loadObligations(cwd); // row 3.5 — which obligations each record answers
@@ -368,7 +373,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
           payload: { gate: e.mechanism, result: e.status, controls: e.controls, ms: e.ms, wave: e.wave, lane, cache_key: e.cache_key ?? null } });
         if (signer) envl = signEnvelope(envl, signer);
         // eslint-disable-next-line no-await-in-loop -- one record at a time, in catalog order
-        const r = await recordPost(envl, { cwd });
+        const r = await recordPost(envl, { cwd, jwks });
         const row = { trail, name, status: r.status };
         if (r.status === 'recorded') { row.id = r.id; xr.posted.push(row); }
         else if (r.status === 'queued') { row.file = r.file; xr.queued.push(row); }

@@ -8,6 +8,11 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    # id-token: write lets the job request a GitHub OIDC token for the runner-identity check below.
+    # Fork pull requests get none; the check is inert there and says so.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,6 +25,11 @@ jobs:
       # fails the PR if a re-import brings a client's name back into the public marketplace.
       - name: De-identification gate (no client names under plugins/)
         run: node scripts/deidentify-check.mjs
+
+      # PR6, second half, proved on the platform: the job's own OIDC token verifies against GitHub's
+      # published keys and its claims match the job (core/runner-identity.mjs; seam question 3).
+      - name: Runner identity — the job's OIDC token verifies against the issuer (PR6, question 3)
+        run: node plugins/middleleap-loom/skills/loom-adopt/harness/scripts/runner-identity-check.mjs
 
       # The validator is the only gate this repo has, so it is itself gated: the
       # suite builds throwaway git repos and asserts every violation still fails.

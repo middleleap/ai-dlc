@@ -168,7 +168,7 @@ contribution (3.7), all of which wait on the 18 September call, and the real-org
 |---|---|---|
 | 1 | Residency: where the trail and the evidence vault live; onshore or self-hosted option | the HG-0011 claim |
 | 2 | Can an approval be refused when the approver is an agent identity | `accepted`; without it the no-agent-approver rule is one-sided |
-| 3 | Can an attestation carry and verify the CI runner's OIDC token | the runner-identity rule |
+| 3 | Can an attestation carry and verify the CI runner's OIDC token — **carry and verify on the Loom's side: done (2.4.7, `core/runner-identity.mjs`); native verification by Kosli: open** | the runner-identity rule |
 | 4 | Attestation retrieval by name on a trail | the no-self-attestation rule read back |
 | 5 | Policy surface: `kosli evaluate` with Rego, environment policies, or both | the policy compiler |
 | 6 | Custom attestation type versioning when a gate's output schema changes | the type compiler |

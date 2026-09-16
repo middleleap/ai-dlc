@@ -36,6 +36,7 @@ import { pathToFileURL } from 'node:url';
 import { buildEnvelope, signEnvelope } from '../core/provenance.mjs';
 import { actorFor, loadRegistry, post, runnerFromEnv, signerFromArgs, status as recordStatus } from '../core/external-record.mjs';
 import { discoveryStoppedRecord, readOutcome, reopenedDiscoveryRecord } from '../core/loop-attestations.mjs';
+import { attachOidc, fetchJwks } from '../core/runner-identity.mjs';
 
 export const KINDS = ['intent', 'problem-selected', 'discovery-stopped', 'npa-pack', 'npa-approved', 'reopened-discovery'];
 /** A decision is a human act: an agent may prepare a framing or a pack; it never selects, approves or reopens. */
@@ -195,11 +196,12 @@ export async function attest(kind, { cwd = process.cwd(), env = process.env, run
   const registry = loadRegistry(cwd);
   const known = (registry?.identities || []).find((i) => i.id === actor.id);
   if (known) actor.kind = known.kind;
-  const runner = runnerFromEnv(env, commit);
+  const runner = await attachOidc(runnerFromEnv(env, commit), env);
+  const jwks = runner?.oidc?.token ? await fetchJwks() : null;
   let envelope = envelopeFor(kind, { run, payload, actor, origin, commit, runner });
   const signer = signerFromArgs({ issuer, keyPath }, env);
   if (signer) envelope = signEnvelope(envelope, signer);
-  const result = await post(envelope, { cwd, env });
+  const result = await post(envelope, { cwd, env, jwks });
   let kept = null;
   if (emitDir && result.status !== 'rejected') {
     const dir = resolve(cwd, emitDir, 'records'); mkdirSync(dir, { recursive: true });
