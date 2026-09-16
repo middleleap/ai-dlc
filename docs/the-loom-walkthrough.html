@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Loom — how a regulated institution builds software with AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper-0:#f7f5ef; --paper-1:#f0ede5; --paper-2:#e8e4db; --paper-3:#ded8cc; --paper-4:#bdb6aa; --paper-border:#d4cec2;
+  --text-0:#1b1b1b; --text-1:#2b2925; --text-2:#4d4942; --text-3:#5f5b54;
+  --ember-500:#e65c2d; --ember-600:#ce451b; --ember-700:#a83614;
+  --info:#5d8fa6; --info-text:#35637a;
+  --font-display:"Instrument Serif",Georgia,serif;
+  --font-body:"DM Sans",Arial,sans-serif;
+  --font-mono:"JetBrains Mono",monospace;
+  --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px; --s-6:32px; --s-7:48px; --s-8:64px;
+  --dur:.4s; --ease:cubic-bezier(.34,1.3,.4,1);
+}
+@media (prefers-reduced-motion: reduce){ :root{ --dur:.01ms } }
+*{box-sizing:border-box}
+html{scroll-snap-type:y proximity; scroll-behavior:smooth}
+body{margin:0; background:var(--paper-0); color:var(--text-1); font-family:var(--font-body); font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased}
+
+.eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-3); margin:0 0 var(--s-4)}
+h1{font-family:var(--font-display); font-weight:400; line-height:1.05; font-size:clamp(40px,7vw,84px); color:var(--text-0); margin:0 0 var(--s-5); max-width:14ch}
+h2{font-family:var(--font-display); font-weight:400; font-size:clamp(28px,4vw,42px); line-height:1.15; color:var(--text-0); margin:0 0 var(--s-4); max-width:26ch}
+h2 em, h1 em{font-style:italic; color:var(--ember-700)}
+h3{font-family:var(--font-body); font-weight:500; font-size:16px; color:var(--text-0); margin:0 0 6px}
+p{max-width:64ch; margin:0 0 var(--s-4)}
+.lede{font-size:19px; color:var(--text-2)}
+.note{font-size:14px; color:var(--text-3)}
+.mono{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3)}
+
+.slide{min-height:100vh; scroll-snap-align:start; padding:var(--s-8) var(--s-5); display:flex; flex-direction:column; justify-content:center; border-top:1px solid var(--paper-border)}
+.slide:first-of-type{border-top:0}
+.inner{max-width:920px; width:100%; margin:0 auto}
+
+header.top{position:sticky; top:0; z-index:5; background:var(--paper-0); border-bottom:1px solid var(--paper-border); padding:12px var(--s-5); display:flex; align-items:center; gap:12px}
+header.top svg{width:36px; height:auto; color:var(--text-0)}
+.wordmark{font-weight:600; font-size:15px; color:var(--text-0); letter-spacing:-.01em}
+.wordmark span{color:var(--ember-700)}
+.progress{margin-left:auto; display:flex; gap:10px; align-items:center}
+.progress i{display:block; width:7px; height:7px; background:var(--paper-4); transform:rotate(45deg); transition:background var(--dur)}
+.progress i.on{background:var(--ember-500)}
+.progress .count{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; color:var(--text-3); margin-left:8px}
+
+button{font-family:var(--font-mono); cursor:pointer; border-radius:0}
+.btn{font-size:12px; letter-spacing:.1em; text-transform:uppercase; padding:11px 18px; border:1px solid var(--paper-border); background:transparent; color:var(--text-2)}
+.btn:hover{background:var(--paper-2)}
+.btn[aria-pressed="true"], .btn.on{background:var(--ember-500); border-color:var(--ember-500); color:#110d0a}
+:focus-visible{outline:2px solid var(--ember-600); outline-offset:2px}
+.row{display:flex; gap:var(--s-2); flex-wrap:wrap; margin:0 0 var(--s-5)}
+
+.grid2{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s-5)}
+@media (max-width:600px){ .grid2{grid-template-columns:1fr} }
+.card{border:1px solid var(--paper-border); padding:var(--s-5); background:var(--paper-1)}
+.card .mono{margin-bottom:8px; display:block}
+
+figure{margin:0}
+figure svg{width:100%; height:auto; display:block}
+.el{transition:opacity var(--dur)}
+.dim{opacity:.18}
+.caption{border-left:3px solid var(--ember-500); padding:var(--s-3) var(--s-4); background:var(--paper-2); margin-top:var(--s-4); min-height:72px}
+.caption p{margin:0}
+
+.gates{display:flex; gap:6px; margin:var(--s-4) 0}
+.gates i{flex:1; height:6px; background:var(--paper-3)}
+.gates i.on{background:var(--ember-500)}
+.gates i.done{background:var(--text-0)}
+.stepbox{border:1px solid var(--paper-border); background:var(--paper-1); padding:var(--s-5); min-height:200px}
+.stepbox .ex{margin-top:var(--s-4); padding:var(--s-4) var(--s-5); background:var(--paper-2); border-left:3px solid var(--text-0)}
+.stepbox .ex .mono{display:block; margin-bottom:6px}
+.stepbox .ev{margin-top:var(--s-3); font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; color:var(--text-3)}
+#dd .m{cursor:pointer}
+#dd .m rect{fill:#f7f5ef; stroke:#bdb6aa; stroke-width:1.5; transition:fill var(--dur), stroke var(--dur)}
+#dd .m.human rect{stroke:#e65c2d}
+#dd .m.done rect{fill:#1b1b1b; stroke:#1b1b1b}
+#dd .m.done.human rect{fill:#e65c2d; stroke:#e65c2d}
+#dd .m.on rect{fill:#1b1b1b; stroke:#1b1b1b}
+#dd .m.on.human rect{fill:#e65c2d; stroke:#e65c2d}
+#dd .m text{font-family:"JetBrains Mono",monospace; font-size:10px; fill:#5f5b54}
+#dd .m.on text{fill:#1b1b1b; font-weight:500}
+#dd #shuttle{transition:transform var(--dur) var(--ease)}
+.stepnav{display:flex; gap:var(--s-2); margin-top:var(--s-4)}
+
+.list{list-style:none; padding:0; margin:0}
+.list li{position:relative; padding:12px 0 12px 22px; border-bottom:1px solid var(--paper-border)}
+.list li::before{content:""; position:absolute; left:0; top:20px; width:8px; height:8px; background:var(--ember-500); transform:rotate(45deg)}
+.list li span{display:block; font-size:14px; color:var(--text-3)}
+
+.acc button.h{width:100%; text-align:left; background:transparent; border:0; border-bottom:1px solid var(--paper-border); padding:14px 4px; font-family:var(--font-body); font-size:16px; color:var(--text-0); display:flex; gap:var(--s-4); align-items:baseline}
+.acc button.h:hover{background:var(--paper-1)}
+.acc button.h .nm{font-family:var(--font-mono); font-size:14px; color:var(--text-0)}
+.acc button.h .tag{margin-left:auto; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); flex:none}
+.acc button.h .dia{width:8px; height:8px; flex:none; background:var(--paper-4); transform:rotate(45deg); transition:transform var(--dur) var(--ease), background var(--dur)}
+.acc button.h[aria-expanded="true"] .dia{background:var(--ember-500); transform:rotate(90deg)}
+.acc .p{max-height:0; overflow:hidden; background:var(--paper-1); border-bottom:1px solid var(--paper-border); padding:0 var(--s-5)}
+.acc .p.open{max-height:300px; padding:var(--s-4) var(--s-5)}
+.acc .p p{font-size:15px; margin:0}
+
+table{width:100%; border-collapse:collapse; font-size:15px}
+th{text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); font-weight:400; padding:0 0 10px; border-bottom:1px solid var(--paper-border)}
+td{padding:12px 12px 12px 0; border-bottom:1px solid var(--paper-border); vertical-align:top}
+td:first-child{font-weight:500; color:var(--text-0); white-space:nowrap}
+td:last-child{color:var(--text-3); font-size:14px}
+
+.kpi{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:var(--s-4); margin:var(--s-5) 0}
+.kpi div{border-top:2px solid var(--text-0); padding-top:10px}
+.kpi b{display:block; font-family:var(--font-display); font-weight:400; font-size:34px; line-height:1; color:var(--text-0); margin-bottom:6px}
+.kpi span{font-size:14px; color:var(--text-3)}
+
+footer{padding:var(--s-6) var(--s-5); border-top:1px solid var(--paper-border); display:flex; justify-content:space-between; gap:var(--s-4); font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3)}
+.hint{position:fixed; right:var(--s-5); bottom:var(--s-5); font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); background:var(--paper-0); border:1px solid var(--paper-border); padding:8px 12px}
+@media (max-width:640px){ .hint{display:none} td:first-child{white-space:normal} }
+@media print{ .slide{min-height:0; break-inside:avoid} .hint,header.top{display:none} .acc .p{max-height:none; padding:var(--s-4) var(--s-5)} .dim{opacity:1} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <svg viewBox="0 0 144 80" role="img" aria-label="MiddleLeap">
+    <defs><linearGradient id="ember" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0722E"/><stop offset="1" stop-color="#CE451B"/></linearGradient></defs>
+    <rect x="0" y="12" width="56" height="56" rx="9" fill="currentColor"/>
+    <g transform="translate(104,40) rotate(45)"><rect x="-28" y="-28" width="56" height="56" rx="9" fill="url(#ember)"/></g>
+  </svg>
+  <span class="wordmark">Middle<span>Leap</span></span>
+  <nav class="progress" id="prog" aria-label="Slides"></nav>
+</header>
+
+<section class="slide" id="s1">
+  <div class="inner">
+    <p class="eyebrow">The Loom · AI-DLC</p>
+    <h1>How a regulated institution builds software <em>with AI</em>.</h1>
+    <p class="lede">Not a tool. Not a framework to replace the SDLC. A way of working in which agents do the building, controls are always on, and leaders take the decisions that matter — with evidence for every one of them.</p>
+    <p class="note">The Loom is the deliverable. UAE Open Finance was the first solution built on it.</p>
+  </div>
+</section>
+
+<section class="slide" id="s2">
+  <div class="inner">
+    <p class="eyebrow">The problem</p>
+    <h2>AI ships in minutes. The governance around it was built for humans typing.</h2>
+    <div class="grid2">
+      <div class="card"><span class="mono">Volume</span><h3>Change outruns the review</h3><p class="note">DevOps drove a hundredfold increase in change. Agents add another. You cannot put a human in front of every pull request, so either review becomes theatre or delivery stalls.</p></div>
+      <div class="card"><span class="mono">Evidence</span><h3>The audit trail starts too late</h3><p class="note">Pipelines record the commit onward. Intent, requirement, risk decision and design rationale — the things an auditor actually asks about — live in chats and heads.</p></div>
+      <div class="card"><span class="mono">Accountability</span><h3>Nobody knows who built it</h3><p class="note">When an agent writes, reviews and fixes code, "who is accountable" has no answer unless the way of working produces one.</p></div>
+      <div class="card"><span class="mono">Trust</span><h3>Agents can narrate evidence</h3><p class="note">A model can write a convincing test report without running a test. Second line will not accept agentic delivery until that is impossible by construction.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s3">
+  <div class="inner">
+    <p class="eyebrow">The Loom in one picture</p>
+    <h2>One diagram. Highlight your role.</h2>
+    <div class="row" role="group" aria-label="Highlight by role">
+      <button class="btn" data-role="all" aria-pressed="true">Everyone</button>
+      <button class="btn" data-role="exec" aria-pressed="false">Executive</button>
+      <button class="btn" data-role="risk" aria-pressed="false">Risk &amp; compliance</button>
+      <button class="btn" data-role="eng" aria-pressed="false">Engineering</button>
+      <button class="btn" data-role="audit" aria-pressed="false">Audit</button>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 900 470" role="img" aria-labelledby="lt ld">
+        <title id="lt">The Loom</title>
+        <desc id="ld">Vertical warp threads are the always-on controls. Two horizontal harnesses, discovery and delivery, run across them. A shuttle carrying the agents passes through the harnesses. The pattern, institutional context, feeds in from the left. The cloth, shipped software, comes out at the bottom.</desc>
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5f5b54" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+        <g font-family="DM Sans, Arial, sans-serif">
+
+          <g class="el" data-r="exec audit">
+            <rect x="20" y="70" width="150" height="300" fill="#e8e4db" stroke="#bdb6aa"/>
+            <text x="95" y="100" text-anchor="middle" font-size="15" fill="#1b1b1b">Pattern</text>
+            <text x="95" y="120" text-anchor="middle" font-size="12" fill="#5f5b54">institutional context</text>
+            <text x="95" y="160" text-anchor="middle" font-size="12" fill="#2b2925">Regulatory taxonomy</text>
+            <text x="95" y="184" text-anchor="middle" font-size="12" fill="#2b2925">Domain skills</text>
+            <text x="95" y="208" text-anchor="middle" font-size="12" fill="#2b2925">Brand and voice</text>
+            <text x="95" y="232" text-anchor="middle" font-size="12" fill="#2b2925">Decision records</text>
+            <text x="95" y="256" text-anchor="middle" font-size="12" fill="#2b2925">Steering files</text>
+            <line x1="170" y1="220" x2="208" y2="220" stroke="#5f5b54" stroke-width="1.2" marker-end="url(#ar)"/>
+          </g>
+
+          <g class="el" data-r="risk eng audit">
+            <text x="540" y="40" text-anchor="middle" font-size="15" fill="#1b1b1b">Warp</text>
+            <text x="540" y="58" text-anchor="middle" font-size="12" fill="#5f5b54">always-on controls, under tension for every pass</text>
+            <g stroke="#1b1b1b" stroke-width="2">
+              <line x1="260" y1="70" x2="260" y2="370"/><line x1="340" y1="70" x2="340" y2="370"/><line x1="420" y1="70" x2="420" y2="370"/>
+              <line x1="500" y1="70" x2="500" y2="370"/><line x1="580" y1="70" x2="580" y2="370"/><line x1="660" y1="70" x2="660" y2="370"/><line x1="740" y1="70" x2="740" y2="370"/>
+            </g>
+            <g font-family="JetBrains Mono, monospace" font-size="10" fill="#5f5b54" text-anchor="middle">
+              <text x="260" y="390">Hard gates</text><text x="340" y="390">Hard stops</text><text x="420" y="390">Attribution</text>
+              <text x="500" y="390">No self-attest</text><text x="580" y="390">Risk tags</text><text x="660" y="390">Evidence</text><text x="740" y="390">Budget</text>
+            </g>
+          </g>
+
+          <g class="el" data-r="exec eng">
+            <rect x="210" y="130" width="560" height="64" fill="#f6ded3" stroke="#e65c2d"/>
+            <text x="230" y="156" font-size="15" fill="#1b1b1b">Discovery harness</text>
+            <text x="230" y="176" font-size="12" fill="#a83614">discover → define · intent, context pack, problem gate, spec lock</text>
+          </g>
+          <g class="el" data-r="exec eng">
+            <rect x="210" y="250" width="560" height="64" fill="#f6ded3" stroke="#e65c2d"/>
+            <text x="230" y="276" font-size="15" fill="#1b1b1b">Delivery harness</text>
+            <text x="230" y="296" font-size="12" fill="#a83614">develop → deliver · spec branch, ephemeral env, gates, review, release</text>
+          </g>
+
+          <g class="el" data-r="eng">
+            <g transform="translate(820,222) rotate(45)"><rect x="-22" y="-22" width="44" height="44" fill="#e65c2d"/></g>
+            <text x="820" y="272" text-anchor="middle" font-size="15" fill="#1b1b1b">Shuttle</text>
+            <text x="820" y="290" text-anchor="middle" font-size="12" fill="#5f5b54">the agents</text>
+            <line x1="792" y1="222" x2="776" y2="222" stroke="#5f5b54" stroke-width="1.2" marker-end="url(#ar)"/>
+          </g>
+
+          <g class="el" data-r="exec audit">
+            <rect x="210" y="420" width="560" height="40" fill="#dde6ea" stroke="#5d8fa6"/>
+            <text x="490" y="445" text-anchor="middle" font-size="15" fill="#1b1b1b">Cloth — shipped software, with its evidence attached</text>
+            <line x1="490" y1="398" x2="490" y2="414" stroke="#5f5b54" stroke-width="1.2" marker-end="url(#ar)"/>
+          </g>
+        </g>
+      </svg>
+    </figure>
+    <div class="caption" id="rolecap"><p>Five parts. The pattern is what the institution already knows. The warp is every control, on for every pass. The harnesses are the two halves of the work. The shuttle is the agents. The cloth is what ships — with its evidence woven in, not attached afterwards.</p></div>
+  </div>
+</section>
+
+<section class="slide" id="s4">
+  <div class="inner">
+    <p class="eyebrow">The two harnesses</p>
+    <h2>Discovery and delivery, run as a <em>double diamond</em> with gates a leader owns.</h2>
+    <p>Step through one pass of the shuttle with a running example at Meridian Trust, a fictional UAE bank. Two scenarios: an operational fix, and a business problem where the answer turns out to be Open Finance. Ember marks where a human decides; everything else is deterministic or agentic.</p>
+    <div class="row" role="group" aria-label="Scenario">
+      <button class="btn" data-sc="op" aria-pressed="true">Operational: fix a certification failure</button>
+      <button class="btn" data-sc="biz" aria-pressed="false">Business: grow lending revenue</button>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 900 250" role="img" aria-labelledby="ddt ddd" id="dd">
+        <title id="ddt">Double diamond with eleven steps</title>
+        <desc id="ddd">Two diamonds. Discovery: intent, gate one which problem, spec drafted, prototype built, investment case assembled, gate two case approved and spec locked. Delivery: spec branch, build, deterministic gates, agentic review, gate three accept, gate four release. A compound loop at the end.</desc>
+        <g font-family="DM Sans, Arial, sans-serif">
+          <path d="M40 125 L230 40 L420 125 L230 210 Z" fill="#e8e4db" stroke="#bdb6aa"/>
+          <path d="M460 125 L650 40 L840 125 L650 210 Z" fill="#e8e4db" stroke="#bdb6aa"/>
+          <line x1="230" y1="40" x2="230" y2="210" stroke="#bdb6aa" stroke-dasharray="3 4"/>
+          <line x1="650" y1="40" x2="650" y2="210" stroke="#bdb6aa" stroke-dasharray="3 4"/>
+          <path d="M840 125 C 890 125, 890 60, 860 60 C 845 60, 845 90, 860 100" fill="none" stroke="#bdb6aa" stroke-dasharray="3 4"/>
+          <text x="230" y="24" text-anchor="middle" font-size="14" fill="#1b1b1b">Discovery harness</text>
+          <text x="650" y="24" text-anchor="middle" font-size="14" fill="#1b1b1b">Delivery harness</text>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#5f5b54" text-anchor="middle">
+            <text x="135" y="236">discover</text><text x="325" y="236">define</text>
+            <text x="555" y="236">develop</text><text x="745" y="236">deliver</text>
+            <text x="868" y="236">compound</text>
+          </g>
+          <g id="ddsteps"></g>
+        </g>
+      </svg>
+    </figure>
+
+    <div class="stepbox" id="stepbox"></div>
+    <div class="stepnav">
+      <button class="btn" id="prev">Back</button>
+      <button class="btn" id="next">Next step</button>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s5">
+  <div class="inner">
+    <p class="eyebrow">The warp</p>
+    <h2>Controls are threads, not tickets.</h2>
+    <p>A control that has to be remembered will be forgotten at agent speed. In the Loom every control is structural: it holds for every pass whether or not anyone thinks about it.</p>
+    <ul class="list">
+      <li>Deterministic hard gates <span>Unit, integration, contract, security, schema diff, SBOM. Machine-evaluable, no opinion involved. A failed gate is a stop, not a comment.</span></li>
+      <li>Three hard stops on every loop <span>Maximum iterations, no-progress detection, token and cost ceiling. An unbounded agent loop touching production or a certification path is a risk event, not a cost issue.</span></li>
+      <li>Actor attribution on every artefact <span>Human, or which agent on which model and harness version, with which tool permissions — and which human accepted it.</span></li>
+      <li>No self-attestation <span>Evidence is machine-derived from a real tool run. An agent never evidences its own work, and never narrates a result it did not observe.</span></li>
+      <li>Risk tagging at refinement <span>Every backlog item is tagged against the institution's risk taxonomy before work starts, by a virtual head of risk, not after the fact by a tired human.</span></li>
+      <li>Evidence substrate <span>Every gate, decision and attestation lands in an immutable record — Kosli in the reference implementation — so the audit package is a query, not a project.</span></li>
+      <li>Tiered human gates <span>Deterministic tasks run unattended. Agentic review handles the judgement calls. Humans take the gates that carry risk or intent. Nothing else reaches them.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" id="s6">
+  <div class="inner">
+    <p class="eyebrow">The pattern</p>
+    <h2>Institutional context, packaged as skills the agents can read.</h2>
+    <p>Skills are the compounding asset. Each one encodes something the institution knows — a regulation, a product, a house style, a risk taxonomy — so that every agent on every pass starts from the same understanding. They are the reason the tenth build is faster than the first.</p>
+    <div class="acc" id="skills"></div>
+    <p class="note" style="margin-top:var(--s-4)">Plus the compound step: every pass ends by asking what the system learned, and writing it back — a steering-file line, a new review rule, a skill update. Skip it and you have ordinary engineering with AI help.</p>
+  </div>
+</section>
+
+<section class="slide" id="s7">
+  <div class="inner">
+    <p class="eyebrow">The toolchain</p>
+    <h2>Tools are interchangeable. The harness is not.</h2>
+    <p>The reference implementation runs on the stack below. Any part can be swapped for the institution's approved equivalent; the Loom governs what a tool must do, not which one it is.</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Role in the Loom</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Claude Code / Cowork</td><td>Primary build and reasoning agents; skills and steering files</td><td>Bedrock or in-region endpoint for regulated data</td></tr>
+        <tr><td>Codex</td><td>Second coding agent; cross-checks and parallel work</td><td>Different model, different failure modes</td></tr>
+        <tr><td>Fable</td><td>PRD and requirements drafting in the discovery harness</td><td>Output feeds the spec lock</td></tr>
+        <tr><td>Kosli</td><td>Evidence substrate; attestations, gates, audit package</td><td>Also the agents' record of what is live</td></tr>
+        <tr><td>WovenPipe</td><td>Delivery pipeline: spec branches, ephemeral environments, hard gates</td><td>Forward-only rollback</td></tr>
+        <tr><td>MCP servers</td><td>Agent access to systems — spec validation, sandboxes, data</td><td>Least-privilege, per harness</td></tr>
+        <tr><td>DX</td><td>Leading indicators: adoption, first-pass gate rate, DevEx index</td><td>Line-level AI attestation captured separately</td></tr>
+        <tr><td>Playwright</td><td>Audits outputs against live reality, not assumptions</td><td>Screenshots are evidence</td></tr>
+        <tr><td>Buzz</td><td>Shared workspace where humans and agent personas work in the open</td><td>Team collaboration is the unsolved gap</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="slide" id="s8">
+  <div class="inner">
+    <p class="eyebrow">Leaders in the loop</p>
+    <h2>Decision-grade proofs, not status reports.</h2>
+    <p>The Loom does not ask leaders to review code. It asks them to take four decisions per pass, each with the evidence attached, and gives them the same diagram engineering works from.</p>
+    <div class="grid2">
+      <div class="card"><span class="mono">Gate 1</span><h3>Which problem</h3><p class="note">Agents synthesise the context pack and surface the candidate problems. The leader picks one. Recorded, attributed, timestamped.</p></div>
+      <div class="card"><span class="mono">Gate 2</span><h3>Approve the case, lock the spec</h3><p class="note">Spec, prototype and investment case lock together — what will be built, what it looks like, what it costs and returns. A go here is a go for unattended build within the warp.</p></div>
+      <div class="card"><span class="mono">Gate 3</span><h3>Accept the proof</h3><p class="note">A working, tested, evidenced increment — not a deck about one. Accepting it is a decision with an audit trail.</p></div>
+      <div class="card"><span class="mono">Gate 4</span><h3>Release</h3><p class="note">Risk classification and evidence drive the approval. The change advisory board reviews exceptions, not everything.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s9">
+  <div class="inner">
+    <p class="eyebrow">Proof</p>
+    <h2>First cloth: UAE Open Finance.</h2>
+    <p>The Loom was not designed on a whiteboard. It was extracted from building a tier-one bank's dual-role Open Finance participation — data sharing, payment initiation, consent lifecycle, certification — under CBUAE regulation, with agents doing the building and the bank's risk function watching.</p>
+    <div class="kpi">
+      <div><b>77</b><span>controls in the risk taxonomy the virtual head of risk tags against</span></div>
+      <div><b>45</b><span>named risks across CPS, PDPL, MMS, BCBS 239 and CPS-AI</span></div>
+      <div><b>3</b><span>pilots in the controlled agentic experiment: migration, new build, and DEV-to-PROD through certification</span></div>
+      <div><b>1</b><span>shared diagram, for every role in the value chain</span></div>
+    </div>
+    <p class="note">Numbers describe the reference implementation. Institution names and internal detail are withheld here by design.</p>
+  </div>
+</section>
+
+<section class="slide" id="s10">
+  <div class="inner">
+    <p class="eyebrow">What it is, in a sentence</p>
+    <h2>The Loom is the <em>how</em> that standards refuse to write.</h2>
+    <p class="lede">A controls catalogue says what must hold true. An evidence platform records what happened. The Loom is the way of working in between: it produces the evidence the catalogue asks for, at agent speed, with a human accountable for every decision that matters.</p>
+    <p>It is offered as a practice to adopt, a reference implementation to run, and a set of skills to make your own.</p>
+  </div>
+</section>
+
+<footer><span>MiddleLeap · Dubai</span><span>September 2026</span></footer>
+<div class="hint" aria-hidden="true">← → to move · click to explore</div>
+
+<script>
+var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+var prog = document.getElementById('prog');
+slides.forEach(function(s,i){ var d=document.createElement('i'); d.setAttribute('data-i',i); prog.appendChild(d); });
+var count = document.createElement('span'); count.className='count'; prog.appendChild(count);
+function cur(){ var y=window.scrollY+window.innerHeight*0.4, idx=0; slides.forEach(function(s,i){ if(s.offsetTop<=y) idx=i; }); return idx; }
+function paint(){ var c=cur(); prog.querySelectorAll('i').forEach(function(d,i){ d.classList.toggle('on',i===c); }); count.textContent=(c+1)+' / '+slides.length; }
+window.addEventListener('scroll', paint); paint();
+document.addEventListener('keydown', function(e){
+  if(e.target.tagName==='BUTTON' && (e.key===' '||e.key==='Enter')) return;
+  var c=cur();
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){ e.preventDefault(); slides[Math.min(c+1,slides.length-1)].scrollIntoView(); }
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){ e.preventDefault(); slides[Math.max(c-1,0)].scrollIntoView(); }
+});
+
+var rolecaps = {
+  all:'Five parts. The pattern is what the institution already knows. The warp is every control, on for every pass. The harnesses are the two halves of the work. The shuttle is the agents. The cloth is what ships — with its evidence woven in, not attached afterwards.',
+  exec:'You set the pattern and you take the gate decisions inside each harness. You are shown proofs, not progress. Everything between the gates is machinery you do not have to watch.',
+  risk:'The controls are the warp: structural, under tension, on for every pass. You define them once, in your own taxonomy, and they are enforced without a ticket. Nothing is switched off to go faster.',
+  eng:'You design the harnesses and steer the shuttle. You stop reviewing every line and start reviewing the loop — its gates, its stops, its attribution. The warp is yours to build against, not around.',
+  audit:'Every pass leaves an attestation on the cloth, from intent to release. The pattern tells you which control each decision satisfied. The audit package is a query over the evidence, not a project.'
+};
+document.querySelectorAll('[data-role]').forEach(function(b){
+  b.addEventListener('click', function(){
+    var r=b.getAttribute('data-role');
+    document.querySelectorAll('[data-role]').forEach(function(x){ x.setAttribute('aria-pressed', x===b ? 'true':'false'); });
+    document.querySelectorAll('.el').forEach(function(el){
+      var roles=el.getAttribute('data-r').split(' ');
+      el.classList.toggle('dim', r!=='all' && roles.indexOf(r)<0);
+    });
+    document.getElementById('rolecap').innerHTML='<p>'+rolecaps[r]+'</p>';
+  });
+});
+
+var sc='op';
+var scIntro={op:'The consent service keeps failing TPP certification.', biz:'Thin-file customers are being declined for loans and cards.'};
+var steps = [
+  ['Discovery','Intent captured','auto',
+   'The sponsor states the outcome wanted or the pain felt. It is written down as intent, not yet as a problem and not as a solution. Agents assemble the context pack from the pattern: what the institution knows, runs, and is regulated by.',
+   {op:'The Head of Open Finance writes: "TPPs keep failing our consent journeys during Al Tareq certification, and LFI go-live slips a quarter each time." Agents pull the certification failure reports, the Nebras tickets, the AlTareq CX guideline, Standards v2.1 with errata, and what is live in the consent service.',
+    biz:'The Head of Retail writes: "We approve 38% of loan and card applications from customers who bank mainly elsewhere. Competitors approve more without taking more risk. We want lending revenue up inside the current risk appetite." Agents pull the decline-reason breakdown, the decisioning inputs, the credit policy, the bank\u2019s TPP licence status, the Bank Data Sharing API standards, the CBUAE consent rules and PDPL.'},
+   {op:'intent attestation, labelled narrated', biz:'intent attestation, labelled narrated'}, 40,125,'Intent'],
+  ['Discovery','Gate 1 \u2014 which problem','human',
+   'Agents propose three distinct framings of the intent, each with evidence from the context pack. A leader chooses one. Without this gate an agent would quietly pick the sponsor\u2019s own framing, which is usually the symptom.',
+   {op:'Three candidates: (a) consent screens deviate from the AlTareq CX requirements; (b) the consent state machine mishandles re-authentication and expiry; (c) TPPs are testing against the wrong errata. Seventy percent of failures cluster on re-auth flows. The leader picks (b).',
+    biz:'Three candidates: (a) we decline customers we cannot see \u2014 let applicants connect their accounts at other banks so we can verify income and commitments; (b) our decision model ignores transaction data we already hold; (c) applicants drop out at document upload. Evidence: 61% of declines are "insufficient income evidence", and most of those applicants hold their salary account at another bank. The leader picks (a), noting that it also dissolves (c), because connected accounts replace document upload.'},
+   {op:'problem-selected: all three candidates, the choice, the rationale', biz:'problem-selected: all three candidates, the choice, the rationale'}, 230,125,'Gate 1'],
+  ['Discovery','Spec drafted and risk-tagged','auto',
+   'One agent drafts the requirements, a second cross-checks them, and the virtual head of risk tags each against the institution\u2019s taxonomy. Control IDs attach here, not at the end.',
+   {op:'Spec: consent re-authentication and expiry handling per Standards v2.1. Requirements: re-auth inside the 90-day consent window, expiry notification to the TPP, idempotent revocation. Tags: the CPS consent-lifecycle control, PDPL retention, and FINOS mi-4 for the requirements record.',
+    biz:'Spec: connected accounts for affordability \u2014 Meridian acting as a TPP, with the applicant\u2019s consent, aggregates their accounts at other LFIs through Al Tareq and produces a verified income-and-commitments summary for the credit decision. Requirements: the AlTareq consent journey, twelve months of transactions only, purpose limitation under PDPL, every decline carries a reason, manual path if consent is refused. The virtual head of risk adds a model-risk tag under CPS-AI: the affordability summary is a model, so it needs validation and cannot decide alone.'},
+   {op:'risk-tagged, with the reviewer\u2019s tool run attached', biz:'risk-tagged, including a CPS-AI model-risk tag'}, 285,125,'Spec'],
+  ['Discovery','Prototype built','auto',
+   'An agent builds a working prototype of the intended solution \u2014 clickable, not a wireframe \u2014 so the people who will decide, and the people who will use it, see it before anything in delivery starts. Findings feed the spec and the case.',
+   {op:'The agent builds a clickable prototype of the re-authentication journey: mock TPP, consent screens per the AlTareq guideline, expiry and revocation states. Two partner TPPs walk through it in a 30-minute session and confirm the flow matches what their certification tests expect.',
+    biz:'The agent builds a clickable prototype of the whole journey: card application, "connect your accounts", the AlTareq consent screens, verified income appearing, the decision with its reasons. Eight customers from a branch panel and two credit officers try it. Two changes come back: show what data is shared and why, and allow a second bank to be added.'},
+   {op:'prototype attestation with the artefact hash', biz:'prototype attestation with the artefact hash and the user-test notes'}, 335,125,'Prototype'],
+  ['Discovery','Investment case assembled','auto',
+   'An agent assembles the business case from the institution\u2019s own template and the prototype findings: what it costs to build and run, what it returns, over what period, with the sign-offs it needs. The Loom scales the case to the size of the change; a small fix gets one page, a new product line gets the full committee pack.',
+   {op:'Below the capital committee threshold, so a one-page pre-screening case: nine agent-days of build, one certification retest; benefit is the removal of one quarter\u2019s go-live slip, priced as deferred TPP revenue share and retest fees. Cost of delay dwarfs cost of build.',
+    biz:'Two packs, from the same context. The Stage 2 business case from the CIC template: capex (build, TPP certification, Al Tareq integration, model validation), opex (Nebras API fees at forecast consent volumes, support, monitoring), modelled approval uplift from 38% to 52% on the connected segment at current loss rates, three-year NPV and IRR, sensitivities on consent take-up. And the New Product Approval pack CBUAE requires: product description, target segment and suitability, pricing, customer disclosures including what data is shared and why, complaints handling, the data-protection assessment, and the risk register with its controls. Sign-offs pre-populated for both: Retail, Risk, Compliance, Legal, Finance, Operations, Technology.'},
+   {op:'business-case attestation, one-page variant', biz:'business-case attestation with the model hash; npa-pack attestation'}, 382,125,'Case'],
+  ['Discovery','Gate 2 \u2014 approve the case, lock the spec','human',
+   'Three things lock together: what will be built (the spec), what it looks like (the prototype), and what it costs and returns (the case). Approving them is a go for unattended build inside the warp. This is the decision that removes line-by-line review from the critical path.',
+   {op:'The Head of Open Finance approves the one-pager, asks for one change to the spec (expiry notification must be a webhook, not polling), and locks it. From here the agents build without waiting for anyone.',
+    biz:'Two committees, one gate. The New Product Approval committee approves the product with three conditions: the disclosure wording as submitted, a 14-day cooling-off on cards, and a post-implementation review at ninety days. The Capital Investment Committee approves the case with a stage-gated release. The Head of Retail and the CRO then lock the spec with their own condition: the affordability summary informs the decision but never solely declines. Every condition becomes a control in the warp, and every name is on the trail.'},
+   {op:'business-case approved; spec-locked with the spec hash', biz:'npa-approved with conditions; business-case approved by the CIC; spec-locked'}, 420,125,'Gate 2'],
+  ['Delivery','Spec branch and ephemeral environment','auto',
+   'One branch per spec, one throwaway environment per branch. No feature flags; the state is deterministic and the agents can inspect it.',
+   {op:'Branch spec/SPEC-2026-014 is cut. An ephemeral environment spins up with a mock TPP client and the Al Tareq sandbox connector, seeded with the twelve consent scenarios from the CX guideline.',
+    biz:'Branch spec/SPEC-2026-021 is cut. The environment spins up with Meridian in its TPP role against the Al Tareq sandbox, synthetic accounts at three other banks, a stubbed credit bureau and the decision engine in shadow mode.'},
+   {op:'gate: env-ready', biz:'gate: env-ready'}, 460,125,'Branch'],
+  ['Delivery','Build under hard stops','auto',
+   'Agents build in bounded loops: maximum iterations, no-progress detection, cost ceiling. Every artefact carries its actor record. A halted loop is a stop event, not a silent retry.',
+   {op:'The builder implements the re-auth state transitions and the expiry webhook. On iteration five it stops making progress on a token-refresh edge case; the loop halts and emits a stop. A one-line steering note from the engineer restarts it and it finishes on iteration seven.',
+    biz:'The builder implements the consent journey, the account-data fetch and the income categorisation. The categorisation loop hits its cost ceiling trying to detect salary credits by inference; it halts. The engineer points it at the bank\u2019s existing categorisation rules as a skill instead of letting it invent them. It restarts and finishes.'},
+   {op:'actor record on every commit; gate: stop-no-progress', biz:'actor record on every commit; gate: stop-cost-ceiling'}, 550,125,'Build'],
+  ['Delivery','Deterministic gates','auto',
+   'Unit, integration, contract, security, schema diff, SBOM. Machine-evaluable, no opinion involved. A failed gate stops the loop; nobody argues with it.',
+   {op:'The contract test against the v2.1 consent API with errata 3 fails on a missing response field. The builder fixes it. All six gates pass, each with a junit or log hash attached.',
+    biz:'Contract tests run against the Bank Data Sharing API; the security gate checks FAPI 2.0 and mTLS; the schema-diff gate flags four new personal-data fields and blocks until the PDPL processing record is attached. Two gates come straight from the approvals: the model-validation gate from the CPS-AI tag replays the affordability summary on a golden set, and a disclosure gate from the NPA conditions checks, screen by screen, that the approved wording is present verbatim. All eight pass.'},
+   {op:'six gate attestations with tool runs', biz:'eight gate attestations, including model validation and disclosure conformance'}, 650,125,'Gates'],
+  ['Delivery','Agentic review','auto',
+   'A separate reviewer agent, never the author, checks the increment against the spec and the pattern and evidences what it ran. The provenance gate rejects a self-review outright.',
+   {op:'The reviewer drives the twelve consent scenarios through the ephemeral environment with Playwright and finds the re-auth screen is missing the AlTareq progress bar the CX certification requires. It sends the finding back; the builder fixes it in one iteration.',
+    biz:'The reviewer drives the consent journey through the AlTareq certification scenarios, then checks every decline path for a reason code that is not the model alone. It finds one path where a decline surfaces with no reason. Back to the builder; fixed in one iteration.'},
+   {op:'review: author and reviewer must differ', biz:'review: author and reviewer must differ'}, 720,125,'Review'],
+  ['Delivery','Gate 3 \u2014 accept the proof','human',
+   'A working, tested, evidenced increment is shown, not a deck about one. Accepting it is a recorded decision with the evidence attached.',
+   {op:'The Head of Open Finance walks the re-auth journey in the ephemeral environment, watches the expiry webhook fire, and scrolls the trail from intent to review. Accepts.',
+    biz:'The Head of Retail applies for a card as a synthetic customer, connects two accounts at other banks through the AlTareq journey, and watches a decline turn into an approval as verified income arrives. The CRO opens the model-validation evidence. Both accept.'},
+   {op:'accepted, by a human actor', biz:'accepted, two human actors'}, 780,125,'Gate 3'],
+  ['Delivery','Gate 4 \u2014 release','human',
+   'A deterministic risk class plus the evidence drive the release policy. The change advisory board sees exceptions only. Rollback is forward-only: re-run the spec.',
+   {op:'The classifier returns high, because the change touches the certification path. So it goes to the CAB with the full evidence pack. The CAB spends twelve minutes on it rather than a fortnight, because nothing has to be reconstructed.',
+    biz:'The classifier returns high: restricted personal data, an external interface, a new model. The CAB sees the full pack \u2014 PDPL record, model validation, consent evidence \u2014 and approves a limited launch: one applicant segment, ten percent of traffic, with approval rate and default rate as the release KPIs.'},
+   {op:'risk-class, then the release attestation on the trail', biz:'risk-class high; release attestation with launch limits'}, 840,125,'Gate 4'],
+  ['Compound','What did the system learn','auto',
+   'The pass ends by writing back: a steering-file line, a review rule, a skill update. The next pass starts further ahead. Skip this and you have ordinary engineering with AI help.',
+   {op:'The steering file gains one line: test the 90-day consent boundary at both ends. The reviewer skill gains the progress-bar check. The crosswalk gains a CPS-to-mi-20 entry. The next consent spec will not repeat any of it.',
+    biz:'The categorisation rules become a reusable connected-accounts skill. The steering file gains: a model informs, it never decides alone. The crosswalk records that neither CPS-AI nor the NPA process has a FINOS equivalent yet. And the ninety-day post-implementation review the NPA committee asked for is already scheduled as the next pass\u2019s intent, with approval rate on connected applicants versus the 38% baseline as its first line of evidence.'},
+   {op:'design-decision; skill and steering diffs committed', biz:'design-decision; new skill; PIR scheduled as next intent'}, 868,80,'Learn']
+];
+var si=0, sb=document.getElementById('stepbox'), dd=document.getElementById('ddsteps');
+var svgns='http://www.w3.org/2000/svg';
+steps.forEach(function(st,i){
+  var g=document.createElementNS(svgns,'g'); g.setAttribute('class','m'+(st[2]==='human'?' human':'')); g.setAttribute('data-i',i);
+  var r=document.createElementNS(svgns,'rect'); r.setAttribute('x',-7); r.setAttribute('y',-7); r.setAttribute('width',14); r.setAttribute('height',14);
+  r.setAttribute('transform','translate('+st[6]+','+st[7]+') rotate(45)'); g.appendChild(r);
+  var t=document.createElementNS(svgns,'text'); t.setAttribute('x',st[6]); t.setAttribute('y',st[7]+(i%2===0?-16:26)); t.setAttribute('text-anchor','middle'); t.textContent=st[8]; g.appendChild(t);
+  g.addEventListener('click',function(){ si=i; showStep(); });
+  dd.appendChild(g);
+});
+var sh=document.createElementNS(svgns,'g'); sh.setAttribute('id','shuttle');
+var shr=document.createElementNS(svgns,'rect'); shr.setAttribute('x',-11); shr.setAttribute('y',-11); shr.setAttribute('width',22); shr.setAttribute('height',22); shr.setAttribute('fill','none'); shr.setAttribute('stroke','#1b1b1b'); shr.setAttribute('stroke-width','1.5'); shr.setAttribute('transform','rotate(45)');
+sh.appendChild(shr); dd.appendChild(sh);
+function showStep(){
+  var st=steps[si];
+  dd.querySelectorAll('.m').forEach(function(m,j){ m.classList.toggle('done',j<si); m.classList.toggle('on',j===si); });
+  sh.setAttribute('transform','translate('+st[6]+','+st[7]+')');
+  sb.innerHTML='<span class="mono" style="display:block;margin-bottom:8px">'+st[0]+' \u00b7 step '+(si+1)+' of '+steps.length+(st[2]==='human'?' \u00b7 <span style="color:var(--ember-700)">human decision</span>':' \u00b7 deterministic or agentic')+'</span>'+
+    '<h3 style="font-family:var(--font-display);font-weight:400;font-size:26px;margin-bottom:10px">'+st[1]+'</h3><p style="margin:0;font-size:15px">'+st[3]+'</p>'+
+    '<div class="ex"><span class="mono">At Meridian Trust \u00b7 '+scIntro[sc]+'</span><p style="margin:0;font-size:15px">'+st[4][sc]+'</p></div>'+
+    '<div class="ev">Evidence \u2192 '+st[5][sc]+'</div>';
+}
+document.querySelectorAll('[data-sc]').forEach(function(b){ b.addEventListener('click', function(){
+  sc=b.getAttribute('data-sc'); document.querySelectorAll('[data-sc]').forEach(function(x){ x.setAttribute('aria-pressed', x===b?'true':'false'); }); si=0; showStep();
+}); });
+document.getElementById('next').addEventListener('click', function(){ si=(si+1)%steps.length; showStep(); });
+document.getElementById('prev').addEventListener('click', function(){ si=(si-1+steps.length)%steps.length; showStep(); });
+showStep();
+
+var skills = [
+  ['open-finance-uae','domain','CBUAE regulation, Al Tareq and Nebras operations, Standards v2.1 with errata, FAPI 2.0 and mTLS, consent lifecycle, certification paths. The agent knows the regime before it reads the ticket.'],
+  ['islamic-banking-uae','domain','Shariah principles and contract structures, HSA and ISSC governance, and the native Islamic fields in the Open Finance standards. Composes with the open-finance skill for any product that touches a covered card or a Murabaha.'],
+  ['risk-reviewer','control','A virtual head of risk with four modes: discovery landscape, delivery risk tagging on stories, formal review against a 77-control taxonomy, and verification that pipeline gates actually enforce what the review identified.'],
+  ['bank-risk-reviewer','control','The same reviewer, generalised beyond one institution: UAE and international regulation, CPS, PDPL, MMS, BCBS 239 and CPS-AI. The portable version of the warp.'],
+  ['npa-uae','control','New Product Approval for a CBUAE-regulated bank: the Business Proposition Form with all thirty-three fields, the regulatory anchor behind each, the sign-off roster and the BAU assessments. The discovery harness assembles the pack at the investment-case step, takes it through Gate 2, turns each approval condition into a control in the warp, and schedules the post-implementation review as the next intent.'],
+  ['altareq-brand-guidelines','output','Mandatory Open Finance customer-journey elements — logo, buttons, progress bar, consent screens — and the CX certification requirements they must pass.'],
+  ['middleleap-brand','output','Tokens, type, the pivot mark, copy rules and accessibility gates, so every generated document, deck or interface is on-brand without a designer in the loop.'],
+  ['meridian-business-case','output','Builds capital-committee business cases and screening proposals, NPV and cost breakdowns included, for a fictional bank used in demos so no real client data is exposed.'],
+  ['steering files','context','CLAUDE.md and system prompts that carry decisions already taken: architecture locks, naming, what not to do. The compound step writes here.']
+];
+var sk=document.getElementById('skills'), out='';
+skills.forEach(function(s,i){
+  out+='<button class="h" aria-expanded="false" data-i="'+i+'"><i class="dia" aria-hidden="true"></i><span class="nm">'+s[0]+'</span><span class="tag">'+s[1]+'</span></button><div class="p" id="sk'+i+'"><p>'+s[2]+'</p></div>';
+});
+sk.innerHTML=out;
+var hs=sk.querySelectorAll('button.h');
+hs.forEach(function(b){ b.addEventListener('click', function(){
+  var open=b.getAttribute('aria-expanded')==='true';
+  hs.forEach(function(x){ x.setAttribute('aria-expanded','false'); document.getElementById('sk'+x.getAttribute('data-i')).classList.remove('open'); });
+  if(!open){ b.setAttribute('aria-expanded','true'); document.getElementById('sk'+b.getAttribute('data-i')).classList.add('open'); }
+}); });
+hs[0].click();
+</script>
+</body>
+</html>
