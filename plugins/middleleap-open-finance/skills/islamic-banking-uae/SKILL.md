@@ -19,7 +19,7 @@ Expert knowledge base for Islamic (Shariah-compliant) banking: principles, contr
 | Bank-level body | Internal Shari'ah Supervision Committee (ISSC) — min 5 members (3 with exemption), ≥⅓ Emirati, HSA-approved |
 | Newest control | Shariah Compliance Function (SCF) Standard — issued 3 Apr 2024, compliance deadline Apr 2025 |
 | Standards baseline | AAOIFI Shariah standards, adopted by the HSA; IFSB for prudential |
-| Windows | CBUAE "Regulatory Requirements for FIs Housing an Islamic Window" standard applies (ADCB context) |
+| Windows | CBUAE "Regulatory Requirements for FIs Housing an Islamic Window" standard applies (the institution's window) |
 | OF Standards support | **Native** Islamic fields in v2.1: `ShariaStructure`, `IsShariaCompliant`, Profit balance/rate semantics, Diminishing Musharaka `OwnershipTransfer`, `Takaful` flag (insurance) |
 | `ShariaStructure` enum | Ijara · ServiceIjara · Murabaha · Musharaka · Tawarruq (v2.1; **no** Mudarabah/Wakala/Istisna/Salam values) |
 

@@ -33,7 +33,7 @@ Verified 13 July 2026 directly against errata-resolved OpenAPI files in `Nebras-
 |---|---|
 | `IsShariaCompliant` | boolean product attribute **and a query filter parameter** ("Filter by Sharia compliance") — TPP comparison engines can filter halal products natively |
 | `ShariaStructure` | same 5-value enum as above |
-| `AlternativeBrandName` | "If the product is Shari'a Compliant, alternative brand name to sell the product" (window sub-brands, e.g. ADCB Islamic product names) |
+| `AlternativeBrandName` | "If the product is Shari'a Compliant, alternative brand name to sell the product" (window sub-brands, e.g. the institution's Islamic product names) |
 | `ShariaInformation` | free-text Sharia compliance description |
 | Account feature enums | include `IslamicBanking` and `IslamicFinance` |
 
@@ -51,7 +51,7 @@ Verified 13 July 2026 directly against errata-resolved OpenAPI files in `Nebras-
 4. **No Sukuk/holdings semantics in banking scope** — halal-portfolio use cases must wait for/lean on investment-data phases.
 5. **Profit-rate encryption**: `FinanceRates` supports JWE (`AEJwe`) — the partial-encryption regime (see open-finance-uae `technical-specs.md`) applies equally to profit rates; treat profit rates as the sensitive-rate class.
 
-## LFI-side implementation guidance (ADCB Islamic window)
+## LFI-side implementation guidance (the institution's Islamic window)
 
 1. **Mapping table first**: every window product → contract type → `ShariaStructure` value (or documented gap) → balance/transaction category conventions (Profit vs Interest, Rental vs Repayment). This is an ISSC-reviewable artefact — the API representation is a Shariah-compliance statement.
 2. **Never emit `Interest` categories on Islamic products.** Balance categories, transaction types, and rate schemas must use the Profit/Rental variants; mixed emissions are both a data-quality defect and a Shariah-presentation problem.

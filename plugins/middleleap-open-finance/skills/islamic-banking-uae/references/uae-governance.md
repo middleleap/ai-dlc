@@ -26,9 +26,9 @@ Per the CBUAE **Shari'ah Governance Standard for IFIs**:
 - Issued **3 April 2024**; full compliance required within one year (**April 2025**). Applies to all UAE banks/FIs conducting all or part of business under Shariah — i.e. including windows.
 - Mandates a dedicated SCF continuously monitoring compliance with HSA resolutions, fatwas, regulations, and standards, across planning, execution, reporting, monitoring, and governance pillars.
 
-## Islamic Windows (ADCB-relevant)
+## Islamic Windows
 
-- CBUAE publishes a dedicated standard: **"Regulatory Requirements for Financial Institutions Housing an Islamic Window."** Windows (like ADCB Islamic Banking) must maintain segregation of Islamic funds/activities, their own ISSC oversight, and separate reporting for the Islamic business — conventional and Islamic balance sheets must not commingle.
+- CBUAE publishes a dedicated standard: **"Regulatory Requirements for Financial Institutions Housing an Islamic Window."** Windows (including the institution's own Islamic Banking window) must maintain segregation of Islamic funds/activities, their own ISSC oversight, and separate reporting for the Islamic business — conventional and Islamic balance sheets must not commingle.
 - Practical consequence for data platforms: window products must be identifiable and segregable in systems of record — which aligns directly with the OF `IsShariaCompliant` / `ShariaStructure` fields (an accurate flag is a segregation-evidence asset, not just an API nicety).
 
 ## Consumer protection — Article 11 (Consumer Protection Standards)

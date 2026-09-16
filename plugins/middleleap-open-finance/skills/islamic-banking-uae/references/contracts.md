@@ -6,7 +6,7 @@ Each contract below notes: structure → typical UAE retail/SME use → cash-flo
 
 ### Murabaha (cost-plus sale)
 Bank buys the asset, then sells it to the customer at cost + disclosed markup, payable in instalments. The customer's obligation is a **sale receivable** — fixed at contract signing; it does not accrue like interest.
-- UAE use: auto finance, personal finance, goods finance, covered cards (ADCB Islamic window uses Murabaha for these).
+- UAE use: auto finance, personal finance, goods finance, covered cards (the institution's Islamic window may use Murabaha for these).
 - Cash flows: fixed instalments of a known total sale price. Early settlement rebates are discretionary (ISSC-governed), not contractual.
 - OF: `ShariaStructure: Murabaha`; price expressed via profit-rate structures (`AEProductProfitCalculationMethodProperties`); balances categorise as Principal/Profit (`AEBalanceCategory`); transactions as Repayments/Profit.
 
@@ -23,7 +23,7 @@ Payment now (Salam) or in stages (Istisna) for future delivery of specified good
 
 ### Ijara (lease) and Service Ijara
 Bank buys the asset and leases it to the customer for agreed rentals. **Ijara Muntahia Bittamleek** (lease ending in ownership) transfers title at the end via gift, token purchase, or separate sale. Service Ijara leases services/usufruct (e.g. education, medical packages).
-- UAE use: home finance is predominantly Ijara at UAE windows including ADCB Islamic.
+- UAE use: home finance is predominantly Ijara at UAE windows, including the institution's.
 - Cash flows: **rentals**, not amortising principal+interest; variable-rental Ijara re-prices rent against a benchmark; ownership costs (major maintenance, takaful on asset) sit with the lessor in principle.
 - OF: `ShariaStructure: Ijara` / `ServiceIjara`; balance category `Rental`; transaction type `LeaseRepayment`; end-of-term title transfer modelled natively via `OwnershipTransfer` (`Type: Gift | TokenPurchase | SeparateSaleContract`, `Method: EndOfLease | Buyouts`, `TransferOfOwnershipDate`).
 
