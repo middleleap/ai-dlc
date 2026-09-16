@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Loom × Kosli — where the two platforms meet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper-0:#f7f5ef; --paper-1:#f0ede5; --paper-2:#e8e4db; --paper-3:#ded8cc; --paper-border:#d4cec2;
+  --text-0:#1b1b1b; --text-1:#2b2925; --text-2:#4d4942; --text-3:#5f5b54;
+  --ember-400:#f0722e; --ember-500:#e65c2d; --ember-600:#ce451b; --ember-700:#a83614;
+  --info:#5d8fa6; --info-text:#35637a;
+  --font-display:"Instrument Serif",Georgia,serif;
+  --font-body:"DM Sans",Arial,sans-serif;
+  --font-mono:"JetBrains Mono",monospace;
+  --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px; --s-6:32px; --s-7:48px; --s-8:64px;
+  --dur-leap:.4s; --ease-leap:cubic-bezier(.34,1.3,.4,1);
+}
+@media (prefers-reduced-motion: reduce){ :root{ --dur-leap:.01ms } }
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper-0); color:var(--text-1);
+  font-family:var(--font-body); font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px; margin:0 auto; padding:var(--s-7) var(--s-5) var(--s-8)}
+a{color:var(--ember-700)}
+
+.eyebrow{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text-3); margin:0;
+}
+h1{
+  font-family:var(--font-display); font-weight:400; line-height:1.08;
+  font-size:clamp(34px,5.4vw,54px); color:var(--text-0);
+  margin:var(--s-4) 0 var(--s-5); max-width:18ch;
+}
+h1 em{font-style:italic; color:var(--ember-700)}
+h2{
+  font-family:var(--font-display); font-weight:400; font-size:30px; line-height:1.2;
+  color:var(--text-0); margin:0 0 var(--s-3);
+}
+p{max-width:68ch; margin:0 0 var(--s-4)}
+.lede{font-size:18px; color:var(--text-2)}
+
+header{display:flex; align-items:center; gap:12px; margin-bottom:var(--s-7)}
+header svg{width:44px; height:auto; color:var(--text-0)}
+.wordmark{font-family:var(--font-body); font-weight:600; font-size:17px; color:var(--text-0); letter-spacing:-.01em}
+.wordmark span{color:var(--ember-700)}
+.meta{margin-left:auto; font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3)}
+
+section{margin-top:var(--s-8); border-top:1px solid var(--paper-border); padding-top:var(--s-6)}
+section .eyebrow{margin-top:var(--s-5)}
+.note{font-size:14px; color:var(--text-3); max-width:68ch}
+
+figure{margin:var(--s-5) 0 0}
+figure svg{width:100%; height:auto; display:block}
+figcaption{font-size:14px; color:var(--text-3); margin-top:var(--s-3)}
+
+.modes{display:flex; gap:var(--s-2); margin:var(--s-5) 0 var(--s-5); flex-wrap:wrap}
+button{font-family:var(--font-mono); cursor:pointer}
+.mode{
+  font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  padding:11px 18px; border:1px solid var(--paper-border); border-radius:0;
+  background:transparent; color:var(--text-2);
+}
+.mode:hover{background:var(--paper-2)}
+.mode[aria-pressed="true"]{background:var(--ember-500); border-color:var(--ember-500); color:#110d0a}
+:focus-visible{outline:2px solid var(--ember-600); outline-offset:2px}
+
+.row{display:flex; align-items:center; gap:var(--s-4); margin-bottom:10px}
+.stage{
+  flex:none; width:120px; font-family:var(--font-mono); font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--text-3);
+}
+.bar{flex:1; display:flex; gap:3px; height:18px}
+.seg{height:18px; transition:width var(--dur-leap) var(--ease-leap)}
+.seg-loom{background:var(--text-0)}
+.seg-shared{background:var(--ember-500)}
+.seg-kosli{background:var(--info)}
+.seg-gap{border:1px dashed #7c776f; background:repeating-linear-gradient(135deg,transparent 0 5px,#d4cec2 5px 6px)}
+
+.legend{display:flex; flex-wrap:wrap; gap:var(--s-5); margin-top:var(--s-5); font-size:13px; color:var(--text-3)}
+.legend span{display:flex; align-items:center; gap:8px}
+.key{width:12px; height:12px; flex:none}
+
+.caps{margin-top:var(--s-5); border-top:1px solid var(--paper-border)}
+.cap{
+  width:100%; display:flex; align-items:baseline; gap:var(--s-4); text-align:left;
+  background:transparent; border:0; border-bottom:1px solid var(--paper-border);
+  padding:16px 4px; font-family:var(--font-body); font-size:16px; color:var(--text-0);
+}
+.cap:hover{background:var(--paper-1)}
+.cap .who{margin-left:auto; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); flex:none}
+.cap .dia{width:8px; height:8px; flex:none; background:var(--paper-4,#bdb6aa); transform:rotate(45deg); transition:transform var(--dur-leap) var(--ease-leap), background var(--dur-leap)}
+.cap[aria-expanded="true"] .dia{background:var(--ember-500); transform:rotate(90deg)}
+.panel{
+  border-bottom:1px solid var(--paper-border); background:var(--paper-1);
+  padding:0 var(--s-5); overflow:hidden; max-height:0;
+}
+.panel.open{padding:var(--s-5); max-height:400px}
+.panel p{margin:0; font-size:15px; color:var(--text-1)}
+.panel p + p{margin-top:10px; color:var(--text-3); font-size:14px}
+.panel .maps{margin-top:var(--s-4); padding-top:10px; border-top:1px solid var(--paper-border);
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; color:var(--ember-700)}
+ul.gaps{list-style:none; padding:0; margin:var(--s-4) 0 var(--s-5); max-width:68ch}
+ul.gaps li{position:relative; padding-left:22px; margin-bottom:10px; color:var(--text-1)}
+ul.gaps li::before{content:""; position:absolute; left:0; top:9px; width:8px; height:8px;
+  background:var(--ember-500); transform:rotate(45deg)}
+blockquote{margin:var(--s-5) 0 var(--s-4); padding:var(--s-5); background:var(--paper-2); border-left:3px solid var(--ember-500)}
+blockquote p:last-child{margin-bottom:0}
+
+footer{display:flex; justify-content:space-between; gap:var(--s-4); margin-top:var(--s-8); border-top:1px solid var(--paper-border); padding-top:var(--s-5);
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3)}
+
+@media (max-width:560px){
+  .stage{width:92px; font-size:11px}
+  .cap{flex-wrap:wrap; row-gap:4px}
+  .cap .who{margin-left:0; flex-basis:100%; padding-left:24px}
+}
+@media print{
+  body{background:#fff}
+  .wrap{padding:0; max-width:none}
+  .modes{display:none}
+  .panel{max-height:none; padding:var(--s-4) var(--s-5)}
+  .cap .dia{background:var(--ember-500)}
+  section{break-inside:avoid}
+  #cap{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg viewBox="0 0 144 80" role="img" aria-label="MiddleLeap">
+    <defs><linearGradient id="ember" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F0722E"/><stop offset="1" stop-color="#CE451B"/>
+    </linearGradient></defs>
+    <rect x="0" y="12" width="56" height="56" rx="9" fill="currentColor"/>
+    <g transform="translate(104,40) rotate(45)"><rect x="-28" y="-28" width="56" height="56" rx="9" fill="url(#ember)"/></g>
+  </svg>
+  <span class="wordmark">Middle<span>Leap</span></span>
+  <span class="meta">Partnership note</span>
+</header>
+
+<p class="eyebrow">Kosli × MiddleLeap</p>
+<h1>Kosli proves what happened. The Loom governs <em>how the work is done</em>.</h1>
+<p class="lede">Two platforms, one lifecycle, and a seam in the middle that neither of them owns today. This note sets out where they meet, what the FINOS catalogue does not yet cover, and the seven capabilities that would close both gaps.</p>
+
+<section>
+  <h2>The two platforms</h2>
+  <p>Kosli's chain of custody begins at the commit. The Loom's ends when code is handed to the pipeline. Between them sits a shared surface — attestations, policy definitions, and the context graph agents read before they act.</p>
+
+  <figure>
+    <svg viewBox="0 0 680 340" role="img" aria-labelledby="ovt ovd">
+      <title id="ovt">The Loom, the overlap, and Kosli</title>
+      <desc id="ovd">Three columns. The Loom covers intent and spec, risk and design, and agent harnesses. The overlap covers attestations, policy as code, and the context graph. Kosli covers build evidence, release gates, and runtime and drift. Arrows run in both directions between the columns.</desc>
+      <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5f5b54" stroke-width="1.5" stroke-linecap="round"/>
+      </marker></defs>
+
+      <g font-family="DM Sans, Arial, sans-serif">
+        <rect x="40" y="40" width="180" height="276" fill="none" stroke="#d4cec2" stroke-dasharray="4 4"/>
+        <text x="130" y="70" text-anchor="middle" font-size="15" fill="#1b1b1b">The Loom</text>
+        <text x="130" y="90" text-anchor="middle" font-size="12" fill="#5f5b54">how the work is done</text>
+        <g fill="#e8e4db" stroke="#bdb6aa">
+          <rect x="56" y="104" width="148" height="56"/><rect x="56" y="172" width="148" height="56"/><rect x="56" y="240" width="148" height="56"/>
+        </g>
+        <g text-anchor="middle" fill="#1b1b1b" font-size="14">
+          <text x="130" y="130">Intent &amp; spec</text><text x="130" y="198">Risk &amp; design</text><text x="130" y="266">Agent harnesses</text>
+        </g>
+        <g text-anchor="middle" fill="#5f5b54" font-size="12">
+          <text x="130" y="148">before any code</text><text x="130" y="216">with control IDs</text><text x="130" y="284">who built what</text>
+        </g>
+
+        <rect x="250" y="40" width="180" height="276" fill="none" stroke="#d4cec2" stroke-dasharray="4 4"/>
+        <text x="340" y="70" text-anchor="middle" font-size="15" fill="#1b1b1b">Overlap</text>
+        <text x="340" y="90" text-anchor="middle" font-size="12" fill="#5f5b54">not built yet</text>
+        <g fill="#f6ded3" stroke="#e65c2d">
+          <rect x="266" y="104" width="148" height="56"/><rect x="266" y="172" width="148" height="56"/><rect x="266" y="240" width="148" height="56"/>
+        </g>
+        <g text-anchor="middle" fill="#1b1b1b" font-size="14">
+          <text x="340" y="130">Attestations</text><text x="340" y="198">Policy as code</text><text x="340" y="266">Context graph</text>
+        </g>
+        <g text-anchor="middle" fill="#a83614" font-size="12">
+          <text x="340" y="148">signed evidence</text><text x="340" y="216">defined once</text><text x="340" y="284">agents read state</text>
+        </g>
+
+        <rect x="460" y="40" width="180" height="276" fill="none" stroke="#d4cec2" stroke-dasharray="4 4"/>
+        <text x="550" y="70" text-anchor="middle" font-size="15" fill="#1b1b1b">Kosli</text>
+        <text x="550" y="90" text-anchor="middle" font-size="12" fill="#5f5b54">what actually happened</text>
+        <g fill="#dde6ea" stroke="#5d8fa6">
+          <rect x="476" y="104" width="148" height="56"/><rect x="476" y="172" width="148" height="56"/><rect x="476" y="240" width="148" height="56"/>
+        </g>
+        <g text-anchor="middle" fill="#1b1b1b" font-size="14">
+          <text x="550" y="130">Build evidence</text><text x="550" y="198">Release gates</text><text x="550" y="266">Runtime &amp; drift</text>
+        </g>
+        <g text-anchor="middle" fill="#35637a" font-size="12">
+          <text x="550" y="148">scans and tests</text><text x="550" y="216">auto approvals</text><text x="550" y="284">what is live</text>
+        </g>
+
+        <g stroke="#5f5b54" stroke-width="1.2" marker-end="url(#a)">
+          <line x1="224" y1="140" x2="246" y2="140"/><line x1="246" y1="240" x2="224" y2="240"/>
+          <line x1="434" y1="140" x2="456" y2="140"/><line x1="456" y1="240" x2="434" y2="240"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Evidence and policy flow left to right. Context flows back the other way — which is what makes the seam a joint surface rather than a feed.</figcaption>
+  </figure>
+</section>
+
+
+<section>
+  <h2>Where the catalogue stops</h2>
+  <p>The FINOS SDLC controls framework — launched under the DevOps Automation SIG by Deutsche Bank, Morgan Stanley and Kosli — is building the shared vocabulary the industry has never had: a risk catalogue and a mitigation catalogue in RFC-style language, mapped outward to NIST SP 800-53, FFIEC and OWASP, with EU AI Act, ISO 42001 and NIST AI 600-1 reference sets already wired in. It defines what must hold true and deliberately refuses to say how.</p>
+  <p>It also reaches further upstream than most people assume. Two draft mitigations — a requirements repository (mi-4) and requirements approval for release (mi-20) — sit before the first commit. Both are the least complete entries in the catalogue: no regulatory references, no implementation pattern. The Loom's intent-and-spec harness is that pattern.</p>
+  <p>Which leaves two holes, and they are the same shape as the seam above.</p>
+
+  <p class="eyebrow">Not in the risk catalogue</p>
+  <ul class="gaps">
+    <li>Non-determinism as a delivery risk in its own right</li>
+    <li>Attribution of agent-authored change</li>
+    <li>Prompt and context injection into the pipeline</li>
+    <li>Model and tool drift across a single release</li>
+    <li>Evidence integrity when the author is an agent</li>
+  </ul>
+  <p>The AI reference frameworks are plumbed in, but none of the eleven risks is AI-native. AI governance lives in the separate FINOS AI Governance Framework, so no one currently owns the intersection of "AI writes the code" and "SDLC controls." That intersection is the Loom's entire subject.</p>
+
+  <p class="eyebrow">Not in scope at all</p>
+  <p>Every outward mapping is US or EU. There is no CBUAE, no PDPL, and no Shariah-governance dimension — the jurisdiction where Kosli already has a flagship customer and no control vocabulary to sell against.</p>
+
+  <blockquote>
+    <p>Proposed contribution: MiddleLeap drafts a set of AI-native risk definitions for the catalogue, co-authored with Kosli, plus a CBUAE and PDPL mapping for the existing mitigations. The risk vocabulary goes public; the harnesses that implement it stay proprietary.</p>
+  </blockquote>
+  <p class="note">State of the catalogue at its last readiness report, 20 June 2026: eleven risks, nineteen mitigations, one working-group approval. Identifiers cited in this note are drafts and will move. Alignment is claimed against draft controls, not conformance.</p>
+</section>
+
+<section>
+  <h2>Lifecycle coverage</h2>
+  <p>Switch between the two states. Kosli today covers half the lifecycle well and the other half not at all — and the uncovered half is where AI now generates the most work and the least verifiable evidence.</p>
+
+  <div class="modes" role="group" aria-label="Coverage state">
+    <button class="mode" id="m0" aria-pressed="true">Kosli today</button>
+    <button class="mode" id="m1" aria-pressed="false">With the Loom</button>
+  </div>
+
+  <div id="bars"></div>
+
+  <div class="legend">
+    <span><i class="key seg-loom"></i>Loom</span>
+    <span><i class="key seg-shared"></i>Shared</span>
+    <span><i class="key seg-kosli"></i>Kosli</span>
+    <span><i class="key seg-gap"></i>No evidence</span>
+  </div>
+  <p id="cap" class="note" aria-live="polite" style="margin-top:var(--s-4)"></p>
+</section>
+
+<section>
+  <h2>Seven capabilities to close the seam</h2>
+  <p>Ranked by how much each one increases Kosli's value, not the Loom's. The first two are the minimum viable demo.</p>
+  <div class="caps" id="caps"></div>
+</section>
+
+<section>
+  <h2>What happens next</h2>
+  <ul class="gaps">
+    <li>Agree the shape of the shared surface and who owns each side of it.</li>
+    <li>Build the minimum demo — the attestation emitter and agent attribution — against a live reference, ending in a Kosli audit package that starts at the requirement rather than the commit.</li>
+    <li>Draft the catalogue contribution together and submit it under both names.</li>
+  </ul>
+</section>
+
+<footer><span>MiddleLeap · Dubai</span><span>September 2026</span></footer>
+</div>
+
+<script>
+var stages = ['Intent','Requirements','Risk & design','Build','Release','Runtime'];
+var cov = [
+  [[['gap',100]],[['gap',100]],[['gap',100]],[['kosli',100]],[['kosli',100]],[['kosli',100]]],
+  [[['loom',100]],[['loom',70],['shared',30]],[['loom',60],['shared',40]],[['shared',35],['kosli',65]],[['shared',40],['kosli',60]],[['kosli',100]]]
+];
+var caps = [
+  ['Attestation emitter','Loom \u2192 Kosli',
+   'Every Loom gate posts a signed, hash-linked attestation into a Kosli flow.',
+   'Extends the chain of custody back from the commit to the business intent \u2014 the half auditors actually challenge.',
+   'Draft catalogue: ri-5, mi-3, mi-4, mi-14'],
+  ['Agent attribution','Loom',
+   'Each artefact records the actor: human, or which agent on which model and harness version, with which tool permissions, and which human accepted it.',
+   'Kosli treats agents as evidence actors, but nothing upstream produces a trustworthy actor record.',
+   'No catalogue risk covers this'],
+  ['Anti-fabrication rules','Loom',
+   'Evidence must be machine-derived from a real tool run, never agent-narrated, and no agent evidences its own work.',
+   'Answers the objection that ends most agentic governance conversations with second line.',
+   'No catalogue risk covers this \u2014 ri-5 adjacent'],
+  ['Gates as policy code','Shared',
+   'The gate is defined once and compiled into both the in-flight Loom check and the Kosli release policy.',
+   'Removes the objection that the bank now operates two governance systems.',
+   'Draft catalogue: mi-12, mi-19'],
+  ['Context read-back','Kosli \u2192 Loom',
+   'Loom agents query the Kosli evidence graph \u2014 what is live, what drifted, which control failed last \u2014 before they plan.',
+   'The direction that makes this a partnership rather than an input feed, and makes Kosli stickier.',
+   'No catalogue entry \u2014 reads the mi-9 and mi-13 inventories'],
+  ['Change-risk scoring','Loom \u2192 Kosli',
+   'An upstream risk classification from blast radius, data class and control surface, emitted as evidence the Kosli policy consumes.',
+   'This is what actually removes the change advisory board from the critical path.',
+   'Draft catalogue: mi-19, mi-20'],
+  ['Control-ID spine','Loom',
+   'Requirements and decisions carry control IDs from a named taxonomy \u2014 CBUAE CPS, PDPL, MMS, BCBS 239, CPS-AI \u2014 mapped outward to the catalogue.',
+   'The localisation layer that makes the second and third UAE bank sellable after the first.',
+   'Draft catalogue: mi-4 \u2014 no MENA mapping exists'],
+];
+
+function draw(m){
+  var html = '';
+  for (var i = 0; i < stages.length; i++){
+    var segs = '';
+    for (var j = 0; j < cov[m][i].length; j++){
+      var t = cov[m][i][j][0], w = cov[m][i][j][1];
+      segs += '<div class="seg seg-' + t + '" style="width:' + w + '%"></div>';
+    }
+    html += '<div class="row"><div class="stage">' + stages[i] + '</div><div class="bar">' + segs + '</div></div>';
+  }
+  document.getElementById('bars').innerHTML = html;
+}
+
+var b0 = document.getElementById('m0'), b1 = document.getElementById('m1');
+b0.addEventListener('click', function(){ draw(0); setCap(0); b0.setAttribute('aria-pressed','true'); b1.setAttribute('aria-pressed','false'); });
+b1.addEventListener('click', function(){ draw(1); setCap(1); b1.setAttribute('aria-pressed','true'); b0.setAttribute('aria-pressed','false'); });
+var capt = [
+  'Three of six stages carry no evidence at all. Everything before the first commit is invisible to the audit trail.',
+  'Runtime stays Kosli\u2019s alone. The shared band is a joint surface, not a takeover \u2014 and the three dark stages are where AI now does most of its work.'
+];
+function setCap(m){ document.getElementById('cap').textContent = capt[m]; }
+draw(0); setCap(0);
+
+var out = '';
+for (var k = 0; k < caps.length; k++){
+  out += '<button class="cap" aria-expanded="false" aria-controls="p' + k + '" data-i="' + k + '">' +
+         '<i class="dia" aria-hidden="true"></i><span class="ttl">' + caps[k][0] + '</span>' +
+         '<span class="who">' + caps[k][1] + '</span></button>' +
+         '<div class="panel" id="p' + k + '" role="region"><p>' + caps[k][2] + '</p><p>' + caps[k][3] + '</p><p class="maps">' + caps[k][4] + '</p></div>';
+}
+document.getElementById('caps').innerHTML = out;
+
+var btns = document.querySelectorAll('.cap');
+for (var n = 0; n < btns.length; n++){
+  btns[n].addEventListener('click', function(){
+    var open = this.getAttribute('aria-expanded') === 'true';
+    for (var q = 0; q < btns.length; q++){
+      btns[q].setAttribute('aria-expanded','false');
+      document.getElementById('p' + btns[q].dataset.i).classList.remove('open');
+    }
+    if (!open){
+      this.setAttribute('aria-expanded','true');
+      document.getElementById('p' + this.dataset.i).classList.add('open');
+    }
+  });
+}
+btns[0].click();
+</script>
+</body>
+</html>
