@@ -47,6 +47,18 @@ export function compileTypes(catalog, catalogText) {
     { name: 'loom-risk-class', kind: 'risk-class', family: null, controls: ['POLICY-COMPILER'], description: 'The compiled tier and plan hash (core/risk-class-attestation.mjs)',
       schema: { type: 'object', required: ['risk_tier', 'plan_hash'], properties: { risk_tier: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] }, plan_hash: { type: 'string', pattern: '^[0-9a-f]{64}$' } } },
       pass: { field: 'payload.plan_hash', matches: '^[0-9a-f]{64}$' } },
+    // The New Product Approval receipts (npa-uae skill): the pack a proposition submits, and the
+    // committee's decision at PA1 (permission to develop) and again at PA2 (permission to launch).
+    // No catalog controls of their own — like `loom-gate` — because they are the institution's pack
+    // that the PA1/PA2 gate families point at, not new controls.
+    { name: 'npa-pack', kind: 'npa', family: null, controls: [], description: 'A New Product Approval pack submitted for a proposition (the Business Proposition Form and its sign-off roster)',
+      schema: { type: 'object', required: ['proposition_id', 'request_type', 'status'],
+        properties: { proposition_id: { type: 'string' }, request_type: { type: 'string', enum: ['New', 'Amendment', 'Withdrawal'] }, status: { type: 'string', enum: ['draft', 'complete'] }, form_sha256: { type: 'string', pattern: '^[0-9a-f]{64}$' } } },
+      pass: { field: 'payload.status', in: ['complete'] } },
+    { name: 'npa-approved', kind: 'npa', family: null, controls: [], description: 'The NPA committee decision for a proposition at PA1 or PA2, with its approver, date and conditions',
+      schema: { type: 'object', required: ['proposition_id', 'receipt', 'decision', 'approved_by', 'decided_at'],
+        properties: { proposition_id: { type: 'string' }, receipt: { type: 'string', enum: ['PA1', 'PA2'] }, decision: { type: 'string', enum: ['approved', 'approved-with-conditions', 'rejected'] }, approved_by: { type: 'string' }, decided_at: { type: 'string', format: 'date-time' }, conditions: { type: 'array', items: { type: 'string' } }, valid_until: { type: 'string', format: 'date' } } },
+      pass: { field: 'payload.decision', in: ['approved', 'approved-with-conditions'] } },
     { name: 'loom-seal-anchor', kind: 'seal-anchor', family: null, controls: ['HG-0003'], description: 'The final seal of the evidence chain (scripts/seal-evidence.mjs --record)',
       schema: { type: 'object', required: ['anchor', 'release_commit', 'entries'], properties: { anchor: { type: 'string', pattern: '^[0-9a-f]{64}$' }, release_commit: { type: 'string', pattern: '^[0-9a-f]{40}$' }, entries: { type: 'integer', minimum: 1 } } },
       pass: { field: 'payload.anchor', matches: '^[0-9a-f]{64}$' } },

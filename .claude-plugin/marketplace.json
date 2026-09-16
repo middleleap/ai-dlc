@@ -3,13 +3,13 @@
   "owner": {
     "name": "MiddleLeap"
   },
-  "description": "MiddleLeap AI DLC \u2014 downloadable content for AI-enabled development: skills, agents, and workflows for regulated software delivery.",
+  "description": "MiddleLeap AI DLC — downloadable content for AI-enabled development: skills, agents, and workflows for regulated software delivery.",
   "version": "2.0.0",
   "plugins": [
     {
       "name": "middleleap-ai-sdlc",
       "source": "./plugins/middleleap-ai-sdlc",
-      "description": "Practices and patterns for AI-enabled software development \u2014 CLAUDE.md authoring, a starter context template, and a structured code-review agent.",
+      "description": "Practices and patterns for AI-enabled software development — CLAUDE.md authoring, a starter context template, and a structured code-review agent.",
       "version": "1.0.0",
       "author": {
         "name": "MiddleLeap"
@@ -28,8 +28,8 @@
     {
       "name": "middleleap-open-finance",
       "source": "./plugins/middleleap-open-finance",
-      "description": "UAE Open Finance domain expertise \u2014 CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, Islamic banking (Shariah-compliant finance), a virtual Head-of-Risk reviewer, New Product Approval (CBUAE-required Business Proposition Form, regulatory anchors, PA1/PA2 mapping), and value-proposition prototyping.",
-      "version": "2.4.1",
+      "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, Islamic banking (Shariah-compliant finance), a virtual Head-of-Risk reviewer, New Product Approval (CBUAE-required Business Proposition Form, regulatory anchors, PA1/PA2 mapping), and value-proposition prototyping.",
+      "version": "2.4.2",
       "author": {
         "name": "MiddleLeap"
       },
@@ -49,7 +49,7 @@
     {
       "name": "middleleap-brand",
       "source": "./plugins/middleleap-brand",
-      "description": "MiddleLeap brand and design system \u2014 tokens, the Pivot logo rules, component recipes, voice and copy rules, and a WCAG AA gate. Use when building or reviewing any MiddleLeap interface, document, or marketing asset.",
+      "description": "MiddleLeap brand and design system — tokens, the Pivot logo rules, component recipes, voice and copy rules, and a WCAG AA gate. Use when building or reviewing any MiddleLeap interface, document, or marketing asset.",
       "version": "2.0.0",
       "author": {
         "name": "MiddleLeap"
@@ -68,8 +68,8 @@
     {
       "name": "middleleap-loom",
       "source": "./plugins/middleleap-loom",
-      "description": "The Loom \u2014 MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.",
-      "version": "2.4.4",
+      "description": "The Loom — MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.",
+      "version": "2.4.5",
       "author": {
         "name": "MiddleLeap"
       },

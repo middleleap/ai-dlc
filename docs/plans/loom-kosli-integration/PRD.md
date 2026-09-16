@@ -1,3 +1,5 @@
+> **Kept for reference — not the source of truth.** Superseded on 16 September 2026 by `plugins/middleleap-loom/skills/loom/references/kosli-seam.md` §4b–§4d and the harness code it names; `README.md` in this folder reconciles every feature below against what shipped.
+
 # PRD — Loom × Kosli integration (`loom-kosli`)
 
 **Status:** Approved for build · **Owner:** Michael Hartmann, MiddleLeap · **Version:** 1.0 · **Date:** 2026-09-12

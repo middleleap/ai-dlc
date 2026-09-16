@@ -9,7 +9,7 @@ description: New Product Approval (NPA) for a CBUAE-regulated bank. Use whenever
 
 CBUAE requires every Licensed Financial Institution to run a strict product and service approval process before a new or updated financial product or service reaches the market, and to apply the Consumer Protection Regulation and Standards to any new product, service, activity or change (CPS Article 3, General Provisions). Banks implement this as a New Product Approval process: a Business Proposition Form completed by the proposing business, reviewed by every risk and control function, and approved by a product committee before build and launch.
 
-This skill gives an agent the form, the meaning of every field, the regulation behind it, and the way the Loom uses it. Read `references/template.md` for the blank form (a Word version is in `assets/`), `references/regulatory-anchors.md` for the CBUAE references per field, and `references/example-connected-accounts.md` for a completed pack.
+This skill gives an agent the form, the meaning of every field, the regulation behind it, and the way the Loom uses it. Read `references/template.md` for the blank form (a Word version is in `assets/`), `references/regulatory-anchors.md` for the CBUAE references per field, and the two completed packs: `references/example-cross-bank-money.md` — the canonical Meridian story, a PFM view built as a TPP, assembled from the discovery run `cross-bank-money` at that run's fidelity with obligations cited by register id and payment initiation filed as a later Amendment — and `references/example-connected-accounts.md`, the same form on the lending side, where another bank's data feeds a credit decision and a model enters the risk answers.
 
 ## When it applies
 
@@ -60,6 +60,15 @@ The form has five sections and thirty-three fields; `references/template.md` has
 7. **Fees** subject to CBUAE caps or approval go in 2.3 with the approval status; structured products need CBUAE approval before marketing.
 8. **Scale the pack, not the rigour.** The Bank's NPA policy decides whether an amendment gets the full form or a short-form variant. When the policy is silent, the agent produces the full form and marks the fields the change does not touch as "unchanged from the approved product, reference [previous NPA ID]".
 9. **Remove nothing from Section 5.** A risk function that is not consulted will not approve.
+
+## Two worked examples
+
+| Pack | Role | What it shows |
+|---|---|---|
+| `references/example-cross-bank-money.md` | TPP — data recipient | The canonical Meridian story. Request type New for the consolidated view; H3 (customer-initiated payment) framed, refuted for prototyping, and named in 1.1 and 4.5 as a later Amendment. Every obligation and risk cited by its register id; the D6 conditions become the committee's conditions; the Loom compiles each into a control or a manual owner. |
+| `references/example-connected-accounts.md` | TPP — data recipient, lending | The same form where the received data is an input to a credit decision: CPS-AI model-risk tag, a human review queue for model-driven declines, a disclosure-conformance gate and a cooling-off contract test from the committee's conditions. |
+
+Read the first for how a run's artifacts fill the form; read the second for how Section 5 changes when a model sits in the decision path.
 
 ## Readiness checklist before Gate 2
 
