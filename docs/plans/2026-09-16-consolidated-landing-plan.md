@@ -168,9 +168,17 @@ Expected: pass, `fail 0`.
 node demo/run-demo.mjs --scenario meridian
 ```
 
-Expected: **fifteen steps** and **two deliberate refusals**. Capture the output. Confirm the
-join table shows every row as `VERIFIED` / `DECLARED` / `RESOLVED · SIMULATED`. If the count
-is not 15/2, **stop and report** — do not open the PR.
+Expected: `DEMO OK — 23 steps`, with **two deliberate failures** (steps tagged `DELIBERATE
+FAILURE 1` and `2`: a fabricated record id refused as unknown to the provider; an unsigned
+envelope refused before it leaves the tree) plus the seal gate's refusal while the anchor is
+only in the tree. Capture the output. Confirm the join prints every row as `VERIFIED`,
+`DECLARED` or `RESOLVED · SIMULATED`, and that the lane pass reads `54 mechanisms executed,
+24 skipped with a reason`. If the step count is not 23 or the deliberate failures are not 2,
+**stop and report** — do not open the PR.
+
+**Runbook correction:** the runbook and the briefing say *fifteen steps*. That was true
+before the Meridian discovery half was added; the branch as pushed runs **23** (verified
+16 Sep against the fake). Fifteen is not a failure signal — a count other than 23 is.
 
 - [ ] **Step 7: Open the PR (do not merge)**
 
@@ -190,7 +198,7 @@ gh pr create --base main --head claude/kosli-founder-demo \
 | `node scripts/validate-marketplace.mjs` | Marketplace OK |
 | `harness && node --test` | pass N / fail 0 |
 | `node --test demo/meridian/scenario.test.mjs` | pass N / fail 0 |
-| `node demo/run-demo.mjs --scenario meridian` | 15 steps, 2 deliberate refusals; every join row VERIFIED / DECLARED / RESOLVED · SIMULATED |
+| `node demo/run-demo.mjs --scenario meridian` | DEMO OK — 23 steps, 2 deliberate failures; 54 mechanisms executed; every join row VERIFIED / DECLARED / RESOLVED · SIMULATED |
 
 Versions: middleleap-loom 2.4.2 → 2.4.3. open-finance untouched.
 EOF
