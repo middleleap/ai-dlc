@@ -26,9 +26,9 @@ test('the policy requires the fixed stages plus one record per runnable pr/relea
   assert.equal(stablePolicy(p), stablePolicy(compilePolicy(CATALOG, TEXT)), 'byte-stable across compiles');
 });
 
-test('types: the generic gate type, one per gate family, and the two fixed stages, each with a schema and a pass condition as data', () => {
+test('types: the generic gate type, one per gate family, the two fixed stages and the two NPA receipts, each with a schema and a pass condition as data', () => {
   const t = compileTypes(CATALOG, TEXT);
-  assert.deepEqual(t.types.map((x) => x.name), ['loom-gate', 'loom-gate-q', 'loom-gate-r', 'loom-risk-class', 'loom-seal-anchor']);
+  assert.deepEqual(t.types.map((x) => x.name), ['loom-gate', 'loom-gate-q', 'loom-gate-r', 'loom-risk-class', 'npa-pack', 'npa-approved', 'loom-seal-anchor']);
   assert.deepEqual(t.types[1].controls, ['A', 'B']);
   assert.deepEqual(t.types[0].pass, { field: 'payload.result', in: ['pass', 'pass-cached'] });
   assert.equal(t.types[0].schema.properties.result.enum.length, 5);

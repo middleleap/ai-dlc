@@ -1,3 +1,5 @@
+> **Kept for reference — not the source of truth.** Superseded on 16 September 2026 by `plugins/middleleap-loom/skills/loom/references/kosli-seam.md` §4b–§4d and the harness code it names; `README.md` in this folder reconciles every feature below against what shipped.
+
 # CLAUDE.md — loom-kosli
 
 You are building `loom-kosli`, the integration between MiddleLeap's Loom (an AI delivery harness for regulated institutions) and Kosli (an SDLC evidence platform). The specification is `PRD.md`. The work order is `TASKS.md`. This file tells you how to behave while doing it.

@@ -1,3 +1,5 @@
+> **Kept for reference — not the source of truth.** Superseded on 16 September 2026 by `plugins/middleleap-loom/skills/loom/references/kosli-seam.md` §4b–§4d and the harness code it names; `README.md` in this folder reconciles every feature below against what shipped.
+
 # TASKS.md — loom-kosli
 
 Work top to bottom. One task per commit. Tick the box and fill `Evidence:` when done. Add a `Deviation:` line if you departed from the PRD and why. Do not start a task whose `Depends:` are unticked.

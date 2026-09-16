@@ -1,9 +1,31 @@
-# loom-kosli integration — PRD bundle
+# loom-kosli integration — reconciliation against what shipped
 
-A build-ready PRD for `loom-kosli`, the adapter that makes Loom gates emit signed, attributed, provenance-checked attestations into Kosli, lets Loom agents read Kosli's record before they plan, and renders an audit package that starts at the requirement. It is written to be executed by Claude Code **in its own repository**, not in this one.
+> **The source of truth is `plugins/middleleap-loom/skills/loom/references/kosli-seam.md`, §4b–§4d**, and the code it names under `plugins/middleleap-loom/skills/loom-adopt/harness/`. `PRD.md`, `EXECUTION-CLAUDE.md` and `TASKS.md` in this folder are the 12 September plan for a *separate* `loom-kosli` repository. That repository was never created: the seam was built inside the harness instead, provider-neutral, with Kosli as its first adapter (decision K9). The three files are kept for the record; this page says, feature by feature, what became of them. Reconciled 16 September 2026 against `main` after PR #74.
 
-- `PRD.md` — nine features, data contracts, acceptance criteria, demo script, definition of done
-- `EXECUTION-CLAUDE.md` — the steering file to place as `CLAUDE.md` in the `loom-kosli` repo (renamed here so it does not shadow this repo's own `CLAUDE.md`)
-- `TASKS.md` — 18 tasks in dependency order with evidence lines
+**Legend.** SHIPPED — exists as code with tests, named by module · DELTA — shipped in part; what is missing is named · SUPERSEDED — the PRD's shape was replaced by a different decision.
 
-The method-side view of the same seam is `plugins/middleleap-loom/skills/loom/references/kosli-seam.md`; the visual one-pager is `docs/loom-kosli-overlap.html`.
+| PRD feature | Status | Where it lives, and what changed |
+|---|---|---|
+| **F1** `loom attest` — the Kosli adapter | **SHIPPED · shape superseded** | There is no `loom attest` command. The gate runner posts: `core/gate-runner.mjs --record` writes each executed mechanism's row as a signed `gate` record (row 2.4); `scripts/seal-evidence.mjs --record` posts the `seal-anchor` (row 2.5). The seam is `core/external-record.mjs` (`status`, `post`, `resolve`, `trailStatus`, `flushOutbox`); the only place a Kosli command is spelled is `core/providers/kosli.mjs`, shelling out through `core/kosli-cli.mjs` (K7). Unmounted, every call is a named no-op. |
+| **F2** Trail model | **SHIPPED · unit changed** | One trail per **change envelope** on the delivery flow and one per **discovery run** on the discovery flow (row 2.3) — not per spec, as the PRD had it. `begin trail` is idempotent; `scripts/record-trail-status.mjs` prints expected (from the catalog) against present (from the provider). |
+| **F3** Actor record and signing | **SHIPPED** | `identities.json` declares each agent identity's model pins, harness role and tool permissions; the registry gate cross-checks the pins against the model manifest (row 2.1, K4). Every envelope is signed with the harness's own attestation core and refused as evidence while unsigned. |
+| **F4** Audit package from the requirement | **SHIPPED** | `scripts/record-audit.mjs <CHG>` joins the provider's trail to the kept envelopes and the sealed bundle, re-verifies every signature, renders one page per change under the mounted brand — every row VERIFIED or FLAGGED, exit 6 when a flag exists (row 2.12). `scripts/record-join.mjs <CHG> --obligation <id>` renders the one-obligation join the demo shows. |
+| **F5** Provenance gate | **SHIPPED** | `core/provenance.mjs` builds, signs and judges `loom.record-envelope/v1` under PR1 tool run · PR2 no self-attestation · PR3 not narrated · PR4 human acceptance · PR5 timestamps · PR6 runner identity. The seam refuses before it posts; `scripts/provenance-check.mjs` (catalog control `RECORD-PROVENANCE`) refuses what is still in the tree (row 2.6). |
+| **F6** Gate compiler (`gates.yaml`) | **SHIPPED · source superseded** | No `gates.yaml`. Gate definitions have one source, `docs/governance/control-catalog.json` (K3): `scripts/record-policy-compile.mjs` compiles the route policy (Rego for `kosli evaluate trail`), `scripts/record-types-compile.mjs` one attestation type per gate family with schema and pass condition as data. Both carry the catalog's sha256; `--verify` fails when the catalog moved or the file was hand-edited (row 2.9). **DELTA:** attestation-type versioning when a schema changes — seam §5 question 6, unconfirmed. |
+| **F7** Kosli MCP server, read side | **SHIPPED · one tool unmounted** | `core/record-mcp.mjs`, zero-dependency stdio, mounted by the plugin as `loom-record`: `record_get_trail`, `record_trail_gaps`, `record_last_failures`, `record_environment_snapshot`, `obligation_lookup`. Nothing writes (K5). `risk-reviewer` and `change-watch` read gaps and last failures before they assess and cite what they read (row 5.3). **DELTA:** `record_answers` stays `not-mounted` — no Answers surface in the CLI (question 7). |
+| **F8** Change-risk classifier | **SHIPPED** | The policy compiler decides the tier; `core/risk-class-attestation.mjs` builds, signs and verifies that decision as it leaves the tree — tier, plan hash, profile inputs, flags, classifier — and `scripts/risk-class-attest.mjs` writes it beside the envelope (row 2.8). |
+| **F9** Control crosswalk skill | **DELTA** | The mapping exists as **register data, not a skill**: `core/record-controls.mjs` fills `controls { institution, finos, catalog, controls_source }` on every record from the obligations register (row 3.5), so an attestation carries the institution's id, the FINOS id and the catalog control together. Contributing the Loom's implementation pattern for the FINOS draft mitigations (`mi-4`, `mi-20`) is hardening-plan row 3.7, co-authored, and waits on the 18 September call. |
+| **§10** The demo | **SHIPPED** | `demo/run-demo.mjs` walks the seam against the record-and-replay fake in **23 steps with two deliberate failures** (a fabricated record id refused as unknown to the provider; an unsigned envelope refused before it leaves the tree); `--scenario meridian` adds the discovery half and the traced obligation (row 2.13). Runs in CI (K8). |
+| **§13** Definition of done | **DELTA** | Everything but one line: *"integration suite passes against a real org at least once, with the run recorded in `docs/integration-run.md`"*. That file is still owed. `--real` needs `KOSLI_ORG`, `KOSLI_API_TOKEN` and the `kosli` CLI on PATH. |
+
+## What the PRD asked for that the seam refused, on purpose
+
+- **A separate repository and a CLI.** K9: Kosli is a provider role (`external_record`), never a dependency, so the seam lives in the harness and any evidence platform can adapt to it. A `loom-kosli` product would have made the Loom depend on one vendor.
+- **A second gate list.** `gates.yaml` would have been a hand-written policy beside the catalog; `ci-catalog-check` already refuses a second list.
+- **A second evidence store.** K1: the sealed bundle is an outbox, Kosli is the record. Nothing else persists attestations.
+
+## What is still open, and what gates it
+
+Rows **2.7** (the refusal half of question 2 — whether Kosli will ever refuse an agent-identity approval itself), **4.3** (the change ticket) and **3.7** (the FINOS contribution) wait on the seven questions in `kosli-seam.md` §5. The live integration run waits on a credential. Everything else in this folder's plan is either code or a decision recorded against it.
+
+The visual one-pager is still `docs/loom-kosli-overlap.html`.

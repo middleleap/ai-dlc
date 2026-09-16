@@ -1,6 +1,6 @@
-# Worked example — Meridian Trust, Connected Accounts for Affordability
+# Worked example (lending-side) — Meridian Trust, Connected Accounts for Affordability
 
-*Meridian Trust is a fictional UAE bank used in Loom demonstrations. This pack is the one assembled at the "Investment case assembled" step of the discovery harness and taken to Gate 2. Field text is deliberately compact; a real pack runs to several pages per section.*
+*Second example. The canonical Meridian story is `example-cross-bank-money.md` — the PFM view built with Meridian as a TPP, from the discovery run `cross-bank-money`. This pack shows the same form on the lending side, where the Bank consumes another bank's data as an input to a credit decision: a different product, a different risk profile (a model in the decision path), and a different set of Section 5 answers. Meridian Trust is a fictional UAE bank used in Loom demonstrations. This pack is assembled at the "Investment case assembled" step of the discovery harness and taken to Gate 2. Field text is deliberately compact; a real pack runs to several pages per section.*
 
 | | |
 |---|---|
