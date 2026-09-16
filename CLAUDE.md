@@ -50,6 +50,7 @@ scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 ```bash
 node scripts/validate-marketplace.mjs   # manifests, sources, versions, skill/agent layout
 node --test scripts/validate-marketplace.test.mjs   # the validator's own suite — run it if you change the validator
+node scripts/deidentify-check.mjs   # no client names under plugins/ — terms and allowlist in .deidentify.json
 node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs   # WCAG AA gate
 ```
 
@@ -74,7 +75,7 @@ Reference files carry regulatory figures, dates, and AED amounts. Treat them as 
 
 ## Provenance rules (learned the hard way)
 
-- **The Open Finance, Islamic banking, and UAE bank risk reviewer skills are canonical in the Claude.ai skills UI**, edited there and imported here via manual `.skill`/`.zip` export. Before editing them in this repo, ask whether a fresher export exists; if they do change here, the change must flow back to Claude.ai or the next import will overwrite it. Last import: 17 Aug 2026 (open-finance-uae only; source-verification update, same content saved to Claude.ai).
+- **The Open Finance, Islamic banking, and UAE bank risk reviewer skills are canonical in the Claude.ai skills UI**, edited there and imported here via manual `.skill`/`.zip` export. Before editing them in this repo, ask whether a fresher export exists; if they do change here, the change must flow back to Claude.ai or the next import will overwrite it. `scripts/deidentify-check.mjs` (CI) fails the build if a re-import brings a client's name back — the ADCB references in `islamic-banking-uae` were de-identified here on 16 Sep 2026 and the Claude.ai copy still carries them. Last import: 17 Aug 2026 (open-finance-uae only; source-verification update, same content saved to Claude.ai).
 - **The former `altareq-brand-guidelines` skill is retired** — merged into `open-finance-uae` as `references/altareq-*.md`. Don't recreate it.
 - **The Loom** is extracted here as `plugins/middleleap-loom` (the generic harness). The OFBO-specific instantiation — the CBUAE data-risk register, OFBO brand profile, OFBO hard-stop checklists, Q1–Q5 CI workflows, and the three `the-loom*.html` decks — stays in the `openfinance-os/ofbo` repo as the worked example.
 - **The `discovery/` tree is shared with `ofbo`, and the divergence is now counted, not remembered.** `discovery-sync.json` is the ledger and `scripts/discovery-sync-check.mjs` holds it: change a file under `harness/discovery/` without declaring it and the build fails. Run `node scripts/discovery-sync-check.mjs --record` to book the change as a port owed to ofbo. What the gate **cannot** see is whether ofbo has moved — it never reports the trees as agreeing, and only `--upstream <ofbo-checkout>`, run where both repos are reachable, may retire a debt. As of rc.29 nobody has ever run that, and 8 of 23 files carry an outstanding port.
