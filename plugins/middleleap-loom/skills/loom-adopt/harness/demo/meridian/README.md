@@ -29,6 +29,11 @@ one inspectable join — mandate, obligation, catalog digest, change, commit, ar
 producer, signature, approval, external record — each row marked VERIFIED, DECLARED,
 RESOLVED · SIMULATED (the fake) or RESOLVED · LIVE (`--real`), or NOT CHECKED.
 
+On stage, run it as `node demo/run-demo.mjs --scenario meridian --pause --keep`: `--pause` stops after
+every step until Enter (`q` stops the walk), and `--keep` leaves the adopted tree behind so the wireframe,
+the repaired contract and the join page can be opened in a browser after the walk. Without a terminal on
+stdin the flag is announced and ignored, so CI never blocks.
+
 A recorded run is a run that happened once and was kept, not a live agent on stage: the demo says so on the step. The boundary the check prints on every run is the boundary of the demo: it validates a declared
 contract and a recorded test. It does not observe a payment system, a participant bank or the
 platform's status API, and it does not make the Open Finance proposition a running service.
