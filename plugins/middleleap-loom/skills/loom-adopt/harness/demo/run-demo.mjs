@@ -5,7 +5,12 @@
 // two deliberate refusals (a fabricated id, an unsigned envelope). Every step prints what it
 // did and the script exits non-zero the moment a step does not behave as the canon says.
 //
-//   node demo/run-demo.mjs [--keep] [--real] [--scenario meridian]
+//   node demo/run-demo.mjs [--keep] [--real] [--scenario meridian] [--pause]
+//
+// --pause is presenter mode: the walk stops after every step and waits for Enter before the next
+// one, so the person at the keyboard sets the pace and the audience reads each result before the
+// screen moves. `q` stops the walk (the tree is kept only with --keep). Pausing needs a terminal:
+// without one (CI, a pipe) the flag is announced and ignored, so no run can ever block.
 //
 // --real runs the same walk against a REAL org: it needs KOSLI_API_TOKEN, KOSLI_ORG in the
 // environment and a real `kosli` on PATH (or KOSLI_BIN), and it records the outcome in
@@ -30,7 +35,7 @@
 //   [live provider]      --real: the official CLI against an org; the read-back is the proof
 //   [refusal]            a deliberate negative case the harness must reject
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readSync, rmSync, writeFileSync } from 'node:fs';
 import { generateKeyPairSync } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -41,6 +46,8 @@ const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
 const real = argv.includes('--real');
 const keep = argv.includes('--keep');
+const pauseAsked = argv.includes('--pause');
+const pause = pauseAsked && Boolean(process.stdin.isTTY);
 const scenario = argv.includes('--scenario') ? argv[argv.indexOf('--scenario') + 1] : null;
 if (scenario && scenario !== 'meridian') { process.stderr.write(`unknown scenario ${scenario}; the only one is meridian\n`); process.exit(2); }
 const meridian = scenario === 'meridian';
@@ -50,7 +57,29 @@ const A = mkdtempSync(join(tmpdir(), 'loom-demo-'));
 const K = mkdtempSync(join(tmpdir(), 'loom-demo-key-'));
 const PROVIDER = real ? 'live provider' : 'simulated provider';
 let step = 0;
-const say = (s, tag = null) => process.stdout.write(`\n[${String(++step).padStart(2, '0')}]${tag ? ` [${tag}]` : ''} ${s}\n`);
+const cleanup = () => { rmSync(K, { recursive: true, force: true }); if (!keep) rmSync(A, { recursive: true, force: true }); };
+// Presenter mode: block on the terminal until Enter; `q` ends the walk cleanly (key deleted, tree
+// kept only with --keep). Synchronous on purpose — every step below is synchronous too.
+const waitForPresenter = () => {
+  process.stdout.write('\n     ⏎ next step · q stop  ');
+  // One line per pause, read byte by byte so queued keystrokes are not swallowed in a single read.
+  // A zero-byte read (Ctrl-D, or stdin gone) counts as Enter: a closed terminal degrades to the
+  // unpaused walk rather than ending it — only a typed `q` stops.
+  const bytes = [];
+  for (;;) {
+    const b = Buffer.alloc(1);
+    let n = 0;
+    try { n = readSync(0, b, 0, 1, null); } catch { n = 0; }
+    if (n === 0 || b[0] === 0x0a) break;
+    bytes.push(b[0]);
+  }
+  const typed = Buffer.from(bytes).toString('utf8').trim().toLowerCase();
+  if (typed === 'q') { process.stdout.write(`\nstopped by the presenter after step ${step}${keep ? `; tree kept at ${A}` : ''}\n`); cleanup(); process.exit(0); }
+};
+const say = (s, tag = null) => {
+  if (pause && step > 0) waitForPresenter();
+  process.stdout.write(`\n[${String(++step).padStart(2, '0')}]${tag ? ` [${tag}]` : ''} ${s}\n`);
+};
 const fail = (s) => { process.stderr.write(`\nDEMO FAILED at step ${step}: ${s}\n`); process.exit(1); };
 const run = (cmd, args, { expect = 0, env = {}, quiet = false } = {}) => {
   const r = spawnSync(cmd, args, { cwd: A, encoding: 'utf8', env: { ...process.env, ...env } });
@@ -61,6 +90,9 @@ const run = (cmd, args, { expect = 0, env = {}, quiet = false } = {}) => {
 const node = (args, o) => run(process.execPath, args, o);
 const J = (p) => JSON.parse(readFileSync(join(A, p), 'utf8'));
 const W = (p, o) => writeFileSync(join(A, p), JSON.stringify(o, null, 2) + '\n');
+
+if (pauseAsked && !pause) process.stdout.write('--pause needs a terminal on stdin; none here, so the walk runs without stopping\n');
+if (pause) process.stdout.write(`presenter mode: the walk stops after every step — Enter runs the next one, q stops${keep ? '' : ' (add --keep to keep the tree on stop)'}\n`);
 
 try {
   say(`adopt the bundle into ${A} (tier full) and copy the worked examples — the same set the CI dry-run stages, so the pr lane is GREEN and every failure below is a deliberate one`, 'fixture');
@@ -347,6 +379,5 @@ try {
   }
   process.stdout.write(`\nDEMO OK — ${step} steps${keep ? `; tree kept at ${A}` : ''}\n`);
 } finally {
-  rmSync(K, { recursive: true, force: true });
-  if (!keep) rmSync(A, { recursive: true, force: true });
+  cleanup();
 }
