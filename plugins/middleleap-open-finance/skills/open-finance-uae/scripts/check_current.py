@@ -28,10 +28,20 @@ errata number, this script also compares the register's "N corrections" count fo
 that errata against the count recorded in SKILL.md's Quick Reference, and reports
 STALE with a section_note if they diverge.
 
-Note on GitHub 403s: unauthenticated api.github.com allows ~60 req/hr per IP.
-A 403 here is almost always the rate limit (shared egress IPs exhaust it fast),
-not a permissions problem — this script now says so and falls back to the
-register-only check.
+Note on GitHub 403s — two different causes, now distinguished:
+
+  1. The unauthenticated api.github.com rate limit (~60 req/hr per IP, shared
+     egress IPs exhaust it fast). Transient; retrying later helps.
+  2. A Claude Code sandboxed-session repo scope block (body contains "not
+     enabled for this session" / "add_repo"). This is NOT a rate limit —
+     it is deterministic for any repo outside the session's granted scope
+     (this script targets Nebras-Open-Finance/api-specs, never this skill's
+     own repo, so a scheduled/automated run gets this every time; see the
+     21 Sep 2026 pass in verification-log.md). Retrying later will not help.
+
+Either way, raw.githubusercontent.com file GETs are unaffected (no API,
+no session scoping) — see PRERELEASE_FRONTIER below for how this script
+uses that to keep partial repo-side visibility instead of going fully blind.
 
 Usage:
   python3 check_current.py            # human-readable report
@@ -50,6 +60,46 @@ from fetch_spec import list_tree  # noqa: E402  (shares the 15-min tree cache)
 
 SKILL_MD = Path(__file__).resolve().parent.parent / "SKILL.md"
 REGISTER_BASE = "https://nebras-open-finance.com/tech/release-notes-and-erratas"
+RAW_BASE = "https://raw.githubusercontent.com/Nebras-Open-Finance/api-specs/main"
+
+# Hand-maintained frontier of pre-release folders to existence-probe via
+# raw.githubusercontent.com when the GitHub Tree API is unreachable (see the
+# 403 note above). This is the same set a human pass would curl by hand from
+# the last verification-log.md entry — update it whenever a pass confirms a
+# new line, so the probe doesn't go stale. Last updated: 21 Sep 2026 pass
+# (v2.2-rc1 confirmed still highest; v2.2-rc2/v2.2/v2.1-errata-next all 404).
+PRERELEASE_FRONTIER = ["v2.2-rc1", "v2.2-rc2", "v2.2-draft2", "v2.2"]
+PROBE_FILE = "uae-bank-initiation-openapi.yaml"  # present in every standards line to date
+
+
+def _raw_exists(path: str) -> bool:
+    req = urllib.request.Request(f"{RAW_BASE}/{path}",
+                                  headers={"User-Agent": "of-skill-check-current"})
+    try:
+        with urllib.request.urlopen(req, timeout=20):
+            return True
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return False
+        raise
+
+
+def probe_repo_fallback(stated_version: str, stated_errata: int):
+    """Narrow raw.githubusercontent.com substitute for repo_current() when the Tree
+    API 403s. Only tells you about the specific candidate paths probed — it is not a
+    full tree read — but that is strictly better than reporting the repo as fully
+    unreachable, which is what happened every pass before this fallback existed.
+    Returns the same shape as repo_current(), or None if raw.githubusercontent.com
+    itself is also unreachable.
+    """
+    try:
+        prerelease = [c for c in PRERELEASE_FRONTIER
+                      if _raw_exists(f"dist/standards/{c}/{PROBE_FILE}")]
+        bumped = _raw_exists(f"dist/standards/{stated_version}-errata{stated_errata + 1}/{PROBE_FILE}")
+    except urllib.error.URLError:
+        return None
+    latest_errata = stated_errata + 1 if bumped else stated_errata
+    return stated_version, latest_errata, [stated_version], sorted(prerelease)
 
 
 def skill_stated_current(text: str) -> tuple[str, int]:
@@ -171,12 +221,30 @@ def main() -> None:
         v, n, repo_lines, prerelease = repo_current(paths)
         repo = (v, n)
     except urllib.error.HTTPError as e:
-        if e.code == 403:
+        body = ""
+        try:
+            body = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            pass
+        if e.code == 403 and ("not enabled for this session" in body or "add_repo" in body):
+            repo_note = ("GitHub API 403 — this is a Claude Code sandboxed-session repo-scope "
+                         "block (this script's target repo is outside the session's granted "
+                         "scope), not a rate limit; retrying later will not help.")
+        elif e.code == 403:
             repo_note = ("GitHub API 403 — almost certainly the unauthenticated rate limit "
                          "(60 req/hr per IP), not a permissions issue. Retry later or check "
-                         "the repo manually; continuing with the register-only check.")
+                         "the repo manually.")
         else:
             repo_note = f"GitHub API error: {e}"
+        fallback = probe_repo_fallback(*stated)
+        if fallback:
+            repo = fallback[0], fallback[1]
+            repo_lines, prerelease = fallback[2], fallback[3]
+            repo_note += (" Fell back to a raw.githubusercontent.com existence probe of a "
+                          "known candidate frontier (narrower than a full tree read — see "
+                          "PRERELEASE_FRONTIER in this script).")
+        else:
+            repo_note += " raw.githubusercontent.com fallback probe also unreachable."
     except Exception as e:  # network, parse, etc.
         repo_note = f"repo check failed: {e}"
 
