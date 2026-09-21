@@ -128,6 +128,24 @@ unaffected and were used instead) against the community hub erratas page
 | `check_current.py` blind spot | **FIXED**: the 31 Aug pass flagged that the script only compares the errata *number* and would miss an existing group growing sections in place — flagged again as still-open on 3 Sep. Added `register_section_count()` (parses the register's "N corrections" badge for the stated errata) and `skill_stated_sections()` (parses the same count from SKILL.md's Quick Reference); when the errata numbers already agree, main() now also compares these counts and reports STALE with a `section_note` on mismatch instead of a false FRESH. Verified against live data this pass: skill=5, register=5 for errata3 (agree, correctly FRESH); register=17 for errata2 (agrees with the known count, confirming the parser) | `scripts/check_current.py`, SKILL.md |
 | NOT re-verified this pass | Full site/Confluence audit (scoped to the watcher's usual register + release-registry surfaces, not a full re-verification pass); the `api-specs` git tree via GitHub API (session-scoped access denied it this pass — see Method above); the insurance-file-in-errata3 PENDING item from 3 Sep (not re-checked; still assumed to hold since nothing upstream changed) | flagged above |
 
+## Pass of 21 September 2026 — weekly ecosystem-watcher re-check + check_current.py repo-check fallback
+
+Trigger: the recurring weekly ecosystem-watcher cadence (see the 31 Aug 2026 pass), run from
+a scheduled/automated session. Method: `check_current.py` plus manual `curl` re-checks of the
+same surfaces the 14 Sep pass used — the community hub `erratas/v2.1/` page, the
+`community-standards` registry sources (`erratas-registry.ts`, `api-hub-releases-registry.ts`,
+`trust-framework-releases-registry.ts`), and raw-file existence probes against `api-specs`
+for `v2.1-errata4`, `v2.2-rc2`, `v2.2`, and `v2.2-rc1`.
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| errata3 scope | **UNCHANGED** — still exactly 5 corrections (§1–5) on both the register page and `erratas-registry.ts`; no §6+, no errata4 | — |
+| API Hub releases | **UNCHANGED** — `2026.22.0` still the latest in `api-hub-releases-registry.ts` | — |
+| Trust Framework releases | **UNCHANGED** — `2.5.0` still `planned` (`effectiveDate: '2026'`, no day-level date), still the highest release entry | — |
+| Pre-release line | **UNCHANGED** — `dist/standards/v2.2-rc1/` still the highest on `main` (`v2.1-errata4`, `v2.2-rc2`, `v2.2` all 404 on raw-file probes) | — |
+| `check_current.py` repo-side check | **New structural finding, fixed this pass**: this session's `api.github.com` call 403s with body `"GitHub access to this repository is not enabled for this session..."` — a **deterministic Claude Code sandboxed-session scope block**, not the unauthenticated rate limit the script's comments assumed. It recurs on every scheduled/automated run (flagged as circumstantial on 14 Sep; now confirmed structural and generalized). Previously this meant `repo_latest`/`prerelease_lines_in_repo` went **fully blank** in exactly the runs this weekly cadence uses — the tool lost the one signal (pre-release visibility) manual passes have relied on `raw.githubusercontent.com` probes to recover by hand every time. Added `probe_repo_fallback()`: when the Tree API errors, the script now existence-probes a small hand-maintained `PRERELEASE_FRONTIER` list (and the next errata folder) via `raw.githubusercontent.com`, which is unaffected by the session scoping. Also split the 403 diagnosis so the two causes (session scope block vs. rate limit) are no longer conflated in `note`. Verified this pass: with the tree call still 403ing, the script now correctly reports `repo latest = v2.1-errata3`, `pre-release on main = v2.2-rc1` instead of nothing | `scripts/check_current.py`, `SKILL.md` |
+| NOT re-verified this pass | Doc-level Confluence "Consolidated Errata" page (not re-fetched — no reason to expect it moved given the spec-level register and doc-level page have been in lockstep-lag since 31 Aug); full site/Confluence audit (scoped to the watcher's usual surfaces, as in every pass since 31 Aug) | — |
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the
