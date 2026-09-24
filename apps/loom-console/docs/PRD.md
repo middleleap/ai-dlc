@@ -158,10 +158,11 @@ The schema is versioned. Additive fields are allowed within `v1`; anything remov
 ## 8. Security, privacy, compliance
 
 - **Authority**: no write path, no token, no outbound call. The generated site has no forms and no script that reaches the network, and its CSP forbids connections.
+- **Local server**: binds to 127.0.0.1 only, answers GET and HEAD only, and serves nothing from the installation except the wireframes the data names (tested).
 - **Access**: the console shows what repository read access already shows. Host it behind the same SSO group as repository readers. A run the institution treats as restricted stays out of the console by staying out of the repository branch the console builds from.
 - **Residency**: the site is built and hosted inside the adopter's environment. Nothing leaves it. MiddleLeap never hosts an adopter's console.
 - **PII**: runs are synthetic in the demo, and the `pii-guard` hook protects the tree. The console adds no data the tree doesn't hold, and catalog-C floor notes never reach it.
-- **Brand gate**: console output must pass D7 (tokens only, marker present), the same as any wireframe.
+- **Embedded artifacts are the committed files.** Wireframes are copied byte for byte (tested) and shown in a sandboxed iframe; the console never re-renders an adopter's artifact.
 
 ## 9. The console's own tests (in the app, not in the plugin's gates)
 
