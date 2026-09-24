@@ -19,6 +19,7 @@ shipped templates; the demo registers these files in the *adopted* scratch tree 
 | `portfolio/sme-overdraft-decision/` | `SI-01`, `lending`. Problem framed and frozen (D1–D5 green); data-governance feasibility is the next record, so **D6 and D8 are open** | executed local check |
 | `portfolio/home-finance-top-up/` | `SI-04`, `islamic-product`. Synthesis written; theme T-2 is a workshop assumption with no signal behind it, so **D5 fails** — the worked example of the gate refusing an unsourced theme | executed local check |
 | `portfolio/salary-advance/` | `SI-03`, `consumer-lending`. Opened from operations signal `OPS-2026-0918`; four signals, nothing synthesised yet | executed local check |
+| `portfolio/identities.json` | The portfolio's product owners (po-khalid, po-rania, po-omar), appended to the adopted identity registry so every run sponsor resolves to a human | fixture |
 | `portfolio/portfolio-obligations.json` | The rows the portfolio cites beyond the Open Finance set: `DR-5.1-001`, `CTRL-005`, and Meridian's internal explanation policy `OB-AE-MTPOL-EXPL-001` (fictional, not a regulatory citation) | fictional planning |
 | `portfolio/operations-signal.json` | `OPS-2026-0918`, routed `discovery`, linked to `salary-advance` | fixture |
 | `scenario.test.mjs` | Adopts a scratch tree, mounts the scenario, requires D1–D9 on both walk runs, the D4 refusal, a well-formed stop record, green register gates, every portfolio run in exactly its declared gate state, every cited `SI-*` approved in the BrainKit strategy, and the operations signal routed and traceable | executed local check |
@@ -44,3 +45,12 @@ stdin the flag is announced and ignored, so CI never blocks.
 A recorded run is a run that happened once and was kept, not a live agent on stage: the demo says so on the step. The boundary the check prints on every run is the boundary of the demo: it validates a declared
 contract and a recorded test. It does not observe a payment system, a participant bank or the
 platform's status API, and it does not make the Open Finance proposition a running service.
+
+## Seeing the portfolio in the Loom console
+
+`apps/loom-console` at the root of this repository is a standalone, read-only console over any Loom
+installation. `node apps/loom-console/bin/loom-console.mjs demo` adopts the Loom into a scratch
+directory, mounts this scenario and the estate (`mountEstate`: the approved BrainKit 1.0.1 and
+CHG-2026-0042), and serves the console on 127.0.0.1. The console reads the installation's own gates;
+nothing here depends on it.
+

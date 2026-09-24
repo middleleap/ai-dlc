@@ -1,10 +1,15 @@
-// The Loom console's data contract (loom.console/v1). One pure read of an adopted repository into
-// the JSON the oversight console renders — so the console is a PROJECTION OF THE RECORD, not a page
-// someone wrote. It writes nothing but its own output file, decides nothing, and holds no authority.
+// The Loom console's data reader (loom.console/v1). One pure read of ANY Loom installation into the
+// JSON the console renders, so the console is a projection of the record, not a page someone wrote.
+// It writes nothing in the installation, decides nothing, and holds no authority.
+//
+// It runs the INSTALLATION'S OWN gate code, loaded from the repository it reads
+// (discovery/gates/validate.mjs, discovery/gates/lib.mjs, scripts/approval-status.mjs): the console
+// shows what that installation's gates say, at that installation's Loom version, never a second
+// opinion bundled here.
 //
 // Every fact it emits carries its provenance: the file it was read from, and one of four kinds —
 //   record          read from a governed file in the tree (a run artifact, a register, the BrainKit)
-//   executed-check  the result of a gate this script actually ran (the D1–D9 validator, brainkit-check)
+//   executed-check  the result of a gate this reader actually ran (the D1–D9 validator, brainkit-check)
 //   derived         computed here from records (a run's stage, whether a sponsor resolves)
 //   telemetry       a report that flags and never blocks (the approval queue, ages against the SLA)
 // A console that shows a fact without one of these is showing an opinion.
@@ -12,18 +17,29 @@
 // Gate states are the validator's, unsoftened: a gate that fails because its stage has not been
 // reached is still `fail`, with `reached: false` beside it. The console may say "not reached yet";
 // it may never say "pass".
-//
-//   node scripts/console-data.mjs [--out <file>] [--now <ISO date>] [--pretty]
-//
-// Run from the repo root. `--now` pins the clock so ages are reproducible (tests, demos).
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
-import { join, dirname, basename } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, basename, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { validateRun, prototypeDigest } from '../discovery/gates/validate.mjs';
-import { frontMatter, section, filledRows, signalIds, drIds, ctrlIds, obIds } from '../discovery/gates/lib.mjs';
-import { collect as approvalQueue } from './approval-status.mjs';
+
+export const APP = 'apps/loom-console';
+/** The installation's own modules the reader depends on. */
+export const REQUIRED = {
+  validate: 'discovery/gates/validate.mjs',
+  lib: 'discovery/gates/lib.mjs',
+  approvals: 'scripts/approval-status.mjs',
+};
+let L = null; // the loaded installation modules for the current read
+
+/** Load the gate code from the installation itself. Refuses a tree that is not a Loom installation. */
+export async function loadInstallation(repo) {
+  const missing = Object.values(REQUIRED).filter((f) => !existsSync(join(repo, f)));
+  if (missing.length) throw new Error(`${repo} is not a Loom installation: missing ${missing.join(', ')}. Adopt the Loom first (loom-adopt), or point --repo at an adopted repository.`);
+  const imp = (f) => import(pathToFileURL(join(repo, f)).href);
+  const [v, lib, a] = await Promise.all([imp(REQUIRED.validate), imp(REQUIRED.lib), imp(REQUIRED.approvals)]);
+  return { validateRun: v.validateRun, prototypeDigest: v.prototypeDigest, ...lib, approvalQueue: a.collect };
+}
 
 export const SCHEMA = 'loom.console/v1';
 const RUNS_DIR = 'discovery/runs';
@@ -44,7 +60,6 @@ export const STAGES = [
 ];
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 const readText = (p) => { try { return readFileSync(p, 'utf8'); } catch { return ''; } };
-const rel = (cwd, p) => p.slice(cwd.length + 1);
 const src = (file, kind = 'record') => ({ file, kind });
 
 /** Is a gate's own subject present? A gate that fails on an absent artifact has not been reached. */
@@ -60,7 +75,7 @@ function hypotheses(problemBody, reactionBody, outcomeFm) {
   for (const m of problemBody.matchAll(/^\s*-\s*\*\*(H\d+)\*\*\s*[—-]\s*(.+)$/gm)) {
     out.push({ id: m[1], text: m[2].replace(/\s*\((?:S-\d+(?:,\s*)?)+\)\s*/g, ' ').replace(/\*[^*]+\*\s*$/, '').trim(), reactions: [] });
   }
-  for (const cells of filledRows(section(reactionBody, 'Reactions'), ['hypothesis', 'verdict'])) {
+  for (const cells of L.filledRows(L.section(reactionBody, 'Reactions'), ['hypothesis', 'verdict'])) {
     const h = out.find((x) => x.id === (cells[0] || '').trim());
     if (h) h.reactions.push({ stakeholder: (cells[1] || '').replace(/`\[synthetic\]`/g, '').trim(), verdict: (cells[2] || '').trim().toLowerCase() });
   }
@@ -83,9 +98,9 @@ export function readRun(cwd, slug, ctx) {
   const dir = join(cwd, RUNS_DIR, slug);
   const file = (k) => join(dir, ART[k]);
   const has = Object.fromEntries(Object.keys(ART).map((k) => [k, existsSync(file(k))]));
-  const doc = (k) => { const raw = readText(file(k)); const { fm, body } = frontMatter(raw); fm.__raw = raw.match(/^---\n([\s\S]*?)\n---/)?.[1] || ''; return { fm, body }; };
+  const doc = (k) => { const raw = readText(file(k)); const { fm, body } = L.frontMatter(raw); fm.__raw = raw.match(/^---\n([\s\S]*?)\n---/)?.[1] || ''; return { fm, body }; };
   const intent = doc('intent'), problem = doc('problem'), reaction = doc('reaction'), outcome = doc('outcome'), handoff = doc('handoff'), research = doc('research');
-  const v = validateRun(dir, ctx.validateOpts);
+  const v = L.validateRun(dir, ctx.validateOpts);
   const reached = reachedMap(has);
   const gates = v.gates.map((g) => ({ id: g.id, name: g.name, status: g.status, reached: reached[g.id], issues: g.issues, ...(g.verdict !== undefined ? { verdict: g.verdict } : {}) }));
   const G = Object.fromEntries(gates.map((g) => [g.id, g]));
@@ -104,16 +119,16 @@ export function readRun(cwd, slug, ctx) {
 
   const sponsor = intent.fm.sponsor || outcome.fm.decided_by || null;
   const strategic = intent.fm.strategic_intent || null;
-  const signals = signalIds(section(research.body, 'Signals'));
+  const signals = L.signalIds(L.section(research.body, 'Signals'));
   const proto = has.prototype ? {
     brief: `${RUNS_DIR}/${slug}/${ART.prototype}`,
     wireframe: existsSync(join(dir, doc('prototype').fm.wireframe || 'wireframe.html')) ? `${RUNS_DIR}/${slug}/${doc('prototype').fm.wireframe || 'wireframe.html'}` : null,
-    digest: prototypeDigest(dir, doc('prototype').fm.wireframe || 'wireframe.html'),
+    digest: L.prototypeDigest(dir, doc('prototype').fm.wireframe || 'wireframe.html'),
     reaction_bound_to: reaction.fm.prototype_digest || null,
   } : null;
   if (proto) proto.reaction_binding = proto.reaction_bound_to ? (proto.reaction_bound_to === proto.digest ? 'bound' : 'stale') : 'none';
   const dg = has.dataGov ? readText(file('dataGov')) : '';
-  const uncovered = has.dataGov ? section(frontMatter(dg).body, 'Uncovered risks').split('\n').map((l) => l.replace(/^-\s*/, '').trim()).filter((l) => l && !/^none/i.test(l)) : [];
+  const uncovered = has.dataGov ? L.section(L.frontMatter(dg).body, 'Uncovered risks').split('\n').map((l) => l.replace(/^-\s*/, '').trim()).filter((l) => l && !/^none/i.test(l)) : [];
   const npa = has.npa ? readJson(file('npa')) : null;
   return {
     slug,
@@ -128,7 +143,7 @@ export function readRun(cwd, slug, ctx) {
     signals: { count: signals.size, source: src(`${RUNS_DIR}/${slug}/${ART.research}`) },
     hypotheses: hypotheses(problem.body, reaction.body, outcome.fm),
     prototype: proto,
-    data_governance: has.dataGov ? { verdict: G.D6?.verdict ?? null, risks: [...drIds(dg)], controls: [...ctrlIds(dg)], obligations: [...obIds(dg)], uncovered, source: src(`${RUNS_DIR}/${slug}/${ART.dataGov}`) } : null,
+    data_governance: has.dataGov ? { verdict: G.D6?.verdict ?? null, risks: [...L.drIds(dg)], controls: [...L.ctrlIds(dg)], obligations: [...L.obIds(dg)], uncovered, source: src(`${RUNS_DIR}/${slug}/${ART.dataGov}`) } : null,
     handoff: has.handoff ? {
       problem: bullet(handoff.body, 'Problem'), target_user: bullet(handoff.body, 'Target user'), success: bullet(handoff.body, 'Success measures'),
       out_of_scope: bullet(handoff.body, 'Explicitly out of scope'), verdict: bullet(handoff.body, 'Residual-risk verdict'),
@@ -146,11 +161,11 @@ function readBrainkit(cwd) {
   if (!m) return null;
   const strat = readText(join(cwd, 'institution/brainkit/strategy.md'));
   const intents = [];
-  for (const cells of filledRows(section(strat, 'Intents'), ['id', 'intent'])) {
+  for (const cells of L.filledRows(L.section(strat, 'Intents'), ['id', 'intent'])) {
     const id = (cells[0] || '').match(/SI-\d+/)?.[0];
     if (id) intents.push({ id, intent: cells[1], owner_role: cells[2], measure: cells[3], source_id: cells[4], pursued: true });
   }
-  for (const cells of filledRows(section(strat, 'Explicitly not pursued'), ['id', 'intent'])) {
+  for (const cells of L.filledRows(L.section(strat, 'Explicitly not pursued'), ['id', 'intent'])) {
     const id = (cells[0] || '').match(/SI-P\d+/)?.[0];
     if (id) intents.push({ id, intent: cells[1], rationale: cells[2], source_id: cells[3], pursued: false });
   }
@@ -246,7 +261,9 @@ function trail(cwd, runs, bk, signals, changes) {
   return ev.sort((a, b) => String(a.at || '9').localeCompare(String(b.at || '9')));
 }
 
-export function consoleData(cwd = process.cwd(), { now = Date.now() } = {}) {
+export async function consoleData(repo, { now = Date.now() } = {}) {
+  const cwd = resolve(repo);
+  L = await loadInstallation(cwd);
   const ids = readJson(join(cwd, 'docs/governance/identities.json')) || { identities: [] };
   const humans = new Map((ids.identities || []).filter((i) => i.kind === 'human').map((i) => [i.id, i]));
   const bk = readBrainkit(cwd);
@@ -265,14 +282,15 @@ export function consoleData(cwd = process.cwd(), { now = Date.now() } = {}) {
   const sig = readJson(join(cwd, 'docs/governance/operations-signal.json'))?.signals || [];
   const chDir = join(cwd, 'docs/governance/changes');
   const changes = existsSync(chDir) ? readdirSync(chDir).map((d) => readJson(join(chDir, d, 'change-envelope.json'))).filter(Boolean) : [];
-  const queue = approvalQueue(cwd, now);
+  const queue = L.approvalQueue(cwd, now);
   const roleHolders = {};
   for (const h of humans.values()) for (const r of h.roles || []) (roleHolders[r] ||= []).push(h.id);
   const queueRows = queue.rows.map((r) => ({ ...r, holders: roleHolders[r.role] || [] }));
   return {
     schema: SCHEMA,
     generated_at: new Date(now).toISOString(),
-    generator: 'scripts/console-data.mjs',
+    generator: APP,
+    reader_modules: Object.values(REQUIRED),
     authority: 'none',
     repository: git(cwd),
     institution: { profile: readdirSync(join(cwd, 'profiles/institutions')).filter((f) => f.endsWith('.json') && !f.includes('template')).map((f) => f.replace(/\.json$/, ''))[0] || null },
@@ -294,15 +312,4 @@ export function consoleData(cwd = process.cwd(), { now = Date.now() } = {}) {
       stale_reactions: runs.filter((r) => r.prototype?.reaction_binding === 'stale').map((r) => r.slug),
     },
   };
-}
-
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args = process.argv.slice(2);
-  const opt = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : undefined; };
-  const nowArg = opt('--now');
-  const data = consoleData(process.cwd(), { now: nowArg ? Date.parse(nowArg) : Date.now() });
-  const text = JSON.stringify(data, null, args.includes('--pretty') ? 2 : 0) + '\n';
-  const out = opt('--out');
-  if (out) { mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, text); process.stderr.write(`console data → ${out} (${data.runs.length} runs, ${data.trail.length} trail events)\n`); }
-  else process.stdout.write(text);
 }

@@ -1,0 +1,11 @@
+{
+  "name": "@middleleap/loom-console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A read-only oversight console over any Loom installation. Zero dependencies.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "bin": { "loom-console": "bin/loom-console.mjs" },
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node --test test/*.test.mjs" }
+}

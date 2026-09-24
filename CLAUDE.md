@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**MiddleLeap AI DLC** — a Claude Code plugin marketplace: skills, agents, and workflows for AI-enabled development, published for public installation. This is a knowledge-base / artifact library, not an application: no build system, no package manager, no dependencies. The only executable is the manifest validator, which has a `node:test` suite of its own (`scripts/validate-marketplace.test.mjs`) — the Loom harness bundle carries its own separate suite.
+**MiddleLeap AI DLC** — a Claude Code plugin marketplace: skills, agents, and workflows for AI-enabled development, published for public installation. This is a knowledge-base / artifact library, not an application: no build system, no package manager, no dependencies. The only executable is the manifest validator, which has a `node:test` suite of its own (`scripts/validate-marketplace.test.mjs`) — the Loom harness bundle carries its own separate suite. The one application is `apps/loom-console` — zero-dependency Node with its own `node:test` suite, outside every plugin.
 
 ## Repository Structure
 
@@ -37,6 +37,9 @@ plugins/
     ├── skills/meridian-brand-guidelines/
     └── skills/meridian-business-case/   # ISB/CIC business case, NPV model, templates
 scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
+apps/loom-console/                  # the Loom console: a standalone, read-only app over ANY Loom
+                                    #   installation (reads it, runs its own gates, writes nothing).
+                                    #   Not a plugin, not installable, never copied into an adoption
 ```
 
 ## The rules that actually bite
@@ -53,6 +56,7 @@ scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 node scripts/validate-marketplace.mjs   # manifests, sources, versions, skill/agent layout
 node --test scripts/validate-marketplace.test.mjs   # the validator's own suite — run it if you change the validator
 node scripts/deidentify-check.mjs   # no client names under plugins/ — terms and allowlist in .deidentify.json
+node --test apps/loom-console/test/*.test.mjs   # the console, over the Meridian demo installation
 ```
 
 The validator reads the **git tree**, not the filesystem: only tracked files can reach a

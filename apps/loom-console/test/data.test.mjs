@@ -1,38 +1,31 @@
-// The console's data contract, held to the Meridian estate. scripts/console-data.mjs reads an
-// adopted tree into loom.console/v1; this test builds that tree (the scenario plus the estate:
-// the approved BrainKit and the change that shipped the view) and requires the generated data to
-// agree with portfolio.json — the same declared state scenario.test.mjs holds the runs to — so
-// the console cannot show a run anywhere other than where the gates put it.
+// The console's data contract, held to the Meridian Trust demo installation. src/data.mjs reads a
+// Loom installation into loom.console/v1; this test builds that installation (the scenario plus the
+// estate: the approved BrainKit and the change that shipped the view) and requires the data to agree
+// with portfolio.json — the same declared state the harness's scenario.test.mjs holds the runs to —
+// so the console cannot show a run anywhere other than where the gates put it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { mountMeridian, mountEstate, PORTFOLIO } from './mount.mjs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { consoleData, loadInstallation } from '../src/data.mjs';
+import { meridianInstallation, HARNESS } from '../src/demo.mjs';
 
-const H = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const bundleOnly = !existsSync(join(H, 'brainkit-example'));
-const A = mkdtempSync(join(tmpdir(), 'meridian-console-'));
-process.on('exit', () => rmSync(A, { recursive: true, force: true }));
-let data = null, consoleData = null;
+const bundleOnly = !existsSync(join(HARNESS, 'brainkit-example'));
 const NOW = Date.parse('2026-09-24T09:00:00Z');
+let A = null, data = null, PORTFOLIO = { runs: [] };
 if (!bundleOnly) {
-  execFileSync(process.execPath, [join(H, 'adopt.mjs'), '--dest', A, '--tier', 'full'], { stdio: 'ignore' });
-  cpSync(join(H, 'register-example'), join(A, 'docs/governance/data-risk-register'), { recursive: true });
-  const p = join(A, 'docs/governance/obligations.json'); const ob = JSON.parse(readFileSync(p, 'utf8'));
-  for (const x of ob.obligations) { x.illustrative = false; x.article = 'demo fixture'; }
-  writeFileSync(p, JSON.stringify(ob, null, 2));
-  mountMeridian(A); mountEstate(A);
-  ({ consoleData } = await import(join(A, 'scripts/console-data.mjs')));
-  data = consoleData(A, { now: NOW });
+  A = await meridianInstallation();
+  ({ PORTFOLIO } = await import(pathToFileURL(join(HARNESS, 'demo/meridian/mount.mjs')).href));
+  data = await consoleData(A, { now: NOW });
 }
+process.on('exit', () => { if (A) rmSync(A, { recursive: true, force: true }); });
 const skip = bundleOnly && 'brainkit-example is bundle-only';
 
-test('the adopted tree carries the generator, and it emits loom.console/v1 with no authority', { skip }, () => {
-  assert.ok(existsSync(join(A, 'scripts/console-data.mjs')), 'console-data.mjs must ship to adopters');
+test('it emits loom.console/v1 with no authority, from the installation\'s own gate modules', { skip }, () => {
   assert.equal(data.schema, 'loom.console/v1');
+  assert.deepEqual(data.reader_modules, ['discovery/gates/validate.mjs', 'discovery/gates/lib.mjs', 'scripts/approval-status.mjs']);
   assert.equal(data.authority, 'none');
   assert.equal(data.generated_at, '2026-09-24T09:00:00.000Z');
 });
@@ -74,7 +67,7 @@ test('the estate reads: BrainKit sealed and checked, approvals aged by telemetry
   assert.deepEqual(data.integrity, { unresolved_sponsors: [], unresolved_intents: [], unresolved_profiles: [], stale_reactions: [] });
 });
 
-test('integrity: an unregistered sponsor and a prototype edited after its reaction are both reported', { skip }, () => {
+test('integrity: an unregistered sponsor and a prototype edited after its reaction are both reported', { skip }, async () => {
   const B = mkdtempSync(join(tmpdir(), 'meridian-console-neg-'));
   try {
     cpSync(A, B, { recursive: true });
@@ -82,8 +75,14 @@ test('integrity: an unregistered sponsor and a prototype edited after its reacti
     writeFileSync(intent, readFileSync(intent, 'utf8').replace('sponsor: po-fatima', 'sponsor: po-nobody'));
     const brief = join(B, 'discovery/runs/cross-bank-money/prototype.md');
     writeFileSync(brief, readFileSync(brief, 'utf8') + '\nEdited after the reaction.\n');
-    const d = consoleData(B, { now: NOW });
+    const d = await consoleData(B, { now: NOW });
     assert.deepEqual(d.integrity.unresolved_sponsors, ['salary-advance: po-nobody']);
     assert.deepEqual(d.integrity.stale_reactions, ['cross-bank-money']);
   } finally { rmSync(B, { recursive: true, force: true }); }
+});
+
+test('a tree that is not a Loom installation is refused, by name', async () => {
+  const E = mkdtempSync(join(tmpdir(), 'not-loom-'));
+  try { await assert.rejects(loadInstallation(E), /is not a Loom installation: missing discovery\/gates\/validate\.mjs/); }
+  finally { rmSync(E, { recursive: true, force: true }); }
 });

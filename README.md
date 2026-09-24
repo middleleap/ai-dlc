@@ -30,6 +30,10 @@ covers prerequisites, checks and activation evidence. Claude Code is the referen
 a specific model is not required by the method. Other runtimes need verified adapters for
 runtime controls before equivalent enforcement can be claimed.
 
+## The Loom console
+
+[`apps/loom-console`](apps/loom-console/) is a standalone, read-only console over any Loom installation. It shows the brain, every discovery run with its stage, prototype and PRD, and what is waiting on whom, for people who oversee the Loom without running it. Try it on the Meridian Trust worked example with `node apps/loom-console/bin/loom-console.mjs demo`.
+
 ## Plugins
 
 | Plugin | For |

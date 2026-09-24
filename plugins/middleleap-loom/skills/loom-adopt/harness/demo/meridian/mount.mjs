@@ -94,8 +94,9 @@ export function mountMeridian(A) {
 // The rest of the estate an oversight surface reads, beyond what the walk needs: Meridian's
 // approved BrainKit (the worked example, 1.0.1) and its institution profile, and the change that
 // shipped the consolidated view (CHG-2026-0042, the bundled change example the walk also uses),
-// so the approval queue has a real change to age. Used by the console build and its test; the
-// walk and the scenario test do not call it, so their trees are unchanged.
+// so the approval queue has a real change to age. Used by the Loom console's demo
+// (apps/loom-console, `loom-console demo`); the walk and the scenario test do not call it, so their
+// trees are unchanged.
 export function mountEstate(A) {
   const H = join(HERE, '../..');
   const BK = join(H, 'brainkit-example');

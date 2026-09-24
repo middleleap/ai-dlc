@@ -2,12 +2,13 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.1 for implementation · 24 Sep 2026 |
+| **Status** | Draft v0.2 for implementation · 24 Sep 2026 |
 | **Owner** | Michael Hartmann (MiddleLeap) |
-| **Plugin** | `middleleap-loom` 2.4.10 (branch `claude/meridian-dense-demo`) |
-| **Prototype** | `docs/plans/loom-console/prototype.html`, generated from the Meridian demo tree |
-| **Data contract (P0, built)** | `plugins/middleleap-loom/skills/loom-adopt/harness/scripts/console-data.mjs` → `loom.console/v1` |
-| **Tests (P0, built)** | `demo/meridian/console.test.mjs`, `demo/meridian/scenario.test.mjs` |
+| **Where it lives** | `apps/loom-console/` in the ai-dlc repository. It is a standalone app, not part of any plugin and not installed into a bank's repository |
+| **Reads** | any Loom installation (a repository adopted with `middleleap-loom`), using that installation's own gate code |
+| **Built so far (P0)** | the reader (`src/data.mjs` → `loom.console/v1`), a static build, a local read-only server, the Meridian demo, the web UI and 15 tests |
+| **Worked example** | the Meridian Trust portfolio in `plugins/middleleap-loom/skills/loom-adopt/harness/demo/meridian/`, run with `loom-console demo` |
+| **Prototype snapshot** | `apps/loom-console/docs/prototype.html` |
 
 ---
 
@@ -57,7 +58,7 @@ The console serves the roles in the institution's identity registry (`docs/gover
 
 ## 4. Principles (each one is testable)
 
-- **P1. Generated, never written.** Every value on screen comes from `console-data.mjs` reading the tree. Nothing is typed into the page. *Test:* the page renders only from `console.json`, and a fixture run's state in the console equals its declared state (`console.test.mjs`).
+- **P1. Generated, never written.** Every value on screen comes from the reader (`src/data.mjs`) reading the installation. Nothing is typed into the page. *Test:* the page renders only from `console.json`, and a fixture run's state in the console equals its declared state (`test/data.test.mjs`).
 - **P2. Every fact carries its source.** Each fact has one of four provenance kinds and a file:
 
   | Kind | Meaning |
@@ -71,7 +72,7 @@ The console serves the roles in the institution's identity registry (`docs/gover
 - **P3. Validator truth, unsoftened.** Gate states are exactly what `discovery/gates/validate.mjs` returned. A gate failing because its stage isn't reached is shown as *fail · not reached*, never as pass or as grey. *Test:* `sme-overdraft-decision` D6 is `fail` with `reached: false`.
 - **P4. Honest state before good news.** The control-maturity ladder (absent → defined → mechanically validated → platform enforced → organisationally enforced, from `control-catalog.json`) is on the overview. So is the statement that the Loom is proven on a demo, not in production.
 - **P5. No authority.** The console has no write path, holds no token, and makes no call out. Its only actions are navigation and copying a path.
-- **P6. The adopter's brand.** The console renders from the adopter's `discovery/brand/design.md` tokens and carries the D7 marker, so Meridian sees Meridian. The MiddleLeap brand appears only on MiddleLeap's own material.
+- **P6. Two brands, kept apart.** The console's own chrome is a MiddleLeap product and uses the MiddleLeap design system. Everything it embeds from the installation (wireframes, and later documents and decks) is shown exactly as committed, in the adopter's brand from `discovery/brand/design.md`. Theming the chrome in the adopter's tokens is a P2 option, not a v1 requirement.
 - **P7. Zero real PII.** Same hard stop as the harness. The console never renders floor catalog C (lives-on-the-floor) content, because that content never enters the tree.
 
 ## 5. Scope
@@ -89,7 +90,7 @@ The console serves the roles in the institution's identity registry (`docs/gover
 | CON-07 | **Role lens**: a "viewing as" switch for the §3 roles. For each role: a banner with the registry holders, three questions each linked to where the console answers them, where the role decides (HG citation with catalog state), and a "not here yet" gap. Relevant sections are highlighted, others dimmed, and the role's attention items come first. Deep link `#as-<role>` | Switching roles never changes the data, only emphasis and ordering; every role can see everything |
 | CON-08 | **Integrity checks** the gates don't make: sponsors not in the registry, intents not in the BrainKit, unknown product profiles, stale reactions | Each has a negative test (`console.test.mjs`) |
 | CON-09 | **Provenance UI**: every fact has a tag showing kind and file; clicking copies the path; a legend at the top | P2 test |
-| CON-10 | **Build and publish**: CI builds `console.json` and the static site on every merge to the default branch, and publishes to an adopter-hosted, access-controlled location | Site footer shows the generator, schema version, commit and time; a failed build keeps the last good site and flags it |
+| CON-10 | **Build and publish**: `loom-console build --repo <installation> --out <dir>` produces a static site; a job in the adopter's CI (or a MiddleLeap-provided workflow) runs it on every merge to the default branch and publishes to an adopter-hosted, access-controlled location. `loom-console serve` runs it locally, read-only, on 127.0.0.1 | Site footer shows the reader, schema version, commit and time; a failed build keeps the last good site and flags it |
 
 ### Not in v1
 
@@ -102,26 +103,30 @@ The console serves the roles in the institution's identity registry (`docs/gover
 ## 6. Architecture
 
 ```
-  repository (system of record)
+  any Loom installation (a bank's repository, the system of record)
      │  discovery/runs/*, institution/brainkit/*, docs/governance/*, profiles/*, .loom/*, .claude/*, .github/*
+     │  + the installation's OWN gate code: discovery/gates/validate.mjs, lib.mjs, scripts/approval-status.mjs
      ▼
-  scripts/console-data.mjs            ← P0, built. Pure Node, zero dependencies, read-only.
-     │  runs validate.mjs and brainkit-check, reads approval-status, tags every fact
+  apps/loom-console/src/data.mjs     reads the tree; imports and runs the installation's gates;
+     │                               tags every fact; writes nothing into the installation
      ▼
-  console.json  (loom.console/v1)     ← the contract; JSON Schema in P1
+  console.json  (loom.console/v1)    the contract between the reader and any UI
      │
-     ▼
-  discovery/render/render.mjs console ← P1. A fourth renderer surface beside document, deck, prototype.
-     │  static HTML from design.md tokens + D7 marker; embeds committed wireframes; no network
-     ▼
-  static site, adopter-hosted         ← P1. CI publishes on merge; access via the bank's SSO at the host
+     ├── src/build.mjs   → static site: index.html, app.js, app.css, console.json, artifacts/<run>/wireframe.html
+     └── src/serve.mjs   → local server on 127.0.0.1: GET/HEAD only, re-reads on refresh, serves only the
+                           UI, the data and the wireframes the data names
 ```
 
-**Decision A (recommended): static-first, zero dependencies.** The console is the fourth surface of the existing discovery renderer. This keeps the harness's no-dependency constraint and its D7 brand gate, and it can be hosted anywhere a bank already hosts internal static content. The option of an interactive app (React or similar) reading the same `console.json` stays open, because the contract is the boundary.
+**Standalone, not in the plugin.** The console sits on top of any installation and ships separately from `middleleap-loom`. That has four consequences:
 
-**Why not a live server first:** a server that reads the repository becomes a system with credentials, uptime and its own threat model. A static build from CI is exactly as current as the last merge. That is the only currency the record has anyway.
+- **The plugin stays a method.** It has no UI dependencies and no hosting concerns.
+- **The console runs the installation's own gates.** It never uses a second copy bundled with the app, so it shows exactly what that installation's gates say, at that installation's Loom version.
+- **One console build serves many installations,** including different Loom versions. The reader refuses a tree that isn't an installation, and names the missing modules.
+- **Release cadences are separate.** A console release never forces a plugin bump, and the reverse.
 
-**Local mode (P1, small):** `node scripts/console-data.mjs --out .loom/console.json && node discovery/render/render.mjs console .loom/console.json .loom/console.html` lets a facilitator open the console on a laptop during a session. No server needed.
+**Zero dependencies.** Pure Node (≥ 20) and a vanilla ES-module UI, following the harness constraint. The UI has a strict CSP (`default-src 'self'`, no external host, no forms). It loads no web fonts, so the MiddleLeap faces fall back to the system stack unless they are installed.
+
+**Static-first.** The build is plain files, hostable wherever a bank serves internal static content. A static build from CI is exactly as current as the last merge, which is the only currency the record has anyway. The local server exists for a facilitator's laptop during a session; it is not a hosted service. If a hosted, multi-user service is ever wanted (identity-aware lens, subscriptions), it is a new component over the same `console.json` contract: P2.
 
 ## 7. Data contract (`loom.console/v1`)
 
@@ -158,21 +163,28 @@ The schema is versioned. Additive fields are allowed within `v1`; anything remov
 - **PII**: runs are synthetic in the demo, and the `pii-guard` hook protects the tree. The console adds no data the tree doesn't hold, and catalog-C floor notes never reach it.
 - **Brand gate**: console output must pass D7 (tokens only, marker present), the same as any wireframe.
 
-## 9. Gates the console adds (P1)
+## 9. The console's own tests (in the app, not in the plugin's gates)
 
-| Gate | Fails when |
+The console adds no gate to an installation. Its guarantees are tested in `apps/loom-console/test/` and run in the ai-dlc CI:
+
+| Test | Fails when |
 |---|---|
-| `console-schema-check` | `console.json` doesn't validate against `schemas/console.v1.json` |
-| `console-provenance` | any fact lacks a provenance kind, or a `record` source doesn't exist |
-| `console-agrees-with-gates` | a run's gate states in `console.json` differ from a fresh validator run |
-| D7 on the console output | a raw colour or font, or no marker |
+| Portfolio agreement (`data.test.mjs`, built) | a Meridian run's status, stage or gate states differ from `portfolio.json` and the validator |
+| Provenance (`data.test.mjs`, built) | any fact lacks one of the four kinds, or a `record` source doesn't exist |
+| Integrity negatives (`data.test.mjs`, built) | an unregistered sponsor or a stale reaction goes unreported |
+| Not-an-installation (`data.test.mjs`, built) | a non-Loom tree is read instead of refused by name |
+| Build fidelity (`app.test.mjs`, built) | an embedded wireframe differs from the committed asset |
+| No network (`app.test.mjs`, built) | the page references an external host, has a form, or fetches anything but `console.json` |
+| Read-only server (`app.test.mjs`, built) | any method other than GET/HEAD succeeds, or a path outside the UI, data and named wireframes is served |
+| Schema (P1) | `console.json` doesn't validate against `schemas/console.v1.json` |
+| Version matrix (P1) | the reader fails on an installation adopted at the previous supported Loom version |
 
 ## 10. Phasing
 
 | Phase | Content | Exit criterion |
 |---|---|---|
-| **P0: done** | `console-data.mjs`, the four provenance kinds, integrity checks, `console.test.mjs`, the Meridian portfolio fixtures, the hand-built prototype rendering the generated data | 11 console tests and 14 scenario tests green; prototype published |
-| **P1: MVP** | JSON Schema; `render.mjs console` surface (port the prototype's views to token-only output); local mode; CI job to build and publish; the §9 gates; `--role` deep links | A second line user answers "what is waiting on me and for how long" without a facilitator, on the Meridian tree and on one real adopter tree |
+| **P0: done** | `apps/loom-console`: reader, static build, local server, demo, web UI, 15 tests; the Meridian portfolio fixtures in the plugin's demo | `loom-console demo` serves the Meridian console; tests green in the ai-dlc CI |
+| **P1: MVP** | JSON Schema for `loom.console/v1`; a reusable CI workflow an adopter drops in to build and publish; the version matrix test; the needs-attention rules as a documented, tested module; deep links per role and per run; accessibility pass | A second line user answers "what is waiting on me and for how long" without a facilitator, on the Meridian tree and on one real adopter tree |
 | **P2: role lens from identity** | Default the lens from the viewer's identity via `docs/governance/identity-map.json` at the host (SSO subject → registry id → roles); per-role subscription digests (email or chat) generated from the same data, still read-only | A viewer lands on their own role without choosing it |
 | **P3: delivery half** | Changes and PA1/PA2 queues per change; Q1–Q5; the evidence bundle; the `record-join.mjs` join to the external record (Kosli) | Audit re-performs one change end to end from the console's links |
 | **P4: portfolio metrics** | Cycle time per stage (`flow-report`), cost per run (`token-report`), the business-case value line | ExCo's "not here yet" gap is closed |
@@ -190,11 +202,11 @@ The schema is versioned. Additive fields are allowed within `v1`; anything remov
 
 ## 12. Decisions for Michael
 
-- **D1: where it ships.** Inside `middleleap-loom` for every adopter (the generator already does), or the renderer surface and hosting pattern as a MiddleLeap offering on top. *Recommendation:* the generator and renderer ship in the plugin; hosting, SSO wiring and the estate view are MiddleLeap engagement work.
+- **D1: where it ships. Decided (24 Sep).** A standalone app in the ai-dlc repository (`apps/loom-console`), on top of any Loom installation, separate from the plugin. Still open: whether it's distributed to adopters as source, as a published package, or only through MiddleLeap engagements.
 - **D2: hosting pattern to document first.** GitHub Pages (enterprise, private), an S3/CloudFront bucket behind the bank's IdP, or the bank's internal portal. *Recommendation:* document one pattern generically (static site behind the IdP) and one worked example.
 - **D3: the programme-owner role.** It isn't in the registry template. Add it (read-only, no approval rights), or leave the persona outside the registry. *Recommendation:* add it, so the console never shows a persona the institution can't hold anyone to.
 - **D4: ages without git history.** Ages come from records (`state_history`, `decided_at`). Using git commit dates would give every artifact an age but ties ages to rebases. *Recommendation:* records first, and git dates as `derived` only when the record has none.
-- **D5: static renderer vs app for P1.** *Recommendation:* static renderer, per §6.
+- **D5: form. Decided (24 Sep).** A standalone app: zero-dependency Node reader, static build, local read-only server, vanilla UI (§6). A hosted multi-user service is deferred to P2.
 
 ## 13. What building P0 surfaced (tracked, each with an owner)
 
@@ -211,8 +223,20 @@ The schema is versioned. Additive fields are allowed within `v1`; anything remov
 
 ## 14. Implementation notes
 
-- Generator: `scripts/console-data.mjs [--out <file>] [--now <ISO>] [--pretty]`. Run from the repo root. `--now` pins the clock for tests and demos.
-- Demo tree: `adopt.mjs --tier full`, then `mountMeridian(A)` and `mountEstate(A)` from `demo/meridian/mount.mjs`. The estate adds the approved BrainKit 1.0.1 and CHG-2026-0042.
-- Prototype build: generate `console.json` from the demo tree, embed it and the committed wireframes into `prototype.html`. For P1 this becomes the renderer surface.
-- Tests: `node --test demo/meridian/console.test.mjs demo/meridian/scenario.test.mjs`.
-- Constraints carried from the harness: pure Node, zero dependencies, deterministic, no network; the discovery-sync ledger for anything under `harness/discovery/`; version bump in both `plugin.json` and `marketplace.json`.
+```
+apps/loom-console/
+├── bin/loom-console.mjs   CLI: data | build | serve | demo
+├── src/data.mjs           the reader → loom.console/v1 (loads the installation's own gate modules)
+├── src/build.mjs          static site
+├── src/serve.mjs          local read-only server (127.0.0.1, GET/HEAD)
+├── src/demo.mjs           the Meridian Trust demo installation (adopt + mountMeridian + mountEstate)
+├── web/                   index.html, app.js, app.css; renders only from console.json
+├── test/                  data.test.mjs, app.test.mjs
+└── docs/                  PRD.md (this file), prototype.html (a published snapshot)
+```
+
+- Run: `node apps/loom-console/bin/loom-console.mjs demo` (serve) or `… demo --out <dir>` (build). Over a real installation: `… serve --repo <path>` or `… build --repo <path> --out <dir>`.
+- `--now <ISO>` pins the clock for reproducible ages in tests and demos.
+- Tests: `node --test apps/loom-console/test/*.test.mjs` (run in the ai-dlc CI).
+- The Meridian fixtures stay in the plugin's demo (they're the worked example of the method). The console only reads them through `src/demo.mjs`.
+- Constraints: pure Node, zero dependencies, deterministic, no network. The console never writes into an installation.
