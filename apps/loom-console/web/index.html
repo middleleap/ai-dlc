@@ -8,32 +8,37 @@
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
+<div class="envbar" id="envbar" hidden></div>
 <div class="app">
   <aside class="side">
     <div class="brand">
-      <svg width="30" height="18" viewBox="0 0 34 20" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0722E"/><stop offset="1" stop-color="#CE451B"/></linearGradient></defs><rect x="1" y="3" width="14" height="14" rx="2.2" fill="#DEDBD4"/><rect x="18" y="3" width="14" height="14" rx="2.2" fill="url(#mg)" transform="rotate(45 25 10)"/></svg>
-      <span>Middle<b>Leap</b></span>
+      <svg width="26" height="16" viewBox="0 0 34 20" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0722E"/><stop offset="1" stop-color="#CE451B"/></linearGradient></defs><rect x="1" y="3" width="14" height="14" rx="2.2" fill="currentColor"/><rect x="18" y="3" width="14" height="14" rx="2.2" fill="url(#mg)" transform="rotate(45 25 10)"/></svg>
+      <span>Loom Console</span>
     </div>
-    <div class="product">The Loom <em>console</em></div>
-    <div class="inst" id="inst"></div>
+    <div class="ws" id="ws"></div>
     <nav class="nav" aria-label="Sections" id="nav">
       <button data-v="overview">Overview</button>
-      <button data-v="brain">The brain <span class="ct">3 dims</span></button>
-      <button data-v="runs">Discovery runs <span class="ct" id="runCount"></span></button>
-      <button data-v="run">Run detail</button>
+      <button data-v="inbox">Inbox <span class="ct" id="inboxCount"></span></button>
+      <button data-v="runs">Runs <span class="ct" id="runCount"></span></button>
+      <button data-v="context">Context</button>
       <button data-v="install">Installation</button>
     </nav>
-    <div class="stack" style="gap:6px"><span class="label roles-h">Viewing as</span><div class="roles" id="roles" role="group" aria-label="Viewing as"></div></div>
+    <div class="viewas">
+      <label class="label" for="roleSel">View as</label>
+      <select id="roleSel" class="sel"></select>
+      <div id="poWrap"></div>
+    </div>
     <div class="side-foot" id="sideFoot"></div>
   </aside>
   <main class="main">
     <div class="topbar">
       <span class="crumbs" id="crumbs"></span>
-      <span class="legend-k" id="legend"></span>
+      <div class="tb-r"><span id="snap" class="snap"></span><button class="icon-btn" id="themeBtn" title="Switch light / dark" aria-label="Switch light / dark"></button><button class="icon-btn" id="helpBtn" aria-expanded="false" aria-controls="help" title="Help and data sources">?</button></div>
     </div>
     <div class="view" id="view"></div>
   </main>
 </div>
+<aside class="drawer" id="help" hidden aria-label="Help"></aside>
 <div class="toast" id="toast" hidden></div>
 <script src="app.js" type="module"></script>
 </body>
