@@ -1,0 +1,54 @@
+/* Meridian Trust — brand CSS variables. Source of truth: SKILL.md (colour roles).
+   The Loom's Meridian brand profile projects the same values as design tokens. */
+:root {
+  /* Structure — blues (primary) */
+  --mt-blue: #0B4F80;            /* PRIMARY — buttons, links, logo globe, chart series 1 */
+  --mt-navy: #083A5E;            /* Hover / pressed, H2 */
+  --mt-midnight: #052540;        /* Depth — display headings and dark surfaces */
+  --mt-azure: #2F80B8;           /* Chart series 2 (large text / non-text only) */
+  --mt-mist: #E9F0F6;            /* Tinted sections, label cells */
+
+  /* Signature and highlight */
+  --mt-cyan: #00A3C4;            /* The Meridian line, active, focus — non-text on light */
+  --mt-cyan-deep: #007C96;       /* Cyan as text on white */
+  --mt-cyan-ice: #EAF8FB;        /* Info callout background */
+  --mt-amber: #E08A2E;           /* One warm note per view — non-text on light */
+  --mt-amber-deep: #9A5B00;      /* Amber as text on white; warning */
+
+  /* Status */
+  --mt-success: #157A55;         /* Harbour Green */
+  --mt-warning: #9A5B00;         /* Amber Deep */
+  --mt-danger: #B3261E;          /* Signal Red */
+
+  /* Neutrals */
+  --mt-graphite: #3A3F44;        /* Body text */
+  --mt-slate: #6B7278;           /* Secondary text */
+  --mt-ash: #9AA1A7;             /* Subtle text on dark, disabled */
+  --mt-silver: #BEC4C9;          /* Dividers, inactive */
+  --mt-silver-light: #D9DDE0;    /* Borders, table rules */
+  --mt-gray-alt: #E9ECEE;        /* Alternate table rows */
+  --mt-gray-bg: #F4F6F7;         /* Page background */
+  --mt-white: #FFFFFF;
+
+  /* Legacy */
+  --mt-icon-blue: #0B5A93;
+  --mt-link-visited: #7C9BB8;
+  --mt-cyan-light: #5FC9DE;
+
+  /* Typography */
+  --mt-font: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mt-font-mono: 'Roboto Mono', Menlo, monospace;
+  --mt-font-office: Arial, sans-serif;   /* PPTX/DOCX-safe fallback */
+  --mt-weight-light: 300;
+  --mt-weight-regular: 400;
+  --mt-weight-medium: 500;
+  --mt-weight-semibold: 600;
+
+  /* Motif and shape */
+  --mt-line: 4px;                /* The Meridian line thickness */
+  --mt-line-length: 40px;
+  --mt-radius: 4px;
+  --mt-radius-sm: 2px;
+  --mt-shadow: 0 2px 8px rgba(5, 37, 64, 0.12);
+  --mt-focus: 0 0 0 2px #FFFFFF, 0 0 0 4px #00A3C4;
+}

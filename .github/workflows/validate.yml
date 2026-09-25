@@ -55,9 +55,6 @@ jobs:
           fi
           grep -q 'job "gates"' "$RUNNER_TEMP/workflow-negative.log"
 
-      - name: Brand contrast gate (WCAG AA)
-        run: node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs
-
       - name: Loom doc-integrity — generated docs match their source of truth (rc.7 W4/W6)
         working-directory: plugins/middleleap-loom/skills/loom-adopt/harness
         run: |

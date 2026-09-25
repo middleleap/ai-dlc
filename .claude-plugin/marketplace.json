@@ -28,8 +28,8 @@
     {
       "name": "middleleap-open-finance",
       "source": "./plugins/middleleap-open-finance",
-      "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, Islamic banking (Shariah-compliant finance), a virtual Head-of-Risk reviewer, New Product Approval (CBUAE-required Business Proposition Form, regulatory anchors, PA1/PA2 mapping), and value-proposition prototyping.",
-      "version": "2.4.2",
+      "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, Islamic banking (Shariah-compliant finance), a virtual Head-of-Risk reviewer, and value-proposition prototyping.",
+      "version": "2.5.0",
       "author": {
         "name": "MiddleLeap"
       },
@@ -47,29 +47,31 @@
       ]
     },
     {
-      "name": "middleleap-brand",
-      "source": "./plugins/middleleap-brand",
-      "description": "MiddleLeap brand and design system — tokens, the Pivot logo rules, component recipes, voice and copy rules, and a WCAG AA gate. Use when building or reviewing any MiddleLeap interface, document, or marketing asset.",
-      "version": "2.0.0",
+      "name": "middleleap-npa-uae",
+      "source": "./plugins/middleleap-npa-uae",
+      "description": "New Product Approval for a CBUAE-regulated bank — the Business Proposition Form with every field, the CBUAE anchor behind each, sign-off routing and BAU assessments, and how the Loom assembles the pack in discovery and turns it into the PA1/PA2 receipts. Applies to any customer-facing product change (Open Finance, lending, cards, pricing, channels, withdrawals); worked examples use the fictional Meridian Trust.",
+      "version": "1.0.0",
       "author": {
         "name": "MiddleLeap"
       },
-      "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-brand",
+      "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/middleleap-npa-uae",
       "repository": "https://github.com/middleleap/ai-dlc",
       "license": "Apache-2.0",
       "keywords": [
-        "brand",
-        "design-system",
-        "design-tokens",
-        "middleleap",
-        "accessibility"
+        "uae",
+        "cbuae",
+        "banking",
+        "new-product-approval",
+        "npa",
+        "product-governance",
+        "consumer-protection"
       ]
     },
     {
       "name": "middleleap-loom",
       "source": "./plugins/middleleap-loom",
       "description": "The Loom — MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.",
-      "version": "2.4.8",
+      "version": "2.4.11",
       "author": {
         "name": "MiddleLeap"
       },
@@ -84,6 +86,27 @@
         "delivery",
         "regulated",
         "autonomous-agents"
+      ]
+    },
+    {
+      "name": "meridian-trust",
+      "source": "./plugins/meridian-trust",
+      "description": "Meridian Trust — the fictional CBUAE-regulated bank that runs through the Loom demo, packaged as an institution pack: its brand guidelines (palette, type, slide layout, logos) and its capital-approval business case (ISB pre-screening, CIC detailed case, NPV model, sign-offs). Shows how an institution's own context plugs into the Loom's discovery → delivery gate; retarget it to a real bank by swapping the values.",
+      "version": "1.0.0",
+      "author": {
+        "name": "MiddleLeap"
+      },
+      "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/meridian-trust",
+      "repository": "https://github.com/middleleap/ai-dlc",
+      "license": "Apache-2.0",
+      "keywords": [
+        "demo",
+        "meridian-trust",
+        "institution-pack",
+        "business-case",
+        "brand",
+        "loom",
+        "banking"
       ]
     }
   ]
