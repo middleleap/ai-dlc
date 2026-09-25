@@ -49,7 +49,7 @@ export function mountMeridian(A) {
   // The NPA pack the run assembles at 'Investment case assembled': the npa-uae skill's worked example
   // for this very run (middleleap-open-finance is a sibling plugin in this repository), plus the
   // committee's PA1 decision. An adopter's tree carries its own form; the demo borrows the skill's.
-  const form = join(HERE, '../../../../../../middleleap-open-finance/skills/npa-uae/references/example-cross-bank-money.md');
+  const form = join(HERE, '../../../../../../middleleap-npa-uae/skills/npa-uae/references/example-cross-bank-money.md');
   const npaDir = join(A, 'discovery/runs/cross-bank-money/npa');
   mkdirSync(npaDir, { recursive: true });
   if (existsSync(form)) cpSync(form, join(npaDir, 'business-proposition-form.md'));

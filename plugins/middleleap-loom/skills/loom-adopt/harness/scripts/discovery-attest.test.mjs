@@ -14,7 +14,7 @@ import { evaluateProvenance, signEnvelope } from '../core/provenance.mjs';
 const H = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RUN = join(H, 'demo/meridian/discovery-run');
 const STOPPED = join(H, 'demo/meridian/discovery-run-stopped');
-const FORM = join(H, '../../../../middleleap-open-finance/skills/npa-uae/references/example-cross-bank-money.md');
+const FORM = join(H, '../../../../middleleap-npa-uae/skills/npa-uae/references/example-cross-bank-money.md');
 const DECISION = join(H, 'demo/meridian/npa/decision.json');
 const SIGNALS = join(H, 'demo/meridian/operations-signal.json');
 // The Meridian fixtures are the bundle's own demonstration data; adopt.mjs does not ship them, so in
