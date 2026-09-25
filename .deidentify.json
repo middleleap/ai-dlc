@@ -3,19 +3,22 @@
   "scope": "plugins",
   "terms": [
     "ADCB",
-    "Abu Dhabi Commercial"
+    "Abu Dhabi Commercial",
+    "WovenPipe",
+    "woven-pipeline",
+    "KevlarPipe"
   ],
   "allow": [
     {
-      "path": "plugins/middleleap-open-finance/skills/open-finance-uiux/references/INDEX.md",
+      "path": "plugins/middleleap-open-finance-uae/skills/open-finance-uiux/references/INDEX.md",
       "reason": "prototyping kit: documents that the sample scenarios use real UAE brand names on purpose and tells the reader to replace them"
     },
     {
-      "path": "plugins/middleleap-open-finance/skills/open-finance-uiux/references/html-blueprint.md",
+      "path": "plugins/middleleap-open-finance-uae/skills/open-finance-uiux/references/html-blueprint.md",
       "reason": "prototyping kit: placeholder account labels in sample UI"
     },
     {
-      "path": "plugins/middleleap-open-finance/skills/open-finance-uiux/references/value-propositions.md",
+      "path": "plugins/middleleap-open-finance-uae/skills/open-finance-uiux/references/value-propositions.md",
       "reason": "prototyping kit: illustrative multi-bank scenarios with named market participants, meant to be replaced"
     }
   ]

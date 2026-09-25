@@ -47,7 +47,7 @@ plugin is installed; copy templates into the working directory before editing th
 In a Loom discovery run, the business case is the investment case assembled at *Define — business
 case (5c)*, and the discovery → delivery gate is its approval: ISB pre-screening, then the CIC
 decision with the capex breakdown and the full sign-off roster. For a customer-facing product
-change the `npa-uae` skill (plugin `middleleap-npa-uae`) assembles the New Product Approval pack
+change the `npa-uae` skill (plugin `middleleap-banking-uae`) assembles the New Product Approval pack
 beside it, citing the same financial model in its section 1.2. The Meridian portfolio in the Loom
 demo (`middleleap-loom` → `loom-adopt/harness/demo/meridian/`) is the worked scenario.
 

@@ -87,7 +87,7 @@ test('isLoomOwned scopes the gate to the trees the harness installs', () => {
   // Loom's vocabulary and must not fail their build for using "D1" as a diagram label.
   assert.equal(isLoomOwned('README.md'), false);
   assert.equal(isLoomOwned('docs/architecture/overview.md'), false);
-  assert.equal(isLoomOwned('plugins/middleleap-open-finance/README.md'), false);
+  assert.equal(isLoomOwned('plugins/middleleap-open-finance-uae/README.md'), false);
 });
 
 test('generated floor forms are out of bounds — the pointer belongs in their template', () => {

@@ -11,33 +11,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 .claude-plugin/marketplace.json     # marketplace manifest — the file Claude Code reads
 plugins/
-├── middleleap-ai-sdlc/             # AI-SDLC practices
-│   ├── .claude-plugin/plugin.json
-│   ├── skills/claude-md-guide/
-│   ├── skills/context-template/
-│   └── agents/code-reviewer.md
-├── middleleap-open-finance/        # UAE Open Finance domain expertise
-│   ├── .claude-plugin/plugin.json
+├── middleleap-loom/                # The Loom — the AI-SDLC method (flagship). Depends on the three below
+│   ├── .claude-plugin/plugin.json  #   ("dependencies"), so installing it installs them
+│   ├── agents/                     # discovery-boundary, data-governance, change-watch, risk,
+│   │                               #   model-risk and code reviewers
+│   └── skills/
+│       ├── loom/                   # method canon + references (discovery/delivery/governance/brainkit)
+│       ├── loom-adopt/             # adoption skill + harness/ bundle (gates, renderer, templates,
+│       │                           #   hooks, profiles, brainkit/ templates + brainkit-example/ —
+│       │                           #   copied into adopting repos via copy-manifest.json)
+│       ├── institution-intake/     # guided Q&A that sets the institution's scene
+│       ├── brainkit-init/          # drafts an Institutional BrainKit from approved sources
+│       │                           #   (never invents policy, never approves — rc.10)
+│       ├── claude-md-guide/        # CLAUDE.md authoring (was middleleap-ai-sdlc)
+│       └── context-template/       # starter CLAUDE.md generator (was middleleap-ai-sdlc)
+├── middleleap-banking-uae/         # General UAE banking — any CBUAE-regulated bank, Loom or not
+│   ├── skills/uae-bank-risk-reviewer/  # owns references/ (taxonomy, frameworks, review template)
+│   ├── skills/bank-risk-reviewer/      # non-UAE variant; reads ../uae-bank-risk-reviewer/references/
+│   ├── skills/islamic-banking-uae/     # Shariah-compliant finance; composes with open-finance-uae
+│   └── skills/npa-uae/                 # New Product Approval: BPF template, anchors, Meridian examples
+├── middleleap-open-finance-uae/    # UAE Open Finance domain expertise
 │   ├── skills/open-finance-uae/    # the canon incl. AlTareq brand refs + check_current.py
-│   ├── skills/islamic-banking-uae/ # Shariah-compliant finance; composes with the canon
 │   └── skills/open-finance-uiux/
-├── middleleap-npa-uae/             # New Product Approval (CBUAE) — standalone, any product change
-│   ├── .claude-plugin/plugin.json
-│   └── skills/npa-uae/             # BPF template, regulatory anchors, Meridian worked examples
-├── meridian-trust/                 # Demo institution pack (fictional bank) — the Loom's "pattern"
-│   ├── .claude-plugin/plugin.json
-│   ├── skills/meridian-brand-guidelines/
-│   └── skills/meridian-business-case/   # ISB/CIC business case, NPV model, templates
-└── middleleap-loom/                # The Loom — the AI-SDLC method (flagship)
-    ├── .claude-plugin/plugin.json
-    ├── agents/                     # discovery-boundary + data-governance reviewers
-    └── skills/
-        ├── loom/                   # method canon + references (discovery/delivery/governance/brainkit)
-        ├── loom-adopt/             # adoption skill + harness/ bundle (gates, renderer, templates,
-        │                           #   hooks, profiles, brainkit/ templates + brainkit-example/ —
-        │                           #   copied into adopting repos via copy-manifest.json)
-        └── brainkit-init/          # drafts an Institutional BrainKit from approved sources
-                                    #   (never invents policy, never approves — rc.10)
+└── middleleap-loom-demo/           # Meridian Trust — the demo institution pack (the Loom's "pattern")
+    ├── skills/meridian-brand-guidelines/
+    └── skills/meridian-business-case/   # ISB/CIC business case, NPV model, templates
 scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 ```
 
@@ -72,13 +70,14 @@ To confirm it actually loads, from inside Claude Code: `/plugin marketplace add 
 - **CBUAE** = Central Bank of the UAE (the regulator)
 - **TPP** = Third Party Provider; **LFI** = Licensed Financial Institution
 - **API Hub** = Ozone-powered centralised infrastructure for Open Finance APIs
-- Standards canon at last verification (17 Aug 2026): **v2.1-final + errata3**, API Hub **v8** — don't trust this line; run `python3 plugins/middleleap-open-finance/skills/open-finance-uae/scripts/check_current.py`
+- Standards canon at last verification (17 Aug 2026): **v2.1-final + errata3**, API Hub **v8** — don't trust this line; run `python3 plugins/middleleap-open-finance-uae/skills/open-finance-uae/scripts/check_current.py`
 
 Reference files carry regulatory figures, dates, and AED amounts. Treat them as load-bearing: check against the Standards, never paraphrase from memory, and record corrections in the skill's `references/verification-log.md`.
 
 ## Provenance rules (learned the hard way)
 
-- **The Open Finance, Islamic banking, and UAE bank risk reviewer skills are canonical in the Claude.ai skills UI**, edited there and imported here via manual `.skill`/`.zip` export. Before editing them in this repo, ask whether a fresher export exists; if they do change here, the change must flow back to Claude.ai or the next import will overwrite it. `scripts/deidentify-check.mjs` (CI) fails the build if a re-import brings a client's name back — the ADCB references in `islamic-banking-uae` were de-identified here on 16 Sep 2026 and the Claude.ai copy still carries them. Last import: 17 Aug 2026 (open-finance-uae only; source-verification update, same content saved to Claude.ai).
+- **This repository is canonical for every skill in it** (from 25 Sep 2026). The Open Finance, Islamic banking and risk reviewer skills used to be edited in the Claude.ai skills UI and imported here by `.skill`/`.zip` export; those account copies are being retired in favour of installing the plugins. If an older account copy resurfaces, diff it against this repo before importing anything — the repo copies are newer and de-identified.
+- **The risk reviewers descend from a client-specific original** (`risk-reviewer` in the Claude.ai account). Everything general from it is in `uae-bank-risk-reviewer`; what was dropped was client-specific (pipeline names, repo paths, calibration documents). Don't re-import it. `scripts/deidentify-check.mjs` (CI) fails the build if a re-import brings a client's name back — the ADCB references in `islamic-banking-uae` were de-identified here on 16 Sep 2026 and the Claude.ai copy still carries them. Last import: 17 Aug 2026 (open-finance-uae only; source-verification update, same content saved to Claude.ai).
 - **The former `altareq-brand-guidelines` skill is retired** — merged into `open-finance-uae` as `references/altareq-*.md`. Don't recreate it.
 - **The Loom** is extracted here as `plugins/middleleap-loom` (the generic harness). The OFBO-specific instantiation — the CBUAE data-risk register, OFBO brand profile, OFBO hard-stop checklists, Q1–Q5 CI workflows, and the three `the-loom*.html` decks — stays in the `openfinance-os/ofbo` repo as the worked example.
 - **The `discovery/` tree is shared with `ofbo`, and the divergence is now counted, not remembered.** `discovery-sync.json` is the ledger and `scripts/discovery-sync-check.mjs` holds it: change a file under `harness/discovery/` without declaring it and the build fails. Run `node scripts/discovery-sync-check.mjs --record` to book the change as a port owed to ofbo. What the gate **cannot** see is whether ofbo has moved — it never reports the trees as agreeing, and only `--upstream <ofbo-checkout>`, run where both repos are reachable, may retire a debt. As of rc.29 nobody has ever run that, and 8 of 23 files carry an outstanding port.

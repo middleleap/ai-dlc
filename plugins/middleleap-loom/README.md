@@ -11,6 +11,11 @@ context. Proven end-to-end on a UAE Open Finance back office: an autonomous buil
 /plugin install middleleap-loom@middleleap-ai-dlc
 ```
 
+Installing the Loom also installs the three plugins it works with, declared as dependencies in
+its `plugin.json`: `middleleap-banking-uae` (risk review, Islamic banking, New Product Approval),
+`middleleap-open-finance-uae` (the UAE Open Finance canon) and `middleleap-loom-demo` (Meridian
+Trust, the demo institution). Each of those also installs on its own.
+
 Human-facing documentation: **[docs/the-loom.html](../../docs/the-loom.html)** — the interactive
 page showing how the Loom works (the loom figure, the double diamond, the brain, continuous
 assurance, the governance catalog). The plugin's markdown canon and that page are the same
@@ -153,6 +158,9 @@ an unsigned activation file no longer advances the adoption status projection.
 | Agent | `change-watch` | Continuous assurance ① Watch — the horizon scanner: new or amended regulation, a certificate inside its warning window, a CVE in a shipped dependency. Flags and routes; never assesses or fixes |
 | Agent | `risk-reviewer` | Continuous assurance ② Assess — impact against the mounted data-risk register, routing what needs a human decision. Assessment only; never authors controls or merges |
 | Agent | `model-risk-reviewer` | Independent challenge on a model/prompt change before it ships (HG-0006) — pinned, tiered, evaluated against its own pin, independently validated |
+| Skill | `claude-md-guide` | How to write CLAUDE.md files that actually change agent behaviour — structure, patterns, anti-patterns. The project canon the harness reads starts here |
+| Skill | `context-template` | Generates a starter CLAUDE.md from the repository's detected stack and layout |
+| Agent | `code-reviewer` | Four-pass review — correctness, security, conventions, design — with critical/warning/nit severity; tuned through the project's CLAUDE.md (below) |
 
 The `loom-adopt` bundle (inside the skill, copied into adopting repos) carries:
 
@@ -202,7 +210,19 @@ own instantiation — the CBUAE data-risk register, the OFBO brand profile, the 
 checklists, the Q1–Q5 CI workflows — remains there as the worked example. This plugin is the
 generic form: the machinery is identical, the domain mounts through the seams.
 
+## Tuning the code reviewer
+
+`code-reviewer` reads the project's `CLAUDE.md` before reviewing, so that file is where you tune
+it. State three things explicitly:
+
+- **Patterns to accept**, so it stops flagging what you meant (e.g. "empty catch blocks in
+  `src/resilience/` are intentional — retry logic").
+- **Focus areas**, so review effort lands where the risk is (e.g. "missing auth checks on API
+  routes"), and what is handled elsewhere (e.g. "code style — the linter owns this").
+- **Severity**, because "critical" means different things to different teams; the agent ships a
+  default definition that `CLAUDE.md` can override.
+
 ## Install nothing by accident
 
-Installing the plugin adds four skills and five agents — nothing always-on. The hooks and the
+Installing the plugin adds six skills and six agents — nothing always-on. The hooks and the
 build loop activate only when a repository adopts them explicitly via `loom-adopt`.

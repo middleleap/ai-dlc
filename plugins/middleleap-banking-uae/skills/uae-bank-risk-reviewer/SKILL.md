@@ -149,6 +149,9 @@ model and fallback. The skill is deliberately UAE-market-focused: regulatory dri
 enforcement context, and examples all assume a CBUAE-regulated institution subject to
 UAE law.
 
+If the institution has earlier risk reviews on file, read one or two before writing:
+they calibrate severity and house style better than any guidance here.
+
 ## Review Methodology (Formal Review Mode)
 
 ### Step 1: Understand the Artifact

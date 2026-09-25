@@ -20,10 +20,10 @@
     },
     "discovery/brand/examples/meridian-trust.design.md": {
       "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
-      "bundle": "sha256:88d0b831a1d107cf26e77ba7c9f5fe37d0faacf74a1dc45432894f961c00024e",
+      "bundle": "sha256:304119a94b8c38553b377a72b7a8e9c45333adcc58692f7d43f39d1c1468fc69",
       "upstream": null,
       "state": "owed",
-      "note": "changed here 2026-09-25: Meridian re-branded to the meridian-trust plugin's system (Meridian Blue + Inter, Midnight ink, Harbour Green, signature cyan and amber as additional tokens) — ofbo's copy is still royal purple + serif"
+      "note": "changed here 2026-09-25; see `git log -- discovery/brand/examples/meridian-trust.design.md`"
     },
     "discovery/gates/brand.mjs": {
       "base": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",

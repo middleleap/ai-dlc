@@ -1,10 +1,10 @@
-# middleleap-open-finance
+# middleleap-open-finance-uae
 
 UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 
 ```
 /plugin marketplace add middleleap/ai-dlc
-/plugin install middleleap-open-finance@middleleap-ai-dlc
+/plugin install middleleap-open-finance-uae@middleleap-ai-dlc
 ```
 
 ## What's in it
@@ -12,22 +12,16 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 | Skill | Description |
 |-------|-------------|
 | `open-finance-uae` | The canon — CBUAE regulation, Standards versions and errata tracking, API specifications, certification paths, liability model, pricing, AlTareq brand and CX requirements, plus scripts that check whether the skill's version claims are still current |
-| `islamic-banking-uae` | Shariah-compliant finance — principles, contract structures (Murabaha, Ijara, Musharaka, Tawarruq, Sukuk, Takaful), CBUAE Shariah governance (HSA, ISSC, SCF), and the native Islamic fields in Open Finance Standards v2.1. Composes with `open-finance-uae` |
-| `uae-bank-risk-reviewer` | Virtual Head of Risk for a UAE bank — four modes (discovery landscape, backlog risk tagging, formal review, pipeline-enforcement verification) against a 4-domain taxonomy (77 controls, 45 risks) grounded in CBUAE CPS, PDPL, MMS, CPS-AI, and BCBS 239 |
 | `open-finance-uiux` | Value-proposition prototyper — generates solution decks and interactive journey mockups |
 
-New Product Approval (`npa-uae`) moved to its own plugin, `middleleap-npa-uae`, in 2.5.0 — it
-applies to every customer-facing product change, not only Open Finance.
+Formerly `middleleap-open-finance`. In 3.0.0 the general UAE banking skills — `islamic-banking-uae`
+and `uae-bank-risk-reviewer`, with `npa-uae` — moved to `middleleap-banking-uae`, because they
+apply to any CBUAE-regulated bank, not only Open Finance. Install both for the full domain.
 
 The former standalone `altareq-brand-guidelines` skill is merged into `open-finance-uae`
 (`references/altareq-*.md`) — one install now carries the whole domain.
 
-`uae-bank-risk-reviewer` reviews against the same v2.5.0 data-risk taxonomy that the
-`middleleap-loom` plugin's D6 gate reads mechanically as a mounted register: the gate checks
-referential integrity, this skill supplies the Head-of-Risk judgement. Adopt both and the
-taxonomy is enforced twice — by machine at the gate, by reasoning in review.
-
-Once installed, skills are namespaced to the plugin: `/middleleap-open-finance:open-finance-uae`.
+Once installed, skills are namespaced to the plugin: `/middleleap-open-finance-uae:open-finance-uae`.
 
 ## Orientation
 
