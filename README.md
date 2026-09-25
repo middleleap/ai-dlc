@@ -65,14 +65,6 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 | Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line and prototype fidelity on discovery runs |
 | Agent | `data-governance-reviewer` | Judges control coverage and residual-risk soundness beyond the mechanical D6 gate |
 
-### [middleleap-brand](plugins/middleleap-brand/)
-
-The MiddleLeap brand and design system — v2.0, verified against middleleap.com.
-
-| Type | Name | Description |
-|------|------|-------------|
-| Skill | `middleleap-brand` | Tokens, the Pivot logo rules, component recipes, voice and copy rules, and a WCAG AA gate — plus drop-in CSS, React components, a Tailwind preset, and brand assets |
-
 Skills are namespaced by their plugin once installed: `/middleleap-open-finance:open-finance-uae`.
 
 ## Using a skill without installing the plugin

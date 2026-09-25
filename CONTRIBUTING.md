@@ -64,9 +64,9 @@ Note the asymmetry, because it's a common mistake: a **skill** is a *directory* 
 
 Every install clones the plugin, so weight matters — but completeness matters more.
 
-- **Ship everything the skill references.** If `SKILL.md` or `DESIGN.md` names a file, that file must be in the plugin. A skill pointing at something it doesn't ship is broken in the most confusing way possible: it looks fine until an agent tries to read it. This rule outranks the size ones below — `middleleap-brand` carries a 132 KB `og-image.png` because its skill references it.
+- **Ship everything the skill references.** If `SKILL.md` or `DESIGN.md` names a file, that file must be in the plugin. A skill pointing at something it doesn't ship is broken in the most confusing way possible: it looks fine until an agent tries to read it. This rule outranks the size ones below: an asset the skill references ships, whatever it weighs.
 - **No design source files** — `.fig`, `.psd`, `.sketch`. Host those separately (see [open-finance-assets](https://github.com/middleleap/open-finance-assets)) and link to them.
-- **Keep a plugin under about 1 MB.** `middleleap-brand` is the current heaviest at ~260 KB. If you're approaching the limit, the question is whether the assets belong in a skill at all.
+- **Keep a plugin under about 1 MB.** If you're approaching the limit, the question is whether the assets belong in a skill at all.
 - No `node_modules/` or generated output.
 
 ## Before you open a PR

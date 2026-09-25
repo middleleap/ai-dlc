@@ -21,9 +21,6 @@ plugins/
 │   ├── skills/open-finance-uae/    # the canon incl. AlTareq brand refs + check_current.py
 │   ├── skills/islamic-banking-uae/ # Shariah-compliant finance; composes with the canon
 │   └── skills/open-finance-uiux/
-├── middleleap-brand/               # MiddleLeap brand & design system (v2.0)
-│   ├── .claude-plugin/plugin.json
-│   └── skills/middleleap-brand/    # SKILL.md, DESIGN.md, tokens, components, assets
 └── middleleap-loom/                # The Loom — the AI-SDLC method (flagship)
     ├── .claude-plugin/plugin.json
     ├── agents/                     # discovery-boundary + data-governance reviewers
@@ -51,7 +48,6 @@ scripts/validate-marketplace.mjs    # run before every commit; CI runs it too
 node scripts/validate-marketplace.mjs   # manifests, sources, versions, skill/agent layout
 node --test scripts/validate-marketplace.test.mjs   # the validator's own suite — run it if you change the validator
 node scripts/deidentify-check.mjs   # no client names under plugins/ — terms and allowlist in .deidentify.json
-node plugins/middleleap-brand/skills/middleleap-brand/scripts/check-contrast.mjs   # WCAG AA gate
 ```
 
 The validator reads the **git tree**, not the filesystem: only tracked files can reach a
