@@ -146,10 +146,11 @@ test('swapping the brand seam re-skins identical content (no code change)', () =
 
   // Same machinery, both branded + marked.
   assert.ok(demoHtml.includes(MARKER) && meridianHtml.includes(MARKER));
-  // Different brand actually applied: demo blue/Inter vs Meridian purple/serif.
-  assert.ok(demoHtml.includes('#1F4DB8') && !demoHtml.includes('#5B2A86'));
-  assert.ok(meridianHtml.includes('#5B2A86') && !meridianHtml.includes('#1F4DB8'));
-  assert.ok(meridianHtml.includes('Georgia') && !meridianHtml.includes('Inter'));
+  // Different brand actually applied. Both brands are set in Inter, so the palette alone carries
+  // the swap: demo blue vs Meridian Blue, demo ink vs Meridian's Midnight.
+  assert.ok(demoHtml.includes('#1F4DB8') && !demoHtml.includes('#0B4F80'));
+  assert.ok(meridianHtml.includes('#0B4F80') && !meridianHtml.includes('#1F4DB8'));
+  assert.ok(meridianHtml.includes('#052540') && !demoHtml.includes('#052540'));
   assert.notEqual(demoHtml, meridianHtml);
 
   // Each output is D7-conformant against ITS OWN brand…

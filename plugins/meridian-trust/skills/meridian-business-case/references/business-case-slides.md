@@ -17,8 +17,11 @@ Template: `assets/Business_Case_Template.pptx` (TMP-CIC-001 V1.0)
 
 ## Slide 1: Title Slide
 
-- Project name (32pt)
-- Subtitle (24pt)
+Midnight background, white logo top-right, cyan Meridian line above the title (see
+`meridian-brand-guidelines` → Title/Section Divider Slides).
+
+- Project name (32pt, bold, white)
+- Subtitle (24pt, Silver Light)
 - Prepared By: Name and Department
 - Presented By: Name and Department
 - Date of presentation

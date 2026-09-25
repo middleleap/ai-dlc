@@ -20,10 +20,10 @@
     },
     "discovery/brand/examples/meridian-trust.design.md": {
       "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
-      "bundle": "sha256:ede29da50af55711ae657ea3ba46b4eed9e3892e784acc0deda1576f45fa425f",
+      "bundle": "sha256:88d0b831a1d107cf26e77ba7c9f5fe37d0faacf74a1dc45432894f961c00024e",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: identifier pointer added so a bare gate id is always resolvable (rc.32 legibility)"
+      "note": "changed here 2026-09-25: Meridian re-branded to the meridian-trust plugin's system (Meridian Blue + Inter, Midnight ink, Harbour Green, signature cyan and amber as additional tokens) — ofbo's copy is still royal purple + serif"
     },
     "discovery/gates/brand.mjs": {
       "base": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",
@@ -108,10 +108,10 @@
     },
     "discovery/render/render.test.mjs": {
       "base": "sha256:0827fbdc544c5d42a81ebb7b390334f09f0ed10080448c7e90938b89dd6a6186",
-      "bundle": "sha256:24a0982456c761e7cc55752286f322ab94b4fa82cc947ee0ff20176cc3deed8e",
+      "bundle": "sha256:722a1a4c87e5012fc9b4bd12b7fb5de3a91ba96ee5262fbf456fd8466b69d053",
       "upstream": null,
       "state": "owed",
-      "note": "changed here: rc.10 enforcement hardening, F5 direction cases — LTR output byte-identical apart from the dir attribute, and the RTL example brand as the seam proof"
+      "note": "changed here: rc.10 enforcement hardening, F5 direction cases, and (2026-09-25) the seam test asserts the Meridian palette now that both brands are set in Inter"
     },
     "discovery/render/tokens.mjs": {
       "base": "sha256:0c12607726e53bc3f83f1e53156de108a7f34be50a61c42e637ab6c9b0ef23a3",

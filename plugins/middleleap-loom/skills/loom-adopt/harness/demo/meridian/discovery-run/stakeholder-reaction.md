@@ -3,7 +3,7 @@ artifact: stakeholder-reaction
 stage: define
 design_profile: discovery/brand/design.md
 run: cross-bank-money
-prototype_digest: 162a40dde5b553b486048cd7b5615a21aff7a027edcd248cfbe069da1ae6f9bd
+prototype_digest: 7aa121e3d302b1e0889b9374b2b352d900953d88854f6ed05ad3c194696e4d53
 ---
 
 # Stakeholder reaction — cross-bank-money

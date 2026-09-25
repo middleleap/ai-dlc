@@ -79,7 +79,7 @@ The demo institution pack — Meridian Trust, a fictional bank, as the context t
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | `meridian-brand-guidelines` | Meridian's palette, typography, slide layout, logos and icon system |
+| Skill | `meridian-brand-guidelines` | Meridian Blue + Inter, colour roles, the Meridian line motif, slide layout, logos and icon system — the source for the Loom's Meridian brand profile |
 | Skill | `meridian-business-case` | Two-stage capital approval — ISB pre-screening and CIC detailed case, NPV/cost model, sign-offs |
 
 Skills are namespaced by their plugin once installed: `/middleleap-open-finance:open-finance-uae`.

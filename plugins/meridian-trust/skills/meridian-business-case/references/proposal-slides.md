@@ -10,7 +10,9 @@ Template: `assets/Stage1_Proposal_Template.pptx` (TMP-CIC-002 V1.0)
 
 ## Slide 1: Title / Agenda
 
-- Project name (32pt)
+Midnight background, white logo, cyan Meridian line above the title.
+
+- Project name (32pt, bold, white)
 - Presented by: Name
 
 ## Slide 2: One-Page Pre-Screening Summary (Main Deliverable)

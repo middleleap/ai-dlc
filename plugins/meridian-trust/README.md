@@ -16,7 +16,7 @@ invented stand-ins built to a realistic structure.
 
 | Skill | Description |
 |-------|-------------|
-| `meridian-brand-guidelines` | Meridian's brand for decks, documents and web assets — palette, typography, slide layout, logo rules (`assets/logos/`), icon system, CSS variables |
+| `meridian-brand-guidelines` | Meridian's brand for decks, documents, web and product UI — Meridian Blue + Inter with defined colour roles (Midnight depth, the cyan Meridian line, one amber note, status colours), typography, slide layout, logos (`assets/logos/`), icon system, CSS variables. The Loom's Meridian brand profile is its token projection |
 | `meridian-business-case` | Meridian's two-stage capital approval — the one-page ISB pre-screening proposal and the CIC detailed business case, with the NPV/cost model (`assets/Project_Costs_Template.xlsx`), slide templates, sign-off roster and validation checklist |
 
 ## How it fits the Loom
