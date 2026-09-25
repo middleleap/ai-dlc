@@ -401,3 +401,4 @@ dl.props dd{margin:0;min-width:0;overflow-wrap:anywhere}
 .stack>*{min-width:0}.term code{min-width:0;overflow-x:auto}.g-7-5>.stack{align-content:start}.g-7-5>.stack>.card{align-self:start}
 @media (max-width:860px){.side-foot{display:none}.topbar{flex-wrap:nowrap}}
 td.mono,td .mono,td.nowrap{white-space:nowrap}
+table.inbox{table-layout:fixed;min-width:760px}table.inbox td{overflow-wrap:anywhere}table.inbox td.own{font-size:13px}table.inbox td:last-child .prov{max-width:100%;overflow:hidden;text-overflow:ellipsis}

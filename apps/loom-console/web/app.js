@@ -107,10 +107,10 @@ function attention(){
 const ATT=attention();
 const SEV={crit:['Critical','var(--critical)'],cau:['Warning','var(--caution)'],info:['Info','var(--bone-3)']};
 const mine=()=>role==='all'?ATT.filter(a=>!a.perRole):ATT.filter(a=>a.roles.includes(role));
-const attRow=a=>`<tr class="click" ${a.go}><td><span class="dia" style="background:${SEV[a.sev][1]}" title="${SEV[a.sev][0]}"></span></td><td><div class="t1">${esc(a.t)}</div><div class="mono cap">${esc(a.subj)}</div></td><td class="cap">${a.b}</td><td class="nowrap">${a.o}</td><td>${prov(a.src)}</td></tr>`;
+const attRow=a=>`<tr class="click" ${a.go}><td><span class="dia" style="background:${SEV[a.sev][1]}" title="${SEV[a.sev][0]}"></span></td><td><div class="t1">${esc(a.t)}</div><div class="mono cap">${esc(a.subj)}</div></td><td class="cap">${a.b}</td><td class="own">${a.o}</td><td>${prov(a.src)}</td></tr>`;
 const attItem=a=>`<button class="it" ${a.go}><span class="dia" style="background:${SEV[a.sev][1]}" title="${SEV[a.sev][0]}"></span><span class="it-m"><span class="t1">${esc(a.t)}</span> <span class="mono cap">${esc(a.subj)}</span><span class="it-d cap">${a.b}</span></span><span class="it-o cap">${a.o}</span></button>`;
 const attList=(list,empty)=>list.length?`<div class="ilist">${list.map(attItem).join('')}</div>`:`<div class="empty">${empty}</div>`;
-const attTable=(list,empty)=>list.length?`<div class="tbl-wrap"><table class="inbox"><thead><tr><th></th><th>Item</th><th>Detail</th><th>Owner</th><th>Source</th></tr></thead><tbody>${list.map(attRow).join('')}</tbody></table></div>`:`<div class="empty">${empty}</div>`;
+const attTable=(list,empty)=>list.length?`<div class="tbl-wrap"><table class="inbox"><colgroup><col style="width:28px"><col style="width:28%"><col><col style="width:22%"><col style="width:150px"></colgroup><thead><tr><th></th><th>Item</th><th>Detail</th><th>Owner</th><th>Source</th></tr></thead><tbody>${list.map(attRow).join('')}</tbody></table></div>`:`<div class="empty">${empty}</div>`;
 
 /* ---------- page header ---------- */
 const head=(h,meta,right='')=>`<header class="ph"><div><h1>${h}</h1>${meta?`<div class="meta">${meta}</div>`:''}</div>${right?`<div class="row">${right}</div>`:''}</header>`;
