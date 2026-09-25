@@ -3,7 +3,9 @@ artifact: intent
 stage: discover
 design_profile: discovery/brand/design.md
 run: "sme-overdraft-decision"
+title: "Small-business owners wait days for a small overdraft"
 sponsor: po-rania
+product_profile: lending
 strategic_intent: SI-01
 statement: "Small-business owners wait days for a small overdraft decision. We want the wait to shrink without lending to businesses that cannot carry it."
 sources: [S-001, S-002]

@@ -68,6 +68,14 @@ export function mountMeridian(A) {
   const sig = existsSync(sigPath) ? J(sigPath) : { signals: [] };
   sig.signals = [...(sig.signals || []), ...J(join(HERE, 'operations-signal.json')).signals, ...J(join(HERE, 'portfolio/operations-signal.json')).signals];
   W(sigPath, sig);
+  // The portfolio's product owners join the identity registry, so every run sponsor resolves.
+  const idPath = join(A, 'docs/governance/identities.json');
+  if (existsSync(idPath)) {
+    const reg = J(idPath);
+    const have = new Set((reg.identities || []).map((i) => i.id));
+    reg.identities = [...(reg.identities || []), ...J(join(HERE, 'portfolio/identities.json')).identities.filter((i) => !have.has(i.id))];
+    W(idPath, reg);
+  }
   return {
     mandate: M.mandate_ref,
     obligation: M.obligation.id,
@@ -81,4 +89,21 @@ export function mountMeridian(A) {
     signal: 'OPS-2026-0912',
     signals: ['OPS-2026-0912', 'OPS-2026-0918'],
   };
+}
+
+// The rest of the estate an oversight surface reads, beyond what the walk needs: Meridian's
+// approved BrainKit (the worked example, 1.0.1) and its institution profile, and the change that
+// shipped the consolidated view (CHG-2026-0042, the bundled change example the walk also uses),
+// so the approval queue has a real change to age. Used by the console build and its test; the
+// walk and the scenario test do not call it, so their trees are unchanged.
+export function mountEstate(A) {
+  const H = join(HERE, '../..');
+  const BK = join(H, 'brainkit-example');
+  if (!existsSync(BK)) throw new Error('brainkit-example is bundle-only; the estate cannot be mounted in an adopted layout');
+  cpSync(join(BK, 'institution/brainkit'), join(A, 'institution/brainkit'), { recursive: true });
+  mkdirSync(join(A, 'profiles/institutions'), { recursive: true });
+  cpSync(join(BK, 'profiles/institutions/meridian-trust.json'), join(A, 'profiles/institutions/meridian-trust.json'));
+  const chg = join(A, 'docs/governance/changes/CHG-2026-0042');
+  if (!existsSync(chg)) cpSync(join(H, 'change-example'), chg, { recursive: true });
+  return { brainkit: 'institution/brainkit/manifest.json', change: 'CHG-2026-0042' };
 }

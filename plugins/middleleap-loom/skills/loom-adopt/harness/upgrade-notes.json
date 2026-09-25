@@ -622,6 +622,19 @@
       "action_required": [
         "None for adopters. scripts/record-join.mjs is installed with the other scripts and reads only what the tree and the mounted provider already hold."
       ]
+    },
+    {
+      "version": "2.4.10",
+      "headline": "The console's data contract: one read of the tree into loom.console/v1, every fact tagged with its source",
+      "notes": [
+        "scripts/console-data.mjs reads an adopted tree (the discovery runs through the D1-D9 validator, the BrainKit and brainkit-check, the registers and obligations, the identity registry, the control catalog, the approval queue from approval-status, operations signals, the adoption stamp, hooks and CI) and writes the JSON an oversight console renders. It writes nothing else and holds no authority.",
+        "Every fact carries a provenance kind (record, executed-check, derived, telemetry) and the file it came from. Gate states are the validator's, unsoftened: a gate failing because its stage is not reached stays fail, with reached: false beside it.",
+        "It also reports four integrity checks the gates do not make: run sponsors that are not humans in the registry, strategic intents missing from the BrainKit, product profiles that do not exist, and stakeholder reactions whose prototype changed after they were recorded.",
+        "An intent.md may now carry title: and product_profile: in its front-matter; the console reads both, no gate does."
+      ],
+      "action_required": [
+        "None for adopters. The script is installed with the other scripts and reads only what the tree already holds; run it with node scripts/console-data.mjs --out <file>."
+      ]
     }
   ]
 }

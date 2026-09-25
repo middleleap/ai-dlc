@@ -8,11 +8,11 @@
       "expect": { "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass", "D7": "pass", "D8": "pass", "D9": "pass" } },
     { "slug": "plain-language-decline", "dir": "portfolio/plain-language-decline", "title": "Declined applicants do not understand why", "owner": "po-khalid", "strategic_intent": "SI-02", "profile": "ai-decision-system", "status": "awaiting-reaction", "stage": "5b", "started": "2026-09-01",
       "expect": { "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass", "D7": "pass", "D8": "pass", "D9": "fail" } },
-    { "slug": "sme-overdraft-decision", "dir": "portfolio/sme-overdraft-decision", "title": "Small-business owners wait days for a small overdraft", "owner": "po-rania", "strategic_intent": "SI-01", "profile": "lending", "status": "in-define", "stage": "4", "started": "2026-09-08",
+    { "slug": "sme-overdraft-decision", "dir": "portfolio/sme-overdraft-decision", "title": "Small-business owners wait days for a small overdraft", "owner": "po-rania", "strategic_intent": "SI-01", "profile": "lending", "status": "in-progress", "stage": "4", "started": "2026-09-08",
       "expect": { "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "fail", "D7": "pass", "D8": "fail", "D9": "skip" } },
     { "slug": "home-finance-top-up", "dir": "portfolio/home-finance-top-up", "title": "Home-finance customers leave to get more finance", "owner": "po-omar", "strategic_intent": "SI-04", "profile": "islamic-product", "status": "gate-failing", "stage": "2", "started": "2026-09-15",
       "expect": { "D1": "fail", "D2": "pass", "D3": "fail", "D4": "pass", "D5": "fail", "D6": "fail", "D7": "pass", "D8": "fail", "D9": "skip" } },
-    { "slug": "salary-advance", "dir": "portfolio/salary-advance", "title": "Salary customers run short before payday", "owner": "po-fatima", "strategic_intent": "SI-03", "profile": "consumer-lending", "status": "gathering-signals", "stage": "1", "started": "2026-09-21", "opened_by": "OPS-2026-0918",
+    { "slug": "salary-advance", "dir": "portfolio/salary-advance", "title": "Salary customers run short before payday", "owner": "po-fatima", "strategic_intent": "SI-03", "profile": "consumer-lending", "status": "in-progress", "stage": "1", "started": "2026-09-21", "opened_by": "OPS-2026-0918",
       "expect": { "D1": "fail", "D2": "fail", "D3": "fail", "D4": "pass", "D5": "fail", "D6": "fail", "D7": "pass", "D8": "fail", "D9": "skip" } }
   ]
 }

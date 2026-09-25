@@ -3,7 +3,9 @@ artifact: intent
 stage: discover
 design_profile: discovery/brand/design.md
 run: "plain-language-decline"
+title: "Declined applicants do not understand why"
 sponsor: po-khalid
+product_profile: ai-decision-system
 strategic_intent: SI-02
 statement: "Customers we decline for a personal loan do not understand why, and they tell the regulator's complaints line before they tell us."
 sources: [S-001, S-002]

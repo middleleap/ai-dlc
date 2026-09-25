@@ -3,7 +3,9 @@ artifact: intent
 stage: discover
 design_profile: discovery/brand/design.md
 run: "salary-advance"
+title: "Salary customers run short before payday"
 sponsor: po-fatima
+product_profile: consumer-lending
 strategic_intent: SI-03
 statement: "Salary customers run short in the days before payday. We want to understand what that week costs them before anyone proposes a product."
 sources: [S-001, S-002]
