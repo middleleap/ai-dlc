@@ -18,7 +18,7 @@ harness demo's own palette). Both brands are set in Inter, so the swap is carrie
 alone — the strictest form of the test. The renderer and gate D7 read this file the same way they
 read `discovery/brand/design.md` — no code changes to swap.
 
-**Source of truth:** the `meridian-brand-guidelines` skill (plugin `meridian-trust`). This file
+**Source of truth:** the `meridian-brand-guidelines` skill (plugin `middleleap-loom-demo`). This file
 is its token projection; change a value there and here in the same commit.
 
 > Render any run's specs against this brand with `--brand`:

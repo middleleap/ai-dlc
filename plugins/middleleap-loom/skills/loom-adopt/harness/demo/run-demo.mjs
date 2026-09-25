@@ -283,7 +283,7 @@ try {
     node(['scripts/discovery-attest.mjs', 'discovery-stopped', '--run', 'cross-bank-money-stopped', ...signOnly], { env });
 
     say('MERIDIAN · the NPA is the content of PA1 — npa-pack (the Business Proposition Form READ: 33 fields, request type New, the obligations it cites by id, its digest) and npa-approved.pa1 (the committee\'s permission to develop with six conditions, attested by the approver) on the same trail', PROVIDER);
-    if (!M.ids.npaForm) fail('the NPA form was not mounted — the sibling plugin middleleap-npa-uae is not beside this bundle');
+    if (!M.ids.npaForm) fail('the NPA form was not mounted — the sibling plugin middleleap-banking-uae is not beside this bundle');
     const np = node(['scripts/discovery-attest.mjs', 'npa-pack', '--run', 'cross-bank-money', '--actor', 'po-fatima', '--proposition', 'NPA-2026-CBM-001', '--json', ...signOnly], { env, quiet: true });
     const npj = JSON.parse(np.stdout);
     const kept = J(npj.kept);

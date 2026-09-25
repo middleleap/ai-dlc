@@ -1,12 +1,12 @@
-# meridian-trust
+# middleleap-loom-demo
 
 **Meridian Trust** is a fictional CBUAE-regulated bank — the demo institution the Loom runs
-against. This plugin is its *institution pack*: the bank-specific context (the Loom's "pattern")
+against. This plugin (formerly `meridian-trust`) is its *institution pack*: the bank-specific context (the Loom's "pattern")
 that the method's harnesses draw on, kept separate from the method itself.
 
 ```
 /plugin marketplace add middleleap/ai-dlc
-/plugin install meridian-trust@middleleap-ai-dlc
+/plugin install middleleap-loom-demo@middleleap-ai-dlc
 ```
 
 Nothing here describes a real institution. Names, governance bodies, templates and figures are
@@ -26,9 +26,9 @@ invented stand-ins built to a realistic structure.
 | Discovery — prototype (D8) | `meridian-brand-guidelines`, so the prototype looks like the bank's product rather than a generic one |
 | Define — business case (5c) | `meridian-business-case` assembles the investment case: ISB proposal, CIC case, NPV at 100% and 130% of capex |
 | Discovery → delivery gate | The CIC decision with the capex breakdown and the full sign-offs — a business-plan approval, not just a spec lock |
-| Product approval (PA1 / PA2) | Pairs with `npa-uae` (plugin `middleleap-npa-uae`), whose worked examples are Meridian's NPA packs |
+| Product approval (PA1 / PA2) | Pairs with `npa-uae` (plugin `middleleap-banking-uae`), whose worked examples are Meridian's NPA packs |
 
-Install alongside `middleleap-loom` and `middleleap-npa-uae` for the full demo. The Loom's own
+Installing `middleleap-loom` installs this plugin and `middleleap-banking-uae` with it. The Loom's own
 scenario data — portfolio, discovery runs, NPA decision — lives in
 `middleleap-loom` → `skills/loom-adopt/harness/demo/meridian/`.
 

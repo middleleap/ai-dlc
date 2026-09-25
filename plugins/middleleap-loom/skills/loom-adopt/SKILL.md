@@ -418,7 +418,7 @@ Two edge cases, both stated by the installer when they happen:
 ## What adoption deliberately does NOT do
 
 - It does not write the project's CLAUDE.md, PRD, or API contract — those are the canon the
-  harness *reads*; authoring them is the project's work (the `middleleap-ai-sdlc` plugin helps).
+  harness *reads*; authoring them is the project's work (the `claude-md-guide` and `context-template` skills in this plugin help).
 - It does not enable any always-on behaviour by itself: hooks activate only when the user
   merges the settings snippet, and the loop runs only when invoked.
 - It does not bring OFBO's domain content — no register records beyond the example, no brand

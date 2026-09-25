@@ -47,9 +47,9 @@ export function mountMeridian(A) {
   if (!brand) throw new Error('the Meridian brand profile (discovery/brand/examples/meridian-trust.design.md) is not in the bundle');
   cpSync(brand, join(A, 'discovery/brand/design.md'));
   // The NPA pack the run assembles at 'Investment case assembled': the npa-uae skill's worked example
-  // for this very run (middleleap-open-finance is a sibling plugin in this repository), plus the
+  // for this very run (middleleap-banking-uae is a sibling plugin in this repository), plus the
   // committee's PA1 decision. An adopter's tree carries its own form; the demo borrows the skill's.
-  const form = join(HERE, '../../../../../../middleleap-npa-uae/skills/npa-uae/references/example-cross-bank-money.md');
+  const form = join(HERE, '../../../../../../middleleap-banking-uae/skills/npa-uae/references/example-cross-bank-money.md');
   const npaDir = join(A, 'discovery/runs/cross-bank-money/npa');
   mkdirSync(npaDir, { recursive: true });
   if (existsSync(form)) cpSync(form, join(npaDir, 'business-proposition-form.md'));
