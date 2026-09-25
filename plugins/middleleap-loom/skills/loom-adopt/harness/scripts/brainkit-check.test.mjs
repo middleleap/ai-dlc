@@ -22,6 +22,9 @@ if (!existsSync(EXAMPLE)) {
 const REGISTRY = loadRegistry(EXAMPLE);
 const LIVE = (() => { const bk = loadBrainkit(EXAMPLE); return livePackageDigest(bk.dir, bk.manifest); })();
 const brainkit = () => loadBrainkit(EXAMPLE); // fresh manifest object each time (tests mutate copies)
+// The sealed example's version, read rather than pinned, so a legitimate reseal of the example
+// (a new approved version) does not need these provenance fixtures edited by hand.
+const VERSION = loadBrainkit(EXAMPLE).manifest.version;
 
 const withTempExample = (fn) => {
   const dir = mkdtempSync(join(tmpdir(), 'brainkit-ex-'));
@@ -223,10 +226,10 @@ test('AUDIT 4b — a broken repo-relative source reference fails; scheme-qualifi
 
 test('AUDIT 1 — a sealed provenance record pinning the wrong digest fails; a right pin passes', () => {
   const bk = brainkit();
-  const wrong = [{ ref: 'brainkit-provenance.json', artifact: { brainkit_id: 'meridian-trust-brainkit', brainkit_version: '1.0.0', brainkit_digest: 'sha256:' + '0'.repeat(64), artifacts: [] } }];
+  const wrong = [{ ref: 'brainkit-provenance.json', artifact: { brainkit_id: 'meridian-trust-brainkit', brainkit_version: VERSION, brainkit_digest: 'sha256:' + '0'.repeat(64), artifacts: [] } }];
   assert.ok(evaluate(bk, { required: true, registry: REGISTRY, provenanceEvidence: wrong })
     .some((x) => /provenance of a different BrainKit/.test(x)));
-  const right = [{ ref: 'brainkit-provenance.json', artifact: { brainkit_id: 'meridian-trust-brainkit', brainkit_version: '1.0.0', brainkit_digest: LIVE, artifacts: [] } }];
+  const right = [{ ref: 'brainkit-provenance.json', artifact: { brainkit_id: 'meridian-trust-brainkit', brainkit_version: VERSION, brainkit_digest: LIVE, artifacts: [] } }];
   const proj = readFrontmatter(readFileSync(join(EXAMPLE, 'discovery/brand/design.md'), 'utf8'));
   assert.deepEqual(evaluate(bk, { required: true, registry: REGISTRY, provenanceEvidence: right, projection: proj }), []);
 });
@@ -234,7 +237,7 @@ test('AUDIT 1 — a sealed provenance record pinning the wrong digest fails; a r
 test('AUDIT 1b — a covered artifact that is absent, or does not EMBED the live digest, fails', () => {
   withTempExample((dir) => {
     const bk = loadBrainkit(dir);
-    const record = (arts) => [{ ref: 'p.json', artifact: { brainkit_id: 'meridian-trust-brainkit', brainkit_version: '1.0.0', brainkit_digest: LIVE, artifacts: arts } }];
+    const record = (arts) => [{ ref: 'p.json', artifact: { brainkit_id: 'meridian-trust-brainkit', brainkit_version: VERSION, brainkit_digest: LIVE, artifacts: arts } }];
     // absent artifact
     let f = evaluate(bk, { required: true, registry: REGISTRY, repoRoot: dir, provenanceEvidence: record([{ ref: 'reports/absent.html' }]) });
     assert.ok(f.some((x) => /does not exist — provenance of an absent artifact/.test(x)));

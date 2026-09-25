@@ -1,0 +1,25 @@
+{
+  "wordmark": "Meridian Trust",
+  "context": "Discovery prototype · low fidelity · synthetic data · not a screen specification",
+  "title": "About your personal loan application",
+  "intro": "Aisha applied for AED 18,000 to pay a course fee. Shown the day the decision is made. Every detail is invented.",
+  "tiles": [
+    { "label": "Our answer", "value": "Not this time", "status": "warn", "pill": "decided 22 Sep", "sub": "We can't offer this loan today. The main reason is below, in one line." },
+    { "label": "Main reason (H1)", "value": "Time in your current job", "sub": "You have been with your employer for 11 months. For this loan we look for at least 12." },
+    { "label": "What would change it (H2)", "value": "Apply again from 15 Oct", "status": "ok", "pill": "same salary, same bank", "sub": "Nothing else in your application stood in the way." },
+    { "label": "If you think we got it wrong", "value": "Ask for a review", "sub": "A person looks at your application again within five working days." }
+  ],
+  "table": {
+    "label": "What we looked at",
+    "headers": ["What", "What we saw", "Did it count against you?"],
+    "rows": [
+      ["Monthly salary", "Paid into Meridian for 11 months", "no"],
+      ["Existing repayments", "Below our limit for your income", "no"],
+      ["Time in current job", "11 months", "yes — the main reason"]
+    ]
+  },
+  "affordance": {
+    "label": "Held — not shown in this prototype",
+    "text": "The variant for a reason Meridian may not disclose is tested separately with retail credit risk"
+  }
+}

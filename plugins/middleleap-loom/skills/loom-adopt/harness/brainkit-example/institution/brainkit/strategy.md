@@ -10,6 +10,8 @@
 |---|---|---|---|---|
 | `SI-01` | Reduce the time a retail customer waits for a credit decision without raising affordability risk | head of retail lending | median decision time; over-extension rate | mt-strategy-2026 |
 | `SI-02` | Make every customer-facing decision explainable to the customer in plain language | head of conduct | complaints citing "unexplained decision" | mt-strategy-2026 |
+| `SI-03` | Be the bank customers turn to for everyday money decisions, including the money they hold elsewhere | head of retail product | share of salary customers active in the app each month; cross-bank "what do I owe" contact-centre enquiries | mt-strategy-2026 |
+| `SI-04` | Keep Islamic home-finance customers with Meridian through the life of their finance, not only at origination | head of home finance | early settlements to refinance elsewhere; top-up requests declined for process reasons | mt-strategy-2026 |
 
 ## Explicitly not pursued this horizon
 

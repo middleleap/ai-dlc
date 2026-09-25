@@ -1,0 +1,16 @@
+{
+  "_comment": "FICTIONAL PLANNING — the Run → Discovery edge that opened salary-advance. Appended by mount.mjs to the adopted tree's docs/governance/operations-signal.json beside OPS-2026-0912.",
+  "signals": [
+    {
+      "id": "OPS-2026-0918",
+      "source": "contact-centre",
+      "type": "customer-signal",
+      "severity": "medium",
+      "detected": "2026-09-18",
+      "summary": "Overdraft and late-payment fee calls from salary customers roughly double in the four days before salary credit. Routed to discovery rather than to a product: nobody yet knows whether customers want credit or a warning.",
+      "evidence_ref": "care/OPS-2026-0918.md",
+      "route": "discovery",
+      "link": "discovery/salary-advance"
+    }
+  ]
+}

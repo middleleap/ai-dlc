@@ -3,7 +3,7 @@
   "schema_version": "1.1",
   "brainkit_id": "meridian-trust-brainkit",
   "institution_id": "meridian-trust",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "status": "approved",
   "effective_at": "2026-07-01",
   "expires_at": null,
@@ -61,7 +61,7 @@
     {
       "section": "strategy",
       "path": "strategy.md",
-      "digest": "sha256:0d435d7d132ce537ccfcfdca73df6e1670986861669473904b8e6e63729908fd",
+      "digest": "sha256:099b908afdd1723bc63bda3a00d4a344e6c60fadf14757e56260bd611ec9717b",
       "sources": [
         "mt-strategy-2026"
       ]
@@ -75,7 +75,7 @@
       ]
     }
   ],
-  "package_digest": "sha256:229b58a17cdfb58f7585e816c93a1613d1cb0e3ee3daa24f30e789d8dfc6047d",
+  "package_digest": "sha256:b06e87b275ef2e25709b7b0f4b5d959805dfa1163201472fa6d899780ba1a0cc",
   "approved_sources": [
     "mt-identity-2026",
     "mt-brand-2026",
@@ -95,6 +95,12 @@
       "at": "2026-07-01",
       "version": "1.0.0",
       "note": "Approved for the Loom worked example."
+    },
+    {
+      "by": "ctx-mariam",
+      "at": "2026-09-24",
+      "version": "1.0.1",
+      "note": "Strategy section: SI-03 and SI-04 recorded from the board-approved strategic plan (mt-strategy-2026); the worked-example runs cite them. Fictional approval."
     }
   ]
 }

@@ -36,13 +36,13 @@ test('edited consumer files block the whole copy and remain untouched',withExamp
 test('two synthetic releases support explicit upgrade and git rollback; revoked rollback targets fail',withExample,async t=>{
  const o=fixture(t),next=join(o.from,'../publisher-v2');cpSync(o.from,next,{recursive:true});
  const mp=join(next,'institution/brainkit/manifest.json'),m=JSON.parse(readFileSync(mp));
- m.version='1.1.0';m.approvals=m.approvals.map(a=>({...a,version:m.version,note:'Fictional approval fixture for rollback regression; no real approval.'}));
+ const prior=m.version;m.version='1.1.0';m.approvals=m.approvals.map(a=>({...a,version:m.version,note:'Fictional approval fixture for rollback regression; no real approval.'}));
  writeFileSync(mp,JSON.stringify(m));
  const architecture=join(next,'institution/brainkit/architecture.md');writeFileSync(architecture,readFileSync(architecture,'utf8')+'\nSynthetic release-two clarification.\n');
  const {seal}=await import('./brainkit-check.mjs');seal(next);
  const sealed=JSON.parse(readFileSync(mp)),profilePath='profiles/institutions/meridian-trust.json';
  const profile=JSON.parse(readFileSync(join(next,profilePath)));profile.brainkit.release_digest=sealed.package_digest;writeFileSync(join(next,profilePath),JSON.stringify(profile));
- const projection=join(next,'discovery/brand/design.md');writeFileSync(projection,readFileSync(projection,'utf8').replaceAll(o.digest,sealed.package_digest).replaceAll('1.0.0','1.1.0'));
+ const projection=join(next,'discovery/brand/design.md');writeFileSync(projection,readFileSync(projection,'utf8').replaceAll(o.digest,sealed.package_digest).replaceAll(`brainkit_version: "${prior}"`,'brainkit_version: "1.1.0"'));
  writeFileSync(join(next,'brainkit-registry.json'),JSON.stringify({releases:[{brainkit_id:sealed.brainkit_id,version:sealed.version,package_digest:sealed.package_digest,status:'active',released_at:'2026-07-01'}],adoption_inventory:[]}));
  const newer={...o,from:next,digest:sealed.package_digest};
  assert.equal(reuseBrainkit({...o,apply:true}).ok,true);

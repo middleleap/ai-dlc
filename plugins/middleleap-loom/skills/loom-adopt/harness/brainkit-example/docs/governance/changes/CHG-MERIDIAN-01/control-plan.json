@@ -29,10 +29,10 @@
       "profile": "meridian-trust",
       "kind": "institution",
       "version": "1.0.0",
-      "digest": "sha256:4f6e0c2f4d0197c9ddeda346e5cc45d497d2ed6c28c3a28667d09694d389deb1",
+      "digest": "sha256:ca0c193949d3a344cf5a2e67b4347f1e1ed16bd673294c76a6e396cf0a5efe9e",
       "brainkit_id": "meridian-trust-brainkit",
-      "brainkit_version": "1.0.0",
-      "brainkit_digest": "sha256:229b58a17cdfb58f7585e816c93a1613d1cb0e3ee3daa24f30e789d8dfc6047d"
+      "brainkit_version": "1.0.1",
+      "brainkit_digest": "sha256:b06e87b275ef2e25709b7b0f4b5d959805dfa1163201472fa6d899780ba1a0cc"
     },
     {
       "profile": "regulated-bank",
@@ -41,5 +41,5 @@
       "digest": "sha256:da0f15e4da2f45425c04e370e26d81b6409f0cbd4041db2778f68a6ee34d3b80"
     }
   ],
-  "plan_hash": "ff0eb92ee50f3cf8007244d4b33dc9ae8e4c8e67ec666e83eccb502eac782a19"
+  "plan_hash": "01828e07c1016d03101bf938fdc8968d512b5fa81acb15a985d97ea17029777c"
 }

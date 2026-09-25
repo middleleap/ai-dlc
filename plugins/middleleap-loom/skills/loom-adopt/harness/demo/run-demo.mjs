@@ -123,12 +123,14 @@ try {
   if (meridian) {
     const { mountMeridian } = await import(pathToFileURL(join(H, 'demo/meridian/mount.mjs')).href);
     M = { obligation: JSON.parse(readFileSync(join(H, 'demo/meridian/obligation.json'), 'utf8')).obligation };
-    say('MERIDIAN — mount the scenario: the Meridian brand, two discovery runs, the Open Finance obligations and their register rows, and the one demo-scoped control. The bundle\'s templates do not move', 'fixture');
+    say('MERIDIAN — mount the scenario: the Meridian brand, its discovery portfolio (six runs; the walk follows two), the Open Finance obligations and their register rows, and the one demo-scoped control. The bundle\'s templates do not move', 'fixture');
     const ids = mountMeridian(A);
     M.ids = ids;
     node(['scripts/obligations-check.mjs'], { quiet: true });
     node(['scripts/control-catalog-check.mjs'], { quiet: true });
     process.stdout.write(`     obligations: ${ids.obligations.join(', ')}\n     traced end to end: ${ids.obligation} → ${ids.registerControl} → ${ids.control} → ${ids.mechanism} (mandate ${ids.mandate})\n     the obligations and catalog gates accept the rows; every owner_role resolves to a human in the registry\n`);
+    { const P = JSON.parse(readFileSync(join(H, 'demo/meridian/portfolio/portfolio.json'), 'utf8'));
+      process.stdout.write(`     portfolio: ${P.runs.map((r) => `${r.slug} (${r.status}, ${r.strategic_intent})`).join(' · ')}\n`); }
 
     say('MERIDIAN · DISCOVER — the run cross-bank-money: research log → synthesis → problem statement → data-governance feasibility (citing the Open Finance obligations by id) → prototype → stakeholder reaction → hand-off. D1–D9, under the Meridian brand', 'executed check');
     const v = node(['discovery/gates/validate.mjs', 'discovery/runs/cross-bank-money', '--register', 'docs/governance/data-risk-register', '--brand', 'discovery/brand/design.md', '--obligations', 'docs/governance/obligations.json'], { expect: 0, quiet: true });
