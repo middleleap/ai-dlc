@@ -50,6 +50,14 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 | Skill | `uae-bank-risk-reviewer` | Virtual Head of Risk — discovery landscape, backlog risk tagging, formal review, and control-enforcement verification against a 77-control UAE taxonomy |
 | Skill | `open-finance-uiux` | Value-proposition prototyper — solution decks and interactive journey mockups |
 
+### [middleleap-npa-uae](plugins/middleleap-npa-uae/)
+
+New Product Approval for a CBUAE-regulated bank — standalone, for any customer-facing product change.
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | `npa-uae` | The Business Proposition Form (33 fields, Word template), the CBUAE anchor behind each field, sign-off routing, BAU assessments, and how the pack becomes the Loom's PA1/PA2 receipts — worked examples on Meridian Trust |
+
 ### [middleleap-loom](plugins/middleleap-loom/)
 
 **The Loom** — MiddleLeap's method for how a regulated entity builds software with AI: a gated discovery harness (D1–D9), an autonomous delivery loop with human four-eyes merge, always-on guardrails, and the machinery to adopt it in any repository. Proven end-to-end on a UAE Open Finance back office.
@@ -64,6 +72,15 @@ UAE Open Finance domain expertise for the CBUAE / Al Tareq / Nebras ecosystem.
 | Skill | `loom-adopt` | Stands the harness up in a repo — gate validator, branded renderer, artifact templates, waist gate, eight build-loop skills, reviewer templates, guardrail hooks |
 | Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line and prototype fidelity on discovery runs |
 | Agent | `data-governance-reviewer` | Judges control coverage and residual-risk soundness beyond the mechanical D6 gate |
+
+### [meridian-trust](plugins/meridian-trust/)
+
+The demo institution pack — Meridian Trust, a fictional bank, as the context the Loom plugs into. Retarget it to a real bank by swapping the values.
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | `meridian-brand-guidelines` | Meridian's palette, typography, slide layout, logos and icon system |
+| Skill | `meridian-business-case` | Two-stage capital approval — ISB pre-screening and CIC detailed case, NPV/cost model, sign-offs |
 
 Skills are namespaced by their plugin once installed: `/middleleap-open-finance:open-finance-uae`.
 

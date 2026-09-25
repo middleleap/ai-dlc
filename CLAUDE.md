@@ -21,6 +21,13 @@ plugins/
 │   ├── skills/open-finance-uae/    # the canon incl. AlTareq brand refs + check_current.py
 │   ├── skills/islamic-banking-uae/ # Shariah-compliant finance; composes with the canon
 │   └── skills/open-finance-uiux/
+├── middleleap-npa-uae/             # New Product Approval (CBUAE) — standalone, any product change
+│   ├── .claude-plugin/plugin.json
+│   └── skills/npa-uae/             # BPF template, regulatory anchors, Meridian worked examples
+├── meridian-trust/                 # Demo institution pack (fictional bank) — the Loom's "pattern"
+│   ├── .claude-plugin/plugin.json
+│   ├── skills/meridian-brand-guidelines/
+│   └── skills/meridian-business-case/   # ISB/CIC business case, NPV model, templates
 └── middleleap-loom/                # The Loom — the AI-SDLC method (flagship)
     ├── .claude-plugin/plugin.json
     ├── agents/                     # discovery-boundary + data-governance reviewers

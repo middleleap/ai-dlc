@@ -1,0 +1,20 @@
+{
+  "name": "meridian-trust",
+  "description": "Meridian Trust — the fictional CBUAE-regulated bank that runs through the Loom demo, packaged as an institution pack: its brand guidelines (palette, type, slide layout, logos) and its capital-approval business case (ISB pre-screening, CIC detailed case, NPV model, sign-offs). Shows how an institution's own context plugs into the Loom's discovery → delivery gate; retarget it to a real bank by swapping the values.",
+  "version": "1.0.0",
+  "author": {
+    "name": "MiddleLeap"
+  },
+  "homepage": "https://github.com/middleleap/ai-dlc/tree/main/plugins/meridian-trust",
+  "repository": "https://github.com/middleleap/ai-dlc",
+  "license": "Apache-2.0",
+  "keywords": [
+    "demo",
+    "meridian-trust",
+    "institution-pack",
+    "business-case",
+    "brand",
+    "loom",
+    "banking"
+  ]
+}

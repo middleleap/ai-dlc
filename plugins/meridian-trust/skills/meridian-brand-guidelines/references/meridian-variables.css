@@ -1,0 +1,40 @@
+/* Meridian Bank Brand CSS Variables — generic bank brand system */
+:root {
+  /* Primary (Blues) */
+  --mb-mist: #E9F0F6;            /* Callout backgrounds, tinted sections */
+  --mb-azure: #2F80B8;           /* Chart accents, secondary blue (large text only) */
+  --mb-icon-blue: #0B5A93;       /* Icon system fill color */
+  --mb-blue: #0B4F80;            /* PRIMARY — main accents, CTAs, logo */
+  --mb-navy: #083A5E;            /* H2 headings, hover states */
+  --mb-navy-dark: #052540;       /* H3 headings, deep emphasis */
+
+  /* Neutrals */
+  --mb-graphite: #3A3F44;        /* Primary body text */
+  --mb-slate: #6B7278;           /* Secondary text, captions */
+  --mb-ash: #9AA1A7;             /* Borders, subtle text */
+  --mb-silver: #BEC4C9;          /* Dividers, inactive */
+  --mb-silver-light: #D9DDE0;    /* Subtle backgrounds */
+  --mb-gray-alt: #E9ECEE;        /* Alternate table rows */
+  --mb-gray-bg: #F4F6F7;         /* Section backgrounds, code blocks */
+
+  /* Base */
+  --mb-black: #000000;
+  --mb-white: #FFFFFF;
+  --mb-teal-dark: #213A45;       /* Occasional dark accent */
+  --mb-link-visited: #7C9BB8;    /* Followed hyperlinks */
+
+  /* Secondary Accents (charts, callouts) */
+  --mb-amber: #E08A2E;           /* Chart secondary accent */
+  --mb-cyan: #00A3C4;            /* Chart accent, info callouts */
+  --mb-cyan-light: #5FC9DE;      /* Chart tertiary */
+  --mb-cyan-ice: #EAF8FB;        /* Very light info backgrounds */
+
+  /* Typography */
+  --mb-font-heading: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mb-font-body: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mb-font-office: Arial, sans-serif;   /* PPTX/DOCX-safe fallback */
+  --mb-weight-light: 300;
+  --mb-weight-regular: 400;
+  --mb-weight-medium: 500;
+  --mb-weight-semibold: 600;
+}
