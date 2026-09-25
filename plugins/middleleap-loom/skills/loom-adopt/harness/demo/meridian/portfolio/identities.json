@@ -1,0 +1,32 @@
+{
+  "_comment": "FICTIONAL PLANNING \u2014 the portfolio's product owners. The shipped identity registry carries one product owner (po-fatima); the portfolio runs are sponsored by three more. mount.mjs appends them to the adopted tree's docs/governance/identities.json so every run sponsor resolves to a human in the registry, which the console checks and reports.",
+  "identities": [
+    {
+      "id": "po-khalid",
+      "kind": "human",
+      "display": "Khalid (Conduct product)",
+      "roles": [
+        "product-owner"
+      ],
+      "groups": []
+    },
+    {
+      "id": "po-rania",
+      "kind": "human",
+      "display": "Rania (Business lending)",
+      "roles": [
+        "product-owner"
+      ],
+      "groups": []
+    },
+    {
+      "id": "po-omar",
+      "kind": "human",
+      "display": "Omar (Home finance)",
+      "roles": [
+        "product-owner"
+      ],
+      "groups": []
+    }
+  ]
+}

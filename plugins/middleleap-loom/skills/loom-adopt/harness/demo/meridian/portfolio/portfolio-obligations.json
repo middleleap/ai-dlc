@@ -1,0 +1,63 @@
+{
+  "_comment": "FICTIONAL PLANNING — the register rows and the one obligation the Meridian portfolio runs cite beyond the Open Finance set. The obligation is Meridian Trust's own INTERNAL policy (fictional), in the same shape as OB-AE-MTPOL-PSI-001; it is not a regulatory citation and none is paraphrased here. mount.mjs appends these to the adopted tree's registers alongside open-finance-obligations.json.",
+  "register": {
+    "taxonomy": [
+      {
+        "risk_domain_id": "DR-5",
+        "risk_domain_name": "Automated Decisions",
+        "risk_category_id": "DR-5.1",
+        "risk_category_name": "Decision Explanation Risk",
+        "definition": "Risk that a customer is told a reason for a model-made decision that the model does not support, or is told a reason the institution must not disclose, or is told nothing they can act on."
+      }
+    ],
+    "statements": [
+      {
+        "risk_id": "DR-5.1-001",
+        "risk_category_id": "DR-5.1",
+        "statement": "A declined applicant is shown a plain-language reason that model validation has not confirmed for that decision, or a restricted indicator reaches the customer.",
+        "regulatory_drivers": ["Meridian internal policy MT-CON-POL-2026 §2.4 (fictional)"],
+        "inherent_rating": "High",
+        "control_ids": ["CTRL-005"],
+        "residual_rating": "Low"
+      }
+    ],
+    "controls": [
+      {
+        "control_id": "CTRL-005",
+        "control_name": "Validated factor-to-reason map with restricted-factor suppression",
+        "control_type": "Preventive",
+        "control_owner": "First line — conduct, with model risk management",
+        "risk_ids": ["DR-5.1-001"],
+        "automation_level": "Semi-automated",
+        "effectiveness_score": 0.85,
+        "description": "Only reasons on a map that model risk management has validated can be shown; factors on the restricted list are suppressed and replaced by a review route; a negative test proves a restricted factor never reaches the notice."
+      }
+    ],
+    "residual": [
+      {
+        "risk_id": "DR-5.1-001",
+        "inherent_rating": "High",
+        "control_effectiveness": 0.85,
+        "residual_rating": "Low",
+        "verdict": "Acceptable with conditions",
+        "conditions": ["factor-to-reason map validated before any pilot", "restricted-factor negative test green"]
+      }
+    ]
+  },
+  "obligations": [
+    {
+      "id": "OB-AE-MTPOL-EXPL-001",
+      "illustrative": false,
+      "source": "Meridian Trust internal conduct policy (fictional)",
+      "article": "MT-CON-POL-2026 §2.4 Explaining credit decisions (fictional institutional policy, not a regulatory citation)",
+      "title": "A customer declined for credit is told the main reason in plain language and what would change the answer, unless the reason is on the restricted list, in which case they are told how to ask for a review",
+      "applicability": { "jurisdictions": ["AE"], "product_types": ["consumer-lending"], "conditions": ["customer_facing"] },
+      "owner_role": "compliance",
+      "last_verified": "2026-09-24",
+      "risk_ids": ["DR-5.1-001"],
+      "control_ids": ["CTRL-005"],
+      "catalog_controls": [],
+      "finos": []
+    }
+  ]
+}

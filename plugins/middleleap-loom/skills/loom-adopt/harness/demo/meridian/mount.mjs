@@ -5,8 +5,13 @@
 //   · the data-risk register gains the Meridian rows (payment status, consent, platform dependency)
 //   · the obligations register gains the payment-status obligation and the Open Finance set
 //   · the control catalog gains the demo-scoped PAYMENT-STATUS control, its mechanism and test
-//   · discovery/runs/ gains the two runs: cross-bank-money (handed off) and
+//   · discovery/runs/ gains the two walk runs: cross-bank-money (handed off) and
 //     cross-bank-money-stopped (the same discovery, ended without a hand-off)
+//   · discovery/runs/ also gains the rest of Meridian's portfolio (portfolio/portfolio.json):
+//     four runs caught at different stages — awaiting a reaction, mid-Define, blocked at D5, and
+//     still gathering signals — so an oversight surface has a real estate to read, not two runs
+//   · the registers gain the portfolio's rows (DR-5.1, CTRL-005, OB-AE-MTPOL-EXPL-001) and the
+//     operations log gains the signal that opened salary-advance (OPS-2026-0918)
 //   · discovery/brand/design.md becomes the Meridian brand profile (the shipped example), so the
 //     runs render and validate under the institution's brand, not the harness's
 //
@@ -18,6 +23,9 @@ import { fileURLToPath } from 'node:url';
 export const HERE = dirname(fileURLToPath(import.meta.url));
 export const RUNS = ['cross-bank-money', 'cross-bank-money-stopped'];
 export const RUN_DIRS = { 'cross-bank-money': 'discovery-run', 'cross-bank-money-stopped': 'discovery-run-stopped' };
+// The whole portfolio, with the gate state each run is expected to be in (scenario.test.mjs holds
+// every run to it). The walk above validates only RUNS; the portfolio is mounted for the reader.
+export const PORTFOLIO = JSON.parse(readFileSync(join(HERE, 'portfolio/portfolio.json'), 'utf8'));
 
 const J = (p) => JSON.parse(readFileSync(p, 'utf8'));
 const W = (p, o) => writeFileSync(p, JSON.stringify(o, null, 2) + '\n');
@@ -26,14 +34,15 @@ const pushAll = (file, rows) => { const cur = J(file); cur.push(...rows); W(file
 export function mountMeridian(A) {
   const M = J(join(HERE, 'obligation.json'));
   const OF = J(join(HERE, 'open-finance-obligations.json'));
+  const PF = J(join(HERE, 'portfolio/portfolio-obligations.json'));
   // Registers.
   const R = join(A, 'docs/governance/data-risk-register');
-  pushAll(join(R, 'risk-taxonomy.json'), [M.register.taxonomy, ...OF.register.taxonomy]);
-  pushAll(join(R, 'risk-statements.json'), [M.register.statement, ...OF.register.statements]);
-  pushAll(join(R, 'controls.json'), [M.register.control, ...OF.register.controls]);
-  pushAll(join(R, 'residual-risk.json'), [M.register.residual, ...OF.register.residual]);
+  pushAll(join(R, 'risk-taxonomy.json'), [M.register.taxonomy, ...OF.register.taxonomy, ...PF.register.taxonomy]);
+  pushAll(join(R, 'risk-statements.json'), [M.register.statement, ...OF.register.statements, ...PF.register.statements]);
+  pushAll(join(R, 'controls.json'), [M.register.control, ...OF.register.controls, ...PF.register.controls]);
+  pushAll(join(R, 'residual-risk.json'), [M.register.residual, ...OF.register.residual, ...PF.register.residual]);
   const obPath = join(A, 'docs/governance/obligations.json');
-  const ob = J(obPath); ob.obligations.push(M.obligation, ...OF.obligations); W(obPath, ob);
+  const ob = J(obPath); ob.obligations.push(M.obligation, ...OF.obligations, ...PF.obligations); W(obPath, ob);
   // The demo-scoped control.
   const catPath = join(A, 'docs/governance/control-catalog.json');
   const cat = J(catPath); cat.controls.push(M.control); W(catPath, cat);
@@ -42,7 +51,7 @@ export function mountMeridian(A) {
   mkdirSync(join(A, 'docs/governance/evidence'), { recursive: true });
   cpSync(join(HERE, 'payment-status-tests.json'), join(A, 'docs/governance/evidence/payment-status-tests.json'));
   // The discovery runs, under the Meridian brand.
-  for (const [slug, dir] of Object.entries(RUN_DIRS)) cpSync(join(HERE, dir), join(A, 'discovery/runs', slug), { recursive: true });
+  for (const { slug, dir } of PORTFOLIO.runs) cpSync(join(HERE, dir), join(A, 'discovery/runs', slug), { recursive: true });
   const brand = [join(A, 'discovery/brand/examples/meridian-trust.design.md'), join(HERE, '../../discovery/brand/examples/meridian-trust.design.md')].find(existsSync);
   if (!brand) throw new Error('the Meridian brand profile (discovery/brand/examples/meridian-trust.design.md) is not in the bundle');
   cpSync(brand, join(A, 'discovery/brand/design.md'));
@@ -57,17 +66,45 @@ export function mountMeridian(A) {
   // The Run → Discovery edge: one signal routed `discovery`, appended to the adopted operations log.
   const sigPath = join(A, 'docs/governance/operations-signal.json');
   const sig = existsSync(sigPath) ? J(sigPath) : { signals: [] };
-  sig.signals = [...(sig.signals || []), ...J(join(HERE, 'operations-signal.json')).signals];
+  sig.signals = [...(sig.signals || []), ...J(join(HERE, 'operations-signal.json')).signals, ...J(join(HERE, 'portfolio/operations-signal.json')).signals];
   W(sigPath, sig);
+  // The portfolio's product owners join the identity registry, so every run sponsor resolves.
+  const idPath = join(A, 'docs/governance/identities.json');
+  if (existsSync(idPath)) {
+    const reg = J(idPath);
+    const have = new Set((reg.identities || []).map((i) => i.id));
+    reg.identities = [...(reg.identities || []), ...J(join(HERE, 'portfolio/identities.json')).identities.filter((i) => !have.has(i.id))];
+    W(idPath, reg);
+  }
   return {
     mandate: M.mandate_ref,
     obligation: M.obligation.id,
-    obligations: [M.obligation.id, ...OF.obligations.map((o) => o.id)],
+    obligations: [M.obligation.id, ...OF.obligations.map((o) => o.id), ...PF.obligations.map((o) => o.id)],
     registerControl: M.register.control.control_id,
     control: M.control.control_id,
     mechanism: M.control.mechanism_ref,
     runs: RUNS,
+    portfolio: PORTFOLIO.runs.map((r) => r.slug),
     npaForm: existsSync(form) ? 'discovery/runs/cross-bank-money/npa/business-proposition-form.md' : null,
     signal: 'OPS-2026-0912',
+    signals: ['OPS-2026-0912', 'OPS-2026-0918'],
   };
+}
+
+// The rest of the estate an oversight surface reads, beyond what the walk needs: Meridian's
+// approved BrainKit (the worked example, 1.0.1) and its institution profile, and the change that
+// shipped the consolidated view (CHG-2026-0042, the bundled change example the walk also uses),
+// so the approval queue has a real change to age. Used by the Loom console's demo
+// (apps/loom-console, `loom-console demo`); the walk and the scenario test do not call it, so their
+// trees are unchanged.
+export function mountEstate(A) {
+  const H = join(HERE, '../..');
+  const BK = join(H, 'brainkit-example');
+  if (!existsSync(BK)) throw new Error('brainkit-example is bundle-only; the estate cannot be mounted in an adopted layout');
+  cpSync(join(BK, 'institution/brainkit'), join(A, 'institution/brainkit'), { recursive: true });
+  mkdirSync(join(A, 'profiles/institutions'), { recursive: true });
+  cpSync(join(BK, 'profiles/institutions/meridian-trust.json'), join(A, 'profiles/institutions/meridian-trust.json'));
+  const chg = join(A, 'docs/governance/changes/CHG-2026-0042');
+  if (!existsSync(chg)) cpSync(join(H, 'change-example'), chg, { recursive: true });
+  return { brainkit: 'institution/brainkit/manifest.json', change: 'CHG-2026-0042' };
 }

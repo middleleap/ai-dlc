@@ -36,6 +36,11 @@ jobs:
       - name: Validator self-test
         run: node --test scripts/validate-marketplace.test.mjs scripts/deidentify-check.test.mjs scripts/onboarding-pilot.test.mjs scripts/onboarding-pilot-workspaces.test.mjs
 
+      # The Loom console (apps/loom-console) is a standalone app over any installation, not part of a
+      # plugin. Its tests build the Meridian Trust demo installation and hold the console to it.
+      - name: Loom console — reader, build, read-only server
+        run: node --test apps/loom-console/test/*.test.mjs
+
       - name: Onboarding handoff, configuration and all-tier installation contracts
         run: node --test plugins/middleleap-loom/skills/loom-adopt/harness/scripts/intake-*.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/onboarding-commands.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/configuration-tasks.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/brainkit-reuse.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/project-integration.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/codex-runtime.test.mjs
 

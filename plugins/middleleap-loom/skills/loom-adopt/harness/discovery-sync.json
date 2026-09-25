@@ -68,10 +68,10 @@
     },
     "discovery/render/brainkit-provenance.test.mjs": {
       "base": null,
-      "bundle": "sha256:cabb247a6c63573630a7bc637942ec939c35eee804b9d9db072d827f275bd5d4",
+      "bundle": "sha256:0eef3905e0fb074eb700a8ccadfbb5517fecfa3f4cd4acf874877ee0b35c947d",
       "upstream": null,
       "state": "owed",
-      "note": "changed here 2026-09-13; see `git log -- discovery/render/brainkit-provenance.test.mjs`"
+      "note": "changed here 2026-09-24; see `git log -- discovery/render/brainkit-provenance.test.mjs`"
     },
     "discovery/render/office.test.mjs": {
       "base": "sha256:08bcd73de99fe59753ca0dae25c337129bbe53980e34039eeb001cbb2b90137d",

@@ -2,8 +2,8 @@
 artifact: intent
 stage: discover
 design_profile: discovery/brand/design.md
-run: "cross-bank-money"
-title: "Customers cannot see what they owe across banks"
+run: "cross-bank-money-stopped"
+title: "Customers cannot see what they owe across banks (alternative ending)"
 sponsor: po-fatima
 product_profile: open-finance
 strategic_intent: SI-03
@@ -11,7 +11,7 @@ statement: "We want to matter in customers' everyday money decisions. Our custom
 sources: [S-001, S-002, S-003]
 ---
 
-# Intent — cross-bank-money
+# Intent — cross-bank-money-stopped
 
 > Discover (the first record). The sponsor's ask, written down as intent — not yet a problem,
 > not a solution. The sponsor already has an app in mind (S-006); that idea is a signal for the
