@@ -28,10 +28,22 @@ errata number, this script also compares the register's "N corrections" count fo
 that errata against the count recorded in SKILL.md's Quick Reference, and reports
 STALE with a section_note if they diverge.
 
-Note on GitHub 403s: unauthenticated api.github.com allows ~60 req/hr per IP.
-A 403 here is almost always the rate limit (shared egress IPs exhaust it fast),
-not a permissions problem — this script now says so and falls back to the
-register-only check.
+Note on GitHub 403s: there are two distinct causes, and this script tells them
+apart from the response body rather than guessing from the status code alone.
+
+  1. The unauthenticated api.github.com rate limit (~60 req/hr per shared
+     egress IP) — transient, worth retrying later.
+  2. A Claude Code session whose GitHub access is scoped to an allowlist that
+     does not include Nebras-Open-Finance/api-specs — the session's own proxy
+     returns 403 with a body containing "not enabled for this session" before
+     the request ever reaches GitHub. Confirmed by a direct curl to
+     api.github.com from inside such a session on 28 Sep 2026 (see
+     verification-log.md); this was the "session's GitHub access is scoped to
+     this repo only" note from the 14 Sep 2026 pass, which had only guessed at
+     the cause. This is not a rate limit and will not clear on retry — it
+     clears only if the session is granted access to that repo. Either way the
+     script falls back to the register-only check, which is authoritative for
+     "current" per the ecosystem's own change policy.
 
 Usage:
   python3 check_current.py            # human-readable report
@@ -172,9 +184,20 @@ def main() -> None:
         repo = (v, n)
     except urllib.error.HTTPError as e:
         if e.code == 403:
-            repo_note = ("GitHub API 403 — almost certainly the unauthenticated rate limit "
-                         "(60 req/hr per IP), not a permissions issue. Retry later or check "
-                         "the repo manually; continuing with the register-only check.")
+            try:
+                body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                body = ""
+            if "not enabled for this session" in body or "add_repo" in body:
+                repo_note = ("GitHub API 403 — this session's GitHub access is scoped to a repo "
+                             "allowlist that does not include Nebras-Open-Finance/api-specs "
+                             "(the session's own proxy denies it before reaching GitHub). This is "
+                             "not the unauthenticated rate limit and will not clear on retry; "
+                             "continuing with the register-only check, which is authoritative.")
+            else:
+                repo_note = ("GitHub API 403 — almost certainly the unauthenticated rate limit "
+                             "(60 req/hr per IP), not a permissions issue. Retry later or check "
+                             "the repo manually; continuing with the register-only check.")
         else:
             repo_note = f"GitHub API error: {e}"
     except Exception as e:  # network, parse, etc.
