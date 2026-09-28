@@ -128,6 +128,30 @@ unaffected and were used instead) against the community hub erratas page
 | `check_current.py` blind spot | **FIXED**: the 31 Aug pass flagged that the script only compares the errata *number* and would miss an existing group growing sections in place — flagged again as still-open on 3 Sep. Added `register_section_count()` (parses the register's "N corrections" badge for the stated errata) and `skill_stated_sections()` (parses the same count from SKILL.md's Quick Reference); when the errata numbers already agree, main() now also compares these counts and reports STALE with a `section_note` on mismatch instead of a false FRESH. Verified against live data this pass: skill=5, register=5 for errata3 (agree, correctly FRESH); register=17 for errata2 (agrees with the known count, confirming the parser) | `scripts/check_current.py`, SKILL.md |
 | NOT re-verified this pass | Full site/Confluence audit (scoped to the watcher's usual register + release-registry surfaces, not a full re-verification pass); the `api-specs` git tree via GitHub API (session-scoped access denied it this pass — see Method above); the insurance-file-in-errata3 PENDING item from 3 Sep (not re-checked; still assumed to hold since nothing upstream changed) | flagged above |
 
+## Pass of 28 September 2026 — weekly ecosystem-watcher re-check: root-caused the recurring 403 + check_current.py refinement
+
+Trigger: the recurring weekly ecosystem-watcher cadence, plus a standing request to look for
+refinements that make the skill/watcher pairing more reliable over time, not just re-run the
+check. Method: `check_current.py` (register-only fallback again), plus a direct `curl` to
+`api.github.com` from this session to settle the cause of the 403 the 14 Sep pass could only
+guess at.
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| errata3 scope | **UNCHANGED** — still exactly 5 corrections (§1–5), matching SKILL.md; `check_current.py` reports FRESH | — |
+| Root cause of the `api-specs` GitHub 403 | **RESOLVED (was open from 14 Sep):** a direct `curl -D-` to `api.github.com/repos/Nebras-Open-Finance/api-specs/git/trees/main` from this session returns HTTP 403 with body `"GitHub access to this repository is not enabled for this session. Use add_repo to request access..."` — a denial from the session's own proxy before the request reaches GitHub, not GitHub's unauthenticated rate limit. The 14 Sep pass's tentative attribution ("session's GitHub access is scoped to this repo only") is now confirmed, not just suspected. This is a structural property of how these sessions are provisioned, not a transient condition — it will not clear on retry | — |
+| `check_current.py` | **Refined**: the 403 handler now reads the response body and reports the session-scope-denial case distinctly from the rate-limit case (previously it always said "almost certainly the rate limit... retry later", which is actively wrong advice for the scope-denial case and would send a future watcher pass chasing a fix that doesn't exist). Docstring's "Note on GitHub 403s" section rewritten to describe both causes | `scripts/check_current.py` |
+| Insurance-file/register discrepancy (open since 3 Sep) | **STILL NOT RESOLVED** — this environment has no more `api-specs` access than the 14 Sep pass did (same proxy denial, now confirmed structural rather than transient), so the repo-vs-register comparison still cannot run. Rather than let it keep aging silently in this log across passes, it is now also a row in SKILL.md's "Still-Open Verification Items" table so it surfaces on every read of the skill, not only when someone reads this file back to 3 Sep | SKILL.md |
+| NOT re-verified this pass | Full site/Confluence audit; doc-level Confluence register page version; API Hub / Trust Framework release registries; the pre-release line — none of these were re-fetched this pass, which was scoped to the register-only drift check plus the 403 root-cause investigation | flagged above |
+
+**Process note for future passes:** when a 403 or similar failure recurs across two or more
+passes with only a guessed explanation, the next pass should spend a few minutes confirming the
+actual cause (as here) rather than re-guessing it again — a confirmed, documented cause is worth
+more to "training the skill set" than another data point that says "still v2.1-errata3, no
+drift." The register-only fallback path has now been exercised and correctly reported FRESH on
+five consecutive passes (31 Aug, 3 Sep script-only, 14 Sep, 28 Sep) with `api-specs` unreachable
+on at least three of them — it is the reliable path in this environment, not a degraded one.
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the
