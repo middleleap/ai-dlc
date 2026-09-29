@@ -18,7 +18,7 @@ Template: `assets/Business_Case_Template.pptx` (TMP-CIC-001 V1.0)
 ## Slide 1: Title Slide
 
 Midnight background, white logo top-right, cyan Meridian line above the title (see
-`meridian-brand-guidelines` → Title/Section Divider Slides).
+`meridian-brand-guidelines` → `references/slides-and-documents.md`, Title/Section Divider Slides).
 
 - Project name (32pt, bold, white)
 - Subtitle (24pt, Silver Light)

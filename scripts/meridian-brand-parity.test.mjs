@@ -27,3 +27,10 @@ test('the Loom brand profile projects the Meridian skill tokens exactly', () => 
     assert.equal(norm(t(d)), norm(v(c)), `--${c} vs ${d}`);
   }
 });
+
+test('the brand SKILL.md stays a skill (≤ 1,500 words) and names its references', () => {
+  const s = at('plugins/middleleap-loom-demo/skills/meridian-brand-guidelines/SKILL.md');
+  const words = s.split(/\s+/).filter(Boolean).length;
+  assert.ok(words <= 1500, `${words} words`);
+  for (const r of ['accessibility', 'slides-and-documents', 'icons', 'logos-and-web']) assert.match(s, new RegExp(`references/${r}\\.md`));
+});
