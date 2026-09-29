@@ -124,8 +124,9 @@ test('the output-contract rules live once, in the schema; each agent keeps a sho
     const text = readFileSync(f, 'utf8');
     const at = text.search(/^### The output contract/m);
     if (at < 0) continue;
-    const rest = text.slice(at + 1); const next = rest.search(/^## /m);
+    const rest = text.slice(text.indexOf('\n', at) + 1); const next = rest.search(/^## /m); // after the heading line
     const words = (next < 0 ? rest : rest.slice(0, next)).split(/\s+/).filter(Boolean).length;
+    assert.ok(words >= 50, `${f}: measured ${words} words — the measurement is not reading the stanza`);
     assert.ok(words <= 170, `${f}: output-contract stanza is ${words} words — the shared rules belong in the schema`);
     checked++;
   }
