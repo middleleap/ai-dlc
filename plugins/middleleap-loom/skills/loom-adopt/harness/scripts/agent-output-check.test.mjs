@@ -1,7 +1,7 @@
 // Tests for the agent output contract gate (2.1.0, plan phase 5).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, cpSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, cpSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -109,4 +109,25 @@ test('the shipped bundle passes end to end, and an adopted tree with an unlisted
     assert.ok(bad.findings.some((f) => /hard-stop-reviewer: does not declare the output schema id/.test(f)), bad.findings.join('\n'));
     assert.ok(bad.findings.some((f) => /hard-stop-reviewer: emits loom.agent-output\/v1 but is not a role/.test(f)));
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// The output-contract rules are shared by every emitting agent; one copy lives in the schema's
+// `rules` array, and each agent keeps only what is its own (what it judges against, its verdicts).
+test('the output-contract rules live once, in the schema; each agent keeps a short stanza', () => {
+  const schemaPath = [join(HARNESS, 'agents/agent-output.schema.json'), join(HARNESS, '.claude/agents/agent-output.schema.json')].find(existsSync);
+  const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
+  assert.ok(Array.isArray(schema.rules) && schema.rules.length >= 5, 'schema.rules holds the contract');
+  const dirs = [join(HARNESS, 'agents'), join(HARNESS, '.claude/agents'), resolve(HARNESS, '../../../agents')].filter(existsSync);
+  const files = dirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.md')).map((f) => join(d, f)));
+  let checked = 0;
+  for (const f of files) {
+    const text = readFileSync(f, 'utf8');
+    const at = text.search(/^### The output contract/m);
+    if (at < 0) continue;
+    const rest = text.slice(at + 1); const next = rest.search(/^## /m);
+    const words = (next < 0 ? rest : rest.slice(0, next)).split(/\s+/).filter(Boolean).length;
+    assert.ok(words <= 170, `${f}: output-contract stanza is ${words} words — the shared rules belong in the schema`);
+    checked++;
+  }
+  assert.ok(checked >= 3, `checked ${checked} agent files`);
 });
