@@ -1151,18 +1151,6 @@
       "note": "rc.26, extended rc.32. Every defect the rc.18–rc.25 review found was one shape — a claim and its evidence drifting apart, in both directions — and each was fixed by hand after a human noticed. This makes the class mechanical, in the method's own idiom: observed, not declared. Bundle-only (it reads this repository's workflow and layout) and inert in an adopted tree. Uncredited inversions are REPORTED, never failed: the checklist enumerates attacks, not gates, so forcing one row per inversion would manufacture rows nobody meant to write. C5 (rc.32) was added because this gate MISSED a defect of its own class: rc.29 documented a `--reconcile` flag in discovery-sync-check.mjs and never wrote it, so passing it changed nothing while the operator believed a sync point had been stamped. C1 could not see it — the cited script existed; only its advertised behaviour did not. The rule is narrow on purpose: a flag counts as documented only on a comment line that names its own file, so prose about git or a sibling script is not a claim. Zero false positives across the 61 flag-documenting scripts, and it catches the rc.29 blob from git history — pinned as a test"
     },
     {
-      "control_id": "DISCOVERY-SYNC",
-      "objective": "The bundle's copy of the discovery machinery cannot diverge from its openfinance-os/ofbo upstream unnoticed: a change here that is not declared as a port owed fails the build, and the outstanding debt is counted on every run",
-      "owner_role": "platform-admin",
-      "line": 1,
-      "state": "mechanically-validated",
-      "mechanism_ref": "scripts/discovery-sync-check.mjs",
-      "test_ref": "scripts/discovery-sync-check.test.mjs",
-      "lane": "pr",
-      "always": true,
-      "note": "rc.29, corrected rc.31. The discovery machinery exists twice — here as the generic harness, in ofbo as the instantiation it was extracted from — and CLAUDE.md carried a standing 'must track upstream fixes (no automated sync)' note with nothing behind it. The adoption dry-run proves the tree still WORKS, never that it still MATCHES; seven files had diverged across four workstreams before anyone measured it. This counts the debt instead of remembering it. HONEST LIMIT, printed on every run including a clean one: it can only see THIS side, and never reports the trees as agreeing. Only `--upstream <checkout> --reconcile`, which has actually seen ofbo, may record an upstream digest, move a shared base, or set a seen-only state. That rule is CONDITIONAL and enforced by checkClaims: rc.29 shipped it as a fixed assertion that last_reconciled is null, which would have turned the build red the first time anyone did the reconciliation correctly. Bundle-only and inert in an adopted tree"
-    },
-    {
       "control_id": "EXCEPTION-REGISTER",
       "objective": "Every open exception to a control — envelope exemptions and assurance risk-acceptances alike — is projected into ONE register: expiry warnings at 30/14/7 days ahead of the existing hard block, aggregation per owner and per control, and a build failure on an expired exception or on more than the limit open against a single control",
       "owner_role": "risk-second-line",
