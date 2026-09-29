@@ -7,7 +7,9 @@ description: New Product Approval (NPA) for a CBUAE-regulated bank. Use whenever
 
 ## What this is
 
-CBUAE requires every Licensed Financial Institution to run a strict product and service approval process before a new or updated financial product or service reaches the market, and to apply the Consumer Protection Regulation and Standards to any new product, service, activity or change (CPS Article 3, General Provisions). Banks implement this as a New Product Approval process: a Business Proposition Form completed by the proposing business, reviewed by every risk and control function, and approved by a product committee before build and launch.
+> **Last verified against sources: 29 September 2026** (CBUAE Rulebook; PDPL items on secondary sources). History and open items: `references/verification-log.md`.
+
+CBUAE requires every Licensed Financial Institution to run a strict product and service approval process before a new or updated financial product or service reaches the market, and to apply the Consumer Protection Regulation and Standards to any new product, service, activity or change (CPS Article 3, Institutional Oversight: 3.1.2.1(i), 3.1.2.2, 3.2.1.13–17). Banks implement this as a New Product Approval process: a Business Proposition Form completed by the proposing business, reviewed by every risk and control function, and approved by a product committee before build and launch.
 
 This skill gives an agent the form, the meaning of every field, the regulation behind it, and the way the Loom uses it. Read `references/template.md` for the blank form (a Word version is in `assets/`), `references/regulatory-anchors.md` for the CBUAE references per field, and the two completed packs: `references/example-cross-bank-money.md` — the canonical Meridian story, a PFM view built as a TPP, assembled from the discovery run `cross-bank-money` at that run's fidelity with obligations cited by register id and payment initiation filed as a later Amendment — and `references/example-connected-accounts.md`, the same form on the lending side, where another bank's data feeds a credit decision and a model enters the risk answers.
 
@@ -55,9 +57,9 @@ The form has five sections and thirty-three fields; `references/template.md` has
 2. **Every Section 5 risk question gets Yes or No and a rationale either way.** A "No" without reasoning is returned by the reviewing function.
 3. **Name the regulation.** Each field in `references/regulatory-anchors.md` has the CBUAE reference the reviewer will check against. Cite it in the field.
 4. **Quantify where the form asks.** Financial projections need a period and an ECL / capital line. Fraud needs an estimated loss. Operational risk needs the process, people, system and continuity impacts separately.
-5. **Third parties trigger three questions.** Are they Authorised Agents under the CPS (if yes, an inclusive agreement is mandatory)? Is this outsourcing under the Outsourcing Regulation (if yes, TPRA and notification or approval)? Do they touch personal data (if yes, DPIA and the contractual clauses)?
+5. **Third parties trigger three questions.** Are they Authorised Agents under the CPS (if yes, a contract meeting CPS 5.1.1.80–82: due diligence, accountability, access and verification rights)? Is this outsourcing under the Outsourcing Regulation (if material, Board approval and a prior notice of non-objection from the Central Bank)? Do they touch personal data (if yes, DPIA and the contractual clauses)?
 6. **Islamic products or windows** need the ISSC's approval and the Shari'ah basis disclosed in the KFS; add it to 4.5 and 5.1.
-7. **Fees** subject to CBUAE caps or approval go in 2.3 with the approval status; structured products need CBUAE approval before marketing.
+7. **Fees** subject to a CBUAE cap go in 2.3 with the cap check (CPS 5.1.1.20, 5.1.1.22 and the Annexure; any other Central Bank fee requirement confirmed by Compliance); structured products need CBUAE approval before marketing.
 8. **Scale the pack, not the rigour.** The Bank's NPA policy decides whether an amendment gets the full form or a short-form variant. When the policy is silent, the agent produces the full form and marks the fields the change does not touch as "unchanged from the approved product, reference [previous NPA ID]".
 9. **Remove nothing from Section 5.** A risk function that is not consulted will not approve.
 
@@ -79,11 +81,11 @@ The agent runs this and attaches the result to the `npa-pack` attestation:
 - [ ] Financial projections tie to the capital case model (same hash)
 - [ ] Key Facts Statement drafted if the product is consumer-facing
 - [ ] Cooling-off applicability stated
-- [ ] Fee approval or cap check done where fees are regulated
+- [ ] Fee cap check done where fees are capped; any other Central Bank fee requirement confirmed by Compliance
 - [ ] Structured product? CBUAE prior approval flagged
 - [ ] Islamic? ISSC approval path and Shari'ah basis stated
 - [ ] Third parties classified: Authorised Agent, outsourcing, data processor
-- [ ] DPIA / PIA / DMBE triggered where personal data is processed
+- [ ] DPIA where PDPL Art. 21 triggers apply (high-risk or new-technology processing, large-scale sensitive data); PIA and DMBE per the Bank's policy
 - [ ] Consumer-protection KPIs defined with thresholds and an owner
 - [ ] Exit strategy includes customer communication and data deletion
 - [ ] Annexure 1 BAU assessments listed with status

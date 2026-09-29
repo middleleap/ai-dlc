@@ -7,7 +7,7 @@ description: Expert guidance on Islamic banking (Shariah-compliant finance) with
 
 Expert knowledge base for Islamic (Shariah-compliant) banking: principles, contract structures, UAE Shariah governance, and — critically — how Islamic products surface in the UAE Open Finance ecosystem (Al Tareq / Nebras). Built as a companion to the **open-finance-uae** skill.
 
-> **Last verified against sources:** OF spec fields re-verified **29 September 2026 (errata3)** against the errata-resolved v2.1 OpenAPI files in the Nebras `api-specs` repo; UAE regulatory facts last verified **13 July 2026** against the CBUAE Rulebook and CBUAE Islamic Finance pages. History in `references/verification-log.md`.
+> **Last verified against sources:** OF spec fields re-verified **29 September 2026 (errata3)** against the errata-resolved v2.1 OpenAPI files in the Nebras `api-specs` repo; UAE regulatory facts re-verified **29 September 2026** against the CBUAE Rulebook (incl. Federal Decree-Law No. 6 of 2025), the CBUAE Islamic Finance and HSA pages and HSA resolutions. History in `references/verification-log.md`.
 
 ## Quick Reference
 
@@ -15,10 +15,10 @@ Expert knowledge base for Islamic (Shariah-compliant) banking: principles, contr
 |--------|--------|
 | Core prohibitions | Riba (interest), gharar (excessive uncertainty), maisir (speculation/gambling), haram sectors |
 | Core requirements | Risk-sharing, materiality (real-asset linkage), no exploitation, ethical screening |
-| UAE apex body | Higher Shari'ah Authority (HSA) at CBUAE — fatwas **binding** on all IFIs and ISSCs |
+| UAE apex body | Higher Shari'ah Authority (HSA) at CBUAE — fatwas **binding** on all IFIs and ISSCs (FDL 6/2025 Art. 24(8)) |
 | Bank-level body | Internal Shari'ah Supervision Committee (ISSC) — min 5 members (3 with exemption), ≥⅓ Emirati, HSA-approved |
 | Newest control | Shariah Compliance Function (SCF) Standard — issued 3 Apr 2024, compliance deadline Apr 2025 |
-| Standards baseline | AAOIFI Shariah standards, adopted by the HSA; IFSB for prudential |
+| Standards baseline | AAOIFI Shari'ah standards, binding minimums since 1 Sep 2018 (HSA Res. 18/3/2018); IFSB prudential standards adopted 2020 |
 | Windows | CBUAE "Regulatory Requirements for FIs Housing an Islamic Window" standard applies (the institution's window) |
 | OF Standards support | **Native** Islamic fields in v2.1: `ShariaStructure`, `IsShariaCompliant`, Profit balance/rate semantics, Diminishing Musharaka `OwnershipTransfer`, `Takaful` flag (insurance) |
 | `ShariaStructure` enum | Ijara · ServiceIjara · Murabaha · Musharaka · Tawarruq (v2.1; **no** Mudarabah/Wakala/Istisna/Salam values) |

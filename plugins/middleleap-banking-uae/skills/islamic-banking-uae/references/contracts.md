@@ -7,7 +7,7 @@ Each contract below notes: structure → typical UAE retail/SME use → cash-flo
 ### Murabaha (cost-plus sale)
 Bank buys the asset, then sells it to the customer at cost + disclosed markup, payable in instalments. The customer's obligation is a **sale receivable** — fixed at contract signing; it does not accrue like interest.
 - UAE use: auto finance, personal finance, goods finance, covered cards (the institution's Islamic window may use Murabaha for these).
-- Cash flows: fixed instalments of a known total sale price. Early settlement rebates are discretionary (ISSC-governed), not contractual.
+- Cash flows: fixed instalments of a known total sale price. Early settlement: in the UAE, CBUAE early-settlement requirements and any caps are binding on IFIs irrespective of contract terms (HSA Resolution 76/3/2019; Consumer Protection Standards 11.1.2 — fees limited to actual costs); the ISSC approves the implementation method per financing mode.
 - OF: `ShariaStructure: Murabaha`; price expressed via profit-rate structures (`AEProductProfitCalculationMethodProperties`); balances categorise as Principal/Profit (`AEBalanceCategory`); transactions as Repayments/Profit.
 
 ### Tawarruq (commodity Murabaha / monetisation)
@@ -35,7 +35,7 @@ Both parties contribute capital; profits shared per agreement, losses per capita
 
 ### Mudarabah (investment agency partnership)
 One party provides capital (rab al-mal), the other expertise (mudarib); profit shared per agreed ratio, financial loss borne by the capital provider. This is the **deposit-side workhorse**: savings/investment accounts are typically Mudarabah pools — customer is capital provider, bank is mudarib.
-- Cash flows: **expected/indicative profit rates**, actual distribution from pool performance, smoothed via profit equalisation and investment risk reserves (CBUAE/HSA-governed). Never a guaranteed rate.
+- Cash flows: **expected/indicative profit rates**, actual distribution from pool performance, smoothed via profit equalisation and investment risk reserves (ISSC-overseen; disclosure per Consumer Protection Standards 2.1.2.14). Never a guaranteed rate.
 - OF: **no `ShariaStructure` enum value** (the enum covers financing structures). Deposit products carry `IsShariaCompliant: true` with profit semantics in `DepositRates` / profit-calculation properties; "periodic Hibah distribution" (gift-based reward on Qard-structured current accounts) is explicitly contemplated in charge/reward `Frequency` descriptions.
 
 ### Wakala (agency)

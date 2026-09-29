@@ -91,7 +91,7 @@ Version: 2.5.0
 
 | Risk ID | Name | Inherent | Residual | Controls | Key Regs |
 |---------|------|----------|----------|----------|----------|
-| DR-2.4-001 | Cross-Border Data Transfer Risk | Critical | Low | CTRL-DP-007, CTRL-DP-014, CTRL-DP-015, CTRL-DP-016 | PDPL-7, PDPL-8, PDPL-13.1 |
+| DR-2.4-001 | Cross-Border Data Transfer Risk | Critical | Low | CTRL-DP-007, CTRL-DP-014, CTRL-DP-015, CTRL-DP-016 | PDPL-22, PDPL-23, PDPL-7, PDPL-8, PDPL-13.1 |
 
 ### DR-2.5: Breach Management Risk
 *Risk that data breaches are not detected, contained, or reported as required*

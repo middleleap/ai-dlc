@@ -121,13 +121,13 @@ Providing non-specific, commercially-available product information (including an
 - **Regulatory technical standards (Article 33):** CBUAE may issue further Regulations/RTS — this is the hook under which the Open Finance Standards (Catalogue of Standards, currently v2.1-final + errata3) are binding.
 - **Enforcement (Article 34):** violations expose the OFP, API Hub and/or Licensee to administrative and financial sanctions under the Central Bank Law. The Commercial & Pricing Model document states a breach of the pricing model is a breach of the OF Regulations.
 - **Consumer protection (Article 35):** OFPs and the API Hub remain subject to applicable consumer protection laws and regulations.
-- **Regularisation:** deemed-licence holders providing OF services were to be regularised by **16 September 2026** (date passed; outcome unverified as of 29 Sep 2026). Banks operating as deemed-licence TPPs may request a **SOC 2 exemption via CISO attestation** (precedent exists at a major UAE bank; verify with Nebras/CBUAE) (verify against source — assurance posture also supported by the platform's published Ozone ISO/IEC 27001:2022 certificate, OF Confluence Jun 2026).
+- **Regularisation:** deemed-licence holders providing OF services were to be regularised by **16 September 2026** (date passed; outcome unverified as of 29 Sep 2026). A possible source, not confirmed: FDL 6/2025 Art. 184 gave institutions one year from its entry into force (16 Sep 2025) to reconcile their position with the new law — a one-year window that ends on the same date. Banks operating as deemed-licence TPPs may request a **SOC 2 exemption via CISO attestation** (precedent exists at a major UAE bank; verify with Nebras/CBUAE) (verify against source — assurance posture also supported by the platform's published Ozone ISO/IEC 27001:2022 certificate, OF Confluence Jun 2026).
 
 ## Relationship to Other CBUAE Regulations
 
 | Regulation | Relationship |
 |------------|--------------|
-| Central Bank Law (Decretal Federal Law 14/2018) | Parent law; licensed financial activities (Art 65), LFI register (Art 73), sanctions regime |
+| Central Bank Law — Federal Decree-Law No. 6 of 2025 (in force 16 Sep 2025; repealed Decretal Federal Law 14/2018) | Parent law: licensed financial activities, the LFI register, the sanctions regime. The Art 65 / Art 73 references previously given here were to the repealed 2018 law; their 2025 equivalents are not yet mapped — verify before citing an article |
 | Retail Payment Services & Card Schemes Regulation | PSPs licensed under it are deemed licensed for OF; domestic OF payments ride IPP (Aani) rails operated by Al Etihad Payments |
 | Stored Value Facilities Regulation | SVF providers are deemed licensed for OF |
 | Finance Companies Regulation | Finance companies are deemed licensed for OF |
