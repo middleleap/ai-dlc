@@ -699,6 +699,14 @@
       "action_required": [
         "If you edited an agent's output-contract section, diff it against its .loom-new sidecar: the shared rules now live in .claude/agents/agent-output.schema.json (rules)."
       ]
+    },
+    {
+      "version": "2.5.10",
+      "headline": "The Meridian brand profile matches the brand skill",
+      "notes": [
+        "discovery/brand/examples/meridian-trust.design.md: the sans font stack now matches the meridian-brand-guidelines skill (adds Helvetica Neue and Helvetica). A new repository test binds the two token sets."
+      ],
+      "action_required": []
     }
   ]
 }
