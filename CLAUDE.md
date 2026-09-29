@@ -23,8 +23,7 @@ plugins/
 │       ├── institution-intake/     # guided Q&A that sets the institution's scene
 │       ├── brainkit-init/          # drafts an Institutional BrainKit from approved sources
 │       │                           #   (never invents policy, never approves — rc.10)
-│       ├── claude-md-guide/        # CLAUDE.md authoring (was middleleap-ai-sdlc)
-│       └── context-template/       # starter CLAUDE.md generator (was middleleap-ai-sdlc)
+│       └── claude-md-guide/        # CLAUDE.md authoring + starter template
 ├── middleleap-banking-uae/         # General UAE banking — any CBUAE-regulated bank, Loom or not
 │   ├── skills/uae-bank-risk-reviewer/  # owns references/ (taxonomy, frameworks, review template)
 │   ├── skills/islamic-banking-uae/     # Shariah-compliant finance; composes with open-finance-uae

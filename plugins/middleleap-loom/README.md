@@ -159,8 +159,7 @@ an unsigned activation file no longer advances the adoption status projection.
 | Agent | `change-watch` | Continuous assurance ① Watch — the horizon scanner: new or amended regulation, a certificate inside its warning window, a CVE in a shipped dependency. Flags and routes; never assesses or fixes |
 | Agent | `risk-reviewer` | Continuous assurance ② Assess — impact against the mounted data-risk register, routing what needs a human decision. Assessment only; never authors controls or merges |
 | Agent | `model-risk-reviewer` | Independent challenge on a model/prompt change before it ships (HG-0006) — pinned, tiered, evaluated against its own pin, independently validated |
-| Skill | `claude-md-guide` | How to write CLAUDE.md files that actually change agent behaviour — structure, patterns, anti-patterns. The project canon the harness reads starts here |
-| Skill | `context-template` | Generates a starter CLAUDE.md from the repository's detected stack and layout |
+| Skill | `claude-md-guide` | How to write CLAUDE.md files that actually change agent behaviour — structure, patterns, anti-patterns. The project canon the harness reads starts here, plus a starter template (`assets/CLAUDE.md.template`) |
 | Agent | `code-reviewer` | Four-pass review — correctness, security, conventions, design — with critical/warning/nit severity; tuned through the project's CLAUDE.md (below) |
 
 The `loom-adopt` bundle (inside the skill, copied into adopting repos) carries:
@@ -225,6 +224,6 @@ it. State three things explicitly:
 
 ## Install nothing by accident
 
-Installing the plugin adds six skills, six agents and one read-only MCP server (`loom-record`),
+Installing the plugin adds five skills, six agents and one read-only MCP server (`loom-record`),
 plus the two UAE domain plugins it depends on. No hook and no loop runs until a repository
 adopts them explicitly via `loom-adopt`.

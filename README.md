@@ -58,8 +58,7 @@ runtime controls before equivalent enforcement can be claimed.
 | Skill | `loom-adopt` | Stands the harness up in a repo — gate validator, branded renderer, artifact templates, waist gate, eight build-loop skills, reviewer templates, guardrail hooks |
 | Skill | `institution-intake` | The guided Q&A that sets the institution's scene before the first problem |
 | Skill | `brainkit-init` | Drafts an Institutional BrainKit from an institution's approved sources |
-| Skill | `claude-md-guide` | How to write CLAUDE.md files that actually change agent behaviour |
-| Skill | `context-template` | Fill-in-the-blanks CLAUDE.md starter for any stack |
+| Skill | `claude-md-guide` | How to write CLAUDE.md files that actually change agent behaviour, plus a fill-in-the-blanks starter template |
 | Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line and prototype fidelity on discovery runs |
 | Agent | `data-governance-reviewer` | Judges control coverage and residual-risk soundness beyond the mechanical D6 gate |
 | Agent | `change-watch`, `risk-reviewer`, `model-risk-reviewer` | Continuous assurance — horizon scanning, impact assessment, independent model challenge |
