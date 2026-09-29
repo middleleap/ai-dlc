@@ -688,6 +688,17 @@
         "core/gate-runner.test.mjs record fixture strips the host job's OIDC request variables. On a GitHub job with id-token: write the fixture's declared runner was contradicted by the real job token and the record was refused — correct product behaviour, a test-isolation defect. Only surfaced once CI began running the harness suite in the bundle layout."
       ],
       "action_required": []
+    },
+    {
+      "version": "2.5.9",
+      "headline": "Less context per load: one copy of the agent output contract, one-line copy-table seams",
+      "notes": [
+        "The five Loom reviewer agents and the three harness reviewer templates keep only what is their own in the output-contract section (what they judge against, their verdicts); the shared rules moved verbatim into agent-output.schema.json's rules array. About 235 words fewer per agent.",
+        "copy-manifest.json seams are at most 30 words; the rest of each moved to a why field. The generated copy table in loom-adopt/SKILL.md is about 1,000 words shorter."
+      ],
+      "action_required": [
+        "If you edited an agent's output-contract section, diff it against its .loom-new sidecar: the shared rules now live in .claude/agents/agent-output.schema.json (rules)."
+      ]
     }
   ]
 }

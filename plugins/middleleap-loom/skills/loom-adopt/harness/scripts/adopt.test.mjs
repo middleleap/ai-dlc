@@ -264,4 +264,10 @@ test('the delivery-loop skills and reviewer templates are manifest entries (stam
   });
 });
 
+test('every manifest seam is a one-line description (rationale lives in "why")', () => {
+  for (const e of loadManifest().entries) {
+    const n = e.seam.split(/\s+/).filter(Boolean).length;
+    assert.ok(n <= 30, `${e.source}: seam is ${n} words — move the rationale to "why"`);
+  }
+});
 }

@@ -1,6 +1,14 @@
 {
   "$id": "loom.agent-output/v1",
   "_comment": "The one output shape every Loom reviewer and assurance agent emits (2.1.0, hardening plan row 5.1). Until now agent output was a line format a human retyped into a decision; a register-less run still produced a verdict, findings carried no confidence and no citation field anyone checked, and the reviewer agents sat outside the method's own model-risk rules. This schema is what scripts/agent-output-check.mjs validates fixtures and agent definitions against. The human-readable lines stay — a person reads them — and the JSON block follows them, so a downstream consumer (the Kosli seam, the operations-signal log, an examiner's query) reads one shape. It is deliberately small: a schema an agent can hold in its prompt.",
+  "rules": [
+      "Register absent ⇒ INSUFFICIENT_EVIDENCE. If the register the agent judges against is not mounted, not readable, or empty where it should not be, set `register_state: \"absent\"`, emit `verdict: \"INSUFFICIENT_EVIDENCE\"` and say in `reason` what was missing. Never fall back to prose, memory or a general rule of thumb: with no register there is nothing to judge against, and a verdict produced anyway is the defect this contract exists to remove. The same verdict applies when the inputs you needed could not be read (no diff, no run directory, no feed) — an unrun review is not a clean one.",
+      "A pass-class verdict carries no `high` or `critical` finding.",
+      "**`confidence`** (`high` | `medium` | `low`) says how far the records you read support the verdict — `low` when the judgement leaned on prose rather than a record. Say it; do not round up.",
+      "**Every finding carries `evidence_refs`**: at least one `{file, locator}` naming the record it rests on, and every such file appears in `inputs_read`. A finding with no evidence is an opinion and does not go in the array — put it in `reason` if it matters.",
+      "**`model` and `prompt_version`** are the pins for this agent's role in `docs/governance/model-manifest.json` (HG-0006 — the reviewer is a model too). `\"unknown\"` is a finding, not a value.",
+      "Shape of the block: { \"schema\": \"loom.agent-output/v1\", \"agent\": \"<this agent's name>\", \"prompt_version\": \"<manifest pin>\", \"model\": \"<manifest pin>\", \"inputs_read\": [\"...\"], \"register_state\": \"mounted | absent | not-applicable\", \"verdict\": \"...\", \"confidence\": \"high | medium | low\", \"findings\": [{ \"id\": \"...\", \"severity\": \"critical | high | medium | low | info\", \"subject\": \"...\", \"issue\": \"...\", \"evidence_refs\": [{ \"file\": \"...\", \"locator\": \"...\" }] }], \"reason\": \"<required when INSUFFICIENT_EVIDENCE>\" }"
+  ],
   "type": "object",
   "required": ["schema", "agent", "prompt_version", "model", "inputs_read", "register_state", "verdict", "confidence", "findings"],
   "properties": {
