@@ -209,3 +209,43 @@ test('a bump that is not yet committed skips the check instead of failing', () =
   const { code, out } = run(dir)
   assert.equal(code, 0, out)
 }))
+
+// ── Frontmatter parsing: block indicators, CRLF, paragraph breaks ──────────────────────────────
+const skillWith = (dir, fm) => { write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), `---\n${fm}\n---\n\nbody\n`); bumpBoth(dir, '1.0.1'); commit(dir) }
+
+test('a literal-block description is measured without its indicator', () => withRepo((dir) => {
+  skillWith(dir, 'name: alpha\ndescription: |\n  ' + 'x'.repeat(1023))
+  const { code, out } = run(dir); assert.equal(code, 0, out)
+}))
+
+test('a CRLF SKILL.md is parsed, not reported as missing frontmatter', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), '---\r\nname: alpha\r\ndescription: d\r\n---\r\n\r\nbody\r\n'); bumpBoth(dir, '1.0.1'); commit(dir)
+  const { code, out } = run(dir); assert.equal(code, 0, out)
+}))
+
+test('a folded description keeps text after a blank line', () => withRepo((dir) => {
+  skillWith(dir, 'name: alpha\ndescription: >\n  first\n\n  ' + 'y'.repeat(1030))
+  const { code, out } = run(dir); assert.equal(code, 1); assert.match(out, /max 1024/)
+}))
+
+// ── Dependencies, shallow clones, nameless skills ───────────────────────────────────────────────
+test('a plugin dependency that is not in the marketplace fails', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', '.claude-plugin', 'plugin.json'), JSON.stringify({ name: 'demo', version: '1.0.0', dependencies: ['ghost'] }))
+  commit(dir); const { code, out } = run(dir)
+  assert.equal(code, 1); assert.match(out, /dependency "ghost" is not a plugin in this marketplace/)
+}))
+
+test('a shallow clone warns that the version check cannot see history', () => withRepo((dir) => {
+  // a second commit, so --depth 1 really truncates
+  git(dir, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'second')
+  const shallow = mkdtempSync(join(tmpdir(), 'mkt-shallow-'))
+  try {
+    execFileSync('git', ['clone', '-q', '--depth', '1', `file://${dir}`, shallow], { stdio: 'ignore' })
+    const { code, out } = run(shallow); assert.equal(code, 0, out); assert.match(out, /shallow clone/)
+  } finally { rmSync(shallow, { recursive: true, force: true }) }
+}))
+
+test('a skill with no name field warns', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), '---\ndescription: d\n---\n'); bumpBoth(dir, '1.0.1'); commit(dir)
+  const { code, out } = run(dir); assert.equal(code, 0, out); assert.match(out, /skills\/alpha has no name field/)
+}))
