@@ -1,6 +1,6 @@
-# HTML Blueprint: Al Tareq Open Finance Journey Prototypes
+# HTML Blueprint: AlTareq Open Finance Journey Prototypes
 
-This document is the **single source of truth** for the HTML structure and styling of all Al Tareq Open Finance journey prototypes. Use this blueprint to generate consistent, working prototypes for all journey types.
+This document is the **single source of truth** for the HTML structure and styling of all AlTareq Open Finance journey prototypes. Use this blueprint to generate consistent, working prototypes for all journey types.
 
 ## Quick Start
 
@@ -32,9 +32,9 @@ All SVGs are stored in `svg-assets.md`. Insert them as raw SVG elements:
 - Use the component templates below for structured content
 
 ### Step 4: Set Button Text
-- **Most journeys**: Use "Pay using Al Tareq"
-- **Data Sharing (DATA)**: Use "Authorize using Al Tareq"
-- **VRP variants**: "Authorize using Al Tareq"
+- **Most journeys**: Use "Pay using AlTareq"
+- **Data Sharing (DATA)**: Use "Authorize using AlTareq"
+- **VRP variants**: "Authorize using AlTareq"
 
 ### Step 5: Optional Sections
 Enable/disable these based on journey requirements:
@@ -56,7 +56,7 @@ Enable/disable these based on journey requirements:
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><!-- JOURNEY_TITLE --> | Al Tareq Open Finance</title>
+  <title><!-- JOURNEY_TITLE --> | AlTareq Open Finance</title>
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -1771,8 +1771,8 @@ All SVG assets must be inserted as raw SVG elements (not img tags) to enable fil
 The blueprint includes media queries for screens ≤480px. Adjust padding, font sizes, and grid layouts for mobile viewports.
 
 ### Button Text Configuration
-- **Most journeys**: "Pay using Al Tareq"
-- **DATA, VRP, VRP-OD**: "Authorize using Al Tareq"
+- **Most journeys**: "Pay using AlTareq"
+- **DATA, VRP, VRP-OD**: "Authorize using AlTareq"
 - Check the journey specification for the correct text
 
 ### JavaScript Functionality
@@ -1814,4 +1814,4 @@ Ensure all SVG prefixes match the asset document exactly.
 
 ## Version History
 
-- **v1.0** (2024-03-15) — Initial blueprint created with all core components, styles, and templates for Al Tareq Open Finance journeys.
+- **v1.0** (2024-03-15) — Initial blueprint created with all core components, styles, and templates for AlTareq Open Finance journeys.

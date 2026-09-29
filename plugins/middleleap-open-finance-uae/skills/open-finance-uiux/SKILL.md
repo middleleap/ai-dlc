@@ -1,11 +1,11 @@
 ---
 name: open-finance-uiux
-description: Rapidly prototype Open Finance value propositions with solution presentations and interactive mockups. Use this skill when prototyping payment or data sharing use cases within retail banking apps, e-commerce, fintech partners, government portals, or any channel. Generates two deliverables per value proposition — (1) a polished HTML slide deck presenting the business case, and (2) an interactive HTML prototype showing the end-to-end user journey embedded in the app context. Triggers on queries about Open Finance prototyping, value propositions, use case demos, payment journey mockups, data sharing demos, solution presentations, pitch decks, Al Tareq journey design, or any request to build/prototype an Open Finance solution.
+description: Rapidly prototype Open Finance value propositions with solution presentations and interactive mockups. Use this skill when prototyping payment or data sharing use cases within retail banking apps, e-commerce, fintech partners, government portals, or any channel. Generates two deliverables per value proposition — (1) a polished HTML slide deck presenting the business case, and (2) an interactive HTML prototype showing the end-to-end user journey embedded in the app context. Triggers on queries about Open Finance prototyping, value propositions, use case demos, payment journey mockups, data sharing demos, solution presentations, pitch decks, AlTareq journey design, or any request to build/prototype an Open Finance solution.
 ---
 
 # Open Finance Value Proposition Prototyper
 
-This skill rapidly generates complete Open Finance value proposition packages — each comprising a **solution presentation** (HTML slide deck) and an **interactive prototype** (clickable HTML demo) — for any use case across payments, data sharing, or combined journeys within the UAE's Al Tareq Open Finance platform.
+This skill rapidly generates complete Open Finance value proposition packages — each comprising a **solution presentation** (HTML slide deck) and an **interactive prototype** (clickable HTML demo) — for any use case across payments, data sharing, or combined journeys within the UAE's AlTareq Open Finance platform.
 
 ## What This Skill Produces
 
@@ -14,8 +14,8 @@ For any given use case, this skill generates up to three deliverables:
 | Deliverable | Format | Purpose |
 |-------------|--------|---------|
 | **Solution Presentation** | HTML slide deck (9 slides) | Pitch the value proposition to stakeholders, banks, or partners |
-| **Interactive Prototype** | HTML clickable flow | Demo the end-to-end user journey (app → Al Tareq → app) |
-| **Al Tareq Journey Only** | HTML 3-screen flow | CX-certification-ready consent screens only |
+| **Interactive Prototype** | HTML clickable flow | Demo the end-to-end user journey (app → AlTareq → app) |
+| **AlTareq Journey Only** | HTML 3-screen flow | CX-certification-ready consent screens only |
 
 ## Generation Workflow
 
@@ -79,10 +79,10 @@ Read these files IN ORDER based on what you're generating:
 **For Interactive Prototype (with app context):**
 3. **`references/app-context-blueprint.md`** — App shell templates, pre-flow screens, post-flow screens, and the complete 7-screen flow template
 
-**For Al Tareq Journey screens (used within the prototype):**
+**For AlTareq Journey screens (used within the prototype):**
 4. **`references/journey-generator.md`** — Journey type composition specs
-5. **`references/html-blueprint.md`** — Al Tareq consent flow HTML template
-6. **`references/svg-assets.md`** — Inline SVG code for Al Tareq logos (use `{P}` prefix system)
+5. **`references/html-blueprint.md`** — AlTareq consent flow HTML template
+6. **`references/svg-assets.md`** — Inline SVG code for AlTareq logos (use `{P}` prefix system)
 7. **`references/design-tokens.md`** — CSS custom properties
 8. **`references/component-library.md`** — Component HTML/CSS patterns
 9. **`references/screen-catalog.md`** — Detailed field-by-field specs
@@ -101,14 +101,14 @@ Using `presentation-blueprint.md` as the template:
 
 ### Step 6: Generate the Interactive Prototype
 
-Using `app-context-blueprint.md` for the app shell and `html-blueprint.md` for the Al Tareq flow:
+Using `app-context-blueprint.md` for the app shell and `html-blueprint.md` for the AlTareq flow:
 
 1. Select the appropriate app shell (Banking, E-Commerce, Fintech, Government)
-2. Build the pre-flow screen (the app screen before Al Tareq kicks in)
-3. Build the Al Tareq 3-screen flow (Authorization → Redirect → Completion) using `journey-generator.md` specs
-4. Build the post-flow screen (the app screen after returning from Al Tareq)
+2. Build the pre-flow screen (the app screen before AlTareq kicks in)
+3. Build the AlTareq 3-screen flow (Authorization → Redirect → Completion) using `journey-generator.md` specs
+4. Build the post-flow screen (the app screen after returning from AlTareq)
 5. Wire up navigation: Pre-flow → Transition → Auth → Redirect → Completion → Transition → Post-flow
-6. Inline all Al Tareq SVGs with unique gradient ID prefixes
+6. Inline all AlTareq SVGs with unique gradient ID prefixes
 7. Add realistic sample data matching the scenario
 8. Save as `[use-case-slug]-prototype.html`
 
@@ -118,22 +118,22 @@ Using `app-context-blueprint.md` for the app shell and `html-blueprint.md` for t
 - [ ] All slides populated with real content (no remaining `{{PLACEHOLDER}}` text)
 - [ ] Keyboard navigation works (arrow keys)
 - [ ] Progress dots update correctly
-- [ ] Al Tareq brand colors used consistently
+- [ ] AlTareq brand colors used consistently
 - [ ] KPIs have realistic target values
 
 **Prototype checks:**
 - [ ] All 7 screens navigate correctly
 - [ ] App shell looks realistic for the chosen context
-- [ ] Al Tareq flow screens pass CX certification rules (see below)
+- [ ] AlTareq flow screens pass CX certification rules (see below)
 - [ ] Pre-flow and post-flow screens are contextually appropriate
 - [ ] Transitions feel natural
 
-**Al Tareq CX Certification (within prototype):**
-- [ ] Al Tareq logo uses actual inline SVG (not CSS text)
+**AlTareq CX Certification (within prototype):**
+- [ ] AlTareq logo uses actual inline SVG (not CSS text)
 - [ ] Progress bar shows correct states per screen
 - [ ] All mandatory fields present in correct order
-- [ ] Button text exact: "Pay using Al Tareq" or "Authorize using Al Tareq"
-- [ ] Al Tareq mark (◉) inside primary button as inline SVG
+- [ ] Button text exact: "Pay using AlTareq" or "Authorize using AlTareq"
+- [ ] AlTareq mark (◉) inside primary button as inline SVG
 - [ ] Cancel button paired with primary action
 - [ ] Gradient IDs unique across all inline SVGs
 
@@ -168,21 +168,23 @@ Using `app-context-blueprint.md` for the app shell and `html-blueprint.md` for t
 Files are saved to the user's workspace folder:
 - `[slug]-presentation.html` — The slide deck
 - `[slug]-prototype.html` — The interactive demo
-- `[slug]-journey.html` — Al Tareq flow only (if requested separately)
+- `[slug]-journey.html` — AlTareq flow only (if requested separately)
 
 ## Critical Quality Rules
 
 ### Brand Name Spelling
-The platform name is **"Al Tareq"** (two words, space between "Al" and "Tareq"). NEVER write "Al Tareq" as one word. This applies to:
-- Button text: "Pay using Al Tareq" / "Authorize using Al Tareq"
-- Payment option labels: "Pay by Bank using Al Tareq"
+The consumer-facing brand is written **"AlTareq"** (one word) in every button, label, screen
+title and slide — the canon is `../open-finance-uae/references/altareq-brand.md`. "Al Tareq"
+(two words) appears only when quoting CBUAE regulatory prose verbatim. This applies to:
+- Button text: "Pay using AlTareq" / "Authorize using AlTareq"
+- Payment option labels: "Pay by Bank using AlTareq"
 - All descriptive text and slide content
 
 ### SVG Logo Rules
 
-**CRITICAL**: Never use CSS-rendered text, gradient boxes, or placeholder divs for the Al Tareq logo. ALWAYS inline the actual SVG from `references/svg-assets.md`. This applies EVERYWHERE the logo appears — including:
-- Al Tareq consent flow screens (Authorization, Redirect, Completion)
-- App context screens (e.g., checkout page payment option showing the Al Tareq logo)
+**CRITICAL**: Never use CSS-rendered text, gradient boxes, or placeholder divs for the AlTareq logo. ALWAYS inline the actual SVG from `references/svg-assets.md`. This applies EVERYWHERE the logo appears — including:
+- AlTareq consent flow screens (Authorization, Redirect, Completion)
+- App context screens (e.g., checkout page payment option showing the AlTareq logo)
 - Presentation slides (if logo is shown)
 
 Each SVG has internal gradient `<defs>` with IDs. Use unique prefixes to avoid collisions:

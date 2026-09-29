@@ -4,7 +4,7 @@
 `references/value-propositions.md`
 
 ## What's Inside
-A comprehensive catalog of **24 Open Finance use cases** mapped to UAE market contexts (Al Tareq platform, CBUAE regulated) with ready-made value proposition frameworks for rapid prototyping.
+A comprehensive catalog of **24 Open Finance use cases** mapped to UAE market contexts (AlTareq platform, CBUAE regulated) with ready-made value proposition frameworks for rapid prototyping.
 
 ## Quick Navigation
 
@@ -132,6 +132,4 @@ The sample scenarios use actual UAE companies to keep them realistic:
 
 ---
 
-**Maintained by**: Open Finance Product & Marketing Team  
 **Last Updated**: 2026-02-17  
-**Questions?** Slack: #open-finance-ux

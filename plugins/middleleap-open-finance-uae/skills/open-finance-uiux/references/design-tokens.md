@@ -1,12 +1,12 @@
 # Design Tokens
 
-Complete design token reference extracted from Al Tareq Figma assets and screen designs.
+Complete design token reference extracted from AlTareq Figma assets and screen designs.
 
 ## Color Palette
 
-### Brand Colors (Al Tareq Mark Gradients)
+### Brand Colors (AlTareq Mark Gradients)
 
-The Al Tareq mark uses concentric squares with graduated gradient layers:
+The AlTareq mark uses concentric squares with graduated gradient layers:
 
 | Layer | Gradient Start | Gradient End | Usage |
 |-------|---------------|--------------|-------|
@@ -68,7 +68,7 @@ The Al Tareq mark uses concentric squares with graduated gradient layers:
 
 | Usage | Font | Fallback |
 |-------|------|----------|
-| Al Tareq brand text | System default (matches Figma) | `'Inter', 'Segoe UI', sans-serif` |
+| AlTareq brand text | System default (matches Figma) | `'Inter', 'Segoe UI', sans-serif` |
 | Arabic brand text | System Arabic | `'Noto Sans Arabic', 'Arial', sans-serif` |
 | Body text / fields | System default | `'Inter', 'Segoe UI', sans-serif` |
 
@@ -109,7 +109,7 @@ The Al Tareq mark uses concentric squares with graduated gradient layers:
 | Token | Value | Usage |
 |-------|-------|-------|
 | `--space-header-padding` | 20px 0 | Header vertical padding |
-| `--space-logo-margin` | 16px 0 | Al Tareq logo vertical margin |
+| `--space-logo-margin` | 16px 0 | AlTareq logo vertical margin |
 | `--space-progress-margin` | 16px 0 24px | Progress bar margins |
 | `--space-button-gap` | 16px | Gap between Cancel and Primary buttons |
 | `--space-button-padding` | 14px 32px | Button internal padding |

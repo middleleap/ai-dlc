@@ -25,18 +25,18 @@ Every journey follows this 3-screen flow:
 
 | ID | Journey Type | Screen Title | Permission Text | Button Text | Has Account Selector | Has Consent Footer | Has Payment Rules | Has Schedule | Has Beneficiary List |
 |----|-------------|-------------|-----------------|-------------|---------------------|-------------------|-------------------|-------------|---------------------|
-| SIP | Single Instant Payment | Confirm Payment | [TPP] needs your permission to make the payment below: | Pay using Al Tareq | Yes (radio) | No | No | No | No |
-| FDP | Future Dated Payment | Confirm to set up payment | [TPP] needs your permission to setup the payment below: | Pay using Al Tareq | Yes (radio) | No | No | No | No |
-| FD-MULTI | Fixed-Defined Multi-Payment | Confirm to setup Multi-Payment | [TPP] needs your permission to make payment(s) from your account within the payment rules below: | Pay using Al Tareq | No (pre-selected IBAN) | Yes | No | Yes (exact amounts) | No |
-| VRP | Variable Recurring Payment | Confirm to setup Multi-Payment | [TPP] needs your permission to make payment(s) from your account within the payment rules below: | Pay using Al Tareq | No (pre-selected IBAN) | Yes | Yes | No | No |
-| VD-MULTI | Variable-Defined Multi-Payment | Confirm to setup Multi-Payment | same as VRP | Pay using Al Tareq | No (pre-selected IBAN) | Yes | No | Yes (MAX amounts) | No |
-| IAVDB | Variable-Defined Beneficiary | Confirm to setup Multi-Payment | same as VRP | Pay using Al Tareq | No (pre-selected IBAN) | Yes | Yes (simplified) | No | Yes |
-| EAVB | Variable Beneficiary | Confirm to setup Multi-Payment | same as VRP | Pay using Al Tareq | No (pre-selected IBAN) | Yes | Yes (simplified) | No | No |
-| VRP-OD | VRP On-Demand | Confirm to setup Multi-Payment | same as VRP | Pay using Al Tareq | No (pre-selected IBAN) | Yes | Yes (detailed) | No | No |
-| COMBINED | Combined Payment | Confirm to setup Combined-Payment | same as VRP | Pay using Al Tareq | No (pre-selected IBAN) | Yes | Yes (with immediate) | No | No |
-| INTL | International Payment | Confirm to setup payment | [TPP] needs your permission to setup the payment below: | Pay using Al Tareq | No (pre-selected IBAN) | No | No | No | No |
-| BULK | Bulk/Batch Payment | Confirm to setup payment | Please check if the details below are correct. | Pay using Al Tareq | Yes (radio, includes Business Account) | No | No | No | No |
-| DATA | Data Sharing | (no heading) | Select account(s) to share information with [TPP name] | Authorize using Al Tareq | Yes (checkbox multi-select) | No | No | No | No |
+| SIP | Single Instant Payment | Confirm Payment | [TPP] needs your permission to make the payment below: | Pay using AlTareq | Yes (radio) | No | No | No | No |
+| FDP | Future Dated Payment | Confirm to set up payment | [TPP] needs your permission to setup the payment below: | Pay using AlTareq | Yes (radio) | No | No | No | No |
+| FD-MULTI | Fixed-Defined Multi-Payment | Confirm to setup Multi-Payment | [TPP] needs your permission to make payment(s) from your account within the payment rules below: | Pay using AlTareq | No (pre-selected IBAN) | Yes | No | Yes (exact amounts) | No |
+| VRP | Variable Recurring Payment | Confirm to setup Multi-Payment | [TPP] needs your permission to make payment(s) from your account within the payment rules below: | Pay using AlTareq | No (pre-selected IBAN) | Yes | Yes | No | No |
+| VD-MULTI | Variable-Defined Multi-Payment | Confirm to setup Multi-Payment | same as VRP | Pay using AlTareq | No (pre-selected IBAN) | Yes | No | Yes (MAX amounts) | No |
+| IAVDB | Variable-Defined Beneficiary | Confirm to setup Multi-Payment | same as VRP | Pay using AlTareq | No (pre-selected IBAN) | Yes | Yes (simplified) | No | Yes |
+| EAVB | Variable Beneficiary | Confirm to setup Multi-Payment | same as VRP | Pay using AlTareq | No (pre-selected IBAN) | Yes | Yes (simplified) | No | No |
+| VRP-OD | VRP On-Demand | Confirm to setup Multi-Payment | same as VRP | Pay using AlTareq | No (pre-selected IBAN) | Yes | Yes (detailed) | No | No |
+| COMBINED | Combined Payment | Confirm to setup Combined-Payment | same as VRP | Pay using AlTareq | No (pre-selected IBAN) | Yes | Yes (with immediate) | No | No |
+| INTL | International Payment | Confirm to setup payment | [TPP] needs your permission to setup the payment below: | Pay using AlTareq | No (pre-selected IBAN) | No | No | No | No |
+| BULK | Bulk/Batch Payment | Confirm to setup payment | Please check if the details below are correct. | Pay using AlTareq | Yes (radio, includes Business Account) | No | No | No | No |
+| DATA | Data Sharing | (no heading) | Select account(s) to share information with [TPP name] | Authorize using AlTareq | Yes (checkbox multi-select) | No | No | No | No |
 
 ---
 
@@ -46,7 +46,7 @@ Every journey follows this 3-screen flow:
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -67,14 +67,14 @@ Account Selector Card:
     - Overdraft Limit: [amount] AED (if applicable)
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -123,7 +123,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -144,14 +144,14 @@ Account Selector Card:
     - Overdraft Limit: [amount] AED (if applicable)
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -176,7 +176,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -205,14 +205,14 @@ Consent Footer Card:
     ☐ "I trust this payee and want to save as trusted payee"
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -237,7 +237,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -265,14 +265,14 @@ Consent Footer Card:
     ☐ "I trust this payee and want to save as trusted payee"
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -297,7 +297,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -326,14 +326,14 @@ Consent Footer Card:
     ☐ "I trust this payee and want to save as trusted payee"
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -358,7 +358,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -386,14 +386,14 @@ Consent Footer Card:
     ☐ "I trust these payees and want to save as trusted payees"
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -418,7 +418,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -440,14 +440,14 @@ Consent Footer Card:
     ☐ "I understand payments can be made to any beneficiary within these limits"
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -472,7 +472,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -501,14 +501,14 @@ Consent Footer Card:
     ☐ "I trust this payee and want to save as trusted payee"
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -533,7 +533,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -562,14 +562,14 @@ Consent Footer Card:
     ☐ "I trust this payee and want to save as trusted payee"
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -594,7 +594,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -623,14 +623,14 @@ Exchange Rate Countdown:
   Note: "Exchange rate valid until [time]. Rate may change if not completed within this period."
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -656,7 +656,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Card:
@@ -681,14 +681,14 @@ Account Selector Card:
     - Overdraft Limit: [amount] AED (if applicable)
 
 Action Buttons:
-  [Cancel] | [Pay using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Pay using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -714,7 +714,7 @@ Return Button: [Return to [TPP]]
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: dl)
+AlTareq Logo (dark, prefix: dl)
 Progress Bar (Consent ✓ | Authorize active | Complete inactive)
 
 Content Section (no card):
@@ -741,14 +741,14 @@ Expiry Notice:
   Text: "This authorization will expire on [date]. You can revoke access at any time."
 
 Action Buttons:
-  [Cancel] | [Authorize using Al Tareq] (white mark SVG, prefix: bm)
+  [Cancel] | [Authorize using AlTareq] (white mark SVG, prefix: bm)
 ```
 
 ### Completion Screen Composition
 
 ```
 Header Block (LFI branding)
-Al Tareq Logo (dark, prefix: cl)
+AlTareq Logo (dark, prefix: cl)
 Progress Bar (all completed with checkmarks, lines all active)
 
 Success Card (centered):
@@ -794,8 +794,8 @@ Layout:
         - Margin-top: 40px
 
       Footer (bottom of viewport, centered):
-        Al Tareq Logo (white, prefix: wl)
-        Text below logo: "Powered by Al Tareq"
+        AlTareq Logo (white, prefix: wl)
+        Text below logo: "Powered by AlTareq"
         Font color: white
         Opacity: 0.9
 ```
@@ -820,8 +820,8 @@ Layout:
         - Margin-top: 40px
 
       Footer (bottom of viewport, centered):
-        Al Tareq Logo (white, prefix: wl)
-        Text below logo: "Powered by Al Tareq"
+        AlTareq Logo (white, prefix: wl)
+        Text below logo: "Powered by AlTareq"
         Font color: white
         Opacity: 0.9
 ```
@@ -903,7 +903,7 @@ Used in: SIP variants
 |--------|-------|---------|-------|
 | dl | Dark Logo | Used in Authorization screens (headers) | Dark/Black |
 | cl | Completion Logo | Used in Completion screens (headers) | Dark/Black |
-| bm | Button Mark | Used on "[Pay using Al Tareq]" button | White |
+| bm | Button Mark | Used on "[Pay using AlTareq]" button | White |
 | wl | White Logo | Used on Redirect screens (footer) | White |
 
 ---
@@ -922,8 +922,8 @@ Used in: SIP variants
 
 | Journey | Button Text | Icon |
 |---------|------------|------|
-| SIP, FDP, FD-MULTI, VRP, VD-MULTI, IAVDB, EAVB, VRP-OD, COMBINED, INTL, BULK | "Pay using Al Tareq" | White mark (bm) |
-| DATA | "Authorize using Al Tareq" | White mark (bm) |
+| SIP, FDP, FD-MULTI, VRP, VD-MULTI, IAVDB, EAVB, VRP-OD, COMBINED, INTL, BULK | "Pay using AlTareq" | White mark (bm) |
+| DATA | "Authorize using AlTareq" | White mark (bm) |
 
 ---
 

@@ -16,7 +16,7 @@ Every SVG uses gradient `<defs>` internally. When multiple SVGs appear on the sa
 | White mark — Second button (if any) | `bm2_` | `bm2_0, bm2_1, bm2_2, bm2_3` |
 | Spinner gradient | `sg` | `sg` |
 
-**IMPORTANT**: The Al Tareq logo must ALWAYS be rendered as an inline SVG, never as:
+**IMPORTANT**: The AlTareq logo must ALWAYS be rendered as an inline SVG, never as:
 - CSS text with gradients
 - `<div>` or `<span>` placeholder elements
 - `<img>` tags referencing external files

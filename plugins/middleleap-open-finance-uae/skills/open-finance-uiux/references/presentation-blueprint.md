@@ -1,6 +1,6 @@
-# Al Tareq Open Finance Presentation Blueprint
+# AlTareq Open Finance Presentation Blueprint
 
-A professional, modern HTML template for generating solution presentations about Open Finance value propositions for the UAE's Al Tareq platform.
+A professional, modern HTML template for generating solution presentations about Open Finance value propositions for the UAE's AlTareq platform.
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ A professional, modern HTML template for generating solution presentations about
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{PRESENTATION_TITLE}} - Al Tareq Open Finance</title>
+    <title>{{PRESENTATION_TITLE}} - AlTareq Open Finance</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ===== CSS Variables & Reset ===== */
@@ -808,7 +808,7 @@ A professional, modern HTML template for generating solution presentations about
                     <p style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.9); margin: 2rem 0;">{{PRESENTATION_DESCRIPTION}}</p>
                 </div>
                 <div class="title-slide-meta">
-                    <div class="altareq-badge">⚡ Powered by Al Tareq Open Finance</div>
+                    <div class="altareq-badge">⚡ Powered by AlTareq Open Finance</div>
                     <div class="date">{{PRESENTATION_DATE}}</div>
                 </div>
             </div>
@@ -876,7 +876,7 @@ A professional, modern HTML template for generating solution presentations about
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
                             <div class="flow-step-icon">🔗</div>
-                            <div class="flow-step-label">Al Tareq</div>
+                            <div class="flow-step-label">AlTareq</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
@@ -1069,7 +1069,7 @@ A professional, modern HTML template for generating solution presentations about
                         <div class="arch-arrow">⟷</div>
                         <div class="arch-block">
                             <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">🔗</div>
-                            Al Tareq Open Finance API
+                            AlTareq Open Finance API
                         </div>
                         <div class="arch-arrow">⟷</div>
                         <div class="arch-block">
@@ -1359,7 +1359,7 @@ The template uses Google Fonts "Inter" via CDN. To use a different font:
 ✅ **9 professionally designed slide layouts**
 ✅ **Smooth keyboard and click navigation**
 ✅ **Progress dots and slide counter**
-✅ **Al Tareq brand colors pre-configured**
+✅ **AlTareq brand colors pre-configured**
 ✅ **Fully responsive design**
 ✅ **Modern CSS animations and transitions**
 ✅ **Accessibility-ready (WCAG compliant)**
