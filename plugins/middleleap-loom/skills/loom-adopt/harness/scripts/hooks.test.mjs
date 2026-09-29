@@ -11,7 +11,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync, execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -94,6 +94,42 @@ test('spec-tripwire: reading the contract from the shell is allowed', { skip: SK
     for (const command of ['cat specs/openapi.yaml', 'git diff origin/main -- specs/openapi.yaml', 'grep -n consent specs/openapi.yaml']) {
       assert.ok(!denied(run('spec-tripwire.sh', { command }, repo)), `wrongly denied: ${command}`);
     }
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('spec-tripwire: read-only tooling that names the contract is allowed; a write aimed at it is denied', { skip: SKIP }, () => {
+  const repo = repoOn('claude/STORY-9-types');
+  try {
+    for (const command of [
+      'npx openapi-typescript specs/openapi.yaml > src/api.d.ts',
+      'node scripts/lint-spec.mjs specs/openapi.yaml',
+      'python3 -m openapi_spec_validator specs/openapi.yaml',
+    ]) assert.ok(!denied(run('spec-tripwire.sh', { command }, repo)), `wrongly denied: ${command}`);
+    for (const command of [
+      "python3 -c \"open('specs/openapi.yaml','w').write('')\"",
+      'cat src/new.yaml > specs/openapi.yaml',
+      'tee specs/openapi.yaml < src/new.yaml',
+    ]) assert.ok(denied(run('spec-tripwire.sh', { command }, repo)), `not denied: ${command}`);
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('spec-tripwire: a ../ path to the contract is canonicalised without GNU realpath', { skip: SKIP }, () => {
+  const repo = repoOn('feature/STORY-7-add-field');
+  try {
+    assert.ok(denied(run('spec-tripwire.sh', { file_path: 'src/../specs/openapi.yaml' }, repo)), 'relative ../ path');
+    assert.ok(denied(run('spec-tripwire.sh', { file_path: `${repo}/lib/../specs/openapi.yaml` }, repo)), 'absolute ../ path');
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('spec-tripwire: a symlink to the contract is resolved on every platform (no GNU realpath -m)', { skip: SKIP }, () => {
+  const repo = repoOn('feature/STORY-7-add-field');
+  try {
+    mkdirSync(join(repo, 'specs'), { recursive: true });
+    mkdirSync(join(repo, 'docs'), { recursive: true });
+    writeFileSync(join(repo, 'specs', 'openapi.yaml'), 'openapi: 3.1.0\n');
+    symlinkSync('../specs/openapi.yaml', join(repo, 'docs', 'contract.yaml'));
+    assert.ok(denied(run('spec-tripwire.sh', { file_path: join(repo, 'docs', 'contract.yaml') }, repo)), 'absolute symlink path');
+    assert.ok(denied(run('spec-tripwire.sh', { file_path: 'docs/contract.yaml' }, repo)), 'relative symlink path');
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
 
