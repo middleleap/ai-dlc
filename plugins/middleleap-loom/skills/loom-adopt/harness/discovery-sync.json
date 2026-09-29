@@ -20,10 +20,10 @@
     },
     "discovery/brand/examples/meridian-trust.design.md": {
       "base": "sha256:06979c6fafda313f635e72d7adac7ad43975dda67e38d69d27fd3b5a433c73ca",
-      "bundle": "sha256:304119a94b8c38553b377a72b7a8e9c45333adcc58692f7d43f39d1c1468fc69",
+      "bundle": "sha256:a6796102aaf7e843d1880dad3cbfb30bdc131a80eb23bf5b51e81ba3f24dd635",
       "upstream": null,
       "state": "owed",
-      "note": "changed here 2026-09-25; see `git log -- discovery/brand/examples/meridian-trust.design.md`"
+      "note": "changed here 2026-09-29; see `git log -- discovery/brand/examples/meridian-trust.design.md`"
     },
     "discovery/gates/brand.mjs": {
       "base": "sha256:59fa90ae29fac2038006cde66626311ab47295c6368a9192119926172ce6d0d5",

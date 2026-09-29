@@ -59,7 +59,7 @@ Additional Meridian tokens — allowed in rendered output, not required by the r
 
 | Token | Value |
 |---|---|
-| `font.family.sans` | `"Inter", Arial, sans-serif` |
+| `font.family.sans` | `"Inter", "Helvetica Neue", Helvetica, Arial, sans-serif` |
 | `font.family.mono` | `"Roboto Mono", Menlo, monospace` |
 | `font.size.h1` | `32px` |
 | `font.size.h2` | `24px` |
