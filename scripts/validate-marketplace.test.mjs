@@ -209,3 +209,21 @@ test('a bump that is not yet committed skips the check instead of failing', () =
   const { code, out } = run(dir)
   assert.equal(code, 0, out)
 }))
+
+// ── Frontmatter parsing: block indicators, CRLF, paragraph breaks ──────────────────────────────
+const skillWith = (dir, fm) => { write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), `---\n${fm}\n---\n\nbody\n`); bumpBoth(dir, '1.0.1'); commit(dir) }
+
+test('a literal-block description is measured without its indicator', () => withRepo((dir) => {
+  skillWith(dir, 'name: alpha\ndescription: |\n  ' + 'x'.repeat(1023))
+  const { code, out } = run(dir); assert.equal(code, 0, out)
+}))
+
+test('a CRLF SKILL.md is parsed, not reported as missing frontmatter', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), '---\r\nname: alpha\r\ndescription: d\r\n---\r\n\r\nbody\r\n'); bumpBoth(dir, '1.0.1'); commit(dir)
+  const { code, out } = run(dir); assert.equal(code, 0, out)
+}))
+
+test('a folded description keeps text after a blank line', () => withRepo((dir) => {
+  skillWith(dir, 'name: alpha\ndescription: >\n  first\n\n  ' + 'y'.repeat(1030))
+  const { code, out } = run(dir); assert.equal(code, 1); assert.match(out, /max 1024/)
+}))

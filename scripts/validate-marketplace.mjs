@@ -89,14 +89,17 @@ const readJson = (p) => {
 
 // Frontmatter must be a leading --- block; description may be folded (`>`) across lines.
 const frontmatter = (file) => {
-  const text = readFileSync(file, 'utf8')
+  const text = readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
   const m = /^---\n([\s\S]*?)\n---/.exec(text)
   if (!m) return null
   const fields = {}
-  const re = /^([A-Za-z][\w-]*):[ \t]*(.*(?:\n[ \t]+.*)*)/gm
+  // A value runs on over indented lines, and over a blank line that is followed by another
+  // indented line (a paragraph break inside a folded or literal block).
+  const re = /^([A-Za-z][\w-]*):[ \t]*(.*(?:\n(?:[ \t]+.*|(?=\n[ \t]+\S)))*)/gm
   let f
   while ((f = re.exec(m[1]))) {
-    fields[f[1]] = f[2].replace(/^>-?\s*/, '').split('\n').map((l) => l.trim()).join(' ').trim()
+    // Drop a block-scalar indicator (|, |-, >, >+, …) so it is not counted as description text.
+    fields[f[1]] = f[2].replace(/^[|>][+-]?\d*[ \t]*/, '').split('\n').map((l) => l.trim()).filter(Boolean).join(' ').trim()
   }
   return fields
 }
