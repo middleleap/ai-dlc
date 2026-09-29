@@ -30,7 +30,7 @@ Once installed, skills are namespaced to the plugin: `/middleleap-open-finance-u
 - **CBUAE** is the Central Bank of the UAE — the regulator.
 - **TPP** = Third Party Provider; **LFI** = Licensed Financial Institution.
 - The **API Hub** is the Ozone-powered centralised infrastructure for Open Finance APIs.
-- Standards canon at last verification (13 Jul 2026): **v2.1-final + errata3**, API Hub **v8**.
+- Standards canon: **v2.1-final + errata3**, API Hub **v8** at the skill's last verification — the date and the audit trail live in `skills/open-finance-uae/SKILL.md` (the "Last verified" note) and `references/verification-log.md`; run `python3 skills/open-finance-uae/scripts/check_current.py` before relying on it.
   Don't trust that line — run `python3 skills/open-finance-uae/scripts/check_current.py`,
   which exists precisely because hardcoded version claims rot quietly.
 

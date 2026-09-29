@@ -72,7 +72,7 @@ To confirm it actually loads, from inside Claude Code: `/plugin marketplace add 
 - **CBUAE** = Central Bank of the UAE (the regulator)
 - **TPP** = Third Party Provider; **LFI** = Licensed Financial Institution
 - **API Hub** = Ozone-powered centralised infrastructure for Open Finance APIs
-- Standards canon at last verification (17 Aug 2026): **v2.1-final + errata3**, API Hub **v8** — don't trust this line; run `python3 plugins/middleleap-open-finance-uae/skills/open-finance-uae/scripts/check_current.py`
+- Standards canon: **v2.1-final + errata3**, API Hub **v8** at the skill's last verification — the date lives only in the skill's SKILL.md "Last verified" note; don't trust this line, run `python3 plugins/middleleap-open-finance-uae/skills/open-finance-uae/scripts/check_current.py` (Python ≥ 3.9)
 
 Reference files carry regulatory figures, dates, and AED amounts. Treat them as load-bearing: check against the Standards, never paraphrase from memory, and record corrections in the skill's `references/verification-log.md`.
 
