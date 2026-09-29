@@ -11,8 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 .claude-plugin/marketplace.json     # marketplace manifest — the file Claude Code reads
 plugins/
-├── middleleap-loom/                # The Loom — the AI-SDLC method (flagship). Depends on the three below
-│   ├── .claude-plugin/plugin.json  #   ("dependencies"), so installing it installs them
+├── middleleap-loom/                # The Loom — the AI-SDLC method (flagship). Depends on the two UAE
+│   ├── .claude-plugin/plugin.json  #   plugins below ("dependencies"); the demo is opt-in
 │   ├── agents/                     # discovery-boundary, data-governance, change-watch, risk,
 │   │                               #   model-risk and code reviewers
 │   └── skills/

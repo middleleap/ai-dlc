@@ -11,10 +11,11 @@ context. Proven end-to-end on a UAE Open Finance back office: an autonomous buil
 /plugin install middleleap-loom@middleleap-ai-dlc
 ```
 
-Installing the Loom also installs the three plugins it works with, declared as dependencies in
-its `plugin.json`: `middleleap-banking-uae` (risk review, Islamic banking, New Product Approval),
-`middleleap-open-finance-uae` (the UAE Open Finance canon) and `middleleap-loom-demo` (Meridian
-Trust, the demo institution). Each of those also installs on its own.
+Installing the Loom also installs the two plugins it works with, declared as dependencies in
+its `plugin.json`: `middleleap-banking-uae` (risk review, Islamic banking, New Product Approval)
+and `middleleap-open-finance-uae` (the UAE Open Finance canon). The Meridian Trust demo
+institution (`middleleap-loom-demo`) is installed separately when you want the worked example.
+Each of them also installs on its own.
 
 Human-facing documentation: **[docs/the-loom.html](../../docs/the-loom.html)** — the interactive
 page showing how the Loom works (the loom figure, the double diamond, the brain, continuous
@@ -178,7 +179,7 @@ The `loom-adopt` bundle (inside the skill, copied into adopting repos) carries:
   support), and `govern` (author a governed artifact without supplying its judgement)
 - **Two reviewer templates** — `hard-stop-reviewer`, `contract-conformance-reviewer`
   (checklists are domain content; you fill in yours)
-- **Three guardrail hooks** — `pii-guard`, `spec-tripwire`, `test-tripwire`, plus the
+- **Four guardrail hooks** — `pii-guard`, `spec-tripwire`, `test-tripwire`, `shariah-term-guard`, plus the
   settings snippet that wires them
 - **A minimal data-risk register**, as a worked example (`harness/register-example/`) — one
   complete regulation → risk → control → residual chain. Copy it to
@@ -224,5 +225,6 @@ it. State three things explicitly:
 
 ## Install nothing by accident
 
-Installing the plugin adds six skills and six agents — nothing always-on. The hooks and the
-build loop activate only when a repository adopts them explicitly via `loom-adopt`.
+Installing the plugin adds six skills, six agents and one read-only MCP server (`loom-record`),
+plus the two UAE domain plugins it depends on. No hook and no loop runs until a repository
+adopts them explicitly via `loom-adopt`.
