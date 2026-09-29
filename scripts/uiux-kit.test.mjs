@@ -16,7 +16,7 @@ test('the three large templates are HTML files the skill names by path', () => {
 
 test('placeholders survive the move', () => {
   const count = (s) => (s.match(/\{\{[A-Z0-9_]+\}\}/g) ?? []).length;
-  assert.ok(count(read('assets/templates/presentation.html')) >= 60, 'presentation placeholders (69 at the move; the rest are in the blueprint'\''s fill-in table)');
+  assert.ok(count(read('assets/templates/presentation.html')) >= 60, 'presentation placeholders: 69 at the move; the rest are in the blueprint fill-in table');
   assert.ok(count(read('assets/templates/app-flow.html')) > 0, 'app-flow placeholders');
   assert.match(read('assets/templates/consent-flow.html'), /<!-- INSERT DARK LOGO SVG/);
 });
