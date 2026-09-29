@@ -72,7 +72,6 @@ UAE banking expertise for any CBUAE-regulated institution — general-purpose, w
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | `uae-bank-risk-reviewer` | Virtual Head of Risk — discovery landscape, backlog risk tagging, formal review, and control-enforcement verification against a 77-control UAE taxonomy |
-| Skill | `bank-risk-reviewer` | The same reviewer for a bank outside the UAE, mapping the regulatory drivers to local equivalents |
 | Skill | `islamic-banking-uae` | Shariah-compliant finance — principles, contracts, CBUAE Shariah governance, and the Islamic fields in Standards v2.1 |
 | Skill | `npa-uae` | New Product Approval — the Business Proposition Form (33 fields, Word template), the CBUAE anchor behind each field, sign-off routing, BAU assessments, and the Loom's PA1/PA2 receipts |
 

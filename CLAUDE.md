@@ -27,7 +27,6 @@ plugins/
 │       └── context-template/       # starter CLAUDE.md generator (was middleleap-ai-sdlc)
 ├── middleleap-banking-uae/         # General UAE banking — any CBUAE-regulated bank, Loom or not
 │   ├── skills/uae-bank-risk-reviewer/  # owns references/ (taxonomy, frameworks, review template)
-│   ├── skills/bank-risk-reviewer/      # non-UAE variant; reads ../uae-bank-risk-reviewer/references/
 │   ├── skills/islamic-banking-uae/     # Shariah-compliant finance; composes with open-finance-uae
 │   └── skills/npa-uae/                 # New Product Approval: BPF template, anchors, Meridian examples
 ├── middleleap-open-finance-uae/    # UAE Open Finance domain expertise

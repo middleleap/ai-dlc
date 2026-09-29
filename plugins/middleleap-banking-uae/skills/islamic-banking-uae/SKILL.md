@@ -38,7 +38,7 @@ Expert knowledge base for Islamic (Shariah-compliant) banking: principles, contr
 - **Trigger both skills** for any task touching Islamic products in an Al Tareq / Nebras context (LFI data sharing, TPP use cases, product API, consent journeys, account opening).
 - open-finance-uae owns: architecture, consent lifecycle, security, certification, pricing, liability, brand/CX.
 - This skill owns: what the Islamic fields mean, which contract maps to which schema, Shariah governance sign-offs a feature needs, and Shariah-native use-case design.
-- Field-level detail: always resolve errata first (`python3 scripts/fetch_spec.py` in open-finance-uae), then interpret via `references/open-finance-intersection.md`.
+- Field-level detail: always resolve errata first (`python3 scripts/fetch_spec.py` in the `open-finance-uae` skill of the `middleleap-open-finance-uae` plugin, which this plugin declares as a dependency; if it is absent, answer from `references/open-finance-intersection.md` and mark the field detail unverified), then interpret via `references/open-finance-intersection.md`.
 
 ## Reference Routing — read these first
 
