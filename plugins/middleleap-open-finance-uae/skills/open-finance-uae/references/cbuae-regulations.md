@@ -64,7 +64,7 @@ Products in scope (Article 5) span banking (current/savings accounts, credit car
 
 Licence scope: an Open Finance Licence covers **Data Sharing** and/or **Service Initiation** only. It does not authorise any other licensed activity — no advice, no arranging/mediating transactions, no holding customer funds (see Article 4).
 
-**Regularisation deadline:** deemed-licence participants must complete regularisation of their Open Finance activities (notification/approval and compliance posture) by **16 September 2026** (verify against source — date is carried from the skill's verified baseline; not present in the public rulebook text, which provides for phased application by CBUAE notification).
+**Regularisation deadline:** deemed-licence participants were to complete regularisation of their Open Finance activities by **16 September 2026** (date now passed; carried from the skill's verified baseline and never found in the public rulebook text, which provides for phased application by CBUAE notification — the outcome is unverified as of 29 Sep 2026).
 
 ## Capital and Insurance Requirements
 
@@ -121,7 +121,7 @@ Providing non-specific, commercially-available product information (including an
 - **Regulatory technical standards (Article 33):** CBUAE may issue further Regulations/RTS — this is the hook under which the Open Finance Standards (Catalogue of Standards, currently v2.1-final + errata3) are binding.
 - **Enforcement (Article 34):** violations expose the OFP, API Hub and/or Licensee to administrative and financial sanctions under the Central Bank Law. The Commercial & Pricing Model document states a breach of the pricing model is a breach of the OF Regulations.
 - **Consumer protection (Article 35):** OFPs and the API Hub remain subject to applicable consumer protection laws and regulations.
-- **Regularisation:** deemed-licence holders providing OF services must be regularised by **16 September 2026** (verify against source). Banks operating as deemed-licence TPPs may request a **SOC 2 exemption via CISO attestation** (precedent exists at a major UAE bank; verify with Nebras/CBUAE) (verify against source — assurance posture also supported by the platform's published Ozone ISO/IEC 27001:2022 certificate, OF Confluence Jun 2026).
+- **Regularisation:** deemed-licence holders providing OF services were to be regularised by **16 September 2026** (date passed; outcome unverified as of 29 Sep 2026). Banks operating as deemed-licence TPPs may request a **SOC 2 exemption via CISO attestation** (precedent exists at a major UAE bank; verify with Nebras/CBUAE) (verify against source — assurance posture also supported by the platform's published Ozone ISO/IEC 27001:2022 certificate, OF Confluence Jun 2026).
 
 ## Relationship to Other CBUAE Regulations
 
