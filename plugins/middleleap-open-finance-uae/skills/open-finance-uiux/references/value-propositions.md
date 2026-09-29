@@ -1,5 +1,5 @@
 # Open Finance Value Propositions Catalog
-## Al Tareq Platform (CBUAE Regulated)
+## AlTareq Platform (CBUAE Regulated)
 
 ---
 
@@ -13,7 +13,7 @@ Each entry is self-contained and structured to enable immediate:
 - User testing scenario development
 - Stakeholder communication materials
 
-**Context**: This catalog focuses on UAE Open Finance implementations via the Al Tareq platform (Central Bank of the UAE regulated), covering both **Payment Initiation Services (SIP)** and **Account Information Services (AIS/Data Sharing)**.
+**Context**: This catalog focuses on UAE Open Finance implementations via the AlTareq platform (Central Bank of the UAE regulated), covering both **Payment Initiation Services (SIP)** and **Account Information Services (AIS/Data Sharing)**.
 
 ---
 
@@ -913,24 +913,9 @@ For quick lookup, the Open Finance journey types referenced in this catalog:
 
 This catalog should be updated as:
 - New use cases emerge in the UAE Open Finance market
-- Al Tareq platform capabilities expand
+- AlTareq platform capabilities expand
 - Customer demand shifts (seasonal, regulatory, competitive)
 - New channel contexts become relevant (e.g., Gaming, Real Estate MarTech)
 
 **Last Updated**: 2026-02-17
 **Version**: 1.0
-**Maintained By**: Open Finance Product & Marketing Team
-
----
-
-## 7. Contact & Resources
-
-For questions about specific value propositions or to propose new use cases:
-- Slack: #open-finance-ux
-- Email: open-finance@altareq.ae
-- Internal Wiki: [Confluence Link]
-- CBUAE Regulations: [Regulatory Reference]
-
----
-
-*This document is proprietary to Al Tareq and confidential. Distribution is restricted to authorized team members only.*

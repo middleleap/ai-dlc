@@ -60,13 +60,17 @@ and you fill their ADOPT markers in step 3.
 
 ### Pick a tier — you do not have to adopt all of it at once
 
-A full adoption lands 133 ADOPT markers across 28 files to fill in, which is a cliff rather than
-an on-ramp — and it grows every release. `--tier` stages it:
+A full adoption lands well over a hundred ADOPT markers to fill in, which is a cliff rather than
+an on-ramp — and the count grows every release. `--tier` stages it. `harness/` below is the
+bundle inside the installed plugin, `${CLAUDE_PLUGIN_ROOT}/skills/loom-adopt/harness`; run the
+commands from that directory or prefix the path. Add `--dry-run` to any of them to see what that
+tier would land, and `node scripts/loom.mjs status` in the adopted repository counts the files
+still ADOPT-PENDING.
 
 ```bash
-node harness/adopt.mjs --dest . --tier core       # the warp: 12 markers in 9 files (the default)
-node harness/adopt.mjs --dest . --tier governed   # + product governance: 44 in 16
-node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution: 133 in 28
+node harness/adopt.mjs --dest . --tier core       # the warp (the default)
+node harness/adopt.mjs --dest . --tier governed   # + product governance
+node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution
 ```
 
 A first run with no `--tier` lands `core` (rc.33 — it used to land `full`, handing every
@@ -195,8 +199,8 @@ Worked examples to study in the bundle (not copied): `harness/register-example/`
 realistic Meridian Trust operations-signal log showing the Run→Discovery loop close across all
 four routes (`../loom/references/operations.md`).
 
-Five agents ship as **plugin agents** and work as soon as the machinery lands (no copying):
-`discovery-boundary-reviewer`, `data-governance-reviewer`, the `model-risk-reviewer` (HG-0006),
+Six agents ship as **plugin agents** and work as soon as the machinery lands (no copying):
+`code-reviewer`, `discovery-boundary-reviewer`, `data-governance-reviewer`, the `model-risk-reviewer` (HG-0006),
 and the continuous-assurance pair `change-watch` (① Watch) + `risk-reviewer` (② Assess).
 
 ## 2. Mount the seams
@@ -399,8 +403,9 @@ It reports `UPGRADE <from> → <to>`, then prints the migration notes for every 
 — including the `ACTION:` lines naming the templates you now have to fill. Add `--dry-run` to see
 all of it without writing anything.
 
-**Your edits are safe.** Step 3 tells you to edit `scripts/discovery-link-check.mjs`,
-`.claude/hooks/pii-guard.sh` and others; the stamp is what lets the installer tell your changes
+**Your edits are safe.** Step 3 tells you to edit `.loom/project.json`,
+`.claude/hooks/pii-patterns.json`, the reviewer agents and the skill templates; the stamp is
+what lets the installer tell your changes
 from its own. A file you have edited is **preserved**, and the new upstream version is written
 beside it as `<file>.loom-new` for you to diff. It stays flagged as yours until your content and
 ours converge — `loom version` lists them. Siblings in the same directory still update normally,

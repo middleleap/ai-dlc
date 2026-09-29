@@ -17,7 +17,7 @@
 // docs/integration-run.md. Until someone has run it, that file says it is OWED — the fake proves
 // the harness, never Kosli (core/kosli-fake.mjs header).
 //
-// --scenario meridian (docs/plans/kosli-founder-demo-briefing.md) adds the ONE obligation the
+// --scenario meridian (the Meridian demo briefing (kept outside this repository)) adds the ONE obligation the
 // founder demo traces: demo/meridian/ registers a Meridian Trust payment-status obligation, its
 // register rows and a demo-scoped PAYMENT-STATUS control in the adopted tree; the team's first
 // contract FAILS that check, the output of a RECORDED bounded agent run (demo/meridian/agent-run/,

@@ -2,18 +2,18 @@
 
 ## Overview
 
-This document provides HTML templates for embedding the Open Finance (Al Tareq) authorization flow within different application contexts. The Al Tareq flow (Authorization → Redirect → Completion) is the mandatory consent flow, but in a real product, this flow is triggered FROM within an app. These templates show the "before" and "after" screens that wrap around the Al Tareq flow.
+This document provides HTML templates for embedding the Open Finance (AlTareq) authorization flow within different application contexts. The AlTareq flow (Authorization → Redirect → Completion) is the mandatory consent flow, but in a real product, this flow is triggered FROM within an app. These templates show the "before" and "after" screens that wrap around the AlTareq flow.
 
 **Context:** UAE Open Finance
-**Flow:** Al Tareq-mandated consent flow triggered from app context
-**Design System:** Al Tareq design tokens for flow screens + custom styling for app shells
+**Flow:** AlTareq-mandated consent flow triggered from app context
+**Design System:** AlTareq design tokens for flow screens + custom styling for app shells
 
 ---
 
-## Design Tokens (Al Tareq)
+## Design Tokens (AlTareq)
 
 ```css
-/* Al Tareq Colors */
+/* AlTareq Colors */
 --altareq-bg: #F0F2FA;
 --altareq-card: #FFFFFF;
 --altareq-text-primary: #1A1D3B;
@@ -970,7 +970,7 @@ HTML structure for a government service portal:
 
 ### Banking App: Payment Form
 
-Screen shown before user enters Al Tareq flow in banking context:
+Screen shown before user enters AlTareq flow in banking context:
 
 ```html
 <!-- Banking App: Pre-Flow Payment Screen -->
@@ -1012,8 +1012,8 @@ Screen shown before user enters Al Tareq flow in banking context:
       </div>
     </div>
 
-    <button class="btn-primary btn-altareq" onclick="transitionToAl Tareq()">
-      <span>Pay with Al Tareq</span>
+    <button class="btn-primary btn-altareq" onclick="transitionToAlTareq()">
+      <span>Pay with AlTareq</span>
       <span class="btn-icon">→</span>
     </button>
 
@@ -1155,7 +1155,7 @@ Screen shown before user enters Al Tareq flow in banking context:
 
 ### E-Commerce: Payment Method Selection
 
-Screen showing payment method options with Al Tareq highlighted:
+Screen showing payment method options with AlTareq highlighted:
 
 ```html
 <!-- E-Commerce: Pre-Flow Payment Method Selection -->
@@ -1183,7 +1183,7 @@ Screen showing payment method options with Al Tareq highlighted:
           </span>
           <span class="method-desc">Fast, secure payment using Open Finance</span>
         </span>
-        <span class="altareq-logo">Al Tareq</span>
+        <span class="altareq-logo">AlTareq</span>
       </label>
     </div>
 
@@ -1197,7 +1197,7 @@ Screen showing payment method options with Al Tareq highlighted:
       </label>
     </div>
 
-    <button class="btn-primary btn-continue" onclick="transitionToAl Tareq()">
+    <button class="btn-primary btn-continue" onclick="transitionToAlTareq()">
       Continue to Payment
     </button>
   </div>
@@ -1337,8 +1337,8 @@ Screen for action initiation in fintech context:
         </div>
       </div>
 
-      <button class="btn-primary btn-large" onclick="transitionToAl Tareq()">
-        Continue with Al Tareq
+      <button class="btn-primary btn-large" onclick="transitionToAlTareq()">
+        Continue with AlTareq
       </button>
 
       <div class="info-box">
@@ -1506,8 +1506,8 @@ Screen for government service fee payment:
       <p><strong>Due Date:</strong> {{DUE_DATE}}</p>
     </div>
 
-    <button class="btn-primary btn-gov" onclick="transitionToAl Tareq()">
-      Pay Now Using Al Tareq
+    <button class="btn-primary btn-gov" onclick="transitionToAlTareq()">
+      Pay Now Using AlTareq
     </button>
 
     <div class="payment-methods-alt">
@@ -1619,7 +1619,7 @@ Screen for government service fee payment:
 
 ### Banking App: Payment Confirmation
 
-Confirmation screen after Al Tareq completion:
+Confirmation screen after AlTareq completion:
 
 ```html
 <!-- Banking App: Post-Flow Confirmation Screen -->
@@ -1827,7 +1827,7 @@ Confirmation screen after Al Tareq completion:
 
 ### E-Commerce: Order Confirmation
 
-Order confirmation page after Al Tareq completion:
+Order confirmation page after AlTareq completion:
 
 ```html
 <!-- E-Commerce: Post-Flow Order Confirmation -->
@@ -1876,7 +1876,7 @@ Order confirmation page after Al Tareq completion:
       <div class="detail-section">
         <h4>Payment Method</h4>
         <p>
-          <span class="payment-badge">Bank Transfer via Al Tareq</span>
+          <span class="payment-badge">Bank Transfer via AlTareq</span>
         </p>
       </div>
     </div>
@@ -2049,7 +2049,7 @@ Order confirmation page after Al Tareq completion:
 
 ### Fintech: Updated Balance
 
-Account status after funding via Al Tareq:
+Account status after funding via AlTareq:
 
 ```html
 <!-- Fintech: Post-Flow Updated Balance -->
@@ -2079,7 +2079,7 @@ Account status after funding via Al Tareq:
           <span>ID: {{TXN_ID}}</span>
         </div>
         <div class="txn-method">
-          <span class="method-badge">Al Tareq</span>
+          <span class="method-badge">AlTareq</span>
         </div>
       </div>
     </div>
@@ -2483,7 +2483,7 @@ Government service confirmation with receipt:
 
 ## Section 4: Complete Interactive Flow Template
 
-A complete, self-contained HTML file that demonstrates the entire flow from app context → Al Tareq → app result:
+A complete, self-contained HTML file that demonstrates the entire flow from app context → AlTareq → app result:
 
 ```html
 <!DOCTYPE html>
@@ -2491,7 +2491,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Open Finance App Context Demo - Al Tareq Flow</title>
+  <title>Open Finance App Context Demo - AlTareq Flow</title>
   <style>
     * {
       margin: 0;
@@ -2904,7 +2904,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
       opacity: 0.9;
     }
 
-    /* ===== SCREEN 5: Al Tareq Completion ===== */
+    /* ===== SCREEN 5: AlTareq Completion ===== */
     .completion-card {
       text-align: center;
       margin-top: 40px;
@@ -3042,7 +3042,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
   <div class="container">
     <div class="demo-header">
       <h1>Open Finance Flow Demo</h1>
-      <p>Complete Journey: Banking App → Al Tareq → Confirmation</p>
+      <p>Complete Journey: Banking App → AlTareq → Confirmation</p>
     </div>
 
     <div class="device-frame">
@@ -3085,7 +3085,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
             </div>
 
             <button class="btn-pay" onclick="goToScreen(2)">
-              Pay with Al Tareq →
+              Pay with AlTareq →
             </button>
           </div>
         </div>
@@ -3103,21 +3103,21 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
         <div class="transition-screen">
           <div class="transition-content">
             <div class="spinner"></div>
-            <h2>Redirecting to Al Tareq</h2>
+            <h2>Redirecting to AlTareq</h2>
             <p>Preparing secure authorization...</p>
           </div>
         </div>
       </div>
 
-      <!-- SCREEN 3: Al Tareq - Authorization (Select Bank) -->
+      <!-- SCREEN 3: AlTareq - Authorization (Select Bank) -->
       <div class="screen" id="screen-3">
         <div class="altareq-header">
-          <h1>Al Tareq Authorization</h1>
+          <h1>AlTareq Authorization</h1>
           <p>Select your bank to authorize payment</p>
         </div>
 
         <div class="altareq-content">
-          <div class="screen-label">Al Tareq: Step 1/3 - Authorization</div>
+          <div class="screen-label">AlTareq: Step 1/3 - Authorization</div>
 
           <div class="progress-bar">
             <div class="progress-fill" style="width: 33%;"></div>
@@ -3149,7 +3149,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
         </div>
       </div>
 
-      <!-- SCREEN 4: Al Tareq - Redirect/Consent -->
+      <!-- SCREEN 4: AlTareq - Redirect/Consent -->
       <div class="screen" id="screen-4">
         <div class="altareq-header">
           <h1>Bank Authorization</h1>
@@ -3157,7 +3157,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
         </div>
 
         <div class="altareq-content">
-          <div class="screen-label">Al Tareq: Step 2/3 - Redirect</div>
+          <div class="screen-label">AlTareq: Step 2/3 - Redirect</div>
 
           <div class="progress-bar">
             <div class="progress-fill" style="width: 66%;"></div>
@@ -3189,7 +3189,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
         </div>
       </div>
 
-      <!-- SCREEN 5: Al Tareq - Completion -->
+      <!-- SCREEN 5: AlTareq - Completion -->
       <div class="screen" id="screen-5">
         <div class="altareq-header">
           <h1>Payment Complete</h1>
@@ -3197,7 +3197,7 @@ A complete, self-contained HTML file that demonstrates the entire flow from app 
         </div>
 
         <div class="altareq-content">
-          <div class="screen-label">Al Tareq: Step 3/3 - Completion</div>
+          <div class="screen-label">AlTareq: Step 3/3 - Completion</div>
 
           <div class="progress-bar">
             <div class="progress-fill" style="width: 100%;"></div>
@@ -3384,7 +3384,7 @@ All customizable text is marked with `{{PLACEHOLDER}}` format. Here's the comple
 - `{{TIME}}` - Time of transaction
 - `{{PREVIOUS_RECIPIENT}}` - Previous transaction recipient
 - `{{PREV_AMOUNT}}` - Previous transaction amount
-- `{{REFERENCE_ID}}` - Al Tareq reference ID
+- `{{REFERENCE_ID}}` - AlTareq reference ID
 
 ### E-Commerce Placeholders
 - `{{STORE_URL}}` - Store domain URL
@@ -3433,7 +3433,7 @@ All customizable text is marked with `{{PLACEHOLDER}}` format. Here's the comple
 
 2. **Device Frames**: Mobile frames are 375px × 812px (iPhone dimensions) with realistic device chrome. Desktop frames are max 1200px width.
 
-3. **Al Tareq Design System**: The Al Tareq flow screens (screens 3–5 in the complete demo) use exact design tokens:
+3. **AlTareq Design System**: The AlTareq flow screens (screens 3–5 in the complete demo) use exact design tokens:
    - Background: `#F0F2FA`
    - Cards: `#FFFFFF`
    - Text: `#1A1D3B`

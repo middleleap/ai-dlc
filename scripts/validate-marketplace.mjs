@@ -2,7 +2,7 @@
 // Validates the marketplace against what Claude Code actually loads.
 // Run: node scripts/validate-marketplace.mjs
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { join, dirname, basename, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -157,6 +157,26 @@ if (!shipped(marketplacePath, 'the marketplace')) {
       if (!entry.version) warn(`${label}: no version in the marketplace entry — users will not receive updates reliably.`)
       if (manifest.version !== entry.version) {
         fail(`${label}: version mismatch — plugin.json says "${manifest.version}", marketplace says "${entry.version}". Bump both.`)
+      }
+
+      // Content changed since the version was last set — CLAUDE.md's "rule that bites". Only
+      // meaningful inside a git checkout. The pickaxe (-S, fixed string) finds the last commit
+      // that changed how often the quoted version string appears in plugin.json — i.e. the bump
+      // that introduced it; the plugin tree on disk (tracked files, staged or not) is then diffed
+      // against that commit. Any difference means installed users are behind. No such commit
+      // (the bump is still uncommitted) means the bump is in progress: nothing to report.
+      if (gitTree && manifest.version && manifest.version === entry.version) {
+        let bumpCommit = ''
+        try {
+          bumpCommit = execFileSync('git', ['-C', root, 'log', '-1', '--format=%H', '-S', `"${manifest.version}"`, '--', rel(manifestPath)],
+            { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+        } catch { bumpCommit = '' }
+        if (bumpCommit) {
+          const diff = spawnSync('git', ['-C', root, 'diff', '--quiet', bumpCommit, '--', rel(dir)], { stdio: 'ignore' })
+          if (diff.status === 1) {
+            fail(`${label}: content changed since version ${manifest.version} was set in ${bumpCommit.slice(0, 7)} — bump the version in plugin.json and marketplace.json, or installed users never receive it.`)
+          }
+        }
       }
 
       // Skills: a DIRECTORY containing SKILL.md.

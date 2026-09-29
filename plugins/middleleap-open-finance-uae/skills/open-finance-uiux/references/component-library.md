@@ -1,12 +1,12 @@
 # Component Library
 
-Reusable UI components for building Al Tareq Open Finance screens. Each component includes HTML structure, CSS, and usage notes.
+Reusable UI components for building AlTareq Open Finance screens. Each component includes HTML structure, CSS, and usage notes.
 
 ## Table of Contents
 
 1. [Page Shell](#page-shell)
 2. [Header Block](#header-block)
-3. [Al Tareq Logo](#altareq-logo)
+3. [AlTareq Logo](#altareq-logo)
 4. [Progress Bar](#progress-bar)
 5. [Content Card](#content-card)
 6. [Payment Details Grid](#payment-details-grid)
@@ -97,7 +97,7 @@ Displays the LFI or TPP identity. This is the only fully customizable area — L
 
 ---
 
-## Al Tareq Logo
+## AlTareq Logo
 
 The bilingual brand logo. Always centered. **MUST be inlined as SVG** (never use `<img>` tags or CSS text). Get the SVG code from `svg-assets.md`.
 
@@ -489,14 +489,14 @@ Horizontal row of account cards. One is selectable at a time (radio behavior). F
 
 ## Action Buttons
 
-Always a pair: Cancel (outline) + Primary (gradient with Al Tareq mark). Centered at the bottom of the screen.
+Always a pair: Cancel (outline) + Primary (gradient with AlTareq mark). Centered at the bottom of the screen.
 
 ```html
 <div class="of-actions">
   <button class="of-btn of-btn--cancel">Cancel</button>
   <button class="of-btn of-btn--primary">
     <img src="assets/logos/white-mark.svg" alt="" class="of-btn__icon" />
-    Pay using Al Tareq
+    Pay using AlTareq
   </button>
 </div>
 ```
@@ -555,10 +555,10 @@ Always a pair: Cancel (outline) + Primary (gradient with Al Tareq mark). Centere
 **Button Text Variants:**
 | Journey | Button Text |
 |---------|-------------|
-| Payments (SIP, FDP, VRP, FRP, etc.) | "Pay using Al Tareq" |
-| Data sharing authorization | "Authorize using Al Tareq" |
-| Account connection | "Connect using Al Tareq" |
-| Data sharing consent | "Share data using Al Tareq" |
+| Payments (SIP, FDP, VRP, FRP, etc.) | "Pay using AlTareq" |
+| Data sharing authorization | "Authorize using AlTareq" |
+| Account connection | "Connect using AlTareq" |
+| Data sharing consent | "Share data using AlTareq" |
 
 ---
 
@@ -695,7 +695,7 @@ Warning banners for overdraft notices, duplicate payment alerts, or exchange rat
 
 ## Redirection Screen
 
-Full-viewport gradient screen shown during TPP ↔ LFI transitions. Features animated spinner, status message, and "Powered by Al Tareq" footer.
+Full-viewport gradient screen shown during TPP ↔ LFI transitions. Features animated spinner, status message, and "Powered by AlTareq" footer.
 
 ```html
 <div class="of-redirect">
@@ -710,7 +710,7 @@ Full-viewport gradient screen shown during TPP ↔ LFI transitions. Features ani
   </div>
   <div class="of-redirect__footer">
     <span class="of-redirect__powered">Powered by</span>
-    <img src="assets/logos/white-logo.svg" alt="Al Tareq" class="of-redirect__logo" />
+    <img src="assets/logos/white-logo.svg" alt="AlTareq" class="of-redirect__logo" />
   </div>
 </div>
 ```
@@ -790,7 +790,7 @@ Full-viewport gradient screen shown during TPP ↔ LFI transitions. Features ani
 
 ## Spinner
 
-The Al Tareq spinner is a circular loading indicator with a gradient stroke. The Figma assets provide 4 rotation frames. In code, use a single SVG with CSS rotation animation.
+The AlTareq spinner is a circular loading indicator with a gradient stroke. The Figma assets provide 4 rotation frames. In code, use a single SVG with CSS rotation animation.
 
 ```html
 <div class="of-spinner">

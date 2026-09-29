@@ -1,6 +1,6 @@
 # Screen Catalog
 
-Complete field-by-field specifications for every Al Tareq Open Finance journey screen. Use this to build pixel-accurate screens for each journey type.
+Complete field-by-field specifications for every AlTareq Open Finance journey screen. Use this to build pixel-accurate screens for each journey type.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ Complete field-by-field specifications for every Al Tareq Open Finance journey s
 
 **Screen title:** "Confirm Payment"
 **Permission text:** "[TPP trading name] needs your permission to make the payment below:"
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 ### Field Grid (two-column layout)
 
@@ -47,12 +47,12 @@ Displays 2+ account cards side by side:
 
 ### Components Used
 1. Header Block
-2. Al Tareq Logo
+2. AlTareq Logo
 3. Progress Bar (Consent ✓, Authorize active, Complete inactive)
 4. Content Card with heading + permission text
 5. Payment Details Grid
 6. Account Selector Card (separate card below)
-7. Action Buttons (Cancel + Pay using Al Tareq)
+7. Action Buttons (Cancel + Pay using AlTareq)
 
 ---
 
@@ -60,7 +60,7 @@ Displays 2+ account cards side by side:
 
 **Screen title:** "Confirm to set up payment"
 **Permission text:** "[TPP trading name] needs your permission to setup the payment below:"
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 ### Field Grid
 
@@ -86,7 +86,7 @@ Same as SIP — "Please select the account to pay from" with account cards.
 
 **Screen title:** "Confirm to setup Multi-Payment"
 **Permission text:** "[TPP trading name] needs your permission to make payment(s) from your account within the payment rules below:"
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 ### Field Grid — Payment Details
 
@@ -126,7 +126,7 @@ Balance check permission + Trusted Payees checkbox.
 
 **Screen title:** "Confirm to setup Multi-Payment"
 **Permission text:** "[TPP trading name] needs your permission to make payment(s) from your account within the payment rules below:"
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 ### Field Grid — Payment Details
 
@@ -159,7 +159,7 @@ Balance check permission + Trusted Payees checkbox.
 
 **Screen title:** "Confirm to setup Multi-Payment"
 **Permission text:** Same as VRP.
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 ### Field Grid — Payment Details
 
@@ -196,7 +196,7 @@ Same as Fixed-Defined.
 
 **Screen title:** "Confirm to setup Multi-Payment"
 **Permission text:** "[TPP trading name] needs your permission to make payment(s) from your account within the payment rules below:"
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 ### Payment Rules Section
 
@@ -228,7 +228,7 @@ Same pattern.
 
 **Screen title:** "Confirm to setup Multi-Payment"
 **Permission text:** Same.
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 This is the simplest multi-payment variant — no fixed beneficiaries.
 
@@ -254,7 +254,7 @@ Same pattern.
 
 **Screen title:** "Confirm to setup Multi-Payment"
 **Permission text:** Same.
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 The most detailed payment rules variant.
 
@@ -284,7 +284,7 @@ Same pattern.
 
 **Screen title:** "Confirm to setup Combined-Payment"
 **Permission text:** Same.
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 Combines an immediate one-time payment with recurring payment rules.
 
@@ -312,7 +312,7 @@ Same pattern.
 
 **Screen title:** "Confirm to setup payment"
 **Permission text:** "[TPP trading name] needs your permission to setup the payment below:"
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 The most field-heavy screen with beneficiary address, BIC, exchange rate, and charges.
 
@@ -354,7 +354,7 @@ Payer IBAN shown.
 
 **Screen title:** "Confirm to setup payment"
 **Permission text:** "Please check if the details below are correct."
-**Button text:** "Pay using Al Tareq"
+**Button text:** "Pay using AlTareq"
 
 ### Field Grid
 
@@ -387,8 +387,8 @@ Check the list of payments within the submitted file
 ## Data Sharing Consent
 
 **Screen title:** None (no explicit heading card)
-**Instruction text:** "Select account(s) to share information with [Al Tareq Financial Technology Limited]"
-**Button text:** "Authorize using Al Tareq"
+**Instruction text:** "Select account(s) to share information with [AlTareq Financial Technology Limited]"
+**Button text:** "Authorize using AlTareq"
 
 ### Account Selection (Multi-Select)
 
@@ -420,12 +420,12 @@ Expandable category list with icon + label + chevron:
 
 ### Components Used
 1. Header Block
-2. Al Tareq Logo
+2. AlTareq Logo
 3. Progress Bar (Consent ✓, Authorize active, Complete inactive)
 4. Account Selector (multi-select with checkboxes)
 5. Data Categories List
 6. Expiry Notice
-7. Action Buttons (Cancel + Authorize using Al Tareq)
+7. Action Buttons (Cancel + Authorize using AlTareq)
 
 ---
 
@@ -436,18 +436,18 @@ Two redirection screens used during TPP ↔ LFI transitions.
 ### Redirect to LFI
 
 **Message:** "We're redirecting you to **YOUR LFI**<br>please keep this window open"
-**Footer:** "Powered by" + white Al Tareq logo
+**Footer:** "Powered by" + white AlTareq logo
 
 ### Redirect to TPP
 
 **Message:** "We are securely transferring you back to<br>**YOUR TPP**"
-**Footer:** "Powered by" + white Al Tareq logo
+**Footer:** "Powered by" + white AlTareq logo
 
 ### Visual Design
 - Full-viewport gradient background (navy → teal)
 - Centered animated spinner
 - White text
-- White Al Tareq logo at bottom
+- White AlTareq logo at bottom
 
 ---
 

@@ -3,7 +3,7 @@
 This is agent-operated browser evidence using fictional records, not unfamiliar-user research,
 institutional approval, or full accessibility certification.
 
-Preview: https://loom-onboarding-pilot.michartmann.chatgpt.site (owner-only).
+Preview: owner-only; the link is held outside this repository.
 Initial questionnaire digest: `sha256:91afcb899bea3c566dc6d7a2015d2a63c0d2835ddbec4017a9765bbc6857ebbc`.
 Corrected questionnaire digest: `sha256:28d39e7c95228da48283d571c656a333af899d09dcc2847199dc30a327b96040`.
 Sites version 2 deployed successfully; source commit `8147cac6ccb6117be498a1dd3bda367c3df6019f`.

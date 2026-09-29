@@ -1,6 +1,6 @@
 ---
 name: meridian-brand-guidelines
-description: "Meridian Trust brand system for presentations, documents, web and product UI — Meridian Blue + Inter as the primary identity, with defined colour roles (structure, depth, signature cyan, warm amber highlight, status colours), the Meridian line motif, Midnight surfaces, typography, slide layout, logo rules and icon system. Use for anything Meridian Trust-branded, including the Loom demo's discovery artifacts, business cases and prototypes."
+description: "Meridian Trust (the Loom's fictional demo bank) brand system — Meridian Blue + Inter, colour roles, the Meridian line motif, Midnight surfaces, typography, slide layout and logo rules. Use only for Meridian Trust-branded work: the Loom demo's discovery artifacts, business cases and prototypes, or as the template to copy when packaging a real institution's brand. Not for any other institution's branding."
 ---
 
 # Meridian Trust Brand Guidelines

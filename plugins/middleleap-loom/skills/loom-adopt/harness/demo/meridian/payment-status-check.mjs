@@ -1,5 +1,5 @@
-// The payment-status integrity gate — the ONE obligation the Kosli founder demo traces end to
-// end (docs/plans/kosli-founder-demo-briefing.md, "Develop": one obligation → an acceptance
+// The payment-status integrity gate — the ONE obligation the Meridian demo traces end to
+// end (the Meridian demo briefing (kept outside this repository), "Develop": one obligation → an acceptance
 // condition → an agent task → an executable check). It is a DEMO-SCOPED control: demo/run-demo.mjs
 // --scenario meridian copies it into the adopted tree as scripts/payment-status-check.mjs and
 // registers it in that tree's control catalog as PAYMENT-STATUS. It is not in the shipped catalog

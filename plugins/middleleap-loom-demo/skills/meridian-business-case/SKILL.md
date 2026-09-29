@@ -1,6 +1,6 @@
 ---
 name: meridian-business-case
-description: "Build Meridian Trust CIC (Capital Investment Committee) business cases and ISB (Investment Screening Board) project proposals. Use when creating, editing, or discussing bank business cases, project proposals, CIC submissions, ISB pre-screening documents, NPV/IRR calculations, or project cost breakdowns. Triggers on mentions of CIC, ISB proposal, business case, project proposal, NPV calculation, cost breakdown, sign-off tracking, or project funding approval in a banking context. Covers both Stage 1 (one-page pre-screening) and Stage 2 (Detailed Business Case with supporting Excel financials). Also use when the user needs help understanding the capital approval process, stakeholder sign-off requirements, or financial modeling for bank projects."
+description: "Meridian Trust (the Loom's fictional demo bank) capital-approval business cases — the two-stage ISB pre-screening proposal and CIC detailed business case with its NPV model, cost breakdown and sign-off tracking. Use only when the work is explicitly for Meridian Trust or the Loom demo, or as the template to copy when packaging a real bank's approval process. Not for a real institution's business cases — those follow that institution's own pack."
 ---
 
 # Meridian Trust Business Case Skill

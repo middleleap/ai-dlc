@@ -11,8 +11,9 @@ DLC = knowledge packs and structured workflows you install into an AI coding ass
 /plugin install middleleap-loom@middleleap-ai-dlc
 ```
 
-That installs the Loom and the three plugins it depends on. To take only the domain expertise,
-install `middleleap-banking-uae` or `middleleap-open-finance-uae` on its own instead.
+That installs the Loom and the two UAE domain plugins it depends on. The Meridian Trust demo
+is a separate install: `/plugin install middleleap-loom-demo@middleleap-ai-dlc`. To take only
+the domain expertise, install `middleleap-banking-uae` or `middleleap-open-finance-uae` on its own.
 
 Run it from inside Claude Code. `/plugin` lists what's available and lets you enable or disable plugins per project.
 
@@ -38,7 +39,7 @@ runtime controls before equivalent enforcement can be claimed.
 
 | Plugin | For |
 |---|---|
-| [middleleap-loom](plugins/middleleap-loom/) | The Loom method. Installs the other three with it |
+| [middleleap-loom](plugins/middleleap-loom/) | The Loom method. Installs the two UAE domain plugins with it |
 | [middleleap-banking-uae](plugins/middleleap-banking-uae/) | Any CBUAE-regulated bank: risk review, Islamic banking, New Product Approval |
 | [middleleap-open-finance-uae](plugins/middleleap-open-finance-uae/) | UAE Open Finance: regulation, Standards, AlTareq brand and CX, prototyping |
 | [middleleap-loom-demo](plugins/middleleap-loom-demo/) | Meridian Trust, the fictional bank the Loom demo runs against |

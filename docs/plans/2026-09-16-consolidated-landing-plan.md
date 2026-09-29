@@ -134,7 +134,7 @@ manifest conflict, then re-run.
 - [ ] **Step 2: Read what the branch claims**
 
 ```bash
-sed -n '1,120p' docs/plans/kosli-founder-demo-briefing.md
+sed -n '1,120p' the Meridian demo briefing (kept outside this repository)
 sed -n '1,120p' plugins/middleleap-loom/skills/loom-adopt/harness/demo/meridian/README.md
 ```
 

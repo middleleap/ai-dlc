@@ -15,6 +15,10 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the validator finds the commit that set each plugin's version and fails
+          # when content changed after it. A depth-1 clone makes that check silently pass.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
