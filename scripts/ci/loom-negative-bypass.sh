@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The Loom negative bypass tests (run after loom-dry-run.sh; they reuse its tree) — extracted verbatim from .github/workflows/validate.yml.
 # GitHub runs step scripts with `bash -e -o pipefail`; so does this. Outside Actions the
-# runner variables default to a scratch dir, so `bash scripts/ci/local.sh` can run it.
+# runner variables default to a scratch dir, so `node scripts/ci/local.mjs` can run it.
 set -eo pipefail
 RUNNER_TEMP="${RUNNER_TEMP:-$(mktemp -d)}"; export RUNNER_TEMP
 GITHUB_ENV="${GITHUB_ENV:-$RUNNER_TEMP/github-env}"; export GITHUB_ENV; touch "$GITHUB_ENV"

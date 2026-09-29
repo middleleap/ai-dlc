@@ -699,6 +699,22 @@
       "action_required": [
         "If you edited an agent's output-contract section, diff it against its .loom-new sidecar: the shared rules now live in .claude/agents/agent-output.schema.json (rules)."
       ]
+    },
+    {
+      "version": "2.5.10",
+      "headline": "The Meridian brand profile matches the brand skill",
+      "notes": [
+        "discovery/brand/examples/meridian-trust.design.md: the sans font stack now matches the meridian-brand-guidelines skill (adds Helvetica Neue and Helvetica). A new repository test binds the two token sets."
+      ],
+      "action_required": []
+    },
+    {
+      "version": "2.5.11",
+      "headline": "The agent output-contract length test measures the stanza",
+      "notes": [
+        "agent-output-check.test.mjs read the output-contract section from the wrong offset and measured 0 words, so its length cap could never fail. It now reads from after the heading, and asserts it measured something."
+      ],
+      "action_required": []
     }
   ]
 }

@@ -10,7 +10,7 @@
       "name": "middleleap-loom",
       "source": "./plugins/middleleap-loom",
       "description": "The Loom — MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, always-on guardrails, the machinery to adopt it in any repository, and the CLAUDE.md authoring and code-review kit it runs on. Installs the UAE banking and UAE Open Finance plugins with it; the Meridian Trust demo is a separate install. Proven end-to-end on a UAE Open Finance back office.",
-      "version": "2.5.9",
+      "version": "2.5.11",
       "author": {
         "name": "MiddleLeap"
       },
@@ -75,7 +75,7 @@
       "name": "middleleap-loom-demo",
       "source": "./plugins/middleleap-loom-demo",
       "description": "The Loom demo institution — Meridian Trust, a fictional CBUAE-regulated bank, packaged as an institution pack: its brand guidelines (palette, type, slide layout, logos) and its capital-approval business case (ISB pre-screening, CIC detailed case, NPV model, sign-offs). Shows how an institution's own context plugs into the Loom's discovery → delivery gate; retarget it to a real bank by swapping the values.",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": {
         "name": "MiddleLeap"
       },

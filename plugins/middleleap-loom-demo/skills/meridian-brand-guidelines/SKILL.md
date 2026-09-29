@@ -91,23 +91,7 @@ drifted.
 
 ### Accessibility
 
-Contrast ratios (WCAG 2.1):
-
-| Colour | On white | On Midnight | Safe for |
-|--------|---------|-------------|----------|
-| Midnight `#052540` | 15.6:1 | — | All text |
-| Deep Navy `#083A5E` | 11.8:1 | — | All text |
-| Graphite `#3A3F44` | 10.6:1 | — | Body text |
-| Meridian Blue `#0B4F80` | 8.6:1 | — | All text |
-| Signal Red `#B3261E` | 6.5:1 | — | Text and chips |
-| Amber Deep `#9A5B00` | 5.4:1 | — | Text and chips |
-| Harbour Green `#157A55` | 5.3:1 | — | Text and chips |
-| Slate `#6B7278` | 4.9:1 | — | Secondary text (AA on white; exactly 4.5:1 on Gray BG — the floor) |
-| Cyan Deep `#007C96` | 4.9:1 | — | Text |
-| Azure `#2F80B8` | 4.3:1 | — | Large text and non-text only |
-| Meridian Cyan `#00A3C4` | 3.0:1 | 5.2:1 | Non-text on light; **text on Midnight** |
-| Amber `#E08A2E` | 2.7:1 | 5.8:1 | Non-text on light; **text on Midnight** |
-| White `#FFFFFF` | — | 15.6:1 | Text on Midnight and on Meridian Blue (8.6:1) |
+Contrast pairs and the accessibility rules: `references/accessibility.md`.
 
 ## Typography
 
@@ -124,67 +108,9 @@ typeface.
 - **Office-safe fallback:** Arial (PPTX/DOCX where Inter may not be installed)
 - **Web fallback stack:** `'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif`
 
-### Size Hierarchy (slides)
+### Slides
 
-| Element | Weight | Size |
-|---------|--------|------|
-| Title slide heading | SemiBold | 32pt |
-| Title slide subtitle | Light | 20pt |
-| Content slide title | Medium | 20pt |
-| Section label (top-left, uppercase) | Medium | 9pt |
-| Subheading / column header | Medium | 11pt |
-| Body text / bullet content | Regular | 10pt |
-| Headline figure | SemiBold | 28–40pt |
-| Table of contents items | Regular | 12pt |
-| Footnotes / source citations | Regular | 7pt |
-
-## Slide Layout Structure
-
-The template uses a consistent layout pattern across content slides:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│ SECTION LABEL (9pt, uppercase, top-left)  [MERIDIAN LOGO]│
-│                                              (top-right) │
-│ Slide Title (20pt, Light weight)                         │
-│ Subtitle line(s) (11pt, Medium weight)                   │
-│                                                          │
-│ ┌─────────────────────────────────────────────────────┐  │
-│ │                                                     │  │
-│ │              CONTENT AREA                           │  │
-│ │    (text, tables, charts, multi-column)             │  │
-│ │                                                     │  │
-│ └─────────────────────────────────────────────────────┘  │
-│                                                          │
-│ [Source: 6pt]  [Meridian Trust presentation]  [page #]   │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Available Slide Layout Types
-
-| Layout | Use For |
-|--------|---------|
-| Title Slide (variants) | Opening and section dividers on Midnight |
-| Title and Content | Standard content with title + body area |
-| Two Content | Side-by-side content (text+chart, text+text) |
-| Comparison | Labeled left/right comparison columns |
-| Section Header | Section transition slides |
-| Blank | Custom layout (charts, diagrams, full-bleed visuals) |
-| Title Only | Slide with only title bar, free content area below |
-
-### Title/Section Divider Slides
-
-Midnight (`#052540`) full-bleed background. Display title in white, lower-left; a Meridian line
-(cyan, 48×4pt) directly above the title; subtitle in Ash or white at 20pt Light. Use
-`assets/logos/default-2.svg` top-right. Abstract architectural imagery is optional — if used, place
-it on the right half behind a Midnight gradient so the title side stays solid.
-
-### Content Slides
-
-White background. Meridian logo top-right. Section label top-left (uppercase, 9pt, Meridian Blue).
-Title in Medium 20pt with a short Meridian line beneath it. Footer at bottom with source text,
-the deck identifier ("Meridian Trust"), and page number. A dark summary panel (Midnight, white
-text, one amber figure) is allowed once per slide for the key takeaway.
+Size hierarchy, slide layout structure, layout types, title/section divider slides and content slides: `references/slides-and-documents.md`.
 
 ## Design Elements
 
@@ -211,21 +137,7 @@ All logo files are in `assets/logos/` as SVG vectors. The mark is a globe: the o
 in Meridian Blue, the **meridian** — the vertical ellipse — in Meridian Cyan. The wordmark reads
 MERIDIAN over TRUST.
 
-### Full Logo (mark + wordmark)
-
-| File | Background | Description |
-|------|-----------|-------------|
-| `default.svg` | Light / white | Blue globe, cyan meridian, Midnight wordmark — **primary usage** |
-| `default-2.svg` | Midnight / dark | White globe, cyan meridian, white wordmark |
-| `black.svg` | Light / white | All-black monochrome — grayscale and print |
-
-### Mark only
-
-| File | Background | Description |
-|------|-----------|-------------|
-| `mark.svg` | Light / white | Blue globe, cyan meridian — icon, favicon, small spaces |
-| `mark-white.svg` | Midnight / dark | White globe, cyan meridian |
-| `mark-black.svg` | Light / white | All-black monochrome |
+Logo files (full logo and mark, each in default, white and black) and when to use each: `references/logos-and-web.md`.
 
 ### Logo Usage Rules
 
@@ -241,147 +153,21 @@ MERIDIAN over TRUST.
 
 ## Icon System
 
-Meridian maintains a library of brand icons as SVGs. When icon files are supplied, they follow a
-consistent design system.
-
-### Icon Design Specifications
-
-| Property | Value |
-|----------|-------|
-| Format | SVG (outlined paths, not strokes) |
-| viewBox | `0 0 100 100` (square) |
-| Primary fill | `#0B5A93` (icon blue — slightly brighter than brand Meridian Blue `#0B4F80`) |
-| Secondary fill | `#2F80B8` (for layered detail elements) |
-| Negative space | `#FFFFFF` (white cutouts within filled shapes) |
-| Style | Monochrome line-art with ~2px apparent stroke weight, clean outlines |
-| Construction | Paths are outlined/expanded (not live strokes) — the "line" look comes from shaped fills |
-
-### Icon Categories
-
-| Category | Prefix | Examples |
-|----------|--------|----------|
-| Platform / API | `platform-*` | availability, efficiency, productivity, real-time, security, scalability |
-| Banking Services | `service-*` | card activation, contact centre, ease of access, mobile platforms, multilingual |
-| Wealth Management | `wealth-*` | multi-asset, portfolio objectives, mutual funds, strategies, managed portfolios |
-| Digital Onboarding | `onboarding-*` | benefits, documents, features |
-| Generic / Reusable | `icon1`–`icon5` | general-purpose icons and variants |
-| Stats / Touchpoints | `stat-*` | stat-20, stat-200 |
-
-### Using Icons in Presentations (PPTX)
-
-When placing icons on Meridian slides:
-
-- **Size:** 40–60px (0.55–0.83in) for inline icons alongside text; 80–100px (1.1–1.4in) for
-  featured icon blocks
-- **Placement:** Align icons to the left of text labels in feature grids. Use consistent spacing
-  (12–16px gaps).
-- **Color on white slides:** Use as-is (blue `#0B5A93` on white background)
-- **Color on dark/blue slides:** Replace fill with white (`#FFFFFF`) — since icons are single-fill
-  SVGs, a simple find-replace of the fill color works
-- **Icon + label pattern:** Icon left or top, label text in Medium 11pt, description in Light 9pt
-  below
-- **Grid layouts:** For feature/benefit slides, use 2×3 or 3×3 icon grids with equal column widths
-
-Typical icon-label slide layout:
-
-```
-┌────────────────────────────────────────────┐
-│ SECTION LABEL                [MERIDIAN LOGO]│
-│ Slide Title                                 │
-│                                             │
-│  ◆ Label 1      ◆ Label 2     ◆ Label 3    │
-│  Description    Description   Description   │
-│                                             │
-│  ◆ Label 4      ◆ Label 5     ◆ Label 6    │
-│  Description    Description   Description   │
-│                                             │
-│ [Source]  [Meridian Trust presentation]  [#]│
-└────────────────────────────────────────────┘
-```
-
-**Embedding SVG icons in PPTX programmatically:**
-
-1. Convert SVG to PNG at 2x resolution (200×200px from the 100×100 viewBox) for crisp display
-2. Insert as an image at the target size (e.g., 0.7in × 0.7in)
-3. For python-pptx: use `slide.shapes.add_picture()` with the converted PNG
-
-### Using Icons in Web / HTML / React
-
-- **Inline SVG** (preferred): Embed the SVG directly for color control via CSS
-- **Fill override:** Set `fill: var(--mt-blue)` or `fill: currentColor` on the SVG paths for theme
-  flexibility
-- **Sizing:** Use `width` and `height` on the `<svg>` element; the 100×100 viewBox scales cleanly
-- **Dark mode:** Override fill to `#FFFFFF` or `var(--mt-white)`
-- **Icon + text components:** Flex row with icon at 24–32px, gap 12px, text block right-aligned
-
-```html
-<!-- Inline SVG with color override -->
-<svg viewBox="0 0 100 100" width="32" height="32" class="mt-icon">
-  <path fill="currentColor" d="..." />
-</svg>
-
-<style>
-  .mt-icon { color: var(--mt-blue, #0B4F80); }
-  .dark .mt-icon { color: var(--mt-white, #FFFFFF); }
-</style>
-```
-
-### Creating New Icons to Match the Meridian Style
-
-When the existing set doesn't cover a concept, create new icons following these rules:
-
-1. **Canvas:** 100×100 SVG viewBox, no padding (content fills the full box)
-2. **Color:** Single fill `#0B5A93`. No gradients, no shadows, no multi-color.
-3. **Stroke appearance:** ~2px visual stroke weight. Achieve this with outlined/expanded paths
-   (not live `stroke` attributes) — this matches how the existing icons are built
-4. **Corners:** Slightly rounded joins (2–4px radius) for a friendly but professional feel
-5. **Complexity:** Keep path count low (1–3 paths). Simple, recognizable silhouettes.
-6. **Negative space:** Use white (`#FFFFFF`) fill for internal cutout details (e.g., window panes,
-   screen content)
-7. **Consistency:** Match the visual weight and level of detail of existing icons — not too thin,
-   not too heavy
-8. **Export:** Outline all strokes, flatten layers, export as SVG with `viewBox="0 0 100 100"`
-
-**Anti-patterns to avoid:**
-
-- Solid/filled icons (these are outline-style)
-- Multiple colors or brand blues mixed together
-- Live strokes (always outline/expand before export)
-- Icons smaller than the viewBox with excessive padding
-- Overly detailed or illustrative icons — keep them diagrammatic
+No icon files ship with this plugin. The specification for creating Meridian-style icons is `references/icons.md`.
 
 ## PPTX Template Usage
 
-When creating Meridian presentations:
-
-1. **Preferred method:** Start from an approved Meridian template PPTX (if the user supplies one)
-   and edit slides using the pptx skill's editing workflow (unpack → modify → repack)
-2. **From scratch:** Apply the color palette, fonts, and layout structure documented above
-3. **Section dividers:** Midnight background, white display title, Meridian line — see Title/Section Divider Slides
+See `references/slides-and-documents.md` (PPTX Template Usage).
 
 ## Format-Specific Notes
 
 ### Documents (DOCX/PDF)
 
-- Heading colour hierarchy: H1 `#0B4F80`, H2 `#083A5E`, H3 `#052540`; a Meridian line under H1
-- Body text: `#3A3F44`, Inter Regular (or Arial where Inter is unavailable)
-- Footer: page numbers in `#6B7278`
-- Key-value tables: `#E9F0F6` label cells, white value cells
-- Cover page: Midnight band across the top third with the white logo and the display title
+See `references/slides-and-documents.md` (Documents).
 
 ### Web / HTML / Product UI
 
-- CSS variables in `references/meridian-variables.css` (prefix `--mt-`)
-- Logo: `assets/logos/default.svg` in the header; `assets/logos/mark.svg` for favicons
-- Page background Gray BG, cards white with Silver Light borders
-- Hero or summary band on Midnight with a white display heading and the Meridian line
-- Primary button Meridian Blue / white text, hover Deep Navy; secondary button white with a
-  Meridian Blue border; focus ring 2px Meridian Cyan with 2px offset
-- Links `#0B4F80`, hover `#083A5E`, visited `#7C9BB8`
-- Active navigation: Meridian Blue text with a 3px cyan underline
-- Status chips: status colour background, white text, the status word in capitals
-- Font stack: `'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif`; body 400, headings 500,
-  display 600
+CSS variables, component notes and product-UI rules: `references/logos-and-web.md` (tokens in `references/meridian-variables.css`).
 
 ### Loom discovery artifacts
 
