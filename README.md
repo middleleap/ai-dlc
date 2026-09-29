@@ -52,6 +52,8 @@ runtime controls before equivalent enforcement can be claimed.
 
 **[The Loom for the value chain →](docs/loom-for-the-value-chain.html)** — the same method for the people who have to approve it: executive sponsor, product, engineering, risk, audit, operations, security. Five views — the machine, one idea end to end, the adversarial checklist, the toolkit, and the decision.
 
+Working documents (plans, ADRs, research) are indexed in [docs/](docs/README.md), each with the status it declares.
+
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | `loom` | The method canon — the double diamond, the gate models, the context brain, the governance catalog (HG-0001…HG-0014) |
