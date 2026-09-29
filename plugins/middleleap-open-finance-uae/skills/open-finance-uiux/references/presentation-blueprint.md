@@ -4,7 +4,7 @@ A professional, modern HTML template for generating solution presentations about
 
 ## Quick Start
 
-1. Open the HTML template below in any web browser
+1. Open the HTML template (`../assets/templates/presentation.html`) in any web browser
 2. Navigate through slides using arrow keys, on-screen buttons, or progress dots
 3. Customize placeholders (marked as `{{PLACEHOLDER_NAME}}`) with your content
 4. Save as `.html` and share
@@ -66,7 +66,7 @@ All customizable content uses the `{{PLACEHOLDER_NAME}}` format. Use your text e
 - `{{METRIC_1_DESCRIPTION}}` through `{{METRIC_4_DESCRIPTION}}` — Metric descriptions
 
 #### Technical Architecture (Slide 8)
-- `{{BANK_NAME}}` — Name of the bank/LFI (e.g., "Al Hilal Bank")
+- `{{BANK_NAME}}` — Name of the bank/LFI (e.g., "Meridian Trust")
 
 #### Call-to-Action (Slide 9)
 - `{{CTA_SUBTITLE}}` — Subtitle under "Let's Build This Together"

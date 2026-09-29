@@ -29,7 +29,7 @@ jobs:
 
       # Three skills are imported from the Claude.ai skills UI as whole-file overwrites. This
       # fails the PR if a re-import brings a client's name back into the public marketplace.
-      - name: De-identification gate (no client names under plugins/)
+      - name: De-identification gate (no client names under plugins/ or docs/)
         run: node scripts/deidentify-check.mjs
 
       # PR6, second half, proved on the platform: the job's own OIDC token verifies against GitHub's

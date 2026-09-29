@@ -70,7 +70,7 @@ The form has five sections and thirty-three fields; `references/template.md` has
 
 Read the first for how a run's artifacts fill the form; read the second for how Section 5 changes when a model sits in the decision path.
 
-## Readiness checklist before Gate 2
+## Readiness checklist before the NPA decision
 
 The agent runs this and attaches the result to the `npa-pack` attestation:
 
@@ -98,4 +98,4 @@ Proposed by the product owner; reviewed by the department head; approved by the 
 - Must not mark a risk "No" to make the pack lighter.
 - Must not invent regulatory article numbers; use `references/regulatory-anchors.md` or say "reference to be confirmed by Compliance".
 - Must not include a real institution's name, internal system names, or prior NPA content in a pack for another institution.
-- Must not treat NPA approval as build approval or the reverse; Gate 2 needs both the NPA decision and the capital decision.
+- Must not treat NPA approval as build approval or the reverse: building needs both the NPA decision (PA1, recorded at the Loom's `permission-to-develop` hand-off) and the institution's own capital decision.

@@ -4,7 +4,7 @@ This document is the **single source of truth** for the HTML structure and styli
 
 ## Quick Start
 
-1. **Copy the Complete Template** below
+1. **Copy the complete template** — `../assets/templates/consent-flow.html`
 2. **Customize placeholders** as documented in the "How to Use This Blueprint" section
 3. **Insert SVG assets** from svg-assets.md using the specified prefixes
 4. **Add journey-specific content** using the component templates provided

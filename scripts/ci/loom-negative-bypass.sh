@@ -6,7 +6,6 @@ set -eo pipefail
 RUNNER_TEMP="${RUNNER_TEMP:-$(mktemp -d)}"; export RUNNER_TEMP
 GITHUB_ENV="${GITHUB_ENV:-$RUNNER_TEMP/github-env}"; export GITHUB_ENV; touch "$GITHUB_ENV"
 cd "$(git rev-parse --show-toplevel)"
-set -a; . "$GITHUB_ENV"; set +a   # KOSLI_BIN from the dry-run, when run locally in sequence
 A="$RUNNER_TEMP/loom-adopt-dryrun"
 cd "$A"
 # 1 · Tampered evidence: alter a sealed artifact — the seal gate must break.
