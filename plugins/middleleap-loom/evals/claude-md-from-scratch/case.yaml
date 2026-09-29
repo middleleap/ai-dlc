@@ -1,0 +1,19 @@
+schema_version: "1.1"
+name: claude-md-from-scratch
+description: A new-repo CLAUDE.md request loads claude-md-guide (the only CLAUDE.md skill after WP-B).
+tags: [triggers]
+execution:
+  prompt: "This repository has no CLAUDE.md. Write me a starter one I can fill in."
+  runs: 2
+  max_turns: 6
+graders:
+  - name: guide-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?claude-md-guide"'
+    min: 1
+    max: 3
+  - name: has-commands-section
+    type: regex
+    pattern: "## Commands"
+    match: contains

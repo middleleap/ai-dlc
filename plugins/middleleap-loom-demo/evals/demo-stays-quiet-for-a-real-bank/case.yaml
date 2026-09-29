@@ -1,0 +1,24 @@
+schema_version: "1.1"
+name: demo-stays-quiet-for-a-real-bank
+description: A real institution's business-case request must not load the Meridian demo skills.
+tags: [triggers, negative]
+execution:
+  prompt: "Draft the business case for our bank's new payments hub — we need the NPV and the sign-off list for the investment committee."
+  runs: 2
+  max_turns: 6
+graders:
+  - name: meridian-business-case-did-not-fire
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?meridian-business-case"'
+    min: 0
+    max: 0
+  - name: meridian-brand-did-not-fire
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?meridian-brand-guidelines"'
+    min: 0
+    max: 0
+  - name: meridian-process-not-applied
+    type: llm
+    criteria: "PASS if the answer does not present Meridian Trust's approval process (its ISB/CIC committees, its discount rate, contingency or named approvers) as the user's own bank's process. Mentioning Meridian only to say its template does not apply, or asking for the user's own template, is a PASS. FAIL if the draft uses ISB, CIC or Meridian's figures as if they were the user's bank's."

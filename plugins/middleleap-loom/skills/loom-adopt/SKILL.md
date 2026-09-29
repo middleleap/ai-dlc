@@ -73,8 +73,7 @@ node harness/adopt.mjs --dest . --tier governed   # + product governance
 node harness/adopt.mjs --dest . --tier full       # + estate, floor, institution
 ```
 
-A first run with no `--tier` lands `core` (rc.33 — it used to land `full`, handing every
-unflagged first-timer the cliff this section exists to remove).
+A first run with no `--tier` lands `core`, the safe on-ramp.
 
 Two things make this safe rather than merely smaller:
 
@@ -418,7 +417,7 @@ so one customised gate does not freeze the other forty.
 
 Two edge cases, both stated by the installer when they happen:
 
-- **A repository adopted before 2.0.0-rc.18** has no stamp, so an edit of yours and an older copy
+- **A repository adopted before the stamp existed** (early 2.0 release candidates) has no stamp, so an edit of yours and an older copy
   of ours are indistinguishable. Everything that differs is preserved and reported as
   `unverifiable`. Reconcile the sidecars, or re-run with `--force` if you know you never
   customised anything. It happens once — the stamp written on that run means later upgrades know.

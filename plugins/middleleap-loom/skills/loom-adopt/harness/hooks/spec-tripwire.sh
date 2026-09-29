@@ -68,12 +68,19 @@ fi
 
 # ── file tools: the path names the contract ──────────────────────────────────────────────────
 if [ -n "$file_path" ]; then
-  # Canonicalize so ../, symlinks, or odd prefixes cannot dodge the match.
-  if command -v realpath >/dev/null 2>&1; then
-    canonical=$(realpath -m -- "$file_path" 2>/dev/null || printf '%s' "$file_path")
-  else
-    canonical="$file_path"
-  fi
+  # Canonicalize so ../, symlinks, or odd prefixes cannot dodge the match. GNU `realpath -m` is
+  # not on macOS, so resolve with node (always present: the gates are node): the real path of
+  # the file if it exists, else of its nearest existing parent. The raw path is the fallback.
+  case "$file_path" in /*) abs="$file_path" ;; *) abs="${CLAUDE_PROJECT_DIR:-$PWD}/$file_path" ;; esac
+  canonical=$(node -e '
+    const fs = require("fs"), path = require("path");
+    let p = path.resolve(process.argv[1]), tail = "";
+    for (;;) {
+      try { process.stdout.write(path.join(fs.realpathSync(p), tail)); break; }
+      catch { const up = path.dirname(p); if (up === p) { process.stdout.write(path.resolve(process.argv[1])); break; }
+              tail = path.join(path.basename(p), tail); p = up; }
+    }' -- "$abs" 2>/dev/null) || canonical="$abs"
+  [ -n "$canonical" ] || canonical="$abs"
   for spec in $SPEC_PATHS; do
     case "$canonical" in
       */"$spec" | "$spec")
@@ -83,12 +90,24 @@ if [ -n "$file_path" ]; then
   exit 0
 fi
 
-# ── Bash: the command names the contract and carries a write signal ─────────────────────────
+# ── Bash: the command names the contract and writes TO it ───────────────────────────────────
+# A read that names the contract (cat, grep, git diff, codegen whose output goes elsewhere) is
+# fine; the deny needs a write signal aimed at the contract path itself. POSIX classes rather
+# than \b / \s, so BSD grep on macOS matches the same strings as GNU grep.
 for spec in $SPEC_PATHS; do
   name="${spec##*/}"
+  esc=$(printf '%s' "$name" | sed 's/[][\.*^$]/\\&/g')
   if printf '%s' "$command" | grep -Fq -- "$name"; then
-    if printf '%s' "$command" | grep -Eq -- '(^|[^<])>|\bsed\s+(-[a-zA-Z]*i|--in-place)|\btee\b|\b(mv|cp|rm|dd|truncate|install)\b|\bgit\s+(mv|rm|checkout|restore)\b|\b(python[0-9.]*|node|perl|ruby|php)\b|\byq\b.*\s-i\b|<<'; then
-      deny "Spec tripwire: this shell command names $spec and looks like a write (redirection, sed -i, mv/cp/rm, a scripting runtime, a heredoc) on a working branch ($branch). The contract changes via its own spec-only PR — use the spec-change skill (branch feature/<ID>-spec-<slug>). Reading it (cat, grep, git diff) is fine."
+    t="[^|;&]*"   # stay inside one pipeline segment
+    if printf '%s' "$command" | grep -Eq -- "(^|[^<])>[>|]?[[:space:]]*[^[:space:]|;&]*(${esc}|\\\$)" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])sed[[:space:]]+(-[a-zA-Z]*i|--in-place)${t}${esc}" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])(mv|cp|rm|dd|truncate|install|tee|ln|rsync)[[:space:]]${t}${esc}" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])git[[:space:]]+(mv|rm|checkout|restore)[[:space:]]${t}${esc}" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])yq[[:space:]]([^|;&]*[[:space:]])?-[a-zA-Z]*i([[:space:]=]|$)" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])(-o|-O|--out|--output)([[:space:]]+|=)[^[:space:]]*${esc}" \
+      || { printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])(python[0-9.]*|node|perl|ruby|php)([[:space:]]|$)" \
+           && printf '%s' "$command" | grep -Eq -- "[wW]rite[A-Z_(]|write_(text|bytes)|open\([^)]*['\"][wax]|[cC]opy[fF]ile|[aA]ppend[fF]ile|createWriteStream|shutil\.|os\.(replace|rename|remove)|unlink|rename|dump\(|truncate|(^|[[:space:]])-[a-zA-Z]*i([[:space:]]|$)"; }; then
+      deny "Spec tripwire: this shell command names $spec and writes to it (redirection, sed -i, yq -i, mv/cp/rm/tee/ln/rsync, a download or -o output, a scripting runtime with a write call) on a working branch ($branch). The contract changes via its own spec-only PR — use the spec-change skill (branch feature/<ID>-spec-<slug>). Reading it (cat, grep, git diff, codegen that writes elsewhere) is fine."
     fi
   fi
 done

@@ -135,7 +135,7 @@ projection, change-profile selection, recompilation and estate acknowledgement t
 Upgrades that conflict with a mounted snapshot require a reviewed replacement; `--apply` has
 no overwrite option.
 
-Version 2.4 adds an automatic UAE consumer-AI route: a model-bearing new or materially changed
+An automatic UAE consumer-AI route: a model-bearing new or materially changed
 product compiles the AI decision-system controls without relying on a classifier to remember the
 profile. A governed AI record now joins human oversight, customer alternatives, bilingual
 disclosure, monitoring and stress evidence to the exact model role and pin that ship. See

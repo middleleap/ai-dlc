@@ -152,6 +152,15 @@ drift." The register-only fallback path has now been exercised and correctly rep
 five consecutive passes (31 Aug, 3 Sep script-only, 14 Sep, 28 Sep) with `api-specs` unreachable
 on at least three of them — it is the reliable path in this environment, not a degraded one.
 
+## 29 September 2026 — check_current.py gains the raw-file fallback from the unmerged 21 Sep pass
+
+The 21 Sep 2026 watcher pass (PR #86, never merged; it edited the pre-rename plugin path) added a
+`raw.githubusercontent.com` existence probe of a small pre-release frontier for when the GitHub
+Tree API is refused. The 28 Sep pass diagnosed the same 403 but did not have the probe, so the
+repo side still went blank. The probe is ported here (`probe_repo_fallback`, `PRERELEASE_FRONTIER`)
+with offline tests in `scripts/test_check_current.py`. The 21 Sep pass's source re-check itself
+found no drift and is superseded by the 28 Sep pass; it is not re-logged.
+
 ## Other dated verification notes
 
 - **Pricing model** — OF Confluence "Commercial and Pricing Model" page edited 2 Jun 2026 but the

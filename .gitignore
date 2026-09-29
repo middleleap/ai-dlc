@@ -10,3 +10,5 @@ Claude outputs/
 # Notion simulation credentials (docs/simulations/notion-e2e reads this file)
 .notion-token
 *.notion-token
+# Plugin eval results (claude plugin eval) — local, per run
+**/evals/results/

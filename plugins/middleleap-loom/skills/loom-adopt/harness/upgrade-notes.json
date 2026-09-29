@@ -632,7 +632,7 @@
         "loom-adopt/SKILL.md states the bundle location once and no longer carries marker counts that drift from adopt.mjs."
       ],
       "action_required": [
-        "If you use the Meridian Trust worked example, install it explicitly: /plugin install middleleap-loom-demo@middleleap-ai-dlc."
+        "If you use the Meridian Trust worked example, install it explicitly: /plugin install middleleap-loom-demo@middleleap-ai-dlc. If you do not, it stays installed from the earlier dependency until you run /plugin uninstall middleleap-loom-demo@middleleap-ai-dlc."
       ]
     },
     {
@@ -654,7 +654,31 @@
         "DISCOVERY-SYNC is removed from the control catalog template and ci.yml — it measured the Loom bundle's own divergence from its origin and had nothing to verify in an adopted tree."
       ],
       "action_required": [
-        "If you merged DISCOVERY-SYNC into docs/governance/control-catalog.json, delete that row."
+        "If you merged DISCOVERY-SYNC into docs/governance/control-catalog.json, delete that row.",
+        "If you hand-copied harness/skills or harness/agents before 2.5.5, expect every copy that differs from this bundle — edited or merely older — to be reported unverifiable-preserved with a .loom-new sidecar on this upgrade: diff each one and take ours where you never edited it. Do not reach for --force, which overwrites every edited file in the adoption.",
+        "A hand-copied .claude/agents/shariah-conformance-reviewer.md is managed only at --tier full; at core or governed it stays where it is, unmanaged. Delete it if you do not need it, or adopt --tier full."
+      ]
+    },
+    {
+      "version": "2.5.6",
+      "headline": "Portable spec tripwire; build-loop skills consistent; canon quick reference",
+      "notes": [
+        "spec-tripwire.sh no longer needs GNU realpath (symlinks and ../ paths resolve on macOS too) and denies only commands that write to the contract; read-only codegen naming it is allowed.",
+        "implement-story is invocable from next-story again; under the loop a decision is recorded as blocked, never asked. The /design steps are marked optional.",
+        "discovery and develop carry red-flag lists; the loom skill lists every gate inline."
+      ],
+      "action_required": [
+        "If you edited .claude/hooks/spec-tripwire.sh, diff it against spec-tripwire.sh.loom-new after upgrading."
+      ]
+    },
+    {
+      "version": "2.5.7",
+      "headline": "spec-tripwire closes the write paths its 2.5.6 rewrite opened",
+      "notes": [
+        "The Bash branch of spec-tripwire.sh denies again: redirection to a variable target, >|, yq -i and perl -pi in any position, -o/--output and curl/wget downloads, ln and rsync, and Node/Python write calls (copyFile, appendFile, createWriteStream, write_bytes, shutil, os.replace). Read-only codegen that writes elsewhere is still allowed."
+      ],
+      "action_required": [
+        "If you edited .claude/hooks/spec-tripwire.sh, diff it against spec-tripwire.sh.loom-new after upgrading."
       ]
     }
   ]

@@ -15,7 +15,7 @@ You do **not** invent risk. You assess a *specific change or horizon item* again
 that is mounted, and you are honest when something falls outside it (that is itself a finding —
 an unregistered risk needs a human, not a guess).
 
-## Read the external record first (2.1.0, hardening plan row 5.3)
+## Read the external record first
 
 Before you assess, read what the record outside the tree already says about the change, through
 the read-only `loom-record` MCP server (`core/record-mcp.mjs`; decision K5 — you can read the
