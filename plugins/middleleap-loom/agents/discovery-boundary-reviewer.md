@@ -48,10 +48,11 @@ downstream consumer — the operations-signal log, the Kosli seam, an examiner's
 shape from every Loom agent. `scripts/agent-output-check.mjs` holds this definition and the
 fixtures under `agents/evals/` to it.
 
-- **Register absent ⇒ `INSUFFICIENT_EVIDENCE`.** This agent judges against the run directory and its gate report (no register: `register_state` is `not-applicable`). If it is
-  not mounted, not readable, or empty where it should not be, set `register_state: "absent"`,
-  emit `verdict: "INSUFFICIENT_EVIDENCE"` and say in `reason` what was missing. Never fall back
-  to prose, memory or a general rule of thumb: with no register there is nothing to judge
+- **Inputs unreadable ⇒ `INSUFFICIENT_EVIDENCE`.** This agent judges against the run directory
+  and its gate report, not a register: `register_state` is always `not-applicable`. If the run
+  directory or its gate report is missing, unreadable or empty, emit
+  `verdict: "INSUFFICIENT_EVIDENCE"` and say in `reason` what was missing. Never fall back
+  to prose, memory or a general rule of thumb: with no inputs there is nothing to judge
   against, and a verdict produced anyway is the defect this contract exists to remove. The same
   verdict applies when the inputs you needed could not be read (no diff, no run directory, no
   feed) — an unrun review is not a clean one.
