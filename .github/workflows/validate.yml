@@ -40,12 +40,15 @@ jobs:
       # The validator is the only gate this repo has, so it is itself gated: the
       # suite builds throwaway git repos and asserts every violation still fails.
       - name: Validator self-test
-        run: node --test scripts/validate-marketplace.test.mjs scripts/deidentify-check.test.mjs scripts/onboarding-pilot.test.mjs scripts/onboarding-pilot-workspaces.test.mjs
+        run: node --test scripts/*.test.mjs   # every root test, by glob, so a new one cannot be left out
 
       # The Loom console (apps/loom-console) is a standalone app over any installation, not part of a
       # plugin. Its tests build the Meridian Trust demo installation and hold the console to it.
       - name: Loom console — reader, build, read-only server
         run: node --test apps/loom-console/test/*.test.mjs
+      - name: Loom harness — full suite in the bundle layout (bundle-only branches run here)
+        working-directory: plugins/middleleap-loom/skills/loom-adopt/harness
+        run: node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs demo/meridian/*.test.mjs
 
       - name: Onboarding handoff, configuration and all-tier installation contracts
         run: node --test plugins/middleleap-loom/skills/loom-adopt/harness/scripts/intake-*.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/onboarding-commands.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/configuration-tasks.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/brainkit-reuse.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/project-integration.test.mjs plugins/middleleap-loom/skills/loom-adopt/harness/scripts/codex-runtime.test.mjs
@@ -299,7 +302,8 @@ jobs:
           '
           if node scripts/obligations-check.mjs > /dev/null 2>&1; then :; else
             echo "::error::the obligations gate failed on the dry-run register after the fixture substitution"; exit 1; fi
-          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs "$H"/demo/meridian/*.test.mjs
+          # demo/meridian tests run in the bundle-layout step; $H is not staged under $A
+          node --test discovery/gates/*.test.mjs discovery/render/*.test.mjs scripts/*.test.mjs core/*.test.mjs
           # rc.12 WS2: model `loom activate` — generate a today-dated, independently-signed
           # observation that the live platform refused a bypass, and register the observer key. Done
           # BEFORE the base commit so the record + registry entry are TRACKED — the negative-bypass
