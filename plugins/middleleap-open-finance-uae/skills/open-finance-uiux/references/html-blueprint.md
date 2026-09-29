@@ -16,7 +16,7 @@ This document is the **single source of truth** for the HTML structure and styli
 
 ### Step 1: Replace Page Metadata
 - Replace `<!-- JOURNEY_TITLE -->` with the journey's display name (e.g., "Single Payment")
-- Replace `<!-- LFI_NAME -->` with the LFI identifier (e.g., "ADCB")
+- Replace `<!-- LFI_NAME -->` with the LFI identifier (e.g., "Meridian Trust")
 - Replace `<!-- TPP_NAME -->` with the TPP identifier (e.g., "PayBy")
 
 ### Step 2: Insert SVG Assets
@@ -103,7 +103,7 @@ Use these templates to build journey-specific content blocks. Replace placeholde
       <input type="radio" id="account-1" name="payment-account" value="account-1" class="of-account-radio" />
       <label for="account-1" class="of-account-label">
         <div class="of-account-info">
-          <div class="of-account-bank">ADCB</div>
+          <div class="of-account-bank">Meridian Trust</div>
           <div class="of-account-number">AE07 0331 1234 5678</div>
           <div class="of-account-balance">Balance: AED 25,000.00</div>
         </div>
@@ -113,7 +113,7 @@ Use these templates to build journey-specific content blocks. Replace placeholde
       <input type="radio" id="account-2" name="payment-account" value="account-2" class="of-account-radio" />
       <label for="account-2" class="of-account-label">
         <div class="of-account-info">
-          <div class="of-account-bank">ADCB</div>
+          <div class="of-account-bank">Meridian Trust</div>
           <div class="of-account-number">AE07 0331 9876 5432</div>
           <div class="of-account-balance">Balance: AED 12,500.00</div>
         </div>
@@ -181,7 +181,7 @@ Use these templates to build journey-specific content blocks. Replace placeholde
       <input type="checkbox" id="account-data-1" name="data-accounts" value="account-1" class="of-account-checkbox" />
       <label for="account-data-1" class="of-account-label">
         <div class="of-account-info">
-          <div class="of-account-bank">ADCB Savings</div>
+          <div class="of-account-bank">Meridian Trust Savings</div>
           <div class="of-account-number">AE07 0331 1234 5678</div>
           <div class="of-account-balance">Balance: AED 25,000.00</div>
         </div>
@@ -191,7 +191,7 @@ Use these templates to build journey-specific content blocks. Replace placeholde
       <input type="checkbox" id="account-data-2" name="data-accounts" value="account-2" class="of-account-checkbox" />
       <label for="account-data-2" class="of-account-label">
         <div class="of-account-info">
-          <div class="of-account-bank">ADCB Current</div>
+          <div class="of-account-bank">Meridian Trust Current</div>
           <div class="of-account-number">AE07 0331 9876 5432</div>
           <div class="of-account-balance">Balance: AED 12,500.00</div>
         </div>
@@ -466,7 +466,7 @@ Use these templates to build journey-specific content blocks. Replace placeholde
     <div class="of-fields__row--full">
       <div class="of-fields__cell">
         <div class="of-fields__label">Account</div>
-        <div class="of-fields__value">ADCB Checking (AE07 0331 1234 5678)</div>
+        <div class="of-fields__value">Meridian Trust Checking (AE07 0331 1234 5678)</div>
       </div>
     </div>
     <div class="of-fields__row--full">

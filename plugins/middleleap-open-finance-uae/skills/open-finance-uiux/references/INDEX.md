@@ -46,7 +46,7 @@ A comprehensive catalog of **24 Open Finance use cases** mapped to UAE market co
 - **Problem Statement** — 1-2 sentences on the pain point
 - **Value Proposition** — 2-3 sentences on the solution
 - **Key Benefits** — 3-4 bullet points for customer, business, bank, ecosystem
-- **Sample Scenario** — Realistic UAE scenario with real brand names (Noon, DEWA, du, ADCB, Emirates NBD, FAB, Careem, etc.)
+- **Sample Scenario** — Realistic UAE scenario with real merchant and utility names (Noon, DEWA, du, Careem, etc.); banks are Meridian Trust (the Loom's fictional demo bank) or generic Bank A/B/C/D
 - **Presentation Headline** — One-liner for slide title
 - **KPIs** — 2-3 success metrics
 
@@ -102,7 +102,7 @@ A comprehensive catalog of **24 Open Finance use cases** mapped to UAE market co
 
 The sample scenarios use actual UAE companies to keep them realistic:
 
-**Banks**: ADCB, Emirates NBD (ENBD), FAB, ADIB, DFCU, Mashreq, Wio, Bank of Sharjah
+**Banks**: Meridian Trust and generic Bank A, Bank B, Bank C (Islamic), Bank D — replace them with the institution you are prototyping for
 **E-Commerce**: Noon, Amazon.ae, Sharaf DG, Dubizzle, Bayut
 **Telecom/Utility**: du, Etisalat, DEWA, DAMAN, Salik
 **Fintech/App**: Careem, Uber, Netflix, HelloFresh, Fitnes First
@@ -110,7 +110,7 @@ The sample scenarios use actual UAE companies to keep them realistic:
 
 ## Tips for Maximum Effectiveness
 
-1. **Tailor the Scenario** — Replace brand names with your specific partner (e.g., your bank instead of ADCB)
+1. **Tailor the Scenario** — Replace brand names with your specific partner (e.g., your bank instead of Meridian Trust)
 2. **Adjust KPIs** — Use these as templates; adapt metrics to your business model
 3. **Combine Entries** — Mix two use cases for novel applications (e.g., E-Commerce + BNPL)
 4. **Challenge Assumptions** — Use Problem Statements to identify new markets or gaps

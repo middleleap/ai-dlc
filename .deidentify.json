@@ -13,18 +13,6 @@
   ],
   "allow": [
     {
-      "path": "plugins/middleleap-open-finance-uae/skills/open-finance-uiux/references/INDEX.md",
-      "reason": "prototyping kit: documents that the sample scenarios use real UAE brand names on purpose and tells the reader to replace them"
-    },
-    {
-      "path": "plugins/middleleap-open-finance-uae/skills/open-finance-uiux/references/html-blueprint.md",
-      "reason": "prototyping kit: placeholder account labels in sample UI"
-    },
-    {
-      "path": "plugins/middleleap-open-finance-uae/skills/open-finance-uiux/references/value-propositions.md",
-      "reason": "prototyping kit: illustrative multi-bank scenarios with named market participants, meant to be replaced"
-    },
-    {
       "path": "docs/plans/2026-09-16-consolidated-landing-plan.md",
       "reason": "historical plan whose task was the ADCB de-identification itself; it names the term to describe removing it"
     },

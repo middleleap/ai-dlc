@@ -100,7 +100,7 @@ Open Finance enables "Pay by Bank" at checkout—customers authenticate with the
 - **For Ecosystem**: Reduced card dependency, improved financial inclusion
 
 **Sample Scenario**
-A customer shopping on **Noon.com** during the Dubai Shopping Festival sees "Pay by Bank" option at checkout. They select it, are redirected to their ADCB app, authorize the AED 599 purchase, and the payment completes in 10 seconds. Noon receives confirmation immediately; ADCB earns interchange; the customer avoids card fees and feels secure.
+A customer shopping on **Noon.com** during the Dubai Shopping Festival sees "Pay by Bank" option at checkout. They select it, are redirected to their Meridian Trust app, authorize the AED 599 purchase, and the payment completes in 10 seconds. Noon receives confirmation immediately; Meridian Trust earns interchange; the customer avoids card fees and feels secure.
 
 **Presentation Headline**
 "Checkout in Seconds, Protected by Your Bank"
@@ -132,7 +132,7 @@ A dedicated bill aggregator app (powered by Open Finance) lets customers view al
 - **For Banks**: Cross-selling opportunities, customer engagement
 
 **Sample Scenario**
-A Dubai family subscribes to a bill consolidation app. They link their FAB current account once. The app pulls DEWA (AED 450), Salik (AED 120), du (AED 180), and water (AED 50) bills. They authorize a recurring monthly payment of AED 800 via Open Finance. Every month, the payment executes automatically without further action.
+A Dubai family subscribes to a bill consolidation app. They link their Bank B current account once. The app pulls DEWA (AED 450), Salik (AED 120), du (AED 180), and water (AED 50) bills. They authorize a recurring monthly payment of AED 800 via Open Finance. Every month, the payment executes automatically without further action.
 
 **Presentation Headline**
 "All Your Bills, One App, Automatic Payments"
@@ -164,7 +164,7 @@ A property management platform (e.g., Bayut, Dubizzle integration, or direct PM 
 - **For Banks**: Recurring transaction volume, customer data insights
 
 **Sample Scenario**
-A tenant in a Dubai Marina apartment uses a property management app. During lease signup, they authorize Open Finance payments of AED 8,500 (rent) + AED 500 (service charge) every 1st of the month to their landlord's account. Every month, the payment auto-executes from their Emirates NBD account. The property manager sees real-time payment status; the landlord receives settlement within 1 hour.
+A tenant in a Dubai Marina apartment uses a property management app. During lease signup, they authorize Open Finance payments of AED 8,500 (rent) + AED 500 (service charge) every 1st of the month to their landlord's account. Every month, the payment auto-executes from their Bank A account. The property manager sees real-time payment status; the landlord receives settlement within 1 hour.
 
 **Presentation Headline**
 "Rent Sorted. Every Month. Automatically."
@@ -196,7 +196,7 @@ Open Finance enables a "subscription hub" app where customers see all subscripti
 - **For Banks**: Recurring transaction stability, customer engagement data
 
 **Sample Scenario**
-A Dubai professional uses a subscription management app. They link their ADIB account and authenticate with Open Finance. The app shows their active subscriptions: Careem Plus (AED 29.99/month), Fitness First (AED 150/month), Netflix (AED 55/month), and HelloFresh (AED 280/month). They authorize Careem Plus to be charged variably between AED 29.99–AED 49.99 depending on bundle. Each month, all charges execute via Open Finance. If they pause Fitness First, the authorization is suspended instantly.
+A Dubai professional uses a subscription management app. They link their Bank C (Islamic) account and authenticate with Open Finance. The app shows their active subscriptions: Careem Plus (AED 29.99/month), Fitness First (AED 150/month), Netflix (AED 55/month), and HelloFresh (AED 280/month). They authorize Careem Plus to be charged variably between AED 29.99–AED 49.99 depending on bundle. Each month, all charges execute via Open Finance. If they pause Fitness First, the authorization is suspended instantly.
 
 **Presentation Headline**
 "Every Subscription in Your Control"
@@ -228,7 +228,7 @@ Open Finance enables true BNPL: a customer makes a purchase, authorizes a series
 - **For Banks**: Installment transaction fees, customer data, cross-sell opportunities
 
 **Sample Scenario**
-A customer browses **Sharaf DG** for a AED 2,000 laptop. At checkout, they select "Split into 4 payments." A BNPL fintech (powered by transaction data from Open Finance) approves them for 4 × AED 500. The customer authorizes via their FAB account; Sharaf receives AED 2,000 immediately; FAB executes 4 installments on the 1st of each month. If the customer's account goes low, FAB sends a gentle reminder; no failed payment scenario.
+A customer browses **Sharaf DG** for a AED 2,000 laptop. At checkout, they select "Split into 4 payments." A BNPL fintech (powered by transaction data from Open Finance) approves them for 4 × AED 500. The customer authorizes via their Bank B account; Sharaf receives AED 2,000 immediately; Bank B executes 4 installments on the 1st of each month. If the customer's account goes low, Bank B sends a gentle reminder; no failed payment scenario.
 
 **Presentation Headline**
 "Big Purchases, Small Payments, No Interest"
@@ -251,7 +251,7 @@ A customer browses **Sharaf DG** for a AED 2,000 laptop. At checkout, they selec
 Employees face unexpected expenses between paydays and default to payday loans (100–300% APR) or credit cards. Employers lack real-time visibility into payroll obligations and employee financial stress. Traditional salary advances require HR approval and manual processing.
 
 **Value Proposition**
-A fintech app (e.g., Mashreq's Salary Days) uses Open Finance to securely access salary history and verify income in real-time. Employees can request an advance (e.g., AED 500 of their upcoming AED 5,000 salary) and receive it instantly via SIP. The app uses salary data to set safe advance limits; the employer sees aggregate data to improve financial wellness programs. Employees avoid predatory lending.
+A fintech app (e.g., a bank's salary-advance feature) uses Open Finance to securely access salary history and verify income in real-time. Employees can request an advance (e.g., AED 500 of their upcoming AED 5,000 salary) and receive it instantly via SIP. The app uses salary data to set safe advance limits; the employer sees aggregate data to improve financial wellness programs. Employees avoid predatory lending.
 
 **Key Benefits**
 - **For Employee**: Instant access to earned wages, 0–2% APR vs. 200%+ payday loans, financial peace of mind
@@ -260,7 +260,7 @@ A fintech app (e.g., Mashreq's Salary Days) uses Open Finance to securely access
 - **For Banks**: Wage transaction visibility, cross-selling opportunities
 
 **Sample Scenario**
-A warehouse worker in Jebel Ali earns AED 3,500/month and faces an unexpected car repair (AED 800). On the 20th of the month, they open their employer's HR app (or a standalone fintech app) and request a AED 800 advance. The app uses Open Finance to pull their salary history from their ENBD account, verifies they've earned AED 2,500+ YTD, and approves the advance. AED 800 is credited instantly via SIP. On payday (1st of next month), AED 800 is deducted from their salary automatically.
+A warehouse worker in Jebel Ali earns AED 3,500/month and faces an unexpected car repair (AED 800). On the 20th of the month, they open their employer's HR app (or a standalone fintech app) and request a AED 800 advance. The app uses Open Finance to pull their salary history from their Bank A account, verifies they've earned AED 2,500+ YTD, and approves the advance. AED 800 is credited instantly via SIP. On payday (1st of next month), AED 800 is deducted from their salary automatically.
 
 **Presentation Headline**
 "Earned Wages, Instant Access"
@@ -324,7 +324,7 @@ A unified government e-services portal (integrating RTA, GDRFA, DED, MOEU, etc.)
 - **For Banks**: Government transaction volume, customer lifecycle data
 
 **Sample Scenario**
-A UAE resident receives a traffic fine (AED 400) from RTA. They log into the official UAE e-services portal with Emirates ID and find the fine in their dashboard. They click "Pay Fine" and are offered Open Finance as a payment option. They authenticate with their FAB account, authorize the AED 400 payment, and receive a digital receipt and SMS confirmation within seconds. The fine is marked as paid in the RTA system instantly.
+A UAE resident receives a traffic fine (AED 400) from RTA. They log into the official UAE e-services portal with Emirates ID and find the fine in their dashboard. They click "Pay Fine" and are offered Open Finance as a payment option. They authenticate with their Bank B account, authorize the AED 400 payment, and receive a digital receipt and SMS confirmation within seconds. The fine is marked as paid in the RTA system instantly.
 
 **Presentation Headline**
 "Government Fees. Paid. Instantly. Anywhere."
@@ -356,7 +356,7 @@ Open Finance enables insurance companies to set up VRP authorizations for variab
 - **For Banks**: Recurring transaction volume, insurance customer data
 
 **Sample Scenario**
-A customer purchases auto insurance from **AXA** (AED 1,200/year). During enrollment, AXA offers "Auto Payments via Bank." The customer authorizes via Open Finance with their ADCB account. Monthly, AED 100 is debited automatically. When the customer adds a second vehicle in July, the monthly premium increases to AED 150. AXA updates the VRP authorization; in August, AED 150 is debited. No customer action needed; no payment failure risk.
+A customer purchases auto insurance from **AXA** (AED 1,200/year). During enrollment, AXA offers "Auto Payments via Bank." The customer authorizes via Open Finance with their Meridian Trust account. Monthly, AED 100 is debited automatically. When the customer adds a second vehicle in July, the monthly premium increases to AED 150. AXA updates the VRP authorization; in August, AED 150 is debited. No customer action needed; no payment failure risk.
 
 **Presentation Headline**
 "Insurance Premiums You'll Never Miss"
@@ -388,7 +388,7 @@ Investment platforms use Open Finance to enable automated, recurring contributio
 - **For Ecosystem**: Improved financial literacy, increased equity market participation
 
 **Sample Scenario**
-A Dubai professional (age 28) opens a robo-advisor account with AED 5,000. The app recommends a diversified portfolio. To improve returns through regular investing, the professional authorizes Open Finance for AED 1,000/month. Every 1st of the month, AED 1,000 is automatically pulled from their FAB account and invested in the portfolio. Over 5 years, they accumulate AED 65,000 invested and benefit from compound growth and rupiah-averaging.
+A Dubai professional (age 28) opens a robo-advisor account with AED 5,000. The app recommends a diversified portfolio. To improve returns through regular investing, the professional authorizes Open Finance for AED 1,000/month. Every 1st of the month, AED 1,000 is automatically pulled from their Bank B account and invested in the portfolio. Over 5 years, they accumulate AED 65,000 invested and benefit from compound growth and rupiah-averaging.
 
 **Presentation Headline**
 "Automate Your Path to Wealth"
@@ -420,7 +420,7 @@ Open Finance enables frictionless international remittances: a customer in the U
 - **For Banks (Both Sides)**: Transaction fees, inbound/outbound flow data, customer financial behavior
 
 **Sample Scenario**
-A Filipino domestic worker in Abu Dhabi sends AED 1,000 home every month. Instead of using traditional Western Union (AED 70 fee), they use a fintech remittance app powered by Open Finance. They authorize the payment from their ENBD account; the app shows: AED 1,000 = PHP 15,200 (at real-time rate), fee = AED 25 (2.5%). They confirm; within seconds, the money is routed to their family's account in the Philippines (via a BDO partner bank). Their mother receives an SMS confirming the deposit.
+A Filipino domestic worker in Abu Dhabi sends AED 1,000 home every month. Instead of using traditional Western Union (AED 70 fee), they use a fintech remittance app powered by Open Finance. They authorize the payment from their Bank A account; the app shows: AED 1,000 = PHP 15,200 (at real-time rate), fee = AED 25 (2.5%). They confirm; within seconds, the money is routed to their family's account in the Philippines (via a BDO partner bank). Their mother receives an SMS confirming the deposit.
 
 **Presentation Headline**
 "Send Money Home. Fast. Cheap. Real Rate."
@@ -453,7 +453,7 @@ Open Finance enables a simple payroll platform: HR enters employee salaries (or 
 - **For Banks**: Payroll flow data, employee relationship insights, cross-sell opportunities
 
 **Sample Scenario**
-A UAE-based logistics startup (50 employees) uses a payroll app integrated with Open Finance. On the last day of the month, the HR manager syncs employee rosters from their ERP system. The payroll app calculates salaries, deductions, and net amounts. The HR manager clicks "Approve & Disburse." All 50 salary payments execute instantly from the company's ADIB account to each employee's personal account. Every employee receives a salary deposit SMS within 5 minutes. Compliance reports for Ministry of Labor are auto-generated.
+A UAE-based logistics startup (50 employees) uses a payroll app integrated with Open Finance. On the last day of the month, the HR manager syncs employee rosters from their ERP system. The payroll app calculates salaries, deductions, and net amounts. The HR manager clicks "Approve & Disburse." All 50 salary payments execute instantly from the company's Bank C (Islamic) account to each employee's personal account. Every employee receives a salary deposit SMS within 5 minutes. Compliance reports for Ministry of Labor are auto-generated.
 
 **Presentation Headline**
 "Payroll in One Click. Employees Paid Today."
@@ -486,7 +486,7 @@ Open Finance enables a digital charity platform where donors authorize recurring
 - **For Banks**: Charitable giving data, social impact positioning, customer satisfaction scores
 
 **Sample Scenario**
-A Dubai professional (age 45) earns AED 150,000/year and calculates their annual Zakat (AED 5,000). Instead of collecting cash or writing a check, they use an Islamic charity fintech app. They link their FAB account and authorize 12 monthly Zakat contributions of AED 417 via Open Finance VRP. Each month, AED 417 is auto-deducted and distributed to verified orphanages, food banks, and education programs. The app shows the donor exactly which beneficiaries received their Zakat. At year-end, the app generates a tax-deductible receipt.
+A Dubai professional (age 45) earns AED 150,000/year and calculates their annual Zakat (AED 5,000). Instead of collecting cash or writing a check, they use an Islamic charity fintech app. They link their Bank B account and authorize 12 monthly Zakat contributions of AED 417 via Open Finance VRP. Each month, AED 417 is auto-deducted and distributed to verified orphanages, food banks, and education programs. The app shows the donor exactly which beneficiaries received their Zakat. At year-end, the app generates a tax-deductible receipt.
 
 **Presentation Headline**
 "Your Zakat, Automated. Transparent. Impactful."
@@ -519,7 +519,7 @@ Schools integrate Open Finance to offer semester or monthly installment plans. A
 - **For Banks**: Education expense data, long-term customer lifecycle tracking, cross-sell to families
 
 **Sample Scenario**
-A family enrolls their child in a premium Dubai school (American, British, Indian curriculum) with annual tuition of AED 60,000. The school offers two payment options: (1) full payment upfront (AED 60,000), or (2) 12 monthly installments via Open Finance (AED 5,000/month). The parent chooses installments, authorizes via their ENBD account, and Open Finance executes AED 5,000 on the 1st of each month. The school sees real-time payments in their treasury system. By mid-year, the family has paid AED 30,000 without friction.
+A family enrolls their child in a premium Dubai school (American, British, Indian curriculum) with annual tuition of AED 60,000. The school offers two payment options: (1) full payment upfront (AED 60,000), or (2) 12 monthly installments via Open Finance (AED 5,000/month). The parent chooses installments, authorizes via their Bank A account, and Open Finance executes AED 5,000 on the 1st of each month. The school sees real-time payments in their treasury system. By mid-year, the family has paid AED 30,000 without friction.
 
 **Presentation Headline**
 "Education Fees Made Affordable. Installment by Installment."
@@ -552,7 +552,7 @@ Hospitals and health platforms integrate Open Finance to offer flexible payment:
 - **For Banks**: Healthcare expense data, health-seeking behavior, cross-sell to health insurance
 
 **Sample Scenario**
-A patient in Abu Dhabi needs an orthopedic surgery (knee replacement) costing AED 18,000. The hospital's patient portal (integrated with Open Finance) allows the patient to: (1) pay AED 18,000 immediately via SIP, or (2) pay AED 1,500/month for 12 months via FDP. The patient chooses installments, authorizes via their ADIB account, and Open Finance locks in the payment schedule. The hospital receives AED 18,000 immediately via an BNPL partner; the patient's AED 1,500 monthly payments execute automatically. Surgery is scheduled immediately (not delayed for payment).
+A patient in Abu Dhabi needs an orthopedic surgery (knee replacement) costing AED 18,000. The hospital's patient portal (integrated with Open Finance) allows the patient to: (1) pay AED 18,000 immediately via SIP, or (2) pay AED 1,500/month for 12 months via FDP. The patient chooses installments, authorizes via their Bank C (Islamic) account, and Open Finance locks in the payment schedule. The hospital receives AED 18,000 immediately via an BNPL partner; the patient's AED 1,500 monthly payments execute automatically. Surgery is scheduled immediately (not delayed for payment).
 
 **Presentation Headline**
 "Your Health. Paid Your Way."
@@ -573,7 +573,7 @@ A patient in Abu Dhabi needs an orthopedic surgery (knee replacement) costing AE
 **Channel Context**: Fintech App / Aggregator Portal
 
 **Problem Statement**
-UAE customers (especially expats) often hold accounts at multiple banks (ADCB, ENBD, FAB, Emirates NBD, ADIB) due to different employer relationships, salary splitting, or investment diversification. They lack a unified view of net worth, liquidity, and spending patterns. Switching banks is difficult; customers never see better offers elsewhere.
+UAE customers (especially expats) often hold accounts at multiple banks (Meridian Trust, Bank A, Bank B, Bank A, Bank C (Islamic)) due to different employer relationships, salary splitting, or investment diversification. They lack a unified view of net worth, liquidity, and spending patterns. Switching banks is difficult; customers never see better offers elsewhere.
 
 **Value Proposition**
 Open Finance Data Sharing enables an account aggregation app where customers link all their bank accounts once and see a unified dashboard: total balances, transaction history across all accounts, spending patterns, and tailored offers. No account switching required; customers gain control and visibility. Fintech platforms see cross-bank financial behavior and can recommend services. Banks see aggregate account data to prevent customer migration.
@@ -585,7 +585,7 @@ Open Finance Data Sharing enables an account aggregation app where customers lin
 - **For Ecosystem**: Reduced account fragmentation, improved financial inclusion
 
 **Sample Scenario**
-An expat professional in Dubai holds accounts at ENBD (salary deposit), ADCB (personal savings), and FAB (investment account). Using an account aggregation app powered by Open Finance, they link all three. The app shows: ENBD (AED 15,000 checking), ADCB (AED 125,000 savings), FAB (AED 200,000 investments) = AED 340,000 net worth. They see spending across all accounts merged; investment returns tracked. Each bank also sees the linkage data and starts targeting them with better rates or investment products.
+An expat professional in Dubai holds accounts at Bank A (salary deposit), Meridian Trust (personal savings), and Bank B (investment account). Using an account aggregation app powered by Open Finance, they link all three. The app shows: Bank A (AED 15,000 checking), Meridian Trust (AED 125,000 savings), Bank B (AED 200,000 investments) = AED 340,000 net worth. They see spending across all accounts merged; investment returns tracked. Each bank also sees the linkage data and starts targeting them with better rates or investment products.
 
 **Presentation Headline**
 "All Your Money. One View."
@@ -618,7 +618,7 @@ Open Finance Data Sharing enables alternative credit scoring: fintech lenders re
 - **For Ecosystem**: Reduced cash economy, improved financial formality
 
 **Sample Scenario**
-A freelance architect in the UAE (3 years self-employed, no traditional credit history) applies for a AED 50,000 personal loan from a fintech lender. The lender requests Open Finance access to 12 months of transaction data from their ENBD account. The data shows: average monthly income AED 8,000, consistent monthly expenses AED 4,000, 98% on-time payment to suppliers and utilities. The lender's AI model assesses affordability and approves AED 50,000 at 4.5% APR (vs. 15%+ via traditional lender). Loan is disbursed within 24 hours.
+A freelance architect in the UAE (3 years self-employed, no traditional credit history) applies for a AED 50,000 personal loan from a fintech lender. The lender requests Open Finance access to 12 months of transaction data from their Bank A account. The data shows: average monthly income AED 8,000, consistent monthly expenses AED 4,000, 98% on-time payment to suppliers and utilities. The lender's AI model assesses affordability and approves AED 50,000 at 4.5% APR (vs. 15%+ via traditional lender). Loan is disbursed within 24 hours.
 
 **Presentation Headline**
 "Fair Credit. Built on Your Real Income."
@@ -651,7 +651,7 @@ Open Finance enables a personal finance app that auto-imports all transaction da
 - **For Ecosystem**: Improved financial literacy, higher savings rates, better investment participation
 
 **Sample Scenario**
-A 28-year-old employee in Dubai uses a personal finance app powered by Open Finance. They link their ADCB current account. The app auto-imports 12 months of transactions and categorizes spending: Rent (AED 3,000/month), Food (AED 1,500/month), Transport (AED 300/month via Uber), Subscriptions (AED 400/month for Gym + Streaming), Entertainment (AED 1,200/month). The app identifies opportunity: "You spend AED 1,200/month on subscriptions and entertainment. If you reduce by 30%, you save AED 360/month (AED 4,320/year)." It recommends goal: "Save AED 50,000 for wedding in 12 months (AED 4,167/month needed). Possible if you cut entertainment and cancel unused gym." The app tracks progress monthly.
+A 28-year-old employee in Dubai uses a personal finance app powered by Open Finance. They link their Meridian Trust current account. The app auto-imports 12 months of transactions and categorizes spending: Rent (AED 3,000/month), Food (AED 1,500/month), Transport (AED 300/month via Uber), Subscriptions (AED 400/month for Gym + Streaming), Entertainment (AED 1,200/month). The app identifies opportunity: "You spend AED 1,200/month on subscriptions and entertainment. If you reduce by 30%, you save AED 360/month (AED 4,320/year)." It recommends goal: "Save AED 50,000 for wedding in 12 months (AED 4,167/month needed). Possible if you cut entertainment and cancel unused gym." The app tracks progress monthly.
 
 **Presentation Headline**
 "Your Money, Explained. Your Goals, Achieved."
@@ -684,7 +684,7 @@ Open Finance enables instant mortgage application: customers authorize one-time 
 - **For Financial Inclusion**: Self-employed and gig workers gain mortgage access
 
 **Sample Scenario**
-A 35-year-old Dubai real estate agent (self-employed, highly variable income) wants to buy a AED 1.5M apartment. Traditionally, banks require 2 years of tax returns and business statements (difficult for self-employed). Instead, they apply for a mortgage via a digital bank. They authorize Open Finance sharing of 24 months of transaction data from their ENBD account. The bank's AI analysis shows: average monthly income AED 25,000, predictable monthly expenses AED 12,000, strong payment history (99% on-time to DEWA, Salik, etc.). Within 48 hours, the bank pre-approves a AED 1.2M mortgage. The applicant is amazed—no branch visits, no paperwork, instant decision.
+A 35-year-old Dubai real estate agent (self-employed, highly variable income) wants to buy a AED 1.5M apartment. Traditionally, banks require 2 years of tax returns and business statements (difficult for self-employed). Instead, they apply for a mortgage via a digital bank. They authorize Open Finance sharing of 24 months of transaction data from their Bank A account. The bank's AI analysis shows: average monthly income AED 25,000, predictable monthly expenses AED 12,000, strong payment history (99% on-time to DEWA, Salik, etc.). Within 48 hours, the bank pre-approves a AED 1.2M mortgage. The applicant is amazed—no branch visits, no paperwork, instant decision.
 
 **Presentation Headline**
 "Mortgage Pre-Approved. Before You Find the Home."
@@ -717,7 +717,7 @@ Accounting software (Xero, QuickBooks) integrates Open Finance to auto-sync bank
 - **For Banks**: Real-time B2B transaction data, SME financial health insights, credit risk assessment
 
 **Sample Scenario**
-An SME in Dubai (food import business) with 15 employees uses Xero for accounting. They link their primary business account (ADIB) to Xero via Open Finance. Every morning, Xero automatically syncs overnight transactions: supplier payments, customer invoices, employee reimbursements. The owner logs into Xero and sees: Cash balance (AED 750,000), Monthly revenue (AED 1.2M), Monthly expenses (AED 950,000), Gross margin (21%). No manual statement import. The accountant spends 4 hours/month (vs. 20 hours/month manually) and uses freed time to advise on cost optimization, tax planning, and growth strategy.
+An SME in Dubai (food import business) with 15 employees uses Xero for accounting. They link their primary business account (Bank C (Islamic)) to Xero via Open Finance. Every morning, Xero automatically syncs overnight transactions: supplier payments, customer invoices, employee reimbursements. The owner logs into Xero and sees: Cash balance (AED 750,000), Monthly revenue (AED 1.2M), Monthly expenses (AED 950,000), Gross margin (21%). No manual statement import. The accountant spends 4 hours/month (vs. 20 hours/month manually) and uses freed time to advise on cost optimization, tax planning, and growth strategy.
 
 **Presentation Headline**
 "Accounting That Works for You. Not the Other Way Around."
@@ -750,7 +750,7 @@ Open Finance enables end-to-end digital lending: applicants authorize Data Shari
 - **For Banks**: Lending transaction data, customer relationship deepening
 
 **Sample Scenario**
-A small business owner needs AED 100,000 working capital for inventory. They apply via a fintech lender's app. The app requests two permissions: (1) access to 12 months of transaction data (affordability check), (2) ability to disburse funds via their ENBD account (SIP). Within 2 hours, the lender's AI assesses the data: average monthly revenue AED 80,000, monthly expenses AED 55,000, existing debt servicing is on-time. The system approves AED 100,000 at 3.5% interest. The approval notification is sent; the applicant clicks "Accept Terms"; the full AED 100,000 is transferred to their ENBD account via Open Finance SIP within seconds. No branch visit, no waiting, no paperwork.
+A small business owner needs AED 100,000 working capital for inventory. They apply via a fintech lender's app. The app requests two permissions: (1) access to 12 months of transaction data (affordability check), (2) ability to disburse funds via their Bank A account (SIP). Within 2 hours, the lender's AI assesses the data: average monthly revenue AED 80,000, monthly expenses AED 55,000, existing debt servicing is on-time. The system approves AED 100,000 at 3.5% interest. The approval notification is sent; the applicant clicks "Accept Terms"; the full AED 100,000 is transferred to their Bank A account via Open Finance SIP within seconds. No branch visit, no waiting, no paperwork.
 
 **Presentation Headline**
 "Loans Approved and Funded in Hours"
@@ -783,7 +783,7 @@ Open Finance enables a switching service: customers authorize sharing of their a
 - **For Market**: Increased competition, better consumer rates, improved market efficiency
 
 **Sample Scenario**
-A customer at ENBD notices **Abu Dhabi Commercial Bank (ADCB)** offers 3.5% on savings (vs. ENBD's 2.5%). They're tempted but switching seems hard: salary redirect, bills (DEWA, du, Etisalat, gym membership) are on auto-pay, and they worry about delays. They use an Open Finance switching service. They link their ENBD account; the platform identifies: salary deposit (AED 8,500, 1st of month), DEWA bill (AED 450, 2nd), du bill (AED 150, 3rd), gym (AED 150, 10th). The platform shows a switching plan: "3-day process. Your salary will redirect to ADCB on 1st March. Your bills will auto-pay from ADCB starting 2nd March." They approve; the platform automates the redirects (via Open Finance), and by 2nd March, they're fully switched to ADCB. They gain AED 100+/year in extra interest with zero hassle.
+A customer at Bank A notices **Meridian Trust (Meridian Trust)** offers 3.5% on savings (vs. Bank A's 2.5%). They're tempted but switching seems hard: salary redirect, bills (DEWA, du, Etisalat, gym membership) are on auto-pay, and they worry about delays. They use an Open Finance switching service. They link their Bank A account; the platform identifies: salary deposit (AED 8,500, 1st of month), DEWA bill (AED 450, 2nd), du bill (AED 150, 3rd), gym (AED 150, 10th). The platform shows a switching plan: "3-day process. Your salary will redirect to Meridian Trust on 1st March. Your bills will auto-pay from Meridian Trust starting 2nd March." They approve; the platform automates the redirects (via Open Finance), and by 2nd March, they're fully switched to Meridian Trust. They gain AED 100+/year in extra interest with zero hassle.
 
 **Presentation Headline**
 "Switch Banks in One Click. Keep Everything Else the Same."
@@ -816,7 +816,7 @@ B2B SaaS embeds Open Finance to enable one-click vendor payments: when an invoic
 - **For Banks**: B2B transaction volume, SME cash flow data, supply chain insights
 
 **Sample Scenario**
-A Dubai marketing agency (20 staff) uses a SaaS platform for invoicing and expense management. They receive an invoice from a designer vendor (AED 5,000 for a branding project). The agency's operations manager logs into the SaaS platform, approves the invoice, and clicks "Pay Now via Bank." The system shows the vendor's bank account (verified). The manager authorizes (via Open Finance) a AED 5,000 SIP payment from their ADIB account. The vendor receives the payment within seconds. The SaaS platform logs the transaction in the agency's accounting module automatically. The designer vendor, impressed by instant payment, offers 5% volume discount next quarter.
+A Dubai marketing agency (20 staff) uses a SaaS platform for invoicing and expense management. They receive an invoice from a designer vendor (AED 5,000 for a branding project). The agency's operations manager logs into the SaaS platform, approves the invoice, and clicks "Pay Now via Bank." The system shows the vendor's bank account (verified). The manager authorizes (via Open Finance) a AED 5,000 SIP payment from their Bank C (Islamic) account. The vendor receives the payment within seconds. The SaaS platform logs the transaction in the agency's accounting module automatically. The designer vendor, impressed by instant payment, offers 5% volume discount next quarter.
 
 **Presentation Headline**
 "Vendor Payments in Your Workflow. No Context Switching."
@@ -849,7 +849,7 @@ Telecom providers offer open finance-enabled top-up: customers can purchase top-
 - **For Ecosystem**: Better mobile service availability, reduced customer frustration
 
 **Sample Scenario**
-A du prepaid customer (typically uses AED 30–50/month) downloads the du app. They link their ENBD account via Open Finance. They set up auto-refill: "When balance falls below AED 10, automatically top up with AED 50." One evening, while abroad, their balance hits AED 8. Du's system detects this, sends a notification: "Auto-Refill Activated. AED 50 added to your account," and executes a SIP payment from their ENBD account. The customer's service continues without interruption. At month-end, they have 3 auto-refill charges (AED 150 total) and one manual top-up (AED 30) = AED 180 total spend vs. usual AED 50/month. du generates 3.6x ARPU; the customer loves not worrying about balance.
+A du prepaid customer (typically uses AED 30–50/month) downloads the du app. They link their Bank A account via Open Finance. They set up auto-refill: "When balance falls below AED 10, automatically top up with AED 50." One evening, while abroad, their balance hits AED 8. Du's system detects this, sends a notification: "Auto-Refill Activated. AED 50 added to your account," and executes a SIP payment from their Bank A account. The customer's service continues without interruption. At month-end, they have 3 auto-refill charges (AED 150 total) and one manual top-up (AED 30) = AED 180 total spend vs. usual AED 50/month. du generates 3.6x ARPU; the customer loves not worrying about balance.
 
 **Presentation Headline**
 "Always Connected. Always Topped Up."
