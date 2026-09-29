@@ -170,3 +170,42 @@ test('without git a dotfile is skipped in the fallback too', () => withRepo((dir
   const { code, out } = run(dir)
   assert.equal(code, 0, out)
 }))
+
+// ── Content changed without a version bump (CLAUDE.md: "version gates updates") ────────────────
+const REVISED = '---\nname: alpha\ndescription: A demo skill, revised.\n---\n\nbody v2\n'
+const bumpBoth = (dir, v) => {
+  write(join(dir, 'plugins', 'demo', '.claude-plugin', 'plugin.json'), JSON.stringify({ name: 'demo', version: v }, null, 2))
+  write(join(dir, '.claude-plugin', 'marketplace.json'), JSON.stringify({
+    name: 'demo-mkt', owner: { name: 'Demo' }, plugins: [{ name: 'demo', source: './plugins/demo', version: v }],
+  }, null, 2))
+}
+
+test('plugin content committed after its version was set fails', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), REVISED)
+  commit(dir)
+  const { code, out } = run(dir)
+  assert.equal(code, 1)
+  assert.match(out, /content changed since version 1\.0\.0 was set in [0-9a-f]{7}/)
+}))
+
+test('an uncommitted plugin edit is reported before the commit', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), REVISED)
+  const { code, out } = run(dir)
+  assert.equal(code, 1)
+  assert.match(out, /content changed since version 1\.0\.0/)
+}))
+
+test('a content change shipped with a version bump passes', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), REVISED)
+  bumpBoth(dir, '1.0.1')
+  commit(dir)
+  const { code, out } = run(dir)
+  assert.equal(code, 0, out)
+}))
+
+test('a bump that is not yet committed skips the check instead of failing', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), REVISED)
+  bumpBoth(dir, '1.0.1')
+  const { code, out } = run(dir)
+  assert.equal(code, 0, out)
+}))
