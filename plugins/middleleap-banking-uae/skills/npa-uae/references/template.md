@@ -33,7 +33,7 @@
 
 **2.2 Currency** — *What currency will the product or service be offered in?*
 
-**2.3 Fees and Charges** — *Provide an overview of the proposed fees and charges of the product or service. Ensure there is consideration of any ongoing fees such as maintenance fees, transaction fees, annual fees or service charges. State whether any fee is subject to a Central Bank cap or requires Central Bank approval.*
+**2.3 Fees and Charges** — *Provide an overview of the proposed fees and charges of the product or service. Ensure there is consideration of any ongoing fees such as maintenance fees, transaction fees, annual fees or service charges. State whether any fee is subject to a Central Bank cap (CPS 5.1.1.20, 5.1.1.22 and Annexure), and whether Compliance has confirmed any other Central Bank fee requirement.*
 
 **2.4 Exit Fees** — *Provide an overview of the proposed charges or penalties that customers may incur upon terminating or closing the product or service. This may include early termination, closure charges or redemption fees.*
 
@@ -59,11 +59,11 @@
 
 **4.2 Customer Journey** — *Provide a detailed flow outlining the customer journey of the product or service.*
 
-**4.3 Third Parties or Outsourced Arrangement(s)** — *Provide details where there are any proposed third parties supporting the delivery or distribution of the product or service. Confirm whether third parties supporting the product or service fall under the category of "Authorised Agents" as per the Consumer Protection Standards — where yes, an inclusive agreement as per CPS requirements is mandatory. Confirm whether any arrangement constitutes outsourcing under the Central Bank's Outsourcing Regulation.*
+**4.3 Third Parties or Outsourced Arrangement(s)** — *Provide details where there are any proposed third parties supporting the delivery or distribution of the product or service. Confirm whether third parties supporting the product or service fall under the category of "Authorised Agents" as per the Consumer Protection Standards — where yes, the agent contract must meet CPS 5.1.1.80–5.1.1.82 (due diligence, accountability, access and verification rights). Confirm whether any arrangement constitutes outsourcing under the Central Bank's Outsourcing Regulation.*
 
 **4.4 Training and Accreditation** — *Outline any specific training programmes, modules or materials required to educate relevant staff about the features, functionality, processes or compliance requirements associated with the product or service.*
 
-**4.5 Licensing and/or Specific Approvals** — *Outline whether any specific licences or approvals are required to offer the product or service in the target jurisdictions — including Central Bank product or fee approvals, Internal Shari'ah Supervision Committee approval for Islamic products, and any Open Finance licence or certification dependency.*
+**4.5 Licensing and/or Specific Approvals** — *Outline whether any specific licences or approvals are required to offer the product or service in the target jurisdictions — including Central Bank approvals (e.g. structured products, CPS 5.1.4.2; material outsourcing non-objection), Internal Shari'ah Supervision Committee approval for Islamic products, and any Open Finance licence or certification dependency.*
 
 ## 5. Risk Considerations
 
@@ -122,5 +122,5 @@
 
 - **Operational Risk:** Risk and Control Self-Assessment (RCSA); Third Party Risk Assessment (TPRA); Outsourcing pre / post questionnaires
 - **Data Management:** Data Management Baseline Evaluation (DMBE); Privacy Impact Assessment (PIA); Data Protection Impact Assessment (DPIA); Vendor Risk Assessment (VRA)
-- **Fraud Risk:** Inclusive Agreement — CPS Regulation — Authorised Agents; Detailed Fraud Risk Assessment (FRA)
+- **Fraud Risk:** Authorised Agent contract (CPS 5.1.1.80–82) where agents are used; Detailed Fraud Risk Assessment (FRA)
 - **Other:** User Acceptance Testing (UAT) or Build Verification Testing (BVT); Products and Services Risk Assessment (PSRA) — Financial Crime Compliance

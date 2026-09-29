@@ -1,83 +1,101 @@
 # Regulatory Frameworks Reference
 
-The bundled risk taxonomy is grounded in 5 regulatory frameworks: 4 UAE frameworks (CPS,
-PDPL, MMS, CPS-AI) plus BCBS 239, which is international but expected by CBUAE for
-systemically important banks. This skill is focused on the UAE market — understanding the
+The bundled risk taxonomy is grounded in 5 frameworks: 4 UAE instruments (the CBUAE Consumer
+Protection Regulation and Standards, the PDPL, the Model Management Standards, and the CBUAE
+AI/ML Guidance Note — the last is non-binding guidance) plus BCBS 239, which is international.
+Article and section numbers below were checked against the sources on 29 Sep 2026 (see
+`verification-log.md`); PDPL items rest on an English translation, not the official gazette. This skill is focused on the UAE market — understanding the
 scope and interplay of these frameworks is essential for accurate risk reviews of any
 CBUAE-regulated institution.
 
-## CPS — Consumer Protection Standards (CBUAE Circular No. 8-2020)
+## CPS — Consumer Protection Regulation (CBUAE Circular No. 8/2020) and Consumer Protection Standards (Notice 1158/2021)
 
-**Scope**: How Licensed Financial Institutions (LFIs) must treat consumers across all channels.
+**Scope**: How Licensed Financial Institutions (LFIs) must treat consumers across all channels (Standards 2.1.1.1: branches, telephone, mobile, internet and all other channels).
 
-**Key areas**:
-- Art. 2: Disclosure and Transparency — governs what information must be provided, when, and how clearly
-- Art. 3: Business Conduct — fair treatment, suitability, complaints handling
-- Art. 6: Data Protection — consumer data handling obligations (overlaps with PDPL)
-- Art. 8: Technology and Digital Channels — requirements for digital banking services
+**Key areas** (Standards):
+- Art. 2: Disclosure and Transparency (incl. 2.3 Responsible Advertising)
+- Art. 3: Institutional Oversight — governance, product approval, regulatory reporting
+- Art. 5: Business Conduct — fair treatment, conflicts, debt collection
+- Art. 6: Protection of Consumer Data and Assets — data protection, consent, retention (6.1); fraud (6.2)
+- Art. 7: Responsible Financing Practice — suitability, affordability
+- Art. 8: Complaint Management and Complaint Resolution
+- Digital-channel requirements are spread across the Standards (e.g. 2.1.1.1, 2.1.1.45); there is no dedicated technology article.
 
 **Risk domains**: Primarily DR-3 (Disclosure) and DR-1 (Data Quality), also DR-2 (Privacy) and DR-4 (Compliance)
 
-**Enforcement**: CBUAE has direct enforcement powers including fines and license conditions.
+**Enforcement**: Regulation Art. 13 — supervisory action, sanctions and penalties, which may include fines and replacing or restricting the powers of Senior Management or Board members.
 
 ## PDPL — Personal Data Protection Law (Federal Decree-Law No. 45 of 2021)
 
-**Scope**: UAE's comprehensive data protection legislation governing processing of personal data.
+**Scope**: UAE federal data protection law (issued 20 Sep 2021, in force 2 Jan 2022).
 
-**Key areas**:
-- Art. 5: Lawful basis for processing (consent, contract, legal obligation, vital interests, public interest, legitimate interests)
-- Art. 9-11: Data subject rights (access, rectification, erasure, portability, objection)
-- Art. 12-13: Data quality and accuracy obligations
-- Art. 20: Data breach notification (72-hour window to UAE Data Office)
-- Art. 22-23: Cross-border transfer restrictions
+**Scope carve-out — read first (Art. 2(2))**: the PDPL does not apply to banking and credit
+personal data that is subject to its own protective legislation, nor to free-zone entities under
+their own data-protection law (DIFC, ADGM). For a CBUAE-regulated bank, the primary obligations
+for banking data sit in the CBUAE framework (CPS Art. 6; Open Finance Regulation Art. 22 for
+Open Finance data). Treat the PDPL as applying where the carve-out does not reach, and get a
+legal view per use case.
+
+**Key areas** (English translation; confirm against the official text before quoting):
+- Art. 4: Lawful processing — consent by default, plus listed exceptions (public interest, contract, legal obligation, protecting the data subject's interests, legal claims, etc.); there is no general "legitimate interests" basis
+- Art. 5: Processing controls — fairness, purpose limitation, minimisation, accuracy, security, storage limitation
+- Art. 6: Consent conditions and withdrawal
+- Art. 9: Breach reporting to the UAE Data Office "immediately upon becoming aware" — the period and procedure are left to the Executive Regulations; notify data subjects where the breach is prejudicial
+- Arts. 13–18: Data subject rights — information, portability, correction/erasure, restriction, stop processing, automated processing
+- Arts. 20–21: Security and data protection impact assessment
+- Arts. 22–23: Cross-border transfer
 
 **Risk domains**: Primarily DR-2 (Privacy, Protection & Security), also DR-1 (Data Quality) and DR-4 (Compliance)
 
-**Enforcement**: UAE Data Office; fines up to AED 2 million for violations.
+**Enforcement**: UAE Data Office (Decree-Law 44/2021). Administrative penalties are to be set by Cabinet decision (Art. 26); the law fixes no amounts. As of Sep 2026 secondary sources report the Executive Regulations have not been issued, so the Art. 29 compliance period has not started — re-check before relying on this.
 
 ## MMS — Model Management Standards (CBUAE)
 
-**Scope**: Governance requirements for models used in regulated financial services, including AI/ML.
+**Scope**: Mandatory model-management standards for all licensed banks in the UAE (MMS 2.1.1), covering all models used to support decision-making (2.4.1), including AI (Table 1). Issued with the Model Management Guidance (MMG).
 
 **Key areas**:
-- 4.1: Model inventory and registration requirements
-- 4.4-4.6: Model development, validation, and documentation
-- 4.9-4.10: Model monitoring and performance tracking
-- 5.1-5.6: Independent model validation requirements
+- 4.4: Model inventory and grouping
+- 4.5–4.6: Ownership, stakeholders and decision process
+- 4.9–4.10: Model documentation and performance reporting
+- §5: Data management (5.1–5.6)
+- §6: Model development
+- §9: Model performance monitoring
+- §10: Independent validation
 
 **Risk domains**: DR-1 (Data Quality for model inputs), DR-4 (Governance)
 
 **When MMS applies**: Any time an AI/ML component makes or influences decisions in a regulated
 process. This includes risk classifiers, AI components operating in autonomous mode, and any
 model that processes regulated data. The key question: "Is there a model making or influencing a decision
-about regulated activity?" If yes, MMS applies.
+about regulated activity?" If yes, MMS applies — to a licensed bank; for other LFIs use it as the reference standard.
 
 ## BCBS 239 — Principles for Effective Risk Data Aggregation and Risk Reporting
 
 **Scope**: Basel Committee principles for how banks aggregate, manage, and report risk data.
-Not a UAE regulation per se, but CBUAE expects alignment for systemically important banks.
+Not a UAE regulation. BCBS applies it to G-SIBs and "strongly suggested" that national supervisors apply it to D-SIBs three years after designation. No CBUAE instrument adopting it was found (29 Sep 2026); treat it as good practice for CBUAE D-SIBs unless an institution-specific requirement says otherwise.
 
 **Key areas**:
 - Principle 3: Accuracy and Integrity — data must be accurate and reconciled
 - Principle 4: Completeness — all material risk data must be captured
 - Principle 5: Timeliness — data available when needed, especially in stress
 - Principle 6: Adaptability — systems must be flexible to changing reporting needs
-- Principles 7-12: Risk reporting accuracy, comprehensiveness, clarity, frequency, distribution, and review
+- Principles 7–11: Risk reporting — accuracy, comprehensiveness, clarity and usefulness, frequency, distribution (Principles 12–14 are supervisory: review, remedial action, home/host cooperation)
 
 **Risk domains**: Primarily DR-1 (Data Quality), also DR-3 (Disclosure) and DR-4 (Governance)
 
 **Application**: BCBS 239 is most relevant when reviewing data pipelines, aggregation logic,
 reporting systems, and anything that feeds risk reporting to senior management or regulators.
 
-## CPS-AI — AI Guidance (CBUAE)
+## CPS-AI — CBUAE Guidance Note on Consumer Protection and Responsible Adoption and Use of AI/ML by LFIs (issued 11 Feb 2026)
 
-**Scope**: CBUAE supplementary guidance on use of AI in regulated financial services.
-Extends CPS requirements specifically to AI/ML use cases.
+**Scope**: Principles-based guidance ("should"); it supplements, and does not replace, the
+Consumer Protection Regulation and Standards, the MMS and the PDPL. "CPS-AI" is this skill's label.
 
 **Key areas**:
-- 4.b: AI systems must ensure accuracy and reliability of outputs
-- 5.a: Transparency requirements — AI decisions must be explainable
-- 7.c: Accountability for AI-driven decisions in consumer-facing contexts
+- 2.a–2.f: Governance and accountability — Board and senior-management accountability; AI inventory under the MMS
+- 4.a–4.c: Transparency and explainability — disclose AI use; plain-language Arabic and English disclosures; opt-out for high-impact decisions
+- 5.a–5.d: Data quality, privacy and security — accurate data with provenance and audit trails; privacy and security by design; robustness testing
+- 7.a–7.d: Human oversight and consumer protection — human review, explanation and the right to challenge (7.c); no misleading AI marketing (7.d)
 
 **Risk domains**: DR-1 (Data Quality for AI inputs), DR-2 (Privacy in AI processing), DR-4 (Governance)
 
@@ -153,7 +171,7 @@ For novel approaches (especially AI in regulated contexts):
   something that should be briefed proactively?
 - Is it better to present this as governance innovation than have it discovered
   during an examination?
-- Does CPS-AI guidance require notification for AI use in specific contexts?
+- The AI Guidance Note has no prior-notification requirement; it expects AI conduct risk to be reported "to the board and regulators" (8.b) and encourages engaging the CBUAE — so the question is whether to brief proactively, not whether a filing is due.
 
 ### Second-Order & Systemic Risk
 

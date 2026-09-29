@@ -58,7 +58,7 @@
 
 **4.4** Credit officers: reading the affordability summary and the reason codes; contact centre: the consent journey and withdrawal; Compliance: annual refresher on Open Finance conduct rules.
 
-**4.5** The Bank's TPP licence and certification (OIDF, Functional, CX, Live Proving) for the data-sharing journey; no structured-product approval; conventional product, no ISSC involvement.
+**4.5** The Bank's Open Finance participation as a Person Deemed Licensed (prior written notice to the Central Bank, Open Finance Regulation Art. 3.2) and certification (OIDF, Functional, CX, Live Proving) for the data-sharing journey; no structured-product approval; conventional product, no ISSC involvement.
 
 ## 5. Risk Considerations
 
@@ -87,7 +87,7 @@
 ## NPA Committee decision — Approved with conditions
 
 1. Disclosure wording as submitted, verbatim, on every consent screen.
-2. Fourteen-day cooling-off on cards originated through the connected journey.
+2. Fourteen-day cooling-off on cards originated through the connected journey (a committee condition exceeding the 5-business-day CPS minimum).
 3. Post-implementation review at ninety days with the 1.5 KPIs.
 
 *In the Loom these become: a deterministic disclosure-conformance gate; a contract test on the card origination path; and the next pass's intent.*
