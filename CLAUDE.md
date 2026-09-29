@@ -51,6 +51,8 @@ apps/loom-console/                  # the Loom console: a standalone, read-only 
 ## Verification
 
 ```bash
+node scripts/ci/local.mjs   # everything CI runs, read from validate.yml, locally (~5 min; --list, --from <n>)
+                            # off Linux it shims GNU sed -i / sha256sum and skips the one Linux-binary step
 node scripts/validate-marketplace.mjs   # manifests, sources, versions, skill/agent layout
 node --test scripts/validate-marketplace.test.mjs   # the validator's own suite — run it if you change the validator
 node scripts/deidentify-check.mjs   # no client names under plugins/ — terms and allowlist in .deidentify.json
