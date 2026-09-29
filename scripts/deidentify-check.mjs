@@ -16,8 +16,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-function tracked(root, scope) {
-  const out = execFileSync('git', ['-C', root, 'ls-files', '-z', '--', scope], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+function tracked(root, scopes) {
+  const out = execFileSync('git', ['-C', root, 'ls-files', '-z', '--', ...scopes], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
   return out.split('\0').filter(Boolean);
 }
 
@@ -31,7 +31,10 @@ export function check({ root = resolve(here, '..'), configPath = '.deidentify.js
   try { cfg = JSON.parse(readFileSync(cfgFile, 'utf8')); } catch (e) { return { findings: [`${configPath} is not valid JSON: ${e.message}`], code: 2, scanned: 0, allowed: 0, skippedBinary: 0 }; }
   const terms = Array.isArray(cfg.terms) ? cfg.terms.filter((t) => typeof t === 'string' && t.trim()) : [];
   if (!terms.length) return { findings: [`${configPath} lists no terms`], code: 2, scanned: 0, allowed: 0, skippedBinary: 0 };
-  const scope = typeof cfg.scope === 'string' && cfg.scope ? cfg.scope : 'plugins';
+  // scope: one directory or a list of them ("plugins" or ["plugins", "docs"]).
+  const scopes = [].concat(cfg.scope || 'plugins').filter((s) => typeof s === 'string' && s);
+  if (!scopes.length) scopes.push('plugins');
+  const scope = scopes.map((s) => `${s}/`).join(', ');
   const re = new RegExp(terms.map(escapeRe).join('|'), 'i');
   const canonical = (s) => terms.find((term) => term.toLowerCase() === s.toLowerCase()) ?? s;
 
@@ -45,7 +48,7 @@ export function check({ root = resolve(here, '..'), configPath = '.deidentify.js
   }
 
   let files;
-  try { files = tracked(root, scope); } catch { return { findings: [`${root} is not a git checkout — the gate reads the git tree`], code: 2, scanned: 0, allowed: 0, skippedBinary: 0 }; }
+  try { files = tracked(root, scopes); } catch { return { findings: [`${root} is not a git checkout — the gate reads the git tree`], code: 2, scanned: 0, allowed: 0, skippedBinary: 0 }; }
 
   let scanned = 0, skippedBinary = 0, allowed = 0;
   for (const rel of files) {
@@ -71,10 +74,10 @@ export function check({ root = resolve(here, '..'), configPath = '.deidentify.js
 
 function main() {
   const r = check({});
-  if (r.code === 0) { process.stdout.write(`De-identification gate — OK (${r.scanned} text files under ${r.scope}/ scanned for ${r.terms.length} terms; ${r.allowed} allowlisted with a reason; ${r.skippedBinary} binaries skipped)\n`); return 0; }
+  if (r.code === 0) { process.stdout.write(`De-identification gate — OK (${r.scanned} text files under ${r.scope} scanned for ${r.terms.length} terms; ${r.allowed} allowlisted with a reason; ${r.skippedBinary} binaries skipped)\n`); return 0; }
   process.stderr.write(`De-identification gate — ${r.code === 1 ? 'FAIL' : 'CONFIG'}\n`);
   for (const f of r.findings) process.stderr.write(`  - ${f}\n`);
-  if (r.code === 1) process.stderr.write(`  → a client's name is in something installable. Replace it with the institution-seam idiom, or allowlist the file in .deidentify.json with a reason.\n`);
+  if (r.code === 1) process.stderr.write(`  → a client's name is in a tracked file the gate scans (plugins/ ships to users; docs/ is public). Replace it with the institution-seam idiom, or allowlist the file in .deidentify.json with a reason.\n`);
   return r.code;
 }
 
