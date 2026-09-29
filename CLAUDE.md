@@ -56,6 +56,10 @@ node --test scripts/validate-marketplace.test.mjs   # the validator's own suite 
 node scripts/deidentify-check.mjs   # no client names under plugins/ — terms and allowlist in .deidentify.json
 node --test apps/loom-console/test/*.test.mjs   # the console, over the Meridian demo installation
 claude plugin eval ./plugins/middleleap-loom-demo --trust-plugin --max-cost-usd 3   # trigger evals; paid, run by hand. The loom and banking suites cannot load their dependencies in the eval sandbox yet — see plugins/middleleap-loom/evals/README.md
+# until then, smoke-test a trigger headlessly with every plugin loaded from the checkout (paid; run from an empty dir):
+#   claude -p "<prompt>" --plugin-dir plugins/middleleap-loom --plugin-dir plugins/middleleap-banking-uae \
+#     --plugin-dir plugins/middleleap-open-finance-uae --plugin-dir plugins/middleleap-loom-demo \
+#     --output-format stream-json --verbose | grep -o '"name":"Skill","input":{[^}]*}'
 ```
 
 The validator reads the **git tree**, not the filesystem: only tracked files can reach a
