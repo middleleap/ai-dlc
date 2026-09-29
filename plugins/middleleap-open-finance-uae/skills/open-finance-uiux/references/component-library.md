@@ -495,7 +495,7 @@ Always a pair: Cancel (outline) + Primary (gradient with AlTareq mark). Centered
 <div class="of-actions">
   <button class="of-btn of-btn--cancel">Cancel</button>
   <button class="of-btn of-btn--primary">
-    <img src="assets/logos/white-mark.svg" alt="" class="of-btn__icon" />
+    <!-- inline the white mark SVG from svg-assets.md here (unique {P} prefix), class="of-btn__icon" -->
     Pay using AlTareq
   </button>
 </div>
@@ -701,7 +701,7 @@ Full-viewport gradient screen shown during TPP ↔ LFI transitions. Features ani
 <div class="of-redirect">
   <div class="of-redirect__content">
     <div class="of-redirect__spinner">
-      <img src="assets/spinner/Property 1=1.svg" alt="" />
+      <!-- inline the spinner SVG from svg-assets.md here (unique {P} prefix) -->
     </div>
     <p class="of-redirect__message">
       We're redirecting you to <strong>YOUR LFI</strong><br>
@@ -710,7 +710,7 @@ Full-viewport gradient screen shown during TPP ↔ LFI transitions. Features ani
   </div>
   <div class="of-redirect__footer">
     <span class="of-redirect__powered">Powered by</span>
-    <img src="assets/logos/white-logo.svg" alt="AlTareq" class="of-redirect__logo" />
+    <!-- inline the white logo SVG from svg-assets.md here (unique {P} prefix), class="of-redirect__logo", aria-label="AlTareq" -->
   </div>
 </div>
 ```

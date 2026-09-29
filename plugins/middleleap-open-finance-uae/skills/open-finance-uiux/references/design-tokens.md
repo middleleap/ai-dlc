@@ -196,5 +196,11 @@ The AlTareq mark uses concentric squares with graduated gradient layers:
   /* Shadows */
   --shadow-card: 0 2px 8px rgba(26, 29, 59, 0.06);
   --shadow-button: 0 2px 4px rgba(0, 51, 102, 0.15);
+
+  /* Also listed in the tables above */
+  --color-accent-green: #40E0C7;
+  --color-unselected-border: #E8EAF0;
+  --color-checkbox-checked: #015AD7;
+  --gradient-spinner: conic-gradient(from 0deg, white, #015AD7 40%, #00C8AF 100%);
 }
 ```
