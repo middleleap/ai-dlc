@@ -670,6 +670,16 @@
       "action_required": [
         "If you edited .claude/hooks/spec-tripwire.sh, diff it against spec-tripwire.sh.loom-new after upgrading."
       ]
+    },
+    {
+      "version": "2.5.7",
+      "headline": "spec-tripwire closes the write paths its 2.5.6 rewrite opened",
+      "notes": [
+        "The Bash branch of spec-tripwire.sh denies again: redirection to a variable target, >|, yq -i and perl -pi in any position, -o/--output and curl/wget downloads, ln and rsync, and Node/Python write calls (copyFile, appendFile, createWriteStream, write_bytes, shutil, os.replace). Read-only codegen that writes elsewhere is still allowed."
+      ],
+      "action_required": [
+        "If you edited .claude/hooks/spec-tripwire.sh, diff it against spec-tripwire.sh.loom-new after upgrading."
+      ]
     }
   ]
 }
