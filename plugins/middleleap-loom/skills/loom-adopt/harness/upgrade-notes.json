@@ -632,7 +632,7 @@
         "loom-adopt/SKILL.md states the bundle location once and no longer carries marker counts that drift from adopt.mjs."
       ],
       "action_required": [
-        "If you use the Meridian Trust worked example, install it explicitly: /plugin install middleleap-loom-demo@middleleap-ai-dlc."
+        "If you use the Meridian Trust worked example, install it explicitly: /plugin install middleleap-loom-demo@middleleap-ai-dlc. If you do not, it stays installed from the earlier dependency until you run /plugin uninstall middleleap-loom-demo@middleleap-ai-dlc."
       ]
     },
     {
@@ -654,7 +654,9 @@
         "DISCOVERY-SYNC is removed from the control catalog template and ci.yml — it measured the Loom bundle's own divergence from its origin and had nothing to verify in an adopted tree."
       ],
       "action_required": [
-        "If you merged DISCOVERY-SYNC into docs/governance/control-catalog.json, delete that row."
+        "If you merged DISCOVERY-SYNC into docs/governance/control-catalog.json, delete that row.",
+        "If you hand-copied harness/skills or harness/agents before 2.5.5, expect every copy that differs from this bundle — edited or merely older — to be reported unverifiable-preserved with a .loom-new sidecar on this upgrade: diff each one and take ours where you never edited it. Do not reach for --force, which overwrites every edited file in the adoption.",
+        "A hand-copied .claude/agents/shariah-conformance-reviewer.md is managed only at --tier full; at core or governed it stays where it is, unmanaged. Delete it if you do not need it, or adopt --tier full."
       ]
     },
     {

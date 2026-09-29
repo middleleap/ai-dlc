@@ -10,7 +10,7 @@ function entries(root) {
  function walk(dir) { for(const name of readdirSync(dir).sort()) { const p=join(dir,name), s=lstatSync(p); if(s.isSymbolicLink())throw new Error('Symlinks are not allowed'); if(s.isDirectory())walk(p); else if(s.isFile())result.push([relative(root,p).split('\\').join('/'),hash(readFileSync(p))]); else throw new Error('Unsupported file'); } }
  walk(root); return result;
 }
-// The evidence legend (docs/plans/kosli-founder-demo-briefing.md, change 2): every artifact excerpt
+// The evidence legend (the Meridian demo briefing, kept outside this repository, change 2): every artifact excerpt
 // carries one of these five statuses, shown where the claim appears; the legend itself is always
 // rendered. An excerpt that names no status is fictional planning — the only status an editorial
 // scenario may assume.
