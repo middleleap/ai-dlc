@@ -74,14 +74,14 @@ Read these files IN ORDER based on what you're generating:
 1. **`references/value-propositions.md`** — Get the value proposition entry (problem, solution, benefits, scenario, headline, KPIs)
 
 **For Solution Presentation:**
-2. **`references/presentation-blueprint.md`** — Complete HTML slide deck template with all CSS/JS
+2. **`references/presentation-blueprint.md`** — How to fill the slide deck; the template itself is `assets/templates/presentation.html` (all CSS/JS)
 
 **For Interactive Prototype (with app context):**
-3. **`references/app-context-blueprint.md`** — App shell templates, pre-flow screens, post-flow screens, and the complete 7-screen flow template
+3. **`references/app-context-blueprint.md`** — App shell templates, pre-flow and post-flow screens; the complete 7-screen flow template is `assets/templates/app-flow.html` and the e-commerce shell is `assets/templates/app-shells/ecommerce-checkout.html`
 
 **For AlTareq Journey screens (used within the prototype):**
 4. **`references/journey-generator.md`** — Journey type composition specs
-5. **`references/html-blueprint.md`** — AlTareq consent flow HTML template
+5. **`references/html-blueprint.md`** — How to fill the AlTareq consent flow; the page template is `assets/templates/consent-flow.html`
 6. **`references/svg-assets.md`** — Inline SVG code for AlTareq logos (use `{P}` prefix system)
 7. **`references/design-tokens.md`** — CSS custom properties
 8. **`references/component-library.md`** — Component HTML/CSS patterns
