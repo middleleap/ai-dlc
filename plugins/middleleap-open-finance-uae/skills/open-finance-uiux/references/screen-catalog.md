@@ -2,6 +2,8 @@
 
 Complete field-by-field specifications for every AlTareq Open Finance journey screen. Use this to build pixel-accurate screens for each journey type.
 
+> **The mandatory elements are set by the canon, not here.** What a certified journey screen must show (logo, buttons, progress, consent wording) is defined in `../../open-finance-uae/references/altareq-journey-screens.md` and `altareq-brand.md`. Where this catalogue and the canon differ, the canon wins; this file adds layout and field detail for prototypes.
+
 ## Table of Contents
 
 1. [Single Instant Payment (SIP)](#single-instant-payment-sip)

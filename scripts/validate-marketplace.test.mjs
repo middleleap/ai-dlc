@@ -249,3 +249,9 @@ test('a skill with no name field warns', () => withRepo((dir) => {
   write(join(dir, 'plugins', 'demo', 'skills', 'alpha', 'SKILL.md'), '---\ndescription: d\n---\n'); bumpBoth(dir, '1.0.1'); commit(dir)
   const { code, out } = run(dir); assert.equal(code, 0, out); assert.match(out, /skills\/alpha has no name field/)
 }))
+
+test('a dependency entry with no name is reported as malformed, not "undefined"', () => withRepo((dir) => {
+  write(join(dir, 'plugins', 'demo', '.claude-plugin', 'plugin.json'), JSON.stringify({ name: 'demo', version: '1.0.0', dependencies: [{ version: '1.0.0' }] }))
+  commit(dir); const { code, out } = run(dir)
+  assert.equal(code, 1); assert.match(out, /malformed dependency entry/); assert.doesNotMatch(out, /undefined/)
+}))

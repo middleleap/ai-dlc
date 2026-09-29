@@ -715,6 +715,15 @@
         "agent-output-check.test.mjs read the output-contract section from the wrong offset and measured 0 words, so its length cap could never fail. It now reads from after the heading, and asserts it measured something."
       ],
       "action_required": []
+    },
+    {
+      "version": "2.5.12",
+      "headline": "CLAUDE.md guide reflects current Cursor and Windsurf rule formats",
+      "notes": [
+        "claude-md-guide/references/platform-tips.md: Cursor reads .cursor/rules/*.mdc and AGENTS.md (.cursorrules is the older form); Windsurf reads .devin/rules/ and .windsurf/rules/, AGENTS.md, and still .windsurfrules. Checked against both vendors' docs on 29 Sep 2026.",
+        "copy-manifest.json says what the why field is for."
+      ],
+      "action_required": []
     }
   ]
 }

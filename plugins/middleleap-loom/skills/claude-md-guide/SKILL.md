@@ -3,7 +3,7 @@ name: claude-md-guide
 description: >
   Best practices for writing effective CLAUDE.md files, plus a starter template. Use when
   creating a CLAUDE.md from scratch for a new repository, improving an existing one, or asked
-  about .cursorrules, AI context files, AI coding-assistant configuration, or prompt engineering
+  about AGENTS.md, .cursor/rules, .cursorrules, AI context files, AI coding-assistant configuration, or prompt engineering
   for a codebase.
 ---
 

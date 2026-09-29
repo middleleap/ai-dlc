@@ -10,7 +10,7 @@
       "name": "middleleap-loom",
       "source": "./plugins/middleleap-loom",
       "description": "The Loom — MiddleLeap's method for building regulated software with AI: a gated discovery harness, an autonomous delivery loop with human four-eyes merge, always-on guardrails, the machinery to adopt it in any repository, and the CLAUDE.md authoring and code-review kit it runs on. Installs the UAE banking and UAE Open Finance plugins with it; the Meridian Trust demo is a separate install. Proven end-to-end on a UAE Open Finance back office.",
-      "version": "2.5.11",
+      "version": "2.5.12",
       "author": {
         "name": "MiddleLeap"
       },
@@ -33,7 +33,7 @@
       "name": "middleleap-banking-uae",
       "source": "./plugins/middleleap-banking-uae",
       "description": "UAE banking expertise for CBUAE-regulated institutions — a virtual Head of Risk (discovery, backlog risk tagging, formal review, control-automation verification, with a jurisdiction map for banks outside the UAE), Islamic banking (Shariah-compliant finance), and New Product Approval (the Business Proposition Form, the CBUAE anchor behind each field, sign-off routing). General-purpose: works with or without the Loom.",
-      "version": "1.1.3",
+      "version": "1.1.4",
       "author": {
         "name": "MiddleLeap"
       },
@@ -55,7 +55,7 @@
       "name": "middleleap-open-finance-uae",
       "source": "./plugins/middleleap-open-finance-uae",
       "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, and value-proposition prototyping.",
-      "version": "3.0.6",
+      "version": "3.0.7",
       "author": {
         "name": "MiddleLeap"
       },

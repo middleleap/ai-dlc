@@ -24,14 +24,18 @@ Claude Code reads `CLAUDE.md` files from the project root and any parent directo
 - Error prevention checklists (reduces iteration cycles)
 - Architecture overviews (helps Claude Code navigate large codebases)
 
-## Cursor (.cursorrules)
+## Cursor (.cursor/rules/*.mdc, AGENTS.md)
 
-Cursor reads `.cursorrules` from the project root.
+Cursor reads project rules from `.cursor/rules/` as `.mdc` files — Markdown with frontmatter
+(`description`, `globs`, `alwaysApply`) that decides when each rule applies. A plain `.md` file
+in that folder is ignored. For simple cases an `AGENTS.md` at the root (or in a subdirectory, for
+that subtree) works instead. The single-file `.cursorrules` is the older form; prefer the folder.
+(Checked against cursor.com/docs, 29 Sep 2026.)
 
 ### Key behaviors
-- Single file, no nesting support
-- Loaded into every Cursor AI interaction (Chat, Composer, Cmd+K)
-- Shared across all Cursor features — keep it general
+- One rule per `.mdc` file; `globs` scope a rule to matching files, `alwaysApply` makes it global
+- `AGENTS.md` files nest: a subdirectory's file applies to work in that subtree
+- Rules share the context window with code — keep always-on rules short
 
 ### Tips
 - Front-load the most impactful rules (context window is shared with code)
@@ -70,19 +74,18 @@ GitHub Copilot reads instructions from `.github/copilot-instructions.md`.
 - Mention preferred libraries for common tasks
 - State testing conventions clearly
 
-## Windsurf (.windsurfrules)
+## Windsurf (.devin/rules/, AGENTS.md)
 
-Windsurf reads `.windsurfrules` from the project root.
-
-### Key behaviors
-- Similar to Cursor's format
-- Loaded into Cascade (Windsurf's AI agent) context
-- Single file at project root
+Windsurf reads workspace rules from `.devin/rules/*.md` (preferred) and the older
+`.windsurf/rules/*.md`, in the workspace and its subdirectories. `AGENTS.md` goes through the same
+rules engine: at the root it is always on, in a subdirectory it applies to that directory. The
+single-file `.windsurfrules` at the root is still read. Global rules live in
+`~/.codeium/windsurf/memories/global_rules.md` (always on, up to 6,000 characters).
+(Checked against the Windsurf docs, 29 Sep 2026.)
 
 ### Tips
-- Structure is similar to `.cursorrules`
-- Include file organization patterns
-- Specify import conventions
+- Keep one concern per rule file; put directory-specific rules in that directory
+- Include file organisation patterns and import conventions
 
 ## Cross-Platform Strategy
 
@@ -92,7 +95,7 @@ If your team uses multiple AI tools, maintain a canonical source and generate to
 ai-config/
   canonical.md        # Source of truth
   generate.sh         # Script to generate tool-specific files
-.cursorrules          # Generated
+AGENTS.md             # Generated — read by Cursor and Windsurf
 CLAUDE.md             # Generated (or hand-maintained with extras)
 .github/copilot-instructions.md  # Generated
 ```

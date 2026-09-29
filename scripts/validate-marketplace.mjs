@@ -178,7 +178,8 @@ if (!shipped(marketplacePath, 'the marketplace')) {
       // (the bump is still uncommitted) means the bump is in progress: nothing to report.
       for (const d of Array.isArray(manifest.dependencies) ? manifest.dependencies : []) {
         const depName = typeof d === 'string' ? d : d?.name
-        if (!marketplaceNames.has(depName)) fail(`${label}: dependency "${depName}" is not a plugin in this marketplace — installing ${label} will fail.`)
+        if (typeof depName !== 'string' || !depName) fail(`${label}: malformed dependency entry ${JSON.stringify(d)} — expected a plugin name or { "name": … }.`)
+        else if (!marketplaceNames.has(depName)) fail(`${label}: dependency "${depName}" is not a plugin in this marketplace — installing ${label} will fail.`)
       }
 
       if (gitTree && !shallow && manifest.version && manifest.version === entry.version) {
