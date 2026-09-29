@@ -121,6 +121,14 @@ if (!shipped(marketplacePath, 'the marketplace')) {
     if (mkt.metadata?.pluginRoot !== undefined) {
       fail('marketplace.json: metadata.pluginRoot is set. Current Claude Code releases fail to install plugins whose source relies on it. Remove it and write each source out as "./plugins/<name>".')
     }
+    // A shallow clone cannot see the commit that set a version, so the content-changed check would
+    // anchor on the grafted root and pass silently. Say so, and skip that check.
+    let shallow = false
+    if (gitTree) {
+      try { shallow = execFileSync('git', ['-C', root, 'rev-parse', '--is-shallow-repository'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() === 'true' } catch { shallow = false }
+      if (shallow) warn('this is a shallow clone — the content-changed-without-a-bump check cannot see history and is skipped. Fetch full history (CI: fetch-depth: 0).')
+    }
+    const marketplaceNames = new Set((Array.isArray(mkt.plugins) ? mkt.plugins : []).map((p) => p?.name).filter(Boolean))
     const seen = new Set()
 
     for (const entry of mkt.plugins ?? []) {
@@ -168,7 +176,12 @@ if (!shipped(marketplacePath, 'the marketplace')) {
       // that introduced it; the plugin tree on disk (tracked files, staged or not) is then diffed
       // against that commit. Any difference means installed users are behind. No such commit
       // (the bump is still uncommitted) means the bump is in progress: nothing to report.
-      if (gitTree && manifest.version && manifest.version === entry.version) {
+      for (const d of Array.isArray(manifest.dependencies) ? manifest.dependencies : []) {
+        const depName = typeof d === 'string' ? d : d?.name
+        if (!marketplaceNames.has(depName)) fail(`${label}: dependency "${depName}" is not a plugin in this marketplace — installing ${label} will fail.`)
+      }
+
+      if (gitTree && !shallow && manifest.version && manifest.version === entry.version) {
         let bumpCommit = ''
         try {
           bumpCommit = execFileSync('git', ['-C', root, 'log', '-1', '--format=%H', '-S', `"${manifest.version}"`, '--', rel(manifestPath)],
@@ -203,6 +216,7 @@ if (!shipped(marketplacePath, 'the marketplace')) {
           else if (fm.description.length > 1024) {
             fail(`${label}: skills/${name} description is ${fm.description.length} chars (max 1024).`)
           }
+          if (fm && !fm.name) warn(`${label}: skills/${name} has no name field.`)
           if (fm?.name && fm.name !== name) {
             warn(`${label}: skills/${name} declares name "${fm.name}" — it will be invoked as "${fm.name}", not the folder name.`)
           }
