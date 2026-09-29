@@ -1,6 +1,9 @@
 {
-  "$comment": "Names that must not appear in anything installable. scripts/deidentify-check.mjs scans every tracked text file under plugins/ for these terms (case-insensitive) and fails the build on a hit, unless the file is allowlisted below with a reason. The Open Finance, Islamic banking and risk-reviewer skills are imported from the Claude.ai skills UI as whole-file overwrites (CLAUDE.md, provenance rules); this gate is what makes a careless re-import fail in the PR instead of shipping a client's name to the public marketplace.",
-  "scope": "plugins",
+  "$comment": "Names that must not appear in anything installable. scripts/deidentify-check.mjs scans every tracked text file under plugins/ and docs/ for these terms (case-insensitive) and fails the build on a hit, unless the file is allowlisted below with a reason. The Open Finance, Islamic banking and risk-reviewer skills are imported from the Claude.ai skills UI as whole-file overwrites (CLAUDE.md, provenance rules); this gate is what makes a careless re-import fail in the PR instead of shipping a client's name to the public marketplace.",
+  "scope": [
+    "plugins",
+    "docs"
+  ],
   "terms": [
     "ADCB",
     "Abu Dhabi Commercial",
@@ -20,6 +23,14 @@
     {
       "path": "plugins/middleleap-open-finance-uae/skills/open-finance-uiux/references/value-propositions.md",
       "reason": "prototyping kit: illustrative multi-bank scenarios with named market participants, meant to be replaced"
+    },
+    {
+      "path": "docs/plans/2026-09-16-consolidated-landing-plan.md",
+      "reason": "historical plan whose task was the ADCB de-identification itself; it names the term to describe removing it"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-30-ai-dlc-deferred-items.md",
+      "reason": "implementation plan whose tasks remove these terms; it names them to specify the removal and the tests"
     }
   ]
 }
