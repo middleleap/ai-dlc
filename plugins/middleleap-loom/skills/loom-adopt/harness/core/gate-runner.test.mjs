@@ -509,6 +509,10 @@ function recordFixture({ mount }) {
   spawnSync('git', ['init', '-q'], { cwd: dir }); spawnSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'base'], { cwd: dir });
   const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).stdout.trim();
   const env = { ...process.env, KOSLI_BIN: fake.bin, GITHUB_REPOSITORY: 'acme/x', GITHUB_REF: 'refs/heads/main', GITHUB_SHA: head };
+  // The fixture declares its own runner (acme/x). On a GitHub job with `id-token: write` the host's
+  // OIDC request variables would otherwise attach the real job's token — for a different repository —
+  // and the record would be (correctly) refused. Isolate the fixture from the machine running it.
+  delete env.ACTIONS_ID_TOKEN_REQUEST_URL; delete env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
   return { dir, fake: fake.dir, env, head };
 }
 const recordArgs = ['--lane', 'pr', '--record', '--actor', 'agent-loom-delivery', '--record-issuer', 'ci-runner', '--record-key', 'key.pem', '--emit-dir', 'emitted', '--out', 'record.json'];

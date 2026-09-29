@@ -680,6 +680,14 @@
       "action_required": [
         "If you edited .claude/hooks/spec-tripwire.sh, diff it against spec-tripwire.sh.loom-new after upgrading."
       ]
+    },
+    {
+      "version": "2.5.8",
+      "headline": "A gate-runner test no longer depends on the machine running it",
+      "notes": [
+        "core/gate-runner.test.mjs record fixture strips the host job's OIDC request variables. On a GitHub job with id-token: write the fixture's declared runner was contradicted by the real job token and the record was refused — correct product behaviour, a test-isolation defect. Only surfaced once CI began running the harness suite in the bundle layout."
+      ],
+      "action_required": []
     }
   ]
 }
