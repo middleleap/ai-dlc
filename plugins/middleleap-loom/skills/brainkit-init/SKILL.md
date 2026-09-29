@@ -1,6 +1,6 @@
 ---
 name: brainkit-init
-description: Generate a DRAFT Institutional BrainKit and institution profile for a repository — the institution-owned seed of the Loom's context brain (identity, terminology, architecture principles, technology policy, decision rights). Inspects the repo and the user's approved institutional sources, drafts each BrainKit section with recorded provenance, seals the section and package digests, generates the D7 compatibility projection, and produces a gap register of decisions it could not make. It NEVER invents policy, regulatory interpretation, approval authority or brand rules, never auto-approves, and reconciles an existing BrainKit instead of overwriting it. Use when a repository is adopting the Loom's BrainKit, needs an institution profile, or asks to bootstrap institutional context so agents read binding institutional DNA before writing code, PRDs, ADRs, interfaces or reports.
+description: Use when a repository needs its Institutional BrainKit drafted or reconciled — institution/brainkit/manifest.json is absent or still a draft, loom-adopt routes here, or someone asks for an institution profile — and the institution's approved sources are already named (if they are not, run institution-intake first). Produces drafts with recorded provenance for accountable review. Never invents policy, regulatory interpretation, approval authority or brand rules; never auto-approves; never overwrites an existing BrainKit.
 ---
 
 # Initialise an Institutional BrainKit (draft)

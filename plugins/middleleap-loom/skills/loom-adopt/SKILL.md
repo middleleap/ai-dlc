@@ -1,6 +1,6 @@
 ---
 name: loom-adopt
-description: Stand the Loom harness up in a repository — copies the discovery machinery (D1–D9 gate validator, zero-dep branded renderer, artifact templates, brand seam, register seam), the delivery-loop skills (discovery, develop, next-story, implement-story, spec-change, release, re-perform, govern), the reviewer-agent templates, and the guardrail hooks into the current project, then walks the seam-mounting and verification steps. Use when a project wants to adopt the Loom way of building, set up the discovery harness, install the build-loop guardrails, or bootstrap an AI-SDLC for a regulated build.
+description: Use when a repository wants to install or upgrade the Loom harness — "adopt the Loom", "set up the discovery harness", "install the build-loop guardrails", loom status, assess.mjs, or a re-run after a plugin update. Not for explaining the method (use loom), writing CLAUDE.md (use claude-md-guide), or drafting institutional context (use brainkit-init).
 ---
 
 # Adopt the Loom in this repository
