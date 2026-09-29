@@ -150,8 +150,36 @@
       "source": "agents/agent-output.schema.json",
       "dest": ".claude/agents/agent-output.schema.json",
       "kind": "file",
-      "seam": "The one output shape every Loom reviewer and assurance agent emits (loom.agent-output/v1); scripts/agent-output-check.mjs holds the agent definitions and the eval fixtures to it. The agent definitions themselves stay hand-copied — they are project-specific templates",
+      "seam": "The one output shape every Loom reviewer and assurance agent emits (loom.agent-output/v1); scripts/agent-output-check.mjs holds the agent definitions and the eval fixtures to it",
       "tier": "core"
+    },
+    {
+      "source": "skills",
+      "dest": ".claude/skills",
+      "kind": "dir",
+      "seam": "The eight delivery-loop skills (discovery, develop, next-story, implement-story, spec-change, release, re-perform, govern) — project-specific templates you edit; the stamp tells your edits from ours",
+      "tier": "core"
+    },
+    {
+      "source": "agents/hard-stop-reviewer.md",
+      "dest": ".claude/agents/hard-stop-reviewer.md",
+      "kind": "file",
+      "seam": "Reviewer template — the hard-stop checklist is domain content; you fill in yours",
+      "tier": "core"
+    },
+    {
+      "source": "agents/contract-conformance-reviewer.md",
+      "dest": ".claude/agents/contract-conformance-reviewer.md",
+      "kind": "file",
+      "seam": "Reviewer template — checks an implementation against the API contract",
+      "tier": "core"
+    },
+    {
+      "source": "agents/shariah-conformance-reviewer.md",
+      "dest": ".claude/agents/shariah-conformance-reviewer.md",
+      "kind": "file",
+      "seam": "Reviewer template — checks an implementation against the Shari'ah structures the committee already approved. Full tier, with the rest of the Islamic seam",
+      "tier": "full"
     },
     {
       "source": "agents/evals",
