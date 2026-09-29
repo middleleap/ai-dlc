@@ -6,3 +6,25 @@ execution:
   prompt: "In the Loom, what does gate D6 check and what makes it fail?"
   runs: 2
   max_turns: 6
+graders:
+  - name: loom-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?loom"'
+    min: 1
+    max: 3
+  - name: loom-adopt-did-not-fire
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?loom-adopt"'
+    min: 0
+    max: 0
+  - name: names-the-gate
+    type: regex
+    pattern: "[Dd]ata-governance feasibility"
+    match: contains
+  - name: names-a-failure-condition
+    type: regex
+    pattern: "register|residual"
+    flags: "i"
+    match: contains
