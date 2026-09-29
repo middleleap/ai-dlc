@@ -8,7 +8,7 @@ The Open Finance Regulation's LFI definition expressly includes institutions car
 
 ## Native Islamic fields in Standards v2.1 — verified inventory
 
-Verified 13 July 2026 directly against errata-resolved OpenAPI files in `Nebras-Open-Finance/api-specs` (`dist/standards/`). Re-verify with open-finance-uae `fetch_spec.py` before quoting — enum values can change with versions/errata.
+Verified 29 September 2026 (errata3; first pass 13 July 2026, errata2) directly against errata-resolved OpenAPI files in `Nebras-Open-Finance/api-specs` (`dist/standards/`). Re-verify with open-finance-uae `fetch_spec.py` before quoting — enum values can change with versions/errata.
 
 ### Bank Data Sharing (uae-account-information, v2.1-errata2)
 
@@ -26,6 +26,7 @@ Verified 13 July 2026 directly against errata-resolved OpenAPI files in `Nebras-
 | `OwnershipTransfer` object | `TransferOfOwnershipDate`; `Type`: `Gift` \| `TokenPurchase` \| `Gradual` \| `SeparateSaleContract`; `Method`: `EndOfLease` \| `Buyouts`; `TokenPurchaseAmount`; `BuyoutSchedule` (Frequency + BuyoutAmount) — "Applies to **Diminishing Musharaka**... Required when Type is Gradual" |
 | Security `AssetType` | includes `TakafulPolicy` and `Rahn` (Islamic pledge) alongside Property/Vehicle/etc. |
 | `AEPartyCalendarType` | `IslamicCalendar` \| `GregorianCalendar` for identity-document dates (both YYYY-MM-DD) |
+| `ReadProductFinanceRates` permission | the Bank Data Sharing permission code that grants access to a product's finance (profit) rates; errata3 §5 (effective 21 Aug 2026) extended it to Consent Events and CAAP (`uae-authorization-endpoints`, v2.1-errata3) |
 
 ### Product / Open Data API (uae-product, v2.1)
 
@@ -37,7 +38,7 @@ Verified 13 July 2026 directly against errata-resolved OpenAPI files in `Nebras-
 | `ShariaInformation` | free-text Sharia compliance description |
 | Account feature enums | include `IslamicBanking` and `IslamicFinance` |
 
-### Insurance Data Sharing (uae-insurance, v2.1-errata1)
+### Insurance Data Sharing (uae-insurance, v2.1-errata3)
 
 | Field | Content |
 |---|---|

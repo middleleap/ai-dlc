@@ -33,7 +33,7 @@
       "name": "middleleap-banking-uae",
       "source": "./plugins/middleleap-banking-uae",
       "description": "UAE banking expertise for CBUAE-regulated institutions — a virtual Head of Risk (discovery, backlog risk tagging, formal review, control-automation verification, with a jurisdiction map for banks outside the UAE), Islamic banking (Shariah-compliant finance), and New Product Approval (the Business Proposition Form, the CBUAE anchor behind each field, sign-off routing). General-purpose: works with or without the Loom.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": {
         "name": "MiddleLeap"
       },
@@ -55,7 +55,7 @@
       "name": "middleleap-open-finance-uae",
       "source": "./plugins/middleleap-open-finance-uae",
       "description": "UAE Open Finance domain expertise — CBUAE regulation and Standards errata tracking, Al Tareq platform integration, AlTareq brand and CX requirements, and value-proposition prototyping.",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "author": {
         "name": "MiddleLeap"
       },

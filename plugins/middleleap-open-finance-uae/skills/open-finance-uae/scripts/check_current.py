@@ -48,7 +48,11 @@ apart from the response body rather than guessing from the status code alone.
 Usage:
   python3 check_current.py            # human-readable report
   python3 check_current.py --json     # machine-readable result
+
+Requires Python 3.9 or newer.
 """
+from __future__ import annotations
+
 import argparse
 import json
 import re

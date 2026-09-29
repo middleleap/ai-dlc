@@ -30,13 +30,15 @@ Sources: SKILL.md roadmap table; community hub [Release Notes & Erratas](https:/
 | Pay Request | Q3 2026 | Merchant-initiated payment requests |
 | Corporate R5 | Sep 2026 | Full Corporate Suite |
 
+As of 29 Sep 2026, Pay Request (Q3 2026) and Corporate R5 (Sep 2026) are due; whether they went live on schedule has not been verified. Dates in this calendar are the community hub's plan, not confirmed go-lives.
+
 All releases are now aligned with **Standards v2.1-final** (7 Jan 2026; current errata: errata3, effective 30 Jun/8 Jul 2026) and **API Hub v8**.
 
 Other dated milestones:
 
 | Milestone | Date |
 |---|---|
-| TPP regularisation deadline (CBUAE) | **16 Sep 2026** — unchanged as of the 8 Jun 2026 source check |
+| TPP regularisation deadline (CBUAE) | **16 Sep 2026** — passed; outcome not verified against a public source (29 Sep 2026 check) |
 | Ozone ISO/IEC 27001:2022 certificate + Platform Assurance docs published | Jun 2026 |
 | v2.1-errata2 published | 7 May 2026 (individual errata sections record effective dates from 28 Apr 2026; some "to be confirmed on merge") |
 | v2.1-errata3 published | §1–2 effective 30 Jun 2026 (doc-level) / 8 Jul 2026 (spec register) — intl-payments creditor restructure (SWIFT SR2026); §3–5 effective 21 Aug 2026 (spec register only) — Debtor/Creditor Reference charset, signed idempotency-key response, ReadStatements/ReadProductFinanceRates on Consent Events + CAAP. Standards-tree folder: auth-endpoints + bank-initiation (+ insurance since 15 Aug 2026, repo-level); matching in-place Consent Manager / Ozone Connect updates. Detail: `standards-versions.md` |

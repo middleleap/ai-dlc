@@ -168,7 +168,7 @@ Flag these "(verify against source)" when they matter to an answer. Full history
 
 | Item | Status |
 |------|--------|
-| 16 Sep 2026 TPP regularisation deadline | Not found in any public source; needs authenticated/CBUAE confirmation |
+| 16 Sep 2026 TPP regularisation deadline | Date has passed (29 Sep 2026 check); never confirmed in a public source and the outcome (who regularised, any extension) is unverified — needs authenticated/CBUAE confirmation |
 | The 10 excluded high-risk countries (list) | Not published publicly; likely in Standards/Operational Guidelines or CBUAE Notice 3057/2025 |
 | Rule IDs (A12.1, A15–A17) and the 10-minute initiation window | Not in public specs or Confluence |
 | SOC 2 exemption via CISO attestation | No public text; only vendor-level platform assurance is published |

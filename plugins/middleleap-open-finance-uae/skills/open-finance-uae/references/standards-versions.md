@@ -136,7 +136,7 @@ Operational Guidelines/
 ## Standards v2.0-final
 
 **Publication**: April 4, 2025
-**Status**: Superseded — still in heavy live use; v2.1-final is current (API Hub v7)
+**Status**: Superseded — still in heavy live use; v2.1-final is current (API Hub v8)
 
 ### Major Changes from v1.x
 1. **Comprehensive API restructuring**
@@ -436,7 +436,7 @@ _(Statuses re-verified 17 Aug 2026 against `trust-framework-releases-registry.ts
 | v1.1 | v3 | Aug 2024 | Registration Framework |
 | v1.2 | v4, v5, **v6** | Sep 2024 - Jan 2025 | SCA and Delegated Auth |
 | v2.0 | **v7** | 2025 | Major uplift |
-| v2.1 | **v8** | **Jan 2026** | **Aligns with Standards v2.1-final (errata2)** |
+| v2.1 | **v8** | **Jan 2026** | **Aligns with Standards v2.1-final** (current errata level: SKILL.md Quick Reference) |
 
 ### API Hub v8 Features
 **Core Documentation**
@@ -459,7 +459,7 @@ _(Statuses re-verified 17 Aug 2026 against `trust-framework-releases-registry.ts
 - Both: Renewal with each major standards version
 
 ### Migration Considerations
-1. Review release notes **and the current errata (errata2)** for breaking changes
+1. Review release notes **and the current errata** (the level named in SKILL.md's Quick Reference — confirm with `scripts/check_current.py`) for breaking changes
 2. Update API integrations per new schemas
 3. Test in sandbox against new version
 4. Obtain updated certifications

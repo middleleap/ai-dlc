@@ -7,7 +7,7 @@ description: Expert guidance on Islamic banking (Shariah-compliant finance) with
 
 Expert knowledge base for Islamic (Shariah-compliant) banking: principles, contract structures, UAE Shariah governance, and — critically — how Islamic products surface in the UAE Open Finance ecosystem (Al Tareq / Nebras). Built as a companion to the **open-finance-uae** skill.
 
-> **Last verified against sources: 13 July 2026.** OF spec fields verified directly against the errata-resolved v2.1 OpenAPI files in the Nebras `api-specs` repo on that date. UAE regulatory facts verified against the CBUAE Rulebook and CBUAE Islamic Finance pages.
+> **Last verified against sources: 29 September 2026 (errata3).** OF spec fields verified directly against the errata-resolved v2.1 OpenAPI files in the Nebras `api-specs` repo on that date; history in `references/verification-log.md`. UAE regulatory facts verified against the CBUAE Rulebook and CBUAE Islamic Finance pages.
 
 ## Quick Reference
 
