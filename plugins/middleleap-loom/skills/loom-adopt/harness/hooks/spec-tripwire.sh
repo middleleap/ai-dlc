@@ -98,14 +98,16 @@ for spec in $SPEC_PATHS; do
   name="${spec##*/}"
   esc=$(printf '%s' "$name" | sed 's/[][\.*^$]/\\&/g')
   if printf '%s' "$command" | grep -Fq -- "$name"; then
-    if printf '%s' "$command" | grep -Eq -- "(^|[^<])>>?[[:space:]]*[^[:space:]|;&]*${esc}" \
-      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])sed[[:space:]]+(-[a-zA-Z]*i|--in-place)[^|;&]*${esc}" \
-      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])(mv|cp|rm|dd|truncate|install|tee)[[:space:]][^|;&]*${esc}" \
-      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])git[[:space:]]+(mv|rm|checkout|restore)[[:space:]][^|;&]*${esc}" \
-      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])yq[[:space:]][^|;&]*[[:space:]]-i[[:space:]][^|;&]*${esc}" \
+    t="[^|;&]*"   # stay inside one pipeline segment
+    if printf '%s' "$command" | grep -Eq -- "(^|[^<])>[>|]?[[:space:]]*[^[:space:]|;&]*(${esc}|\\\$)" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])sed[[:space:]]+(-[a-zA-Z]*i|--in-place)${t}${esc}" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])(mv|cp|rm|dd|truncate|install|tee|ln|rsync)[[:space:]]${t}${esc}" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])git[[:space:]]+(mv|rm|checkout|restore)[[:space:]]${t}${esc}" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])yq[[:space:]]([^|;&]*[[:space:]])?-[a-zA-Z]*i([[:space:]=]|$)" \
+      || printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])(-o|-O|--out|--output)([[:space:]]+|=)[^[:space:]]*${esc}" \
       || { printf '%s' "$command" | grep -Eq -- "(^|[[:space:]])(python[0-9.]*|node|perl|ruby|php)([[:space:]]|$)" \
-           && printf '%s' "$command" | grep -Eq -- "writeFile|write_text|write\(|open\([^)]*['\"][wa]|unlink|rename|dump\(|copyfile|truncate|-i[[:space:]]"; }; then
-      deny "Spec tripwire: this shell command names $spec and writes to it (redirection, sed -i, mv/cp/rm/tee, a scripting runtime with a write call) on a working branch ($branch). The contract changes via its own spec-only PR — use the spec-change skill (branch feature/<ID>-spec-<slug>). Reading it (cat, grep, git diff, codegen that writes elsewhere) is fine."
+           && printf '%s' "$command" | grep -Eq -- "[wW]rite[A-Z_(]|write_(text|bytes)|open\([^)]*['\"][wax]|[cC]opy[fF]ile|[aA]ppend[fF]ile|createWriteStream|shutil\.|os\.(replace|rename|remove)|unlink|rename|dump\(|truncate|(^|[[:space:]])-[a-zA-Z]*i([[:space:]]|$)"; }; then
+      deny "Spec tripwire: this shell command names $spec and writes to it (redirection, sed -i, yq -i, mv/cp/rm/tee/ln/rsync, a download or -o output, a scripting runtime with a write call) on a working branch ($branch). The contract changes via its own spec-only PR — use the spec-change skill (branch feature/<ID>-spec-<slug>). Reading it (cat, grep, git diff, codegen that writes elsewhere) is fine."
     fi
   fi
 done

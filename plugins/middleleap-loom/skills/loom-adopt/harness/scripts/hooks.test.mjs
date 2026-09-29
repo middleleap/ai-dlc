@@ -113,6 +113,29 @@ test('spec-tripwire: read-only tooling that names the contract is allowed; a wri
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
 
+test('spec-tripwire: writes the 2.5.6 rewrite let through are denied again', { skip: SKIP }, () => {
+  const repo = repoOn('feature/STORY-7-add-field');
+  try {
+    for (const command of [
+      'f=specs/openapi.yaml; echo x > $f',
+      'SPEC=specs/openapi.yaml && printf x > "$SPEC"',
+      "yq -i '.x=1' specs/openapi.yaml",
+      "perl -pi -e 's/a/b/' specs/openapi.yaml",
+      'cat x >| specs/openapi.yaml',
+      'node scripts/gen.mjs -o specs/openapi.yaml',
+      'node scripts/gen.mjs --output=specs/openapi.yaml',
+      "node -e \"require('fs').copyFileSync('x','specs/openapi.yaml')\"",
+      "node -e \"require('fs').appendFileSync('specs/openapi.yaml','x')\"",
+      "python3 -c \"import pathlib; pathlib.Path('specs/openapi.yaml').write_bytes(b'')\"",
+      "python3 -c \"import shutil; shutil.copy('x','specs/openapi.yaml')\"",
+      'ln -sf x specs/openapi.yaml',
+      'rsync x specs/openapi.yaml',
+      'curl -o specs/openapi.yaml https://example.test/spec',
+      'wget -O specs/openapi.yaml https://example.test/spec',
+    ]) assert.ok(denied(run('spec-tripwire.sh', { command }, repo)), `not denied: ${command}`);
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
 test('spec-tripwire: a ../ path to the contract is canonicalised without GNU realpath', { skip: SKIP }, () => {
   const repo = repoOn('feature/STORY-7-add-field');
   try {
