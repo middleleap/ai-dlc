@@ -119,3 +119,10 @@ The **Develop** phase (the `develop` skill) consumes `handoff.md` next — it ex
 directions, converges on one, and appends the `discovery: <slug>`-linked backlog item the
 `next-story` loop then builds. The waist gate makes a green hand-off the entry condition. The
 harnesses share governance — never authorship of the solution.
+
+## Red flags — you are rationalizing
+- `handoff.md` names a component, an endpoint, a table or a vendor ("just to be concrete") — D4
+- The wireframe has real copy, a colour system or working navigation ("so the sponsor gets it") — D8
+- A theme in the synthesis cites no signal, or the signal was written after the theme — D5
+- Evidence is "common knowledge" or "what the PO said" with no source file — D2
+- Skipping D9 because "nobody was available to react" — an unreacted prototype is not validated

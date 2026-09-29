@@ -1,7 +1,6 @@
 ---
 name: implement-story
 description: Use when implementing a numbered backlog story — one story per session, one branch, spec-first (e.g. /implement-story STORY-17)
-disable-model-invocation: true
 ---
 
 # Implement a story
@@ -17,9 +16,12 @@ exactly.
    code.
 2. **Confirm scope.** Post a short plan: files to touch, endpoints, and what is explicitly out of
    scope (name the neighbouring story IDs you are NOT building). Surface any genuine decision for
-   the user; otherwise proceed.
+   the user; otherwise proceed. Under the `next-story` loop, do not ask: record the decision as
+   `blocked` on the backlog item with the question, and move to the next eligible item.
 3. **Branch:** `feature/<ID>-<short-slug>` off `main`.
-3b. **If the story has a user-facing surface, design it before you test it.** Run
+3b. **If the story has a user-facing surface and Claude Design is installed, design it before you
+   test it** (`/design` and `/design-sync` are not part of the Loom plugin; without them, build
+   from the design tokens and say so in the PR). Run
    `/design-sync` once so the canvas uses the project's real component library (the BrainKit
    design tokens are the source of truth; nothing invented), then `/design <the story's
    screens>` — the acceptance criteria and the API contract's response shapes in, artboards
@@ -27,8 +29,7 @@ exactly.
    story's spec, and only then let Claude Design convert it to code on the feature branch.
    The converted code is a starting point, not a done story: the tests in step 4 are still
    written first against the interface, the hard-stops still apply, and the SDR's discovery
-   sketch is re-drawn here, never reused. Where `/design` is unavailable, build from the design
-   tokens directly and say so in the PR.
+   sketch is re-drawn here, never reused.
 4. **Failing tests first — show them red.** Contract + acceptance tests from the API contract and
    the acceptance criteria, written against the **interface** the story exposes. Minimum cases —
    <!-- ADOPT: replace with your project's binding conventions; these are the shape of the list,

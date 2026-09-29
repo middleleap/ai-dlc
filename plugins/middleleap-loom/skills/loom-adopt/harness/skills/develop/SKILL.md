@@ -57,7 +57,9 @@ binding rules in `CLAUDE.md`). Require each to return, as structured text: appro
 hard-stop; what it **reuses vs introduces** (composition over invention — a new platform
 primitive is a flag, not a free choice); rough delivery cost; and the top risk.
 
-**A direction with a user-facing surface is sketched, not described.** For each such direction
+**A direction with a user-facing surface is sketched, not described.** Where Claude Design is
+installed (`/design` is not part of the Loom plugin — otherwise sketch in Markdown or ASCII and
+say so), for each such direction
 run `/design <direction brief>` once — one low-fidelity artboard per direction, same brand
 tokens, no `/design-sync` yet (the component library binds at implementation, not at the
 choice) — and put the canvas URL in the SDR's "Sketch" column. The judge and the human
@@ -132,3 +134,10 @@ shippable; respect the hand-off's explicit out-of-scope.
   self-merged, never implemented here.
 - No code written, no test authored, the API contract untouched — Develop chooses the direction;
   `next-story` builds it.
+
+## Red flags — you are rationalizing
+- Only one direction was explored ("the obvious one") — the SDR needs alternatives to judge
+- A direction is judged on effort or familiarity instead of the success measures and the D6 conditions
+- Touching the API contract or writing a spike "to see if it works" — that is `next-story`'s work
+- A backlog item without `discovery: <slug>` or `sdr:` ("we'll link it later")
+- Converging because the sponsor prefers it, with no success-measure argument recorded
