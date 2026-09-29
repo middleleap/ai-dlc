@@ -29,3 +29,21 @@ test('no blueprint keeps a fenced block over 300 lines', () => {
     });
   }
 });
+
+test('components inline logos and spinners, as svg-assets.md requires (no <img> to asset files)', () => {
+  assert.doesNotMatch(read('references/component-library.md'), /<img src="assets\//);
+});
+
+test('the inline white logo matches its asset file (the dark logo keeps its own coordinate)', () => {
+  const blocks = read('references/svg-assets.md').split(/^```/m).filter((_, i) => i % 2 === 1);
+  const white = blocks[1]; // svg-assets.md order: dark logo, white logo, white mark, spinner
+  assert.doesNotMatch(white, /351\.674/);
+  assert.match(read('assets/logos/white-logo.svg'), /351\.679/);
+});
+
+test('the :root block declares every token the tables list', () => {
+  const t = read('references/design-tokens.md');
+  const root = t.slice(t.lastIndexOf(':root'));
+  for (const v of ['--color-accent-green', '--color-unselected-border', '--color-checkbox-checked', '--gradient-spinner'])
+    assert.match(root, new RegExp(v), v);
+});
