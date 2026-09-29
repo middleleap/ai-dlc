@@ -1,7 +1,7 @@
 {
   "name": "middleleap-banking-uae",
   "description": "UAE banking expertise for CBUAE-regulated institutions — a virtual Head of Risk (discovery, backlog risk tagging, formal review, control-automation verification, with a jurisdiction map for banks outside the UAE), Islamic banking (Shariah-compliant finance), and New Product Approval (the Business Proposition Form, the CBUAE anchor behind each field, sign-off routing). General-purpose: works with or without the Loom.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": {
     "name": "MiddleLeap"
   },

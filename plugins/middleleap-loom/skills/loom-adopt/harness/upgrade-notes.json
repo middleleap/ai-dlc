@@ -656,6 +656,18 @@
       "action_required": [
         "If you merged DISCOVERY-SYNC into docs/governance/control-catalog.json, delete that row."
       ]
+    },
+    {
+      "version": "2.5.6",
+      "headline": "Portable spec tripwire; build-loop skills consistent; canon quick reference",
+      "notes": [
+        "spec-tripwire.sh no longer needs GNU realpath (symlinks and ../ paths resolve on macOS too) and denies only commands that write to the contract; read-only codegen naming it is allowed.",
+        "implement-story is invocable from next-story again; under the loop a decision is recorded as blocked, never asked. The /design steps are marked optional.",
+        "discovery and develop carry red-flag lists; the loom skill lists every gate inline."
+      ],
+      "action_required": [
+        "If you edited .claude/hooks/spec-tripwire.sh, diff it against spec-tripwire.sh.loom-new after upgrading."
+      ]
     }
   ]
 }
