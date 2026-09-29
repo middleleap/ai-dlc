@@ -622,6 +622,18 @@
       "action_required": [
         "None for adopters. scripts/record-join.mjs is installed with the other scripts and reads only what the tree and the mounted provider already hold."
       ]
+    },
+    {
+      "version": "2.5.3",
+      "headline": "Plugin agents cite canon by plugin root; the demo bank is no longer a dependency",
+      "notes": [
+        "change-watch, risk-reviewer and model-risk-reviewer now cite the Loom canon at ${CLAUDE_PLUGIN_ROOT}/skills/loom/references/… — the previous relative path resolved nowhere in an adopted repository.",
+        "middleleap-loom-demo (Meridian Trust) is installed separately; a real institution no longer receives the fictional brand and business-case skills with the Loom.",
+        "loom-adopt/SKILL.md states the bundle location once and no longer carries marker counts that drift from adopt.mjs."
+      ],
+      "action_required": [
+        "If you use the Meridian Trust worked example, install it explicitly: /plugin install middleleap-loom-demo@middleleap-ai-dlc."
+      ]
     }
   ]
 }
