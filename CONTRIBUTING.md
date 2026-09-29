@@ -64,9 +64,9 @@ Note the asymmetry, because it's a common mistake: a **skill** is a *directory* 
 
 Every install clones the plugin, so weight matters — but completeness matters more.
 
-- **Ship everything the skill references.** If `SKILL.md` or `DESIGN.md` names a file, that file must be in the plugin. A skill pointing at something it doesn't ship is broken in the most confusing way possible: it looks fine until an agent tries to read it. This rule outranks the size ones below: an asset the skill references ships, whatever it weighs.
+- **Ship everything the skill references.** If `SKILL.md` or `DESIGN.md` names a file, that file must be in the plugin. A skill pointing at something it doesn't ship is broken in the most confusing way possible: it looks fine until an agent tries to read it. This rule outranks the size ones below: an asset the skill references ships, whatever it weighs. The validator does not check it: most paths in the Loom's skills and agents name files in the *adopting* repository, not in this one, so check a new reference by hand.
 - **No design source files** — `.fig`, `.psd`, `.sketch`. Host those separately (see [open-finance-assets](https://github.com/middleleap/open-finance-assets)) and link to them.
-- **Keep a plugin under about 1 MB.** If you're approaching the limit, the question is whether the assets belong in a skill at all.
+- **Keep a plugin under about 1 MB — except a harness bundle.** `middleleap-loom` ships the adoption harness (about 5.8 MB) because `loom-adopt` installs it into the adopting repository, where its tests are control evidence. Anything else over 1 MB needs a reason in the PR; if you're approaching the limit, ask whether the assets belong in a skill at all.
 - No `node_modules/` or generated output.
 
 ## Before you open a PR
