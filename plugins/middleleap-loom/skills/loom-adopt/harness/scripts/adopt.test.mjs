@@ -247,4 +247,21 @@ test('the copy table carries the tier column for every entry', () => {
   assert.match(table, /\| Bundle source \| Destination \| Tier \| What it is \|/);
   assert.equal(table.split('\n').length, manifest.entries.length + 2);
 });
+test('the delivery-loop skills and reviewer templates are manifest entries (stamped, upgradeable)', () => {
+  withTempDest((dest) => {
+    install(dest, { tier: 'core' });
+    for (const s of ['discovery', 'develop', 'next-story', 'implement-story', 'spec-change', 'release', 're-perform', 'govern'])
+      assert.ok(existsSync(join(dest, '.claude', 'skills', s, 'SKILL.md')), `skill ${s} did not land at core`);
+    for (const a of ['hard-stop-reviewer.md', 'contract-conformance-reviewer.md', 'agent-output.schema.json'])
+      assert.ok(existsSync(join(dest, '.claude', 'agents', a)), `${a} did not land at core`);
+    assert.ok(!existsSync(join(dest, '.claude', 'agents', 'shariah-conformance-reviewer.md')), 'the Shari\'ah reviewer is full-tier, with the rest of the Islamic seam');
+    const stamp = JSON.parse(readFileSync(join(dest, '.loom', 'adoption.json'), 'utf8'));
+    assert.ok(stamp.files['.claude/skills/next-story/SKILL.md'], 'skills are stamped, so upgrades can tell adopter edits from ours');
+  });
+  withTempDest((dest) => {
+    install(dest, { tier: 'full' });
+    assert.ok(existsSync(join(dest, '.claude', 'agents', 'shariah-conformance-reviewer.md')), 'the Shari\'ah reviewer lands at full');
+  });
+});
+
 }

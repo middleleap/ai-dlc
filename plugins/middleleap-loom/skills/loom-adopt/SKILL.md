@@ -122,7 +122,11 @@ are repo-root-relative.
 | `hooks/pii-patterns.json` | `.claude/hooks/pii-patterns.json` | core | The PII shapes pii-guard.sh reads — mounted data, not code: a new jurisdiction is a row here, never an edit to a security-critical shell script. NOT OPTIONAL and not tierable: the glob above copies only *.sh, and a guard that cannot load its patterns DENIES every write. It ships wherever the hook ships |
 | `hooks/shariah-surfaces.txt` | `.claude/hooks/shariah-surfaces.txt` | core | The declared Islamic customer-facing prose surfaces shariah-term-guard.sh is scoped to. Core because it ships beside the hook it scopes, and it carries NO entries: with an empty list the guard is a no-op, which is the correct and permanent state for a conventional adopter |
 | `hooks/settings.hooks.json` | `.claude/settings.json` | core | Hook wiring for Claude Code (merged, never overwritten — a pre-existing settings.json is preserved and a .loom.json sidecar is dropped to merge by hand) |
-| `agents/agent-output.schema.json` | `.claude/agents/agent-output.schema.json` | core | The one output shape every Loom reviewer and assurance agent emits (loom.agent-output/v1); scripts/agent-output-check.mjs holds the agent definitions and the eval fixtures to it. The agent definitions themselves stay hand-copied — they are project-specific templates |
+| `agents/agent-output.schema.json` | `.claude/agents/agent-output.schema.json` | core | The one output shape every Loom reviewer and assurance agent emits (loom.agent-output/v1); scripts/agent-output-check.mjs holds the agent definitions and the eval fixtures to it |
+| `skills` | `.claude/skills` | core | The eight delivery-loop skills (discovery, develop, next-story, implement-story, spec-change, release, re-perform, govern) — project-specific templates you edit; the stamp tells your edits from ours |
+| `agents/hard-stop-reviewer.md` | `.claude/agents/hard-stop-reviewer.md` | core | Reviewer template — the hard-stop checklist is domain content; you fill in yours |
+| `agents/contract-conformance-reviewer.md` | `.claude/agents/contract-conformance-reviewer.md` | core | Reviewer template — checks an implementation against the API contract |
+| `agents/shariah-conformance-reviewer.md` | `.claude/agents/shariah-conformance-reviewer.md` | full | Reviewer template — checks an implementation against the Shari'ah structures the committee already approved. Full tier, with the rest of the Islamic seam |
 | `agents/evals` | `.claude/agents/evals` | core | Eval fixtures for the reviewer agents (case.json + expected.json + input/): the specification of register-absent, residual-moved and horizon behaviour that an adopter's eval rig runs the model against |
 | `governance/runbooks/*.md` | `docs/governance/runbooks/` | core | Eight adoption runbooks + the supervised-pilot playbook |
 | `governance/activation-runbook.md` | `docs/governance/activation-runbook.md` | core | How to activate branch protection, IAM, the routine lane |
@@ -180,10 +184,11 @@ are repo-root-relative.
 | `runtime-contract.md` | `docs/governance/runtime-contract.md` | core | Runtime adapter contract, bounded Codex reviewer pilot and qualification gaps |
 <!-- LOOM:COPY-TABLE:END -->
 
-Plus, still copied by hand (project-specific templates, see step 3): `harness/skills/*/SKILL.md`
-→ `.claude/skills/<name>/SKILL.md`, `harness/agents/*.md` → `.claude/agents/`, and the worked
-fixtures under `harness/{evidence-example,change-example,assurance-example,register-example}/`
-you adapt into `docs/governance/`.
+The delivery-loop skills (`harness/skills/*` → `.claude/skills/`) and the reviewer templates
+(`harness/agents/*.md` → `.claude/agents/`) are manifest entries, stamped and upgraded like
+everything else. Only the worked fixtures under
+`harness/{evidence-example,change-example,assurance-example,register-example}/` are still
+adapted by hand into `docs/governance/`.
 
 Also create if missing: `discovery/runs/`, `docs/develop/`, `docs/adrs/`, `docs/backlog.yaml`
 (empty list is fine), `docs/build-log.md`.

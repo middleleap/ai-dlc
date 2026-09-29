@@ -645,6 +645,17 @@
       "action_required": [
         "If you invoked /middleleap-loom:context-template, use /middleleap-loom:claude-md-guide instead."
       ]
+    },
+    {
+      "version": "2.5.5",
+      "headline": "Delivery skills and reviewer templates are managed; the ofbo sync control is gone",
+      "notes": [
+        "The eight delivery-loop skills and the hard-stop and contract-conformance reviewer templates are manifest entries now (core tier; the Shari'ah reviewer at full): stamped, upgraded and drift-classified like every other file. Copies you already edited are preserved with a .loom-new sidecar.",
+        "DISCOVERY-SYNC is removed from the control catalog template and ci.yml — it measured the Loom bundle's own divergence from its origin and had nothing to verify in an adopted tree."
+      ],
+      "action_required": [
+        "If you merged DISCOVERY-SYNC into docs/governance/control-catalog.json, delete that row."
+      ]
     }
   ]
 }
