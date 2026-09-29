@@ -1,5 +1,5 @@
 // The join — ONE inspectable record from the institution's mandate to the external record
-// (docs/plans/kosli-founder-demo-briefing.md, "For one synthetic change, make the join
+// (the Meridian demo briefing (kept outside this repository), "For one synthetic change, make the join
 // inspectable: mandate ID, obligation ID, control-catalog version/hash, change/commit, artifact
 // fingerprint, check result, authenticated producer, applicable approval and external record
 // reference"). Every one of those fields already exists somewhere in the tree or at the provider;

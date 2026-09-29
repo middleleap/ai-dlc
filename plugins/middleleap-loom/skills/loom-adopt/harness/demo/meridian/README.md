@@ -1,8 +1,8 @@
 # The Meridian scenario — one obligation, traced
 
-The fixture set behind `node demo/run-demo.mjs --scenario meridian`, prepared for the Kosli
-founder demonstration (`docs/plans/kosli-founder-demo-briefing.md`, "Develop": one obligation
-translated into an acceptance condition, an agent task and an executable check).
+The fixture set behind `node demo/run-demo.mjs --scenario meridian`: one obligation translated
+into an acceptance condition, an agent task and an executable check (the "Develop" step of the
+Meridian demo briefing, which is kept outside this repository).
 
 Everything here is **fictional planning** for the invented institution Meridian Trust. The
 obligation cites Meridian's own internal policy, not a regulation. Nothing is added to the

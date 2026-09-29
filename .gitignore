@@ -4,3 +4,9 @@ node_modules/
 
 __pycache__/
 *.pyc
+# Local analysis dumps and exports
+.loomviz-tmp/
+Claude outputs/
+# Notion simulation credentials (docs/simulations/notion-e2e reads this file)
+.notion-token
+*.notion-token
