@@ -1,6 +1,6 @@
 ---
 name: loom-adopt
-description: Stand the Loom harness up in a repository — copies the discovery machinery (D1–D9 gate validator, zero-dep branded renderer, artifact templates, brand seam, register seam), the delivery-loop skills (discovery, develop, next-story, implement-story, spec-change, release, re-perform, govern), the reviewer-agent templates, and the guardrail hooks into the current project, then walks the seam-mounting and verification steps. Use when a project wants to adopt the Loom way of building, set up the discovery harness, install the build-loop guardrails, or bootstrap an AI-SDLC for a regulated build.
+description: Use when a repository wants to install or upgrade the Loom harness — "adopt the Loom", "set up the discovery harness", "install the build-loop guardrails", loom status, assess.mjs, or a re-run after a plugin update. Not for explaining the method (use loom), writing CLAUDE.md (use claude-md-guide), or drafting institutional context (use brainkit-init).
 ---
 
 # Adopt the Loom in this repository
@@ -423,7 +423,7 @@ Two edge cases, both stated by the installer when they happen:
 ## What adoption deliberately does NOT do
 
 - It does not write the project's CLAUDE.md, PRD, or API contract — those are the canon the
-  harness *reads*; authoring them is the project's work (the `claude-md-guide` and `context-template` skills in this plugin help).
+  harness *reads*; authoring them is the project's work (the `claude-md-guide` skill in this plugin helps).
 - It does not enable any always-on behaviour by itself: hooks activate only when the user
   merges the settings snippet, and the loop runs only when invoked.
 - It does not bring OFBO's domain content — no register records beyond the example, no brand

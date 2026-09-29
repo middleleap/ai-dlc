@@ -634,6 +634,17 @@
       "action_required": [
         "If you use the Meridian Trust worked example, install it explicitly: /plugin install middleleap-loom-demo@middleleap-ai-dlc."
       ]
+    },
+    {
+      "version": "2.5.4",
+      "headline": "context-template folded into claude-md-guide; trigger-first skill descriptions",
+      "notes": [
+        "The context-template skill is gone: its template is claude-md-guide/assets/CLAUDE.md.template and its customisation guide is claude-md-guide/references/starter-guide.md.",
+        "institution-intake, brainkit-init and loom-adopt describe when to fire; the intake/brainkit-init boundary is whether the approved sources are named yet."
+      ],
+      "action_required": [
+        "If you invoked /middleleap-loom:context-template, use /middleleap-loom:claude-md-guide instead."
+      ]
     }
   ]
 }

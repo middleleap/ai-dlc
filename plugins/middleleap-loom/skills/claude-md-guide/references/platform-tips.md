@@ -8,7 +8,7 @@ Claude Code reads `CLAUDE.md` files from the project root and any parent directo
 
 ### Key behaviors
 - Supports nested `CLAUDE.md` files — child directories inherit from parent
-- File is loaded into context at session start and on every tool call
+- File is loaded into context at session start (and again after a resume or compaction); it is not re-sent on every tool call
 - Shorter files = more room for actual code in the context window
 - Claude Code can run commands — always include test/build/lint commands
 

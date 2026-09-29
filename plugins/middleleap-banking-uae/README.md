@@ -12,21 +12,20 @@ Product Approval. General-purpose: each skill works on its own, with or without 
 
 | Skill | Description |
 |-------|-------------|
-| `uae-bank-risk-reviewer` | Virtual Head of Risk for a UAE bank — four modes (discovery landscape, backlog risk tagging, formal review, control-automation verification) against a 4-domain data risk taxonomy (77 controls, 45 risks) grounded in CBUAE CPS, PDPL, MMS, CPS-AI and BCBS 239 |
-| `bank-risk-reviewer` | The same reviewer for a bank outside the UAE — keeps the taxonomy structure and maps the regulatory drivers to local equivalents (GDPR for PDPL, SR 11-7 / ECB guidance for MMS, local conduct rules for CPS) |
+| `uae-bank-risk-reviewer` | Virtual Head of Risk for a UAE bank — four modes (discovery landscape, backlog risk tagging, formal review, control-automation verification) against a 4-domain data risk taxonomy (77 controls, 45 risks) grounded in CBUAE CPS, PDPL, MMS, CPS-AI and BCBS 239. Includes a jurisdiction map for banks outside the UAE. |
 | `islamic-banking-uae` | Shariah-compliant finance — principles, contract structures (Murabaha, Ijara, Musharaka, Tawarruq, Sukuk, Takaful), CBUAE Shariah governance (HSA, ISSC, SCF), and the native Islamic fields in Open Finance Standards v2.1 |
 | `npa-uae` | New Product Approval — the Business Proposition Form (33 fields with guidance; Word template in `assets/`), the CBUAE anchor behind each field, sign-off routing, the BAU assessments, and how the Loom turns the pack into the `PA1`/`PA2` receipts |
 
-## The risk reviewers
+## The risk reviewer
 
-Both reviewers read one shared framework, kept in `uae-bank-risk-reviewer/references/`: the
-taxonomy quick reference, the regulatory frameworks guide and the formal review template. If the
-institution has its own taxonomy, control register or earlier reviews, the reviewers prefer those
-and use the bundled framework as the structural model.
+The reviewer reads its framework from `uae-bank-risk-reviewer/references/`: the taxonomy quick
+reference, the regulatory frameworks guide and the formal review template. If the institution has
+its own taxonomy, control register or earlier reviews, the reviewer prefers those and uses the
+bundled framework as the structural model.
 
-`uae-bank-risk-reviewer` reviews against the same v2.5.0 data-risk taxonomy that the
-`middleleap-loom` D6 gate reads mechanically as a mounted register: the gate checks referential
-integrity, the skill supplies the Head-of-Risk judgement.
+The taxonomy uses the same `DR-x.y-nnn` / `CTRL-xx-nnn` id scheme as the data-risk register the
+`middleleap-loom` D6 gate mounts: the gate checks referential integrity, the skill supplies the
+Head-of-Risk judgement.
 
 ## New Product Approval scope
 

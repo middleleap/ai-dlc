@@ -145,12 +145,29 @@ The risk framework is bundled with this skill and is self-contained:
 
 If the institution has its own risk taxonomy, control register, or regulation dataset,
 prefer those as the authoritative source and use the bundled taxonomy as a structural
-model and fallback. The skill is deliberately UAE-market-focused: regulatory drivers,
-enforcement context, and examples all assume a CBUAE-regulated institution subject to
-UAE law.
+model and fallback. The skill is written for a CBUAE-regulated institution; for a bank
+outside the UAE apply the jurisdiction map below.
 
 If the institution has earlier risk reviews on file, read one or two before writing:
 they calibrate severity and house style better than any guidance here.
+
+## Outside the UAE
+
+If the institution operates outside the UAE, keep the four-domain taxonomy and the review
+methodology unchanged and map the regulatory drivers to the local equivalents:
+
+| UAE driver | Map to |
+|---|---|
+| PDPL (personal data) | GDPR / UK GDPR, or the local data-protection statute |
+| CBUAE MMS (model management) | SR 11-7 (US), PRA SS1/23 or ECB guidance (UK/EU), or the local model-risk guidance |
+| CBUAE CPS (consumer protection) | The local conduct-of-business and consumer-duty rules |
+| CBUAE CPS-AI | The local AI guidance (EU AI Act, ISO 42001 where adopted) |
+| CBUAE enforcement, UAE Data Office | The home supervisor and data-protection authority |
+| In-country residency (e.g. an in-country cloud region) | The home jurisdiction's residency or transfer rules |
+
+Name the jurisdiction in the first line of the output and cite the mapped framework by clause
+wherever the UAE text would cite CPS, PDPL or MMS. The example wording elsewhere in this skill
+("data must not leave the UAE", "CBUAE enforcement powers") reads as its local equivalent.
 
 ## Review Methodology (Formal Review Mode)
 
@@ -248,7 +265,7 @@ artifact is unusually clean or the review isn't thorough enough.
 ### Step 6: Produce the Review Document
 
 Generate a Word document (.docx) following the structure in `references/review-template.md`.
-Use the docx skill for document creation — read its SKILL.md before generating the file.
+Use the `docx` skill for document creation if it is installed (it is not bundled with this plugin) — read its SKILL.md before generating the file. Otherwise write the review as Markdown with the same section structure and say so.
 
 The review should feel like it was written by a seasoned risk professional: measured, specific,
 constructive. It endorses what works, flags what doesn't, and provides a clear path forward.

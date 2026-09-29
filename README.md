@@ -58,8 +58,7 @@ runtime controls before equivalent enforcement can be claimed.
 | Skill | `loom-adopt` | Stands the harness up in a repo — gate validator, branded renderer, artifact templates, waist gate, eight build-loop skills, reviewer templates, guardrail hooks |
 | Skill | `institution-intake` | The guided Q&A that sets the institution's scene before the first problem |
 | Skill | `brainkit-init` | Drafts an Institutional BrainKit from an institution's approved sources |
-| Skill | `claude-md-guide` | How to write CLAUDE.md files that actually change agent behaviour |
-| Skill | `context-template` | Fill-in-the-blanks CLAUDE.md starter for any stack |
+| Skill | `claude-md-guide` | How to write CLAUDE.md files that actually change agent behaviour, plus a fill-in-the-blanks starter template |
 | Agent | `discovery-boundary-reviewer` | Guards the no-solutioning line and prototype fidelity on discovery runs |
 | Agent | `data-governance-reviewer` | Judges control coverage and residual-risk soundness beyond the mechanical D6 gate |
 | Agent | `change-watch`, `risk-reviewer`, `model-risk-reviewer` | Continuous assurance — horizon scanning, impact assessment, independent model challenge |
@@ -72,7 +71,6 @@ UAE banking expertise for any CBUAE-regulated institution — general-purpose, w
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | `uae-bank-risk-reviewer` | Virtual Head of Risk — discovery landscape, backlog risk tagging, formal review, and control-enforcement verification against a 77-control UAE taxonomy |
-| Skill | `bank-risk-reviewer` | The same reviewer for a bank outside the UAE, mapping the regulatory drivers to local equivalents |
 | Skill | `islamic-banking-uae` | Shariah-compliant finance — principles, contracts, CBUAE Shariah governance, and the Islamic fields in Standards v2.1 |
 | Skill | `npa-uae` | New Product Approval — the Business Proposition Form (33 fields, Word template), the CBUAE anchor behind each field, sign-off routing, BAU assessments, and the Loom's PA1/PA2 receipts |
 

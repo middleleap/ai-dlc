@@ -1,11 +1,10 @@
 ---
 name: claude-md-guide
 description: >
-  Best practices for writing effective CLAUDE.md files that maximize AI assistant
-  productivity. Covers structure, patterns, anti-patterns, and real-world examples
-  for configuring AI coding assistants via project-level instruction files.
-  Triggers on queries about CLAUDE.md, .cursorrules, AI context files, AI coding
-  assistant configuration, prompt engineering for codebases, and AI-SDLC setup.
+  Best practices for writing effective CLAUDE.md files, plus a starter template. Use when
+  creating a CLAUDE.md from scratch for a new repository, improving an existing one, or asked
+  about .cursorrules, AI context files, AI coding-assistant configuration, or prompt engineering
+  for a codebase.
 ---
 
 # CLAUDE.md Authoring Guide
@@ -219,6 +218,6 @@ Your CLAUDE.md is working well when:
 
 | Topic | File |
 |-------|------|
-| Starter template | The `context-template` skill in this plugin |
+| Starter template | `assets/CLAUDE.md.template` — copy and fill in; stack-specific sections and the checklist are in `references/starter-guide.md` |
 | Detailed patterns | `references/patterns.md` |
 | Platform-specific tips | `references/platform-tips.md` |
