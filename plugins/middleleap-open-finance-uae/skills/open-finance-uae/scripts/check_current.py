@@ -66,6 +66,43 @@ from fetch_spec import list_tree  # noqa: E402  (shares the 15-min tree cache)
 
 SKILL_MD = Path(__file__).resolve().parent.parent / "SKILL.md"
 REGISTER_BASE = "https://nebras-open-finance.com/tech/release-notes-and-erratas"
+RAW_BASE = "https://raw.githubusercontent.com/Nebras-Open-Finance/api-specs/main"
+
+# Hand-maintained frontier of pre-release folders to existence-probe via
+# raw.githubusercontent.com when the GitHub Tree API is unreachable (the session-scope
+# 403 above). raw.githubusercontent.com file GETs are not session-scoped, so this keeps
+# partial repo-side visibility instead of going blind. It is the same set a human pass
+# would curl by hand — update it whenever a pass confirms a new line. Ported from the
+# 21 Sep 2026 pass (v2.2-rc1 highest; v2.2-rc2 / v2.2 / next errata all 404 then).
+PRERELEASE_FRONTIER = ["v2.2-rc1", "v2.2-rc2", "v2.2-draft2", "v2.2"]
+PROBE_FILE = "uae-bank-initiation-openapi.yaml"  # present in every standards line to date
+
+
+def _raw_exists(path: str) -> bool:
+    req = urllib.request.Request(f"{RAW_BASE}/{path}",
+                                 headers={"User-Agent": "of-skill-check-current"})
+    try:
+        with urllib.request.urlopen(req, timeout=20):
+            return True
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return False
+        raise
+
+
+def probe_repo_fallback(stated_version: str, stated_errata: int):
+    """Narrow raw.githubusercontent.com substitute for repo_current() when the Tree API
+    is refused. It only sees the candidate paths it probes — not a full tree read — but
+    that beats reporting the repo as unreachable. Same shape as repo_current(), or None
+    if raw.githubusercontent.com is unreachable too."""
+    try:
+        prerelease = [c for c in PRERELEASE_FRONTIER
+                      if _raw_exists(f"dist/standards/{c}/{PROBE_FILE}")]
+        bumped = _raw_exists(f"dist/standards/{stated_version}-errata{stated_errata + 1}/{PROBE_FILE}")
+    except urllib.error.URLError:
+        return None
+    latest_errata = stated_errata + 1 if bumped else stated_errata
+    return stated_version, latest_errata, [stated_version], sorted(prerelease)
 
 
 def skill_stated_current(text: str) -> tuple[str, int]:
@@ -204,6 +241,15 @@ def main() -> None:
                              "the repo manually; continuing with the register-only check.")
         else:
             repo_note = f"GitHub API error: {e}"
+        fallback = probe_repo_fallback(*stated)
+        if fallback:
+            repo = fallback[0], fallback[1]
+            repo_lines, prerelease = fallback[2], fallback[3]
+            repo_note += (" Fell back to a raw.githubusercontent.com existence probe of a "
+                          "known candidate frontier (narrower than a full tree read — see "
+                          "PRERELEASE_FRONTIER in this script).")
+        else:
+            repo_note += " The raw.githubusercontent.com fallback probe was unreachable too."
     except Exception as e:  # network, parse, etc.
         repo_note = f"repo check failed: {e}"
 

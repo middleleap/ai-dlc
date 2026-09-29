@@ -24,6 +24,8 @@ jobs:
           node-version: '22'
       - name: Validate manifests, skills, and agents
         run: node scripts/validate-marketplace.mjs
+      - name: Open Finance staleness script — offline tests
+        run: python3 plugins/middleleap-open-finance-uae/skills/open-finance-uae/scripts/test_check_current.py
 
       # Three skills are imported from the Claude.ai skills UI as whole-file overwrites. This
       # fails the PR if a re-import brings a client's name back into the public marketplace.
