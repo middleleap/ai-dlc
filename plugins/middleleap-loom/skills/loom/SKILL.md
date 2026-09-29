@@ -49,6 +49,20 @@ into Discovery as evidence — the third arc (`references/operations.md`).
 **Read `references/core.md` first** — the whole method in two pages. Everything else is either
 the full canon for one part of that page, or an appendix.
 
+**Gate ids at a glance** (full definitions and failure conditions: `references/glossary.md`):
+
+| Discovery gate | Passes when | Delivery gate | Passes when |
+|---|---|---|---|
+| D1 Problem framing | a falsifiable problem, a target user and a success measure exist | Q1 build + unit | it compiles and passes its own tests |
+| D2 Evidence | every claim cites a signal that exists | Q2 static + SAST | lint, types and security static analysis are clean |
+| D3 Scope & stakeholders | stakeholders are named and out-of-scope is explicit | Q3 integration + contract | it works against real local stores and honours the contract end to end |
+| D4 No-solutioning boundary | no discovery artifact specifies a build | Q4 security + dependencies | dependency audit and secrets scan are clean |
+| D5 Synthesis integrity | every theme traces to a signal; the prioritisation method is stated | Q5 production approval | a human approved at release time, evidenced |
+| D6 Data-governance feasibility | risk category, regulatory driver, resolvable register id and residual-risk verdict are present | | |
+| D7 Brand conformance | the brand marker is present; no colour, size or font is hard-coded | | |
+| D8 Tangibility | a prototype brief and wireframe exist and do not over-specify | | |
+| D9 Validation loop | somebody reacted to the prototype | | |
+
 **Canon** — the parts every adopter reads:
 - `references/core.md` — the two-page core: the one sentence, the double diamond closed into a
   loop, the five decisions that carry the weight, the register chain, the maturity ladder.
@@ -85,10 +99,11 @@ the full canon for one part of that page, or an appendix.
 **Appendix** — one part each, read when that part is yours:
 - `references/model-risk.md` — governing the agent as a model (HG-0006): inventory, pinning,
   eval-before-release, and independent validation, with the model-provenance gate that enforces
-  the repo-side half. Since 2.1.0 this covers the reviewer agents too: they emit one output
+  the repo-side half. This covers the five Loom reviewer agents too (`code-reviewer` keeps its
+  Markdown format): they emit one output
   schema (`loom.agent-output/v1`), say `INSUFFICIENT_EVIDENCE` when their register is absent,
   and are a role in the model manifest.
-- `references/uae-ai-governance.md` — the 2.4 UAE consumer-AI route: when a model-bearing
+- `references/uae-ai-governance.md` — the UAE consumer-AI route: when a model-bearing
   product change automatically acquires the `ai-decision-system` profile, what the governed
   AI record and three joined assurance gates prove, and what only the institution can observe
   at runtime.
@@ -135,7 +150,7 @@ dimensions:
    a different solution.
 3. **Institutional DNA** — how the entity itself works: approval routes, architectural patterns,
    approved technologies, design tokens, terminology, tone of voice. Its institution-owned **seed**
-   is the **Institutional BrainKit** (`institution/brainkit/`, 2.0-rc.10) — a versioned, approved,
+   is the **Institutional BrainKit** (`institution/brainkit/`) — a versioned, approved,
    digest-pinned package of identity, terminology, architecture principles, technology policy (with
    its radar), decision rights and strategic intents that every repository inherits before it writes code, PRDs, ADRs, interfaces or
    reports. The BrainKit projects to the **brand profile** seam (gate D7) and composes through the
@@ -178,7 +193,7 @@ A method worth adopting names its own risks:
 - **Comprehension debt is the method's standing risk.** The review gate is the one resource
   that does not scale; at sustained throughput, four-eyes can decay into ceremony while every
   gate stays green — the gap between the code that exists and the code a human still
-  understands widening quietly. The decision log (2.0-rc) makes the agent's *reasoning*
+  understands widening quietly. The decision log makes the agent's *reasoning*
   replayable, which pays down half of it; the other half — whether the human at the gate is
   still reading — the method names here (delivery-harness red flags, HG-0013) but does not yet
   measure. Naming a debt is not paying it.

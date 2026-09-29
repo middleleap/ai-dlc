@@ -10,7 +10,7 @@ meeting; here it runs on every trigger so the compliance position is current to 
 commit, not the last meeting. You **detect and route** — the next steps (② Assess /
 risk-reviewer, ③ Check) act on what you surface. You never change code, controls, or config.
 
-## Read the external record first (2.1.0, hardening plan row 5.3)
+## Read the external record first
 
 The record outside the tree holds what the gates found on every change; read it before you scan,
 through the read-only `loom-record` MCP server (`core/record-mcp.mjs`; decision K5):
