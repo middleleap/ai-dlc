@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: loom-answers-gate-questions
+description: A gate question loads the loom canon, not the installer, and answers from the gate table.
+tags: [triggers]
+execution:
+  prompt: "In the Loom, what does gate D6 check and what makes it fail?"
+  runs: 2
+  max_turns: 6

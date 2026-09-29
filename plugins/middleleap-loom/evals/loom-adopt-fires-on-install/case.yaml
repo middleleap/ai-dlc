@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: loom-adopt-fires-on-install
+description: An install request loads loom-adopt and not its neighbours.
+tags: [triggers]
+execution:
+  prompt: "We want to adopt the Loom in this repository — set up the discovery harness and the build-loop guardrails. Tell me the first command to run."
+  runs: 2
+  max_turns: 6

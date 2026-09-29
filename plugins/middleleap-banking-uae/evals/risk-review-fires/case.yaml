@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: risk-review-fires
+description: A "what are the risks" question in a UAE banking context loads the risk reviewer.
+tags: [triggers]
+execution:
+  prompt: "We are a UAE retail bank adding an AI-driven affordability check to our lending app. What are the risks?"
+  runs: 2
+  max_turns: 6

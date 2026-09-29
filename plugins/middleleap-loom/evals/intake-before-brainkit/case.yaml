@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: intake-before-brainkit
+description: With no approved sources named, the intake fires and brainkit-init stays quiet.
+tags: [triggers]
+execution:
+  prompt: "We are a bank starting with the Loom next month. Nobody has gathered any policy documents, brand guidelines or architecture standards yet. What do we need to prepare?"
+  runs: 2
+  max_turns: 6
