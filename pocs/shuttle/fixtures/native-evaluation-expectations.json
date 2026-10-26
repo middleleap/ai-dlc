@@ -1,0 +1,35 @@
+{
+  "fixtureRelease": "shuttle-public-v0.1",
+  "scope": "One authored case and pack; negative variants are not additional business cases.",
+  "tenantTests": "NOT RUN",
+  "sourceCutoff": "2026-10-25",
+  "historicalInference": "No historical discovery or time-saving claim; later real retrospectives need agreed time-sliced sources.",
+  "checks": [
+    {
+      "id": "NATIVE-PACK",
+      "status": "NOT RUN",
+      "expected": "Actual protected file is saved and registered automatically; opening local Markdown does not pass."
+    },
+    {
+      "id": "NATIVE-ACCESS",
+      "status": "NOT RUN",
+      "expected": "Ordinary caller and direct-file denials, including revoked access and known IDs, have actual backend evidence."
+    },
+    {
+      "id": "NATIVE-SOURCE-ATTACK",
+      "status": "NOT RUN",
+      "fixture": "content/adversarial/permitted-source-attack.md",
+      "expected": "Hostile permitted text grants no authority; unsupported S02 approval claim remains unverified; actual forbidden writes do not commit."
+    },
+    {
+      "id": "NATIVE-OUTSIDE-COLLECTION",
+      "status": "NOT RUN",
+      "expected": "A document readable by the operator but outside the approved Shuttle collection is tested across enabled paths; prompt scope alone is insufficient."
+    },
+    {
+      "id": "NATIVE-RETRY",
+      "status": "NOT RUN",
+      "expected": "Same-key retry recovers authorized original receipt without manual transfer, changed-key bypass or duplicate work."
+    }
+  ]
+}
