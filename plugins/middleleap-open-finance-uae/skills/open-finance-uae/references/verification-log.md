@@ -152,6 +152,18 @@ drift." The register-only fallback path has now been exercised and correctly rep
 five consecutive passes (31 Aug, 3 Sep script-only, 14 Sep, 28 Sep) with `api-specs` unreachable
 on at least three of them — it is the reliable path in this environment, not a degraded one.
 
+## Pass of 26 October 2026 — weekly ecosystem-watcher re-check: doc-level Errata 4 detected
+
+Trigger: weekly watcher cadence. Method: `check_current.py` (register-only, raw-file frontier probe), raw fetches of the two release registries, anonymous Confluence REST on page 1366294554.
+
+| Item | Outcome | Files updated |
+|---|---|---|
+| Hub register / repo | **UNCHANGED** — errata3, 5 corrections, FRESH; `v2.2-rc1` highest; `v2.2-rc2`, `v2.2`, `v2.1-errata4` all 404 | — |
+| API Hub / Trust Framework registries | **UNCHANGED** — `2026.22.0` latest API Hub; TF `2.5.0` last listed (not re-parsed for status) | — |
+| Doc-level Confluence register | **CHANGED** — page v5 → **v7, last edit 18 Sep 2026**; now has an "ERRATA 4" section of 9 items (insurance `KYCCaptured` TPP-only, `CreditDebitIndicator`, multi-document KYC, relaxed ratio regex, non-UUID QuoteId, International Payments CX/FX binding-rate rules). Not yet in `erratas-registry.ts` or `api-specs` | `standards-versions.md`, `SKILL.md` |
+| `check_current.py` | **Refined**: new `doc_register_status()` reports when the doc-level page has a higher ERRATA N than the skill (informational; hub register stays authoritative, status not forced STALE) | `scripts/check_current.py` |
+| NOT done | Errata 4 effective dates and affected spec files (unpublished); field-level reference files not edited since specs haven't changed | — |
+
 ## 29 September 2026 — check_current.py gains the raw-file fallback from the unmerged 21 Sep pass
 
 The 21 Sep 2026 watcher pass (PR #86, never merged; it edited the pre-rename plugin path) added a

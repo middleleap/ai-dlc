@@ -206,6 +206,24 @@ def skill_stated_sections(text: str, version_hint: str, errata_num: int) -> int 
     return int(m.group(1)) if m else None
 
 
+DOC_REGISTER_URL = ("https://openfinanceuae.atlassian.net/wiki/rest/api/content/1366294554"
+                    "?expand=body.storage,version")
+
+
+def doc_register_status() -> tuple[int, int, str] | None:
+    """(highest 'ERRATA N' section, page version, last-edit date) from the doc-level
+    Confluence consolidated-errata page, or None if unreachable. This register can run
+    AHEAD of the hub register and the api-specs repo (seen 26 Oct 2026: Errata 4 present
+    here while both others still stopped at errata3)."""
+    try:
+        with urllib.request.urlopen(DOC_REGISTER_URL, timeout=30) as r:
+            d = json.load(r)
+        nums = [int(n) for n in re.findall(r"ERRATA (\d+)\b", d["body"]["storage"]["value"])]
+        return max(nums), d["version"]["number"], d["version"]["when"][:10]
+    except Exception:
+        return None
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -288,7 +306,16 @@ def main() -> None:
                 "flagged in verification-log.md. Re-verify the new section(s) and update."
             )
 
+    doc = doc_register_status()
+    doc_note = None
+    if doc and doc[0] > stated[1]:
+        doc_note = (f"doc-level Confluence register (page 1366294554, v{doc[1]}, {doc[2]}) "
+                    f"already has an 'ERRATA {doc[0]}' section that the hub register/api-specs "
+                    f"do not publish yet. Not STALE (hub register is authoritative for "
+                    f"'current'), but note the pending content in standards-versions.md.")
+
     result = {
+        "doc_register": doc_note,
         "skill_states": f"{stated[0]}-errata{stated[1]}",
         "register_published": f"{register[0]}-errata{register[1]}" if register else None,
         "repo_latest": f"{repo[0]}-errata{repo[1]}" if repo else None,
@@ -311,6 +338,8 @@ def main() -> None:
                   "note it in standards-versions.md if the skill does not mention it)")
         if repo_note:
             print(f"note                 : {repo_note}")
+        if doc_note:
+            print(f"doc-level register   : {doc_note}")
         if section_note:
             print(f"section check        : {section_note}")
         if status == "FRESH":

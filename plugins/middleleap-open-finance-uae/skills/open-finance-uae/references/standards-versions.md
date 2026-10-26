@@ -312,6 +312,24 @@ Quote Initiation / Common Rules + API Hub quote-status responses), **errata2 —
 16 Mar doc vs 10 Apr spec; errata3: 30 Jun doc vs 8 Jul spec) — cite the register that matches
 the artefact you are quoting.
 
+### Doc-level "Errata 4" — drafted ahead of the hub register (detected 26 Oct 2026)
+
+The Consolidated Errata page (1366294554) went to **page version 7 (18 Sep 2026)** and now carries an
+**"ERRATA 4" section of 9 items**. As of 26 Oct 2026 the hub register (`erratas-registry.ts`) and
+`api-specs` (`dist/standards/v2.1-errata4/` → 404) do **not** list errata4, so **v2.1-errata3 remains
+the published "current"** — treat the items below as *announced, not yet in the specs* and flag them
+"(verify against source)". Items: (1) Products endpoints page — no Ozone Connect↔Standards field
+mapping needed, page kept for completeness; (2–3) `KYCCaptured` quote status may be set **only by the
+TPP** — removed from allowed statuses on `PATCH /insurance-quote-log/{logId}`, Quote Application
+States wording revised (`ApplicationPending` and `KYCCaptured` are TPP-set); (4) new optional
+`data.Premium.Adjustments.CreditDebitIndicator` on `GET /{product}-insurance-policies/{id}` (adjustments
+can be negative); (5) UUID regex on `QuoteId` removed from `PATCH /{product}-insurance-quotes/{QuoteId}`
+(LFIs issue non-UUID IDs); (6) PATCH quote bodies accept **multiple KYC documents**; (7) Solvency /
+Claims-Payment-Capacity ratio patterns relaxed to allow values >100; (8) International Payments CX
+3.4.1 — LFI auth screen shows the AED **or** GBP debtor account, not both (new screen pending); (9) new
+International FX rules: LFI refreshes an expired binding rate, and the customer must re-review changed
+rate/charges after debtor-account selection (§3.3). Dates and affected-spec files not yet published.
+
 ### v2.1-errata2 — two registers, read both
 
 v2.1-errata2 is recorded in **two registers that do not mirror each other**. Cite the right one:
