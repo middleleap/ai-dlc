@@ -33,6 +33,8 @@ No script signs in, provisions a resource, deploys an application, starts a work
 
 ## Separate runtime qualification
 
+A concise [qualification status](QUALIFICATION-STATUS.md) records the bounded synthetic diagnostic results and remaining runtime limits.
+
 A deployment needs reviewed schema/keys, target-local identities and roles, registered steps and transactions, a protected document worker, exact source/file access, concurrency/rollback checks and a clean managed-solution installation. Copilot/native integration and ordinary-user tests are separate gates. Offline passing tests establish none of those results.
 
 The Dataverse registration JSON is a reference contract only. Do not use its public fixture package as a replacement for an approved tenant package. Source-policy pins must correspond to the reviewed content release; changing a fixture requires updating all derived bindings and regression vectors together.

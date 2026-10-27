@@ -6,6 +6,7 @@ SHUTTLE_DOTNET="${DOTNET:-dotnet}"
 cd "$SHUTTLE_ROOT"
 "$SHUTTLE_PYTHON" scripts/validate-contracts.py
 "$SHUTTLE_PYTHON" scripts/verify-fixture-bindings.py
+"$SHUTTLE_PYTHON" -m unittest discover -s renderer -p 'test_*.py'
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_NOLOGO=1
 for project in tests/Shuttle.Guards.Tests/Shuttle.Guards.Tests.csproj tests/Shuttle.Dataverse.Tests/Shuttle.Dataverse.Tests.csproj; do
   "$SHUTTLE_DOTNET" restore "$project" --locked-mode
