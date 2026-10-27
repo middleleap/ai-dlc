@@ -18,7 +18,7 @@ canary result. Canary files are retained for inspection.
 This public helper does not contain a tenant binding, credentials, an installer,
 a Word renderer or the one-job qualification flow. Its example site, case UUID,
 principal and correlation IDs are fictional test fixtures. The local suite has
-26 graph/predicate/adversarial tests, including supported Compose security,
+34 graph/predicate/adversarial tests, including supported Compose security,
 structured-error parsing, injection rejection and exact race-winner checks:
 
 ```sh
@@ -32,3 +32,7 @@ binary envelopes, collision behavior and runtime byte/identity preservation
 still need separate qualification with real supplied bindings. A canary result
 does not establish arbitrary administrator-write protection, a cross-system
 transaction, Office-document integrity or production concurrency guarantees.
+
+The separate [opaque Word upload candidate](OPAQUE-WORD-CANDIDATE.md) authors a
+reviewed static action slice for binary staging and exact post-move checks. It
+does not build an installable flow or qualify the surrounding graph.

@@ -34,8 +34,7 @@ namespace Shuttle.Dataverse
         public IReadOnlyList<string> Authorize(Proposal proposal, string callerReadableCaseBindings)
         {
             if (proposal.Kind != ProposalKind.PackDraft) throw new BoundaryException("FILE_ACL_VERIFIER_NOT_CONFIGURED");
-            if (proposal.PackDraft.TemplateRelease != Schema.TemplateRelease || proposal.PackDraft.SkillRelease != Schema.SkillRelease)
-                throw new BoundaryException("RELEASE_NOT_INSTALLED");
+            Schema.ResolveRenderContract(proposal.PackDraft.TemplateRelease, proposal.PackDraft.SkillRelease);
             using (var doc = StrictJson.Parse(callerReadableCaseBindings, 250000))
             {
                 var root = doc.RootElement;

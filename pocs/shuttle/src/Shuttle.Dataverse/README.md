@@ -27,7 +27,7 @@ The PreOperation step requires this **secure** registration configuration; absen
 {"policy":"LAB_EMBEDDED_SOURCES","enabled":true}
 ```
 
-Case `shuttle_sourcebindingsjson` contains the exact `fixtures/embedded-sources.json` content. It embeds the four synthetic source texts and SHA-256 digests. The adapter retrieves the Case using `InitiatingUserId`, checks all bytes against compiled pins, and accepts only `readiness-gaps-public-v0.1` / `shuttle-public-v0.1` release IDs. These release IDs identify the permitted fixture configuration; actual renderer template installation/hash remains to qualify. Restrict Case/source writes to setup/trusted operations. This policy grants no external SharePoint/source access and is not a general source-policy engine.
+Case `shuttle_sourcebindingsjson` contains the exact `fixtures/embedded-sources.json` content. It embeds the four synthetic source texts and SHA-256 digests. The adapter retrieves the Case using `InitiatingUserId` and checks all bytes against compiled pins. It accepts the legacy `readiness-gaps-public-v0.1` / `shuttle-public-v0.1` tuple and the distinct `readiness-gaps-public-utc-prefix-v0.2` / `shuttle-public-v0.1` candidate tuple. The tuple is part of the canonical proposal hash and is stamped on the work item; unknown combinations fail closed. These identify synthetic fixture contracts, not an installed renderer or a qualified Word template. Restrict Case/source writes to setup/trusted operations. This policy grants no external SharePoint/source access and is not a general source-policy engine.
 
 ## Processing steps and permissions
 

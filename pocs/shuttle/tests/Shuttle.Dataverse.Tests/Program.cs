@@ -12,7 +12,7 @@ using Microsoft.Xrm.Sdk.Query;
 using Shuttle.Dataverse;
 using Shuttle.Guards;
 
-internal static class Program
+internal static partial class Program
 {
     static int checks;
     static readonly string Pack = File.ReadAllText(Path.Combine(System.AppContext.BaseDirectory, "fixtures/pack-draft.json"));
@@ -191,6 +191,7 @@ internal static class Program
             f.Pre(); f.Writer.FailCreateTable = Schema.Work;
             RejectPlugin(f.Post, "PLATFORM_OPERATION_FAILED"); Check(f.Writer.Creates.Count == 1, "work failure propagates; rollback needs tenant proof");
         }
+        TestTimestampReleaseCommit();
         Console.WriteLine($"PASS: {checks} local adapter assertions. SDK fakes do not prove Dataverse transactions, ACLs, native integration or packaging compatibility.");
     }
     static void Check(bool condition, string message) { checks++; if (!condition) throw new Exception("FAIL: " + message); }
