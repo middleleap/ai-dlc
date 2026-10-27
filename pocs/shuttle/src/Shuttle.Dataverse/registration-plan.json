@@ -1,0 +1,50 @@
+{
+  "status": "REFERENCE_PLAN_ONLY_NOT_DEPLOYABLE",
+  "packageId": "MiddleLeap.Shuttle.Dataverse",
+  "packageVersion": "0.1.0-public.1",
+  "assembly": "Shuttle.Dataverse",
+  "deploymentMechanism": "DATAVERSE_PLUGIN_PACKAGE",
+  "standaloneUnsignedAssemblySupported": false,
+  "stepEffectiveWriter": "TARGET_SPECIFIC_EXPLICIT_USER_REQUIRED",
+  "sameWriterForBothSteps": true,
+  "steps": [
+    {
+      "type": "Shuttle.Dataverse.ValidateDraftProposal",
+      "message": "Create",
+      "primaryEntity": "shuttle_draftproposal",
+      "stage": 20,
+      "mode": 0,
+      "rank": 10,
+      "secureConfiguration": {
+        "policy": "LAB_EMBEDDED_SOURCES",
+        "enabled": true
+      },
+      "images": []
+    },
+    {
+      "type": "Shuttle.Dataverse.CommitProposalEventAndWork",
+      "message": "Create",
+      "primaryEntity": "shuttle_draftproposal",
+      "stage": 40,
+      "mode": 0,
+      "rank": 10,
+      "images": []
+    }
+  ],
+  "prerequisites": [
+    "Reviewed five-table metadata, relationships and columns",
+    "Active alternate key on shuttle_case plus shuttle_requestkey",
+    "Case optimistic concurrency enabled and RowVersion supplied",
+    "Target-specific secure configuration applied to PreOperation step",
+    "Protected columns/tables and ordinary Create-only Proposal role verified",
+    "Reviewed effective writer with required bounded privileges",
+    "Exact embedded synthetic source bytes provisioned under Case ACL"
+  ],
+  "unimplemented": [
+    "Target-specific schema, identity, permissions and deployment tooling",
+    "InspectionComment caller-bound file ACL verifier and artifact/reply retrieval",
+    "Worker, artifact registration and automatic renderer are outside this public slice",
+    "Live transaction, concurrency and native reconciliation qualification"
+  ],
+  "tenantTests": "NOT_RUN"
+}

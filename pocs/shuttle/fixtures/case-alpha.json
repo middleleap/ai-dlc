@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "shuttle.case.v0.1",
+  "synthetic": true,
+  "caseId": "11111111-1111-4111-8111-111111111111",
+  "caseKey": "SHWF-001",
+  "title": "Fictional Bank Alpha data-sharing readiness",
+  "role": "LFIProvider",
+  "contentRevision": 1,
+  "sourceCutoff": "2026-10-25",
+  "facts": [
+    {
+      "key": "F1",
+      "title": "Service and scenario",
+      "value": "Read-only account-data-sharing readiness; no live service, payment initiation or launch.",
+      "state": "DocumentedSample",
+      "sourceIds": [
+        "S01",
+        "S03"
+      ],
+      "owedOwner": "Digital co-owner, to be named by the bank sponsor"
+    },
+    {
+      "key": "F2",
+      "title": "Institution role",
+      "value": "Fictional Bank Alpha is the LFI/data provider; the fictional app is the data recipient. Actual role selection is owed.",
+      "state": "Partial",
+      "sourceIds": [
+        "S01"
+      ],
+      "owedOwner": "the bank sponsor / digital co-owner"
+    },
+    {
+      "key": "F3",
+      "title": "Customer journey",
+      "value": "A customer would permit account-summary display. Detailed segment, consent steps and exceptions are unspecified.",
+      "state": "Partial",
+      "sourceIds": [
+        "S01",
+        "S03"
+      ],
+      "owedOwner": "Digital and consent/control owners"
+    },
+    {
+      "key": "F4",
+      "title": "Data and actions",
+      "value": "Synthetic lab only; no actual identifiers, balances, credentials, consent grants or bank endpoints. Real data boundary and retention are owed.",
+      "state": "Partial",
+      "sourceIds": [
+        "S01",
+        "S03"
+      ],
+      "owedOwner": "Digital and data-handling owners"
+    },
+    {
+      "key": "F5",
+      "title": "Parties and interfaces",
+      "value": "Fictional bank and one fictional third-party app. No real counterparty or live interface evidence is supplied.",
+      "state": "Partial",
+      "sourceIds": [
+        "S01"
+      ],
+      "owedOwner": "Digital / technology owners"
+    },
+    {
+      "key": "F6",
+      "title": "Platform inheritance",
+      "value": "No bank control is accepted as inherited. Applicable controls, policy releases, custodians and accepted evidence are unknown.",
+      "state": "Owed",
+      "sourceIds": [
+        "S02",
+        "S03"
+      ],
+      "owedOwner": "Named control owner and evidence custodian"
+    },
+    {
+      "key": "F7",
+      "title": "Decision and ownership",
+      "value": "Identify readiness gaps, owners and next actions. The governing process, reviewer and later decision authority remain unconfirmed.",
+      "state": "Owed",
+      "sourceIds": [
+        "S01",
+        "S03"
+      ],
+      "owedOwner": "the bank sponsor coordinates; accountable bank owners decide"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "version": "demo-v1",
+      "file": "content/sources/S01-synthetic-intake.md",
+      "sha256": "a3610b3023ae50d1261876a698eb134d56ed754f34f0934084de322501c21ae0",
+      "asOfDate": "2026-10-25",
+      "scope": "SYNTHETIC_DESIGN_ONLY"
+    },
+    {
+      "id": "S02",
+      "version": "demo-v1",
+      "file": "content/sources/S02-illustrative-checklist.md",
+      "sha256": "a8efa9187f70a01797f0d2229075c11b885c9556990988394b4f1a4d7530bc3e",
+      "asOfDate": "2026-10-25",
+      "scope": "SYNTHETIC_DESIGN_ONLY"
+    },
+    {
+      "id": "S03",
+      "version": "lab-extract-v0.1",
+      "file": "content/sources/S03-provisional-charter.md",
+      "sha256": "bbd94ae6c8cccc3f96a8a69fa7a733d2eead6df89b8b77e97ed34220dcd32928",
+      "asOfDate": "2026-10-25",
+      "scope": "SYNTHETIC_DESIGN_ONLY"
+    },
+    {
+      "id": "S04",
+      "version": "lab-extract-v0.1",
+      "file": "content/sources/S04-proposed-architecture.md",
+      "sha256": "9ebdfdd73663b8a48afa1c71c5b271d6e859b7e1e95965d1be52634dca3976ab",
+      "asOfDate": "2026-10-25",
+      "scope": "SYNTHETIC_DESIGN_ONLY"
+    }
+  ]
+}

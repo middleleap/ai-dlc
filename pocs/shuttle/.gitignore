@@ -1,0 +1,21 @@
+.venv/
+**/bin/
+**/obj/
+__pycache__/
+*.pyc
+out/
+*.user
+*.suo
+.env
+.env.*
+deploy/local/
+
+# Keep local target captures, credentials and generated artifacts out of public source.
+.local/
+evidence/
+*.cer
+*.pfx
+*.key
+*.nupkg
+*.docx
+*.pdf
